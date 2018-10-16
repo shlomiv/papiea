@@ -219,7 +219,7 @@ Papiea is aimed to be a reference implementation to a formal general purpose int
     #+END_SRC
     
     Next sections go into greater details into each of the apis.
-**** Admin
+**** Admin facing APIs
      The admin apis exposed by Papiea are used to manage providers: registrating, upgrading, deleting etc.
 ***** Pseudocode     
       #+Name: admin-api-pc
@@ -231,7 +231,7 @@ Papiea is aimed to be a reference implementation to a formal general purpose int
         }
       #+END_SRC
      
-**** Providers
+**** Providers facing APIs
      Provider facing defines the interactions between a provider and the
      intent-engine.  It lets the provider register [[*SFS - Status Fields Signature][Status Fields Signature]]
      handlers for intentful apis, and procedural apis which will be exposed to
@@ -267,7 +267,7 @@ Papiea is aimed to be a reference implementation to a formal general purpose int
 
        
      #+END_SRC
-**** User
+**** User facing APIs
      
      #+Name: user-api-pc
      #+BEGIN_SRC go

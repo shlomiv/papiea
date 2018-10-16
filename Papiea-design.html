@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2018-10-16 Tue 15:35 -->
+<!-- 2018-10-16 Tue 16:16 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Papiea Design</title>
@@ -242,137 +242,140 @@ for the JavaScript code in this tag.
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#org4295523">1. Definitions</a></li>
-<li><a href="#orgb13510a">2. Data Structures</a>
+<li><a href="#org07b2779">1. Definitions</a></li>
+<li><a href="#org3dd0574">2. Data Structures</a>
 <ul>
-<li><a href="#org73a0062">2.1. Spec</a></li>
-<li><a href="#org0fe7bb4">2.2. Status</a></li>
-<li><a href="#orga72b850">2.3. Metadata</a></li>
-<li><a href="#orgbcd3237">2.4. Kind</a></li>
-<li><a href="#org74f43a3">2.5. Provider description</a></li>
+<li><a href="#org243373c">2.1. Spec</a></li>
+<li><a href="#org0100c9a">2.2. Status</a></li>
+<li><a href="#org7400e75">2.3. Metadata</a></li>
+<li><a href="#org1dcc282">2.4. Kind</a></li>
+<li><a href="#orgc11cdb7">2.5. Provider description</a></li>
 </ul>
 </li>
-<li><a href="#org3cb0488">3. Modules</a>
+<li><a href="#orga528ac4">3. Modules</a>
 <ul>
-<li><a href="#orgc5ba78f">3.1. Databases</a>
+<li><a href="#org1056fe0">3.1. Databases</a>
 <ul>
-<li><a href="#orgaaded8d">3.1.1. Status</a>
+<li><a href="#org4527a73">3.1.1. Status</a>
 <ul>
-<li><a href="#org6f0a2d9">3.1.1.1. Interface</a></li>
+<li><a href="#orgbbefcb6">3.1.1.1. Interface</a></li>
 </ul>
 </li>
-<li><a href="#org9dca94f">3.1.2. Spec</a>
+<li><a href="#org8111951">3.1.2. Spec</a>
 <ul>
-<li><a href="#orgc6cc1c7">3.1.2.1. Interface</a></li>
+<li><a href="#orgfa18b21">3.1.2.1. Interface</a></li>
 </ul>
 </li>
-<li><a href="#org3f04039">3.1.3. Providers</a>
+<li><a href="#orgf8b8ef9">3.1.3. Providers</a>
 <ul>
-<li><a href="#orgbd47059">3.1.3.1. Interface</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li><a href="#orgbe4c88b">3.2. Dependent services</a>
-<ul>
-<li><a href="#org68368c0">3.2.1. Tasks</a>
-<ul>
-<li><a href="#orgd65b78e">3.2.1.1. Interface</a></li>
+<li><a href="#org14afc8a">3.1.3.1. Interface</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li><a href="#org5340cbd">3.3. Papiea Engine</a>
+<li><a href="#org6a5f3fe">3.2. Dependent services</a>
 <ul>
-<li><a href="#org916d8f3">3.3.1. Initialize</a>
+<li><a href="#orgae9ba5e">3.2.1. Tasks</a>
 <ul>
-<li><a href="#org277f064">3.3.1.1. Interface</a></li>
-<li><a href="#orgbe38cf0">3.3.1.2. Pseudocode</a></li>
+<li><a href="#orgcaf0b20">3.2.1.1. Interface</a></li>
 </ul>
 </li>
-<li><a href="#orga1dcf7b">3.3.2. Exporting APIs</a>
+</ul>
+</li>
+<li><a href="#org2062b93">3.3. Papiea Engine</a>
 <ul>
-<li><a href="#orgfc617dd">3.3.2.1. Interface</a></li>
-<li><a href="#org2c3c108">3.3.2.2. Admin</a></li>
-<li><a href="#orgcbc4c01">3.3.2.3. Providers</a></li>
-<li><a href="#org2ba9118">3.3.2.4. User</a></li>
-</ul>
-</li>
-<li><a href="#orgfd1ddf7">3.3.3. Change Spec</a></li>
-<li><a href="#org690f1a8">3.3.4. Update Status</a></li>
-<li><a href="#orgfd487c2">3.3.5. SFS - Status Fields Signature</a></li>
-<li><a href="#orga919b92">3.3.6. Understanding Deltas</a>
+<li><a href="#orgf3a1dfb">3.3.1. Initialize</a>
 <ul>
-<li><a href="#org1b8cb23">3.3.6.1. Matching SFSs to Deltas</a></li>
-<li><a href="#orgbfa54db">3.3.6.2. Determining Order</a></li>
+<li><a href="#orgb01ab5d">3.3.1.1. Interface</a></li>
+<li><a href="#orga8146e0">3.3.1.2. Pseudocode</a></li>
 </ul>
 </li>
-<li><a href="#orgc88aba9">3.3.7. Provider Invocation</a></li>
-<li><a href="#org3bdb678">3.3.8. RBAC</a></li>
-<li><a href="#orgd66fd46">3.3.9. Scalability and Reliability</a>
+<li><a href="#org4d00e02">3.3.2. Exporting APIs</a>
 <ul>
-<li><a href="#org744a5f3">3.3.9.1. Leader election</a></li>
-<li><a href="#org0e7663c">3.3.9.2. Fault tolerance</a>
+<li><a href="#org72028a9">3.3.2.1. Admin</a>
 <ul>
-<li><a href="#org46f420e">3.3.9.2.1. Dead Papiea Instance</a></li>
-<li><a href="#orgbaebd0b">3.3.9.2.2. Dead Provider</a></li>
+<li><a href="#org367e7de">3.3.2.1.1. Pseudocode</a></li>
 </ul>
 </li>
+<li><a href="#org196bb78">3.3.2.2. Providers</a></li>
+<li><a href="#org3ed2d82">3.3.2.3. User</a></li>
 </ul>
 </li>
-<li><a href="#org9b94913">3.3.10. Auditing</a></li>
-</ul>
-</li>
-<li><a href="#org492165d">3.4. Tasks</a>
+<li><a href="#org761ba9f">3.3.3. Change Spec</a></li>
+<li><a href="#orgdf9d2f5">3.3.4. Update Status</a></li>
+<li><a href="#orgc867ff8">3.3.5. SFS - Status Fields Signature</a></li>
+<li><a href="#org95c736e">3.3.6. Understanding Deltas</a>
 <ul>
-<li><a href="#orgc31bcad">3.4.1. Tracking change</a></li>
-<li><a href="#org529dfb2">3.4.2. Finished</a></li>
+<li><a href="#org3ac3a22">3.3.6.1. Matching SFSs to Deltas</a></li>
+<li><a href="#org9f59645">3.3.6.2. Determining Order</a></li>
 </ul>
 </li>
-<li><a href="#orgb66d4a7">3.5. Provider Library</a>
+<li><a href="#org51c0181">3.3.7. Provider Invocation</a></li>
+<li><a href="#orgedafc39">3.3.8. RBAC</a></li>
+<li><a href="#org77f3706">3.3.9. Scalability and Reliability</a>
 <ul>
-<li><a href="#orga1a2bf6">3.5.1. Define Entity Model</a>
+<li><a href="#org3437531">3.3.9.1. Leader election</a></li>
+<li><a href="#org083c0c2">3.3.9.2. Fault tolerance</a>
 <ul>
-<li><a href="#orga5401d4">3.5.1.1. YAML</a></li>
-<li><a href="#org311aaac">3.5.1.2. CRUD</a></li>
+<li><a href="#org5c4083d">3.3.9.2.1. Dead Papiea Instance</a></li>
+<li><a href="#org514bd77">3.3.9.2.2. Dead Provider</a></li>
 </ul>
 </li>
-<li><a href="#orgfb9ee06">3.5.2. Initialize</a></li>
-<li><a href="#orga67c7f6">3.5.3. Callback Mechanism</a></li>
-<li><a href="#orgd8897bb">3.5.4. Running Effect Validator</a></li>
-<li><a href="#org900043f">3.5.5. Status Changes Handlers</a>
+</ul>
+</li>
+<li><a href="#org530112e">3.3.10. Auditing</a></li>
+</ul>
+</li>
+<li><a href="#org415f96b">3.4. Tasks</a>
 <ul>
-<li><a href="#org6a79a01">3.5.5.1. Registring</a></li>
-<li><a href="#org0df5142">3.5.5.2. Running using context</a></li>
+<li><a href="#org8895cce">3.4.1. Tracking change</a></li>
+<li><a href="#org609d345">3.4.2. Finished</a></li>
 </ul>
 </li>
-<li><a href="#org99744c0">3.5.6. Procedures</a>
+<li><a href="#org58951fb">3.5. Provider Library</a>
 <ul>
-<li><a href="#orgea59d0b">3.5.6.1. Registring</a></li>
-<li><a href="#orgf354be4">3.5.6.2. Running using context</a></li>
-</ul>
-</li>
-<li><a href="#org0e2dd89">3.5.7. Example Provider</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li><a href="#orgaf1e501">4. Full files</a>
+<li><a href="#orgf5c9bc8">3.5.1. Define Entity Model</a>
 <ul>
-<li><a href="#orgf5f867b">4.1. /src/papiea/engine/core.go</a></li>
-<li><a href="#orgcc298fa">4.2. /src/papiea/engine/server.go</a></li>
+<li><a href="#org04e3f89">3.5.1.1. YAML</a></li>
+<li><a href="#org17c111e">3.5.1.2. CRUD</a></li>
 </ul>
 </li>
+<li><a href="#org6a9133f">3.5.2. Initialize</a></li>
+<li><a href="#orgfb2668c">3.5.3. Callback Mechanism</a></li>
+<li><a href="#orgd4064df">3.5.4. Running Effect Validator</a></li>
+<li><a href="#orgb5ffd99">3.5.5. Status Changes Handlers</a>
+<ul>
+<li><a href="#orgd539a93">3.5.5.1. Registring</a></li>
+<li><a href="#org13c5d84">3.5.5.2. Running using context</a></li>
+</ul>
+</li>
+<li><a href="#org335af2d">3.5.6. Procedures</a>
+<ul>
+<li><a href="#orgfc24a14">3.5.6.1. Registring</a></li>
+<li><a href="#org28edf21">3.5.6.2. Running using context</a></li>
+</ul>
+</li>
+<li><a href="#orgad54677">3.5.7. Example Provider</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#orgf7d1229">4. Full files</a>
+<ul>
+<li><a href="#orgbaa2209">4.1. /src/papiea/engine/core.go</a></li>
+<li><a href="#org5d62728">4.2. /src/papiea/engine/server.go</a></li>
+</ul>
+</li>
+<li><a href="#org0ff756d">5. Last notes</a></li>
 </ul>
 </div>
 </div>
 <p>
 Papiea is aimed to be a reference implementation to a formal general purpose intent engine. 
-I followed <a href="http://ehneilsen.net/notebook/orgExamples/org-examples.html">this tutorial</a> for making this document through org-mode.
 </p>
 
-<div id="outline-container-org4295523" class="outline-2">
-<h2 id="org4295523"><span class="section-number-2">1</span> Definitions</h2>
+<div id="outline-container-org07b2779" class="outline-2">
+<h2 id="org07b2779"><span class="section-number-2">1</span> Definitions</h2>
 <div class="outline-text-2" id="text-1">
 <ul class="org-ul">
 <li><span class="underline">Spec</span> - a map containing the desired state of a particular entity</li>
@@ -387,12 +390,12 @@ I followed <a href="http://ehneilsen.net/notebook/orgExamples/org-examples.html"
 </ul>
 </div>
 </div>
-<div id="outline-container-orgb13510a" class="outline-2">
-<h2 id="orgb13510a"><span class="section-number-2">2</span> Data Structures</h2>
+<div id="outline-container-org3dd0574" class="outline-2">
+<h2 id="org3dd0574"><span class="section-number-2">2</span> Data Structures</h2>
 <div class="outline-text-2" id="text-2">
 </div>
-<div id="outline-container-org73a0062" class="outline-3">
-<h3 id="org73a0062"><span class="section-number-3">2.1</span> Spec</h3>
+<div id="outline-container-org243373c" class="outline-3">
+<h3 id="org243373c"><span class="section-number-3">2.1</span> Spec</h3>
 <div class="outline-text-3" id="text-2-1">
 <p>
 Status and Spec are both unstructured, and may change at runtime (by changing providers). Go is a little afraid of
@@ -404,7 +407,7 @@ First, lets declare an untyped json type:
 </p>
 
 <div class="org-src-container">
-<pre class="src src-go" id="org8faf1fb"><span style="color: #F0DFAF; font-weight: bold;">type</span> <span style="color: #7CB8BB;">untyped_json</span> <span style="color: #F0DFAF; font-weight: bold;">map</span><span style="color: #DCDCCC;">[</span><span style="color: #7CB8BB;">string</span><span style="color: #DCDCCC;">]</span><span style="color: #F0DFAF; font-weight: bold;">interface</span><span style="color: #DCDCCC;">{}</span>
+<pre class="src src-go" id="orgbed9563"><span style="color: #F0DFAF; font-weight: bold;">type</span> <span style="color: #7CB8BB;">untyped_json</span> <span style="color: #F0DFAF; font-weight: bold;">map</span><span style="color: #DCDCCC;">[</span><span style="color: #7CB8BB;">string</span><span style="color: #DCDCCC;">]</span><span style="color: #F0DFAF; font-weight: bold;">interface</span><span style="color: #DCDCCC;">{}</span>
 </pre>
 </div>
 
@@ -412,27 +415,27 @@ First, lets declare an untyped json type:
 Now, spec is simply an entyped<sub>json</sub>
 </p>
 <div class="org-src-container">
-<pre class="src src-go" id="orgea4a5a3"><span style="color: #F0DFAF; font-weight: bold;">type</span> <span style="color: #7CB8BB;">spec</span> <span style="color: #7CB8BB;">untyped_json</span>
+<pre class="src src-go" id="org1bf0bcb"><span style="color: #F0DFAF; font-weight: bold;">type</span> <span style="color: #7CB8BB;">spec</span> <span style="color: #7CB8BB;">untyped_json</span>
 </pre>
 </div>
 </div>
 </div>
-<div id="outline-container-org0fe7bb4" class="outline-3">
-<h3 id="org0fe7bb4"><span class="section-number-3">2.2</span> Status</h3>
+<div id="outline-container-org0100c9a" class="outline-3">
+<h3 id="org0100c9a"><span class="section-number-3">2.2</span> Status</h3>
 <div class="outline-text-3" id="text-2-2">
 <p>
 For now its strictly untyped, but there may be a better way to denote the fact that status is a super-set of spec
 </p>
 
 <div class="org-src-container">
-<pre class="src src-go" id="orgfc5bdd3"><span style="color: #F0DFAF; font-weight: bold;">type</span> <span style="color: #7CB8BB;">status</span> <span style="color: #7CB8BB;">untyped_json</span>
+<pre class="src src-go" id="orgeff3725"><span style="color: #F0DFAF; font-weight: bold;">type</span> <span style="color: #7CB8BB;">status</span> <span style="color: #7CB8BB;">untyped_json</span>
 </pre>
 </div>
 </div>
 </div>
 
-<div id="outline-container-orga72b850" class="outline-3">
-<h3 id="orga72b850"><span class="section-number-3">2.3</span> Metadata</h3>
+<div id="outline-container-org7400e75" class="outline-3">
+<h3 id="org7400e75"><span class="section-number-3">2.3</span> Metadata</h3>
 <div class="outline-text-3" id="text-2-3">
 <p>
 Metadata has a bit more structured then spec and status, it must have at least the following items:
@@ -443,7 +446,7 @@ Metadata has a bit more structured then spec and status, it must have at least t
 <li><code>spec_version</code> - the most up-to-date revision of the spec associated with this entity</li>
 </ul>
 <div class="org-src-container">
-<pre class="src src-go" id="org500a577"><span style="color: #F0DFAF; font-weight: bold;">type</span> <span style="color: #7CB8BB;">metadata</span> <span style="color: #F0DFAF; font-weight: bold;">struct</span> <span style="color: #DCDCCC;">{</span>
+<pre class="src src-go" id="org897f708"><span style="color: #F0DFAF; font-weight: bold;">type</span> <span style="color: #7CB8BB;">metadata</span> <span style="color: #F0DFAF; font-weight: bold;">struct</span> <span style="color: #DCDCCC;">{</span>
     <span style="color: #c0afa7;">uuid</span> <span style="color: #c0afa7;">uuid</span>
     <span style="color: #a7c0b9;">kind</span> <span style="color: #c0afa7;">string</span>
     <span style="color: #c0a7bd;">spec_version</span> <span style="color: #bba699;">int</span>
@@ -452,15 +455,15 @@ Metadata has a bit more structured then spec and status, it must have at least t
 </div>
 </div>
 </div>
-<div id="outline-container-orgbcd3237" class="outline-3">
-<h3 id="orgbcd3237"><span class="section-number-3">2.4</span> Kind</h3>
+<div id="outline-container-org1dcc282" class="outline-3">
+<h3 id="org1dcc282"><span class="section-number-3">2.4</span> Kind</h3>
 <div class="outline-text-3" id="text-2-4">
 <p>
 A Kind of an entity is the entity's type. It denotes the valid fields for spec and status for an instance of this kind.
 </p>
 
 <div class="org-src-container">
-<pre class="src src-go" id="org7263cff"><span style="color: #F0DFAF; font-weight: bold;">type</span> <span style="color: #7CB8BB;">kind</span> <span style="color: #F0DFAF; font-weight: bold;">struct</span> <span style="color: #DCDCCC;">{</span>
+<pre class="src src-go" id="orgc940843"><span style="color: #F0DFAF; font-weight: bold;">type</span> <span style="color: #7CB8BB;">kind</span> <span style="color: #F0DFAF; font-weight: bold;">struct</span> <span style="color: #DCDCCC;">{</span>
     <span style="color: #bba699;">name</span> <span style="color: #c0afa7;">string</span>
     <span style="color: #b6a0e0;">entity_structure</span> <span style="color: #9999bb;">untyped_json</span>
 <span style="color: #DCDCCC;">}</span>
@@ -468,15 +471,15 @@ A Kind of an entity is the entity's type. It denotes the valid fields for spec a
 </div>
 </div>
 </div>
-<div id="outline-container-org74f43a3" class="outline-3">
-<h3 id="org74f43a3"><span class="section-number-3">2.5</span> Provider description</h3>
+<div id="outline-container-orgc11cdb7" class="outline-3">
+<h3 id="orgc11cdb7"><span class="section-number-3">2.5</span> Provider description</h3>
 <div class="outline-text-3" id="text-2-5">
 <p>
 A Provider is a plugglable set of handlers, which is responsible for converging a certain entity kind. Its handlers
 are responsible to move the entity from a current status to an intended spec.
 </p>
 <div class="org-src-container">
-<pre class="src src-go" id="org1be5822"><span style="color: #F0DFAF; font-weight: bold;">type</span> <span style="color: #7CB8BB;">provider_description</span> <span style="color: #F0DFAF; font-weight: bold;">struct</span> <span style="color: #DCDCCC;">{</span>
+<pre class="src src-go" id="org86cc892"><span style="color: #F0DFAF; font-weight: bold;">type</span> <span style="color: #7CB8BB;">provider_description</span> <span style="color: #F0DFAF; font-weight: bold;">struct</span> <span style="color: #DCDCCC;">{</span>
     <span style="color: #c0afa7;">uuid</span> <span style="color: #c0afa7;">uuid</span>
     <span style="color: #e0d0a0;">version</span> <span style="color: #bba699;">int</span>
     <span style="color: #99bbb4;">uri</span> <span style="color: #c0afa7;">string</span>
@@ -495,12 +498,12 @@ one provider per kind.
 </div>
 </div>
 
-<div id="outline-container-org3cb0488" class="outline-2">
-<h2 id="org3cb0488"><span class="section-number-2">3</span> Modules</h2>
+<div id="outline-container-orga528ac4" class="outline-2">
+<h2 id="orga528ac4"><span class="section-number-2">3</span> Modules</h2>
 <div class="outline-text-2" id="text-3">
 </div>
-<div id="outline-container-orgc5ba78f" class="outline-3">
-<h3 id="orgc5ba78f"><span class="section-number-3">3.1</span> Databases</h3>
+<div id="outline-container-org1056fe0" class="outline-3">
+<h3 id="org1056fe0"><span class="section-number-3">3.1</span> Databases</h3>
 <div class="outline-text-3" id="text-3-1">
 <div class="note">
 <p>
@@ -511,8 +514,8 @@ document, or as a different database with a different connect uri.
 </div>
 </div>
 
-<div id="outline-container-orgaaded8d" class="outline-4">
-<h4 id="orgaaded8d"><span class="section-number-4">3.1.1</span> Status</h4>
+<div id="outline-container-org4527a73" class="outline-4">
+<h4 id="org4527a73"><span class="section-number-4">3.1.1</span> Status</h4>
 <div class="outline-text-4" id="text-3-1-1">
 <p>
 Status database will be a mapping from a metadata (namely, <code>uuid</code> and <code>kind</code>) to a status json document. 
@@ -530,11 +533,11 @@ Each provider for a kind will supply its entity's structure in its YAML.
 </p>
 </div>
 
-<div id="outline-container-org6f0a2d9" class="outline-5">
-<h5 id="org6f0a2d9"><span class="section-number-5">3.1.1.1</span> Interface</h5>
+<div id="outline-container-orgbbefcb6" class="outline-5">
+<h5 id="orgbbefcb6"><span class="section-number-5">3.1.1.1</span> Interface</h5>
 <div class="outline-text-5" id="text-3-1-1-1">
 <div class="org-src-container">
-<pre class="src src-go" id="orgfc4f457"><span style="color: #F0DFAF; font-weight: bold;">type</span> <span style="color: #7CB8BB;">status_db</span> <span style="color: #F0DFAF; font-weight: bold;">interface</span> <span style="color: #DCDCCC;">{</span>
+<pre class="src src-go" id="org0a73b2b"><span style="color: #F0DFAF; font-weight: bold;">type</span> <span style="color: #7CB8BB;">status_db</span> <span style="color: #F0DFAF; font-weight: bold;">interface</span> <span style="color: #DCDCCC;">{</span>
     <span style="color: #93E0E3;">update_status</span><span style="color: #BFEBBF;">(</span><span style="color: #99bbb4;">metadata</span>, <span style="color: #bba699;">status</span><span style="color: #BFEBBF;">)</span> <span style="color: #e0a0bc;">err</span>
     <span style="color: #93E0E3;">get_status</span><span style="color: #BFEBBF;">(</span><span style="color: #99bbb4;">metadata</span><span style="color: #BFEBBF;">)</span> <span style="color: #bba699;">status</span>, <span style="color: #e0a0bc;">err</span>
     <span style="color: #93E0E3;">delete_status</span><span style="color: #BFEBBF;">(</span><span style="color: #99bbb4;">metadata</span><span style="color: #BFEBBF;">)</span> <span style="color: #e0a0bc;">err</span>
@@ -546,8 +549,8 @@ Each provider for a kind will supply its entity's structure in its YAML.
 </div>
 </div>
 
-<div id="outline-container-org9dca94f" class="outline-4">
-<h4 id="org9dca94f"><span class="section-number-4">3.1.2</span> Spec</h4>
+<div id="outline-container-org8111951" class="outline-4">
+<h4 id="org8111951"><span class="section-number-4">3.1.2</span> Spec</h4>
 <div class="outline-text-4" id="text-3-1-2">
 <p>
 Unlike status which can always be fetched from the providers, spec is a record of the user's intent and must be
@@ -556,11 +559,11 @@ persisted to disk. It must also be scalable and highly available. It must have a
 </p>
 </div>
 
-<div id="outline-container-orgc6cc1c7" class="outline-5">
-<h5 id="orgc6cc1c7"><span class="section-number-5">3.1.2.1</span> Interface</h5>
+<div id="outline-container-orgfa18b21" class="outline-5">
+<h5 id="orgfa18b21"><span class="section-number-5">3.1.2.1</span> Interface</h5>
 <div class="outline-text-5" id="text-3-1-2-1">
 <div class="org-src-container">
-<pre class="src src-go" id="org74ea890"><span style="color: #F0DFAF; font-weight: bold;">type</span> <span style="color: #7CB8BB;">spec_db</span> <span style="color: #F0DFAF; font-weight: bold;">interface</span> <span style="color: #DCDCCC;">{</span>
+<pre class="src src-go" id="orgaff6146"><span style="color: #F0DFAF; font-weight: bold;">type</span> <span style="color: #7CB8BB;">spec_db</span> <span style="color: #F0DFAF; font-weight: bold;">interface</span> <span style="color: #DCDCCC;">{</span>
     <span style="color: #93E0E3;">cas_spec_change</span><span style="color: #BFEBBF;">(</span><span style="color: #99bbb4;">metadata</span>, <span style="color: #bba699;">status</span><span style="color: #BFEBBF;">)</span> <span style="color: #e0a0bc;">task</span>, <span style="color: #e0a0bc;">err</span>
     <span style="color: #93E0E3;">get_latest_spec</span><span style="color: #BFEBBF;">(</span><span style="color: #99bbb4;">metadata</span><span style="color: #BFEBBF;">)</span> <span style="color: #99bbb4;">metadata</span>, <span style="color: #e0a0bc;">spec</span>, <span style="color: #e0a0bc;">err</span>
     <span style="color: #93E0E3;">cleanup</span><span style="color: #BFEBBF;">()</span> <span style="color: #e0a0bc;">err</span>
@@ -571,19 +574,19 @@ persisted to disk. It must also be scalable and highly available. It must have a
 </div>
 </div>
 
-<div id="outline-container-org3f04039" class="outline-4">
-<h4 id="org3f04039"><span class="section-number-4">3.1.3</span> Providers</h4>
+<div id="outline-container-orgf8b8ef9" class="outline-4">
+<h4 id="orgf8b8ef9"><span class="section-number-4">3.1.3</span> Providers</h4>
 <div class="outline-text-4" id="text-3-1-3">
 <p>
-Providers database stores all the configurations a provider may need, which is encoded in <a href="#org74f43a3">Provider description</a> section.
+Providers database stores all the configurations a provider may need, which is encoded in <a href="#orgc11cdb7">Provider description</a> section.
 </p>
 </div>
 
-<div id="outline-container-orgbd47059" class="outline-5">
-<h5 id="orgbd47059"><span class="section-number-5">3.1.3.1</span> Interface</h5>
+<div id="outline-container-org14afc8a" class="outline-5">
+<h5 id="org14afc8a"><span class="section-number-5">3.1.3.1</span> Interface</h5>
 <div class="outline-text-5" id="text-3-1-3-1">
 <div class="org-src-container">
-<pre class="src src-go" id="org8665727"><span style="color: #F0DFAF; font-weight: bold;">type</span> <span style="color: #7CB8BB;">providers_db</span> <span style="color: #F0DFAF; font-weight: bold;">interface</span> <span style="color: #DCDCCC;">{</span>
+<pre class="src src-go" id="org3b1123f"><span style="color: #F0DFAF; font-weight: bold;">type</span> <span style="color: #7CB8BB;">providers_db</span> <span style="color: #F0DFAF; font-weight: bold;">interface</span> <span style="color: #DCDCCC;">{</span>
     <span style="color: #93E0E3;">add_provider</span><span style="color: #BFEBBF;">(</span><span style="color: #a3e0a0;">provider_description</span><span style="color: #BFEBBF;">)</span> <span style="color: #e0a0bc;">err</span>
     <span style="color: #93E0E3;">upgrade_provider</span><span style="color: #BFEBBF;">(</span><span style="color: #a3e0a0;">from</span> <span style="color: #a3e0a0;">provider_description</span>, <span style="color: #e0a0bc;">to</span> <span style="color: #a3e0a0;">provider_description</span><span style="color: #BFEBBF;">)</span> <span style="color: #e0a0bc;">err</span>
     <span style="color: #93E0E3;">list_providers</span><span style="color: #BFEBBF;">()</span> <span style="color: #BFEBBF;">[]</span><span style="color: #7CB8BB;">provider_description</span>
@@ -596,12 +599,12 @@ Providers database stores all the configurations a provider may need, which is e
 </div>
 </div>
 
-<div id="outline-container-orgbe4c88b" class="outline-3">
-<h3 id="orgbe4c88b"><span class="section-number-3">3.2</span> Dependent services</h3>
+<div id="outline-container-org6a5f3fe" class="outline-3">
+<h3 id="org6a5f3fe"><span class="section-number-3">3.2</span> Dependent services</h3>
 <div class="outline-text-3" id="text-3-2">
 </div>
-<div id="outline-container-org68368c0" class="outline-4">
-<h4 id="org68368c0"><span class="section-number-4">3.2.1</span> Tasks</h4>
+<div id="outline-container-orgae9ba5e" class="outline-4">
+<h4 id="orgae9ba5e"><span class="section-number-4">3.2.1</span> Tasks</h4>
 <div class="outline-text-4" id="text-3-2-1">
 <p>
 Tasks in Papiea's sense is not a process tracking mechanism. In a normal system, a process is started and it is
@@ -617,15 +620,15 @@ fail and re-run again which may later succeed.
 
 <p>
 A task is thus defined as a mechanism to track the progress of change towards a <b>particular</b> spec version. To get a
-clear understanding of the logic underlying this please see <a href="#org68368c0">Tasks</a> section below.
+clear understanding of the logic underlying this please see <a href="#orgae9ba5e">Tasks</a> section below.
 </p>
 </div>
 
-<div id="outline-container-orgd65b78e" class="outline-5">
-<h5 id="orgd65b78e"><span class="section-number-5">3.2.1.1</span> Interface</h5>
+<div id="outline-container-orgcaf0b20" class="outline-5">
+<h5 id="orgcaf0b20"><span class="section-number-5">3.2.1.1</span> Interface</h5>
 <div class="outline-text-5" id="text-3-2-1-1">
 <div class="org-src-container">
-<pre class="src src-go" id="org3db8fdf"><span style="color: #F0DFAF; font-weight: bold;">type</span> <span style="color: #7CB8BB;">task</span> <span style="color: #F0DFAF; font-weight: bold;">interface</span> <span style="color: #DCDCCC;">{</span>
+<pre class="src src-go" id="org428e764"><span style="color: #F0DFAF; font-weight: bold;">type</span> <span style="color: #7CB8BB;">task</span> <span style="color: #F0DFAF; font-weight: bold;">interface</span> <span style="color: #DCDCCC;">{</span>
     <span style="color: #93E0E3;">new_task</span><span style="color: #BFEBBF;">(</span><span style="color: #99bbb4;">metadata</span><span style="color: #BFEBBF;">)</span> <span style="color: #e0a0bc;">task</span>
 <span style="color: #DCDCCC;">}</span>
 </pre>
@@ -635,24 +638,24 @@ clear understanding of the logic underlying this please see <a href="#org68368c0
 </div>
 </div>
 
-<div id="outline-container-org5340cbd" class="outline-3">
-<h3 id="org5340cbd"><span class="section-number-3">3.3</span> Papiea Engine</h3>
+<div id="outline-container-org2062b93" class="outline-3">
+<h3 id="org2062b93"><span class="section-number-3">3.3</span> Papiea Engine</h3>
 <div class="outline-text-3" id="text-3-3">
 </div>
-<div id="outline-container-org916d8f3" class="outline-4">
-<h4 id="org916d8f3"><span class="section-number-4">3.3.1</span> Initialize</h4>
+<div id="outline-container-orgf3a1dfb" class="outline-4">
+<h4 id="orgf3a1dfb"><span class="section-number-4">3.3.1</span> Initialize</h4>
 <div class="outline-text-4" id="text-3-3-1">
 <p>
 When Papiea loads up, it needs to initialize its database connections, load the providers, generate entity
-validators and expose CRUD and <a href="#org99744c0">Procedural</a> APIs.
+validators and expose CRUD and <a href="#org335af2d">Procedural</a> APIs.
 </p>
 </div>
 
-<div id="outline-container-org277f064" class="outline-5">
-<h5 id="org277f064"><span class="section-number-5">3.3.1.1</span> Interface</h5>
+<div id="outline-container-orgb01ab5d" class="outline-5">
+<h5 id="orgb01ab5d"><span class="section-number-5">3.3.1.1</span> Interface</h5>
 <div class="outline-text-5" id="text-3-3-1-1">
 <div class="org-src-container">
-<pre class="src src-go" id="org7398e00"><span style="color: #F0DFAF; font-weight: bold;">type</span> <span style="color: #7CB8BB;">papiea</span> <span style="color: #F0DFAF; font-weight: bold;">struct</span> <span style="color: #DCDCCC;">{</span>
+<pre class="src src-go" id="orgcd3b5c7"><span style="color: #F0DFAF; font-weight: bold;">type</span> <span style="color: #7CB8BB;">papiea</span> <span style="color: #F0DFAF; font-weight: bold;">struct</span> <span style="color: #DCDCCC;">{</span>
     <span style="color: #a7aac0;">api</span> <span style="color: #99bbb4;">rest</span>.<span style="color: #a7aac0;">api</span>
     <span style="color: #99bbb4;">status_db</span>
     <span style="color: #e0a0bc;">spec_db</span>
@@ -667,11 +670,11 @@ validators and expose CRUD and <a href="#org99744c0">Procedural</a> APIs.
 </div>
 </div>
 
-<div id="outline-container-orgbe38cf0" class="outline-5">
-<h5 id="orgbe38cf0"><span class="section-number-5">3.3.1.2</span> Pseudocode</h5>
+<div id="outline-container-orga8146e0" class="outline-5">
+<h5 id="orga8146e0"><span class="section-number-5">3.3.1.2</span> Pseudocode</h5>
 <div class="outline-text-5" id="text-3-3-1-2">
 <div class="org-src-container">
-<pre class="src src-go" id="org012d57a"><span style="color: #5F7F5F;">// </span><span style="color: #7F9F7F;">Initialize papiea engine</span>
+<pre class="src src-go" id="orgacdc016"><span style="color: #5F7F5F;">// </span><span style="color: #7F9F7F;">Initialize papiea engine</span>
 <span style="color: #F0DFAF; font-weight: bold;">func</span> <span style="color: #DCDCCC;">(</span><span style="color: #a7c0b9;">papiea</span> <span style="color: #7CB8BB;">papiea</span><span style="color: #DCDCCC;">)</span> <span style="color: #93E0E3;">initialize</span><span style="color: #DCDCCC;">()</span> <span style="color: #7CB8BB;">papiea</span>, <span style="color: #e0a0bc;">err</span> <span style="color: #DCDCCC;">{</span>
     <span style="color: #5F7F5F;">// </span><span style="color: #7F9F7F;">Load databases</span>
     <span style="color: #a7c0b9;">papiea</span>.<span style="color: #99bbb4;">status_db</span> <span style="color: #5F7F5F;">// </span><span style="color: #7F9F7F;">initialize db connection</span>
@@ -682,166 +685,247 @@ validators and expose CRUD and <a href="#org99744c0">Procedural</a> APIs.
     <span style="color: #a7c0b9;">papiea</span>.<span style="color: #a7aac0;">api</span> = <span style="color: #b6a0e0;">new</span> <span style="color: #99bbb4;">rest</span>.<span style="color: #93E0E3;">api</span><span style="color: #BFEBBF;">()</span>
 
     <span style="color: #5F7F5F;">// </span><span style="color: #7F9F7F;">Start admin facing apis</span>
-    <span style="color: #93E0E3;">admin_facing_apis</span><span style="color: #BFEBBF;">()</span>
+    <span style="color: #a7c0b9;">papiea</span>.<span style="color: #93E0E3;">admin_facing_apis</span><span style="color: #BFEBBF;">()</span>
 
     <span style="color: #5F7F5F;">// </span><span style="color: #7F9F7F;">Start providers facing apis</span>
-    <span style="color: #93E0E3;">provider_facing_api</span><span style="color: #BFEBBF;">()</span>
+    <span style="color: #a7c0b9;">papiea</span>.<span style="color: #93E0E3;">provider_facing_api</span><span style="color: #BFEBBF;">()</span>
 
     <span style="color: #5F7F5F;">// </span><span style="color: #7F9F7F;">Start user facing apis</span>
-    <span style="color: #93E0E3;">user_facing_api</span><span style="color: #BFEBBF;">()</span>
-
+    <span style="color: #a7c0b9;">papiea</span>.<span style="color: #93E0E3;">user_facing_api</span><span style="color: #BFEBBF;">()</span>
 <span style="color: #DCDCCC;">}</span>
 </pre>
 </div>
 </div>
 </div>
 </div>
-<div id="outline-container-orga1dcf7b" class="outline-4">
-<h4 id="orga1dcf7b"><span class="section-number-4">3.3.2</span> Exporting APIs</h4>
+<div id="outline-container-org4d00e02" class="outline-4">
+<h4 id="org4d00e02"><span class="section-number-4">3.3.2</span> Exporting APIs</h4>
 <div class="outline-text-4" id="text-3-3-2">
-</div>
-<div id="outline-container-orgfc617dd" class="outline-5">
-<h5 id="orgfc617dd"><span class="section-number-5">3.3.2.1</span> Interface</h5>
-<div class="outline-text-5" id="text-3-3-2-1">
+<p>
+Papiea provides three tiers of APIs: Admin, Provider and User facing. 
+</p>
+
+<p>
+Here is the interface for registring these apis:
+</p>
+
 <div class="org-src-container">
-<pre class="src src-go" id="org56e3d4e"><span style="color: #F0DFAF; font-weight: bold;">type</span> <span style="color: #7CB8BB;">papiea_apis</span> <span style="color: #F0DFAF; font-weight: bold;">interface</span> <span style="color: #DCDCCC;">{</span>
+<pre class="src src-go" id="orge9208c9"><span style="color: #F0DFAF; font-weight: bold;">type</span> <span style="color: #7CB8BB;">papiea_apis</span> <span style="color: #F0DFAF; font-weight: bold;">interface</span> <span style="color: #DCDCCC;">{</span>
     <span style="color: #93E0E3;">admin_facing_apis</span><span style="color: #BFEBBF;">()</span> <span style="color: #e0a0bc;">err</span>
     <span style="color: #93E0E3;">providers_facing_api</span><span style="color: #BFEBBF;">()</span> <span style="color: #e0a0bc;">err</span>
     <span style="color: #93E0E3;">user_facing_api</span><span style="color: #BFEBBF;">()</span> <span style="color: #e0a0bc;">err</span>
 <span style="color: #DCDCCC;">}</span>
 </pre>
 </div>
+
+<p>
+Next sections go into greater details into each of the apis.
+</p>
+</div>
+<div id="outline-container-org72028a9" class="outline-5">
+<h5 id="org72028a9"><span class="section-number-5">3.3.2.1</span> Admin</h5>
+<div class="outline-text-5" id="text-3-3-2-1">
+<p>
+The admin apis exposed by Papiea are used to manage providers: registrating, upgrading, deleting etc.
+</p>
+</div>
+<div id="outline-container-org367e7de" class="outline-6">
+<h6 id="org367e7de"><span class="section-number-6">3.3.2.1.1</span> Pseudocode</h6>
+<div class="outline-text-6" id="text-3-3-2-1-1">
+<div class="org-src-container">
+<pre class="src src-go" id="org6856785"><span style="color: #F0DFAF; font-weight: bold;">func</span> <span style="color: #DCDCCC;">(</span><span style="color: #a7c0b9;">papiea</span> <span style="color: #7CB8BB;">papiea</span><span style="color: #DCDCCC;">)</span> <span style="color: #93E0E3;">admin_facing_apis</span><span style="color: #DCDCCC;">()</span> <span style="color: #7CB8BB;">err</span> <span style="color: #DCDCCC;">{</span>
+    <span style="color: #a7c0b9;">papiea</span>.<span style="color: #a7aac0;">api</span>.<span style="color: #93E0E3;">post</span><span style="color: #BFEBBF;">(</span><span style="color: #b3c0a7;">papiea_prefix</span>+<span style="color: #CC9393;">"/providers"</span>, <span style="color: #F0DFAF; font-weight: bold;">func</span><span style="color: #D0BF8F;">(</span><span style="color: #7CB8BB;">req</span>, <span style="color: #7CB8BB;">res</span><span style="color: #D0BF8F;">)</span> <span style="color: #D0BF8F;">{</span>
+        <span style="color: #93E0E3;">register_or_upgrade_provider</span><span style="color: #93E0E3;">(</span><span style="color: #a0d6e0;">req</span>.<span style="color: #a3e0a0;">provider_description</span><span style="color: #93E0E3;">)</span>
+    <span style="color: #D0BF8F;">}</span><span style="color: #BFEBBF;">)</span>
+<span style="color: #DCDCCC;">}</span>
+</pre>
+</div>
+</div>
 </div>
 </div>
 
-<div id="outline-container-org2c3c108" class="outline-5">
-<h5 id="org2c3c108"><span class="section-number-5">3.3.2.2</span> Admin</h5>
+<div id="outline-container-org196bb78" class="outline-5">
+<h5 id="org196bb78"><span class="section-number-5">3.3.2.2</span> Providers</h5>
+<div class="outline-text-5" id="text-3-3-2-2">
+<p>
+Provider facing defines the interactions between a provider and the
+intent-engine.  It lets the provider register <a href="#orgc867ff8">Status Fields Signature</a>
+handlers for intentful apis, and procedural apis which will be exposed to
+the user.
+</p>
+
+<p>
+Three apis are exposed:
+</p>
+<ul class="org-ul">
+<li><code>POST "/on/"</code> - gets an <a href="#orgc867ff8">SF Signature</a> and a callback url from the client, and registers it to a component that
+listen on status changes and calls the callback url when a matching status change has taken place</li>
+<li><code>POST "/procedure"</code> -</li>
+<li><code>POST "/status"</code> -</li>
+</ul>
+
+<div class="org-src-container">
+<pre class="src src-go" id="org1ee2659"><span style="color: #5F7F5F;">// </span><span style="color: #7F9F7F;">Registering Provider Facing APIs </span>
+<span style="color: #a7aac0;">api</span>.<span style="color: #93E0E3;">post</span><span style="color: #DCDCCC;">(</span><span style="color: #b3c0a7;">papiea_prefix</span>+<span style="color: #CC9393;">"/on"</span>, <span style="color: #F0DFAF; font-weight: bold;">func</span><span style="color: #BFEBBF;">(</span><span style="color: #7CB8BB;">req</span>, <span style="color: #7CB8BB;">res</span><span style="color: #BFEBBF;">)</span> <span style="color: #BFEBBF;">{</span>
+    <span style="color: #5F7F5F;">// </span><span style="color: #7F9F7F;">callback url is being generated by the papiea provider library and passed on the request</span>
+    <span style="color: #93E0E3;">register_provider_intentful_callback</span><span style="color: #D0BF8F;">(</span><span style="color: #a0d6e0;">req</span>.<span style="color: #a6bb99;">signature</span>, <span style="color: #a0d6e0;">req</span>.<span style="color: #b3c0a7;">callback_url</span><span style="color: #D0BF8F;">)</span>;
+<span style="color: #BFEBBF;">}</span><span style="color: #DCDCCC;">)</span>;
+
+<span style="color: #a7aac0;">api</span>.<span style="color: #93E0E3;">post</span><span style="color: #DCDCCC;">(</span><span style="color: #b3c0a7;">papiea_prefix</span>+<span style="color: #CC9393;">"/procedure"</span>, <span style="color: #F0DFAF; font-weight: bold;">func</span><span style="color: #BFEBBF;">(</span><span style="color: #7CB8BB;">req</span>, <span style="color: #7CB8BB;">res</span><span style="color: #BFEBBF;">)</span> <span style="color: #BFEBBF;">{</span>
+    <span style="color: #5F7F5F;">// </span><span style="color: #7F9F7F;">callback url is being generated by the papiea provider library and passed on the request</span>
+    <span style="color: #93E0E3;">register_provider_procedural_callback</span><span style="color: #D0BF8F;">(</span><span style="color: #a0d6e0;">req</span>.<span style="color: #a6bb99;">signature</span>, <span style="color: #a0d6e0;">req</span>.<span style="color: #b3c0a7;">callback_url</span><span style="color: #D0BF8F;">)</span>;
+<span style="color: #BFEBBF;">}</span><span style="color: #DCDCCC;">)</span>;
+
+<span style="color: #5F7F5F;">// </span><span style="color: #7F9F7F;">Status update is only exposed to providers. Users can't update status</span>
+<span style="color: #a7aac0;">api</span>.<span style="color: #93E0E3;">post</span><span style="color: #DCDCCC;">(</span><span style="color: #a7c0b9;">papiea</span>+<span style="color: #CC9393;">"/status"</span>, <span style="color: #F0DFAF; font-weight: bold;">func</span><span style="color: #BFEBBF;">(</span><span style="color: #7CB8BB;">req</span>, <span style="color: #7CB8BB;">res</span><span style="color: #BFEBBF;">)</span> <span style="color: #BFEBBF;">{</span>
+    <span style="color: #a0d6e0;">res</span>.<span style="color: #93E0E3;">status</span><span style="color: #D0BF8F;">(</span><span style="color: #93E0E3;">update_status_in_db</span><span style="color: #93E0E3;">(</span><span style="color: #a0d6e0;">req</span>.<span style="color: #c0afa7;">uuid</span>, <span style="color: #a0d6e0;">req</span>.<span style="color: #bba699;">status</span><span style="color: #93E0E3;">)</span> ? <span style="color: #c0a7bd;">200</span> : <span style="color: #a6bb99;">400</span><span style="color: #D0BF8F;">)</span>;
+    <span style="color: #F0DFAF; font-weight: bold;">return</span> <span style="color: #a0d6e0;">res</span>;
+<span style="color: #BFEBBF;">}</span><span style="color: #DCDCCC;">)</span>
+
+<span style="color: #F0DFAF; font-weight: bold;">func</span> <span style="color: #93E0E3;">register_provider_intentful_callback</span><span style="color: #DCDCCC;">(</span><span style="color: #7CB8BB;">signature</span>, <span style="color: #7CB8BB;">callback_url</span><span style="color: #DCDCCC;">)</span> <span style="color: #DCDCCC;">{</span>
+<span style="color: #DCDCCC;">}</span>
+
+
+</pre>
 </div>
-<div id="outline-container-orgcbc4c01" class="outline-5">
-<h5 id="orgcbc4c01"><span class="section-number-5">3.3.2.3</span> Providers</h5>
-</div>
-<div id="outline-container-org2ba9118" class="outline-5">
-<h5 id="org2ba9118"><span class="section-number-5">3.3.2.4</span> User</h5>
 </div>
 </div>
-<div id="outline-container-orgfd1ddf7" class="outline-4">
-<h4 id="orgfd1ddf7"><span class="section-number-4">3.3.3</span> Change Spec</h4>
+<div id="outline-container-org3ed2d82" class="outline-5">
+<h5 id="org3ed2d82"><span class="section-number-5">3.3.2.3</span> User</h5>
+<div class="outline-text-5" id="text-3-3-2-3">
+<div class="org-src-container">
+<pre class="src src-go" id="orgf23f76a"><span style="color: #F0DFAF; font-weight: bold;">func</span> <span style="color: #DCDCCC;">(</span><span style="color: #a7c0b9;">papiea</span> <span style="color: #7CB8BB;">papiea</span><span style="color: #DCDCCC;">)</span> <span style="color: #93E0E3;">user_facing_apis</span><span style="color: #DCDCCC;">()</span> <span style="color: #7CB8BB;">err</span> <span style="color: #DCDCCC;">{</span>
+    <span style="color: #a7aac0;">registered_providers</span> = <span style="color: #a7c0b9;">papiea</span>.<span style="color: #b6a0e0;">providers_db</span>.<span style="color: #93E0E3;">list_providers</span><span style="color: #BFEBBF;">()</span>
+
+    <span style="color: #F0DFAF; font-weight: bold;">for</span> <span style="color: #a0d6e0;">_</span>, <span style="color: #e0d0a0;">provider</span> := <span style="color: #F0DFAF; font-weight: bold;">range</span> <span style="color: #a7aac0;">registered_providers</span> <span style="color: #BFEBBF;">{</span>
+        <span style="color: #F0DFAF; font-weight: bold;">for</span> <span style="color: #a0d6e0;">_</span>, <span style="color: #a7c0b9;">kind</span> := <span style="color: #F0DFAF; font-weight: bold;">range</span> <span style="color: #e0d0a0;">provider</span>.<span style="color: #7CB8BB;">kinds</span><span style="color: #D0BF8F;">{</span>
+
+        <span style="color: #D0BF8F;">}</span>
+    <span style="color: #BFEBBF;">}</span>
+<span style="color: #DCDCCC;">}</span>
+</pre>
 </div>
-<div id="outline-container-org690f1a8" class="outline-4">
-<h4 id="org690f1a8"><span class="section-number-4">3.3.4</span> Update Status</h4>
 </div>
-<div id="outline-container-orgfd487c2" class="outline-4">
-<h4 id="orgfd487c2"><span class="section-number-4">3.3.5</span> SFS - Status Fields Signature</h4>
 </div>
-<div id="outline-container-orga919b92" class="outline-4">
-<h4 id="orga919b92"><span class="section-number-4">3.3.6</span> Understanding Deltas</h4>
+</div>
+<div id="outline-container-org761ba9f" class="outline-4">
+<h4 id="org761ba9f"><span class="section-number-4">3.3.3</span> Change Spec</h4>
+</div>
+<div id="outline-container-orgdf9d2f5" class="outline-4">
+<h4 id="orgdf9d2f5"><span class="section-number-4">3.3.4</span> Update Status</h4>
+</div>
+<div id="outline-container-orgc867ff8" class="outline-4">
+<h4 id="orgc867ff8"><span class="section-number-4">3.3.5</span> SFS - Status Fields Signature</h4>
+</div>
+<div id="outline-container-org95c736e" class="outline-4">
+<h4 id="org95c736e"><span class="section-number-4">3.3.6</span> Understanding Deltas</h4>
 <div class="outline-text-4" id="text-3-3-6">
 </div>
-<div id="outline-container-org1b8cb23" class="outline-5">
-<h5 id="org1b8cb23"><span class="section-number-5">3.3.6.1</span> Matching SFSs to Deltas</h5>
+<div id="outline-container-org3ac3a22" class="outline-5">
+<h5 id="org3ac3a22"><span class="section-number-5">3.3.6.1</span> Matching SFSs to Deltas</h5>
 </div>
-<div id="outline-container-orgbfa54db" class="outline-5">
-<h5 id="orgbfa54db"><span class="section-number-5">3.3.6.2</span> Determining Order</h5>
+<div id="outline-container-org9f59645" class="outline-5">
+<h5 id="org9f59645"><span class="section-number-5">3.3.6.2</span> Determining Order</h5>
 </div>
 </div>
-<div id="outline-container-orgc88aba9" class="outline-4">
-<h4 id="orgc88aba9"><span class="section-number-4">3.3.7</span> Provider Invocation</h4>
+<div id="outline-container-org51c0181" class="outline-4">
+<h4 id="org51c0181"><span class="section-number-4">3.3.7</span> Provider Invocation</h4>
 </div>
-<div id="outline-container-org3bdb678" class="outline-4">
-<h4 id="org3bdb678"><span class="section-number-4">3.3.8</span> RBAC</h4>
+<div id="outline-container-orgedafc39" class="outline-4">
+<h4 id="orgedafc39"><span class="section-number-4">3.3.8</span> RBAC</h4>
 </div>
-<div id="outline-container-orgd66fd46" class="outline-4">
-<h4 id="orgd66fd46"><span class="section-number-4">3.3.9</span> Scalability and Reliability</h4>
+<div id="outline-container-org77f3706" class="outline-4">
+<h4 id="org77f3706"><span class="section-number-4">3.3.9</span> Scalability and Reliability</h4>
 <div class="outline-text-4" id="text-3-3-9">
 </div>
-<div id="outline-container-org744a5f3" class="outline-5">
-<h5 id="org744a5f3"><span class="section-number-5">3.3.9.1</span> Leader election</h5>
+<div id="outline-container-org3437531" class="outline-5">
+<h5 id="org3437531"><span class="section-number-5">3.3.9.1</span> Leader election</h5>
 </div>
-<div id="outline-container-org0e7663c" class="outline-5">
-<h5 id="org0e7663c"><span class="section-number-5">3.3.9.2</span> Fault tolerance</h5>
+<div id="outline-container-org083c0c2" class="outline-5">
+<h5 id="org083c0c2"><span class="section-number-5">3.3.9.2</span> Fault tolerance</h5>
 <div class="outline-text-5" id="text-3-3-9-2">
 </div>
-<div id="outline-container-org46f420e" class="outline-6">
-<h6 id="org46f420e"><span class="section-number-6">3.3.9.2.1</span> Dead Papiea Instance</h6>
+<div id="outline-container-org5c4083d" class="outline-6">
+<h6 id="org5c4083d"><span class="section-number-6">3.3.9.2.1</span> Dead Papiea Instance</h6>
 </div>
-<div id="outline-container-orgbaebd0b" class="outline-6">
-<h6 id="orgbaebd0b"><span class="section-number-6">3.3.9.2.2</span> Dead Provider</h6>
-</div>
-</div>
-</div>
-<div id="outline-container-org9b94913" class="outline-4">
-<h4 id="org9b94913"><span class="section-number-4">3.3.10</span> Auditing</h4>
+<div id="outline-container-org514bd77" class="outline-6">
+<h6 id="org514bd77"><span class="section-number-6">3.3.9.2.2</span> Dead Provider</h6>
 </div>
 </div>
-<div id="outline-container-org492165d" class="outline-3">
-<h3 id="org492165d"><span class="section-number-3">3.4</span> Tasks</h3>
+</div>
+<div id="outline-container-org530112e" class="outline-4">
+<h4 id="org530112e"><span class="section-number-4">3.3.10</span> Auditing</h4>
+</div>
+</div>
+<div id="outline-container-org415f96b" class="outline-3">
+<h3 id="org415f96b"><span class="section-number-3">3.4</span> Tasks</h3>
 <div class="outline-text-3" id="text-3-4">
 </div>
-<div id="outline-container-orgc31bcad" class="outline-4">
-<h4 id="orgc31bcad"><span class="section-number-4">3.4.1</span> Tracking change</h4>
+<div id="outline-container-org8895cce" class="outline-4">
+<h4 id="org8895cce"><span class="section-number-4">3.4.1</span> Tracking change</h4>
 </div>
-<div id="outline-container-org529dfb2" class="outline-4">
-<h4 id="org529dfb2"><span class="section-number-4">3.4.2</span> Finished</h4>
+<div id="outline-container-org609d345" class="outline-4">
+<h4 id="org609d345"><span class="section-number-4">3.4.2</span> Finished</h4>
 </div>
 </div>
-<div id="outline-container-orgb66d4a7" class="outline-3">
-<h3 id="orgb66d4a7"><span class="section-number-3">3.5</span> Provider Library</h3>
+<div id="outline-container-org58951fb" class="outline-3">
+<h3 id="org58951fb"><span class="section-number-3">3.5</span> Provider Library</h3>
 <div class="outline-text-3" id="text-3-5">
 </div>
-<div id="outline-container-orga1a2bf6" class="outline-4">
-<h4 id="orga1a2bf6"><span class="section-number-4">3.5.1</span> Define Entity Model</h4>
+<div id="outline-container-orgf5c9bc8" class="outline-4">
+<h4 id="orgf5c9bc8"><span class="section-number-4">3.5.1</span> Define Entity Model</h4>
 <div class="outline-text-4" id="text-3-5-1">
 </div>
-<div id="outline-container-orga5401d4" class="outline-5">
-<h5 id="orga5401d4"><span class="section-number-5">3.5.1.1</span> YAML</h5>
+<div id="outline-container-org04e3f89" class="outline-5">
+<h5 id="org04e3f89"><span class="section-number-5">3.5.1.1</span> YAML</h5>
 </div>
-<div id="outline-container-org311aaac" class="outline-5">
-<h5 id="org311aaac"><span class="section-number-5">3.5.1.2</span> CRUD</h5>
+<div id="outline-container-org17c111e" class="outline-5">
+<h5 id="org17c111e"><span class="section-number-5">3.5.1.2</span> CRUD</h5>
 </div>
 </div>
-<div id="outline-container-orgfb9ee06" class="outline-4">
-<h4 id="orgfb9ee06"><span class="section-number-4">3.5.2</span> Initialize</h4>
+<div id="outline-container-org6a9133f" class="outline-4">
+<h4 id="org6a9133f"><span class="section-number-4">3.5.2</span> Initialize</h4>
 </div>
-<div id="outline-container-orga67c7f6" class="outline-4">
-<h4 id="orga67c7f6"><span class="section-number-4">3.5.3</span> Callback Mechanism</h4>
+<div id="outline-container-orgfb2668c" class="outline-4">
+<h4 id="orgfb2668c"><span class="section-number-4">3.5.3</span> Callback Mechanism</h4>
 </div>
-<div id="outline-container-orgd8897bb" class="outline-4">
-<h4 id="orgd8897bb"><span class="section-number-4">3.5.4</span> Running Effect Validator</h4>
+<div id="outline-container-orgd4064df" class="outline-4">
+<h4 id="orgd4064df"><span class="section-number-4">3.5.4</span> Running Effect Validator</h4>
 </div>
-<div id="outline-container-org900043f" class="outline-4">
-<h4 id="org900043f"><span class="section-number-4">3.5.5</span> Status Changes Handlers</h4>
+<div id="outline-container-orgb5ffd99" class="outline-4">
+<h4 id="orgb5ffd99"><span class="section-number-4">3.5.5</span> Status Changes Handlers</h4>
 <div class="outline-text-4" id="text-3-5-5">
 </div>
-<div id="outline-container-org6a79a01" class="outline-5">
-<h5 id="org6a79a01"><span class="section-number-5">3.5.5.1</span> Registring</h5>
+<div id="outline-container-orgd539a93" class="outline-5">
+<h5 id="orgd539a93"><span class="section-number-5">3.5.5.1</span> Registring</h5>
 </div>
-<div id="outline-container-org0df5142" class="outline-5">
-<h5 id="org0df5142"><span class="section-number-5">3.5.5.2</span> Running using context</h5>
+<div id="outline-container-org13c5d84" class="outline-5">
+<h5 id="org13c5d84"><span class="section-number-5">3.5.5.2</span> Running using context</h5>
 </div>
 </div>
-<div id="outline-container-org99744c0" class="outline-4">
-<h4 id="org99744c0"><span class="section-number-4">3.5.6</span> Procedures</h4>
+<div id="outline-container-org335af2d" class="outline-4">
+<h4 id="org335af2d"><span class="section-number-4">3.5.6</span> Procedures</h4>
 <div class="outline-text-4" id="text-3-5-6">
 </div>
-<div id="outline-container-orgea59d0b" class="outline-5">
-<h5 id="orgea59d0b"><span class="section-number-5">3.5.6.1</span> Registring</h5>
+<div id="outline-container-orgfc24a14" class="outline-5">
+<h5 id="orgfc24a14"><span class="section-number-5">3.5.6.1</span> Registring</h5>
 </div>
-<div id="outline-container-orgf354be4" class="outline-5">
-<h5 id="orgf354be4"><span class="section-number-5">3.5.6.2</span> Running using context</h5>
+<div id="outline-container-org28edf21" class="outline-5">
+<h5 id="org28edf21"><span class="section-number-5">3.5.6.2</span> Running using context</h5>
 </div>
 </div>
-<div id="outline-container-org0e2dd89" class="outline-4">
-<h4 id="org0e2dd89"><span class="section-number-4">3.5.7</span> Example Provider</h4>
+<div id="outline-container-orgad54677" class="outline-4">
+<h4 id="orgad54677"><span class="section-number-4">3.5.7</span> Example Provider</h4>
 </div>
 </div>
 </div>
 
-<div id="outline-container-orgaf1e501" class="outline-2">
-<h2 id="orgaf1e501"><span class="section-number-2">4</span> Full files</h2>
+<div id="outline-container-orgf7d1229" class="outline-2">
+<h2 id="orgf7d1229"><span class="section-number-2">4</span> Full files</h2>
 <div class="outline-text-2" id="text-4">
 </div>
-<div id="outline-container-orgf5f867b" class="outline-3">
-<h3 id="orgf5f867b"><span class="section-number-3">4.1</span> /src/papiea/engine/core.go</h3>
+<div id="outline-container-orgbaa2209" class="outline-3">
+<h3 id="orgbaa2209"><span class="section-number-3">4.1</span> /src/papiea/engine/core.go</h3>
 <div class="outline-text-3" id="text-4-1">
 <div class="org-src-container">
 <pre class="src src-go"><span style="color: #5F7F5F;">// </span><span style="color: #7F9F7F;">all our structs and interfaces</span>
@@ -902,13 +986,12 @@ validators and expose CRUD and <a href="#org99744c0">Procedural</a> APIs.
 <span style="color: #F0DFAF; font-weight: bold;">type</span> <span style="color: #7CB8BB;">papiea-init</span> <span style="color: #F0DFAF; font-weight: bold;">interface</span> <span style="color: #DCDCCC;">{</span>
     <span style="color: #93E0E3;">initialize</span><span style="color: #BFEBBF;">()</span> <span style="color: #a7c0b9;">papiea</span>, <span style="color: #e0a0bc;">err</span>
 <span style="color: #DCDCCC;">}</span>
-
 </pre>
 </div>
 </div>
 </div>
-<div id="outline-container-orgcc298fa" class="outline-3">
-<h3 id="orgcc298fa"><span class="section-number-3">4.2</span> /src/papiea/engine/server.go</h3>
+<div id="outline-container-org5d62728" class="outline-3">
+<h3 id="org5d62728"><span class="section-number-3">4.2</span> /src/papiea/engine/server.go</h3>
 <div class="outline-text-3" id="text-4-2">
 <div class="org-src-container">
 <pre class="src src-go">#<span style="color: #F0DFAF; font-weight: bold;">import</span> <span style="color: #a7c0b9;">stuff</span>
@@ -925,24 +1008,32 @@ validators and expose CRUD and <a href="#org99744c0">Procedural</a> APIs.
     <span style="color: #a7c0b9;">papiea</span>.<span style="color: #a7aac0;">api</span> = <span style="color: #b6a0e0;">new</span> <span style="color: #99bbb4;">rest</span>.<span style="color: #93E0E3;">api</span><span style="color: #BFEBBF;">()</span>
 
     <span style="color: #5F7F5F;">// </span><span style="color: #7F9F7F;">Start admin facing apis</span>
-    <span style="color: #93E0E3;">admin_facing_apis</span><span style="color: #BFEBBF;">()</span>
+    <span style="color: #a7c0b9;">papiea</span>.<span style="color: #93E0E3;">admin_facing_apis</span><span style="color: #BFEBBF;">()</span>
 
     <span style="color: #5F7F5F;">// </span><span style="color: #7F9F7F;">Start providers facing apis</span>
-    <span style="color: #93E0E3;">provider_facing_api</span><span style="color: #BFEBBF;">()</span>
+    <span style="color: #a7c0b9;">papiea</span>.<span style="color: #93E0E3;">provider_facing_api</span><span style="color: #BFEBBF;">()</span>
 
     <span style="color: #5F7F5F;">// </span><span style="color: #7F9F7F;">Start user facing apis</span>
-    <span style="color: #93E0E3;">user_facing_api</span><span style="color: #BFEBBF;">()</span>
-
+    <span style="color: #a7c0b9;">papiea</span>.<span style="color: #93E0E3;">user_facing_api</span><span style="color: #BFEBBF;">()</span>
 <span style="color: #DCDCCC;">}</span>
 </pre>
 </div>
 </div>
 </div>
 </div>
+
+<div id="outline-container-org0ff756d" class="outline-2">
+<h2 id="org0ff756d"><span class="section-number-2">5</span> Last notes</h2>
+<div class="outline-text-2" id="text-5">
+<ul class="org-ul">
+<li>I followed <a href="http://ehneilsen.net/notebook/orgExamples/org-examples.html">this tutorial</a> for generating the source files through this org-mode.</li>
+</ul>
+</div>
+</div>
 </div>
 <div id="postamble" class="status">
 <p class="author">Author: Shlomi Vaknin</p>
-<p class="date">Created: 2018-10-16 Tue 15:35</p>
+<p class="date">Created: 2018-10-16 Tue 16:16</p>
 <p class="validation"><a href="http://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>

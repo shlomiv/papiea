@@ -12,12 +12,11 @@ func (papiea papiea) initialize() papiea, err {
     papiea.api = new rest.api()
 
     // Start admin facing apis
-    admin_facing_apis()
+    papiea.admin_facing_apis()
 
     // Start providers facing apis
-    provider_facing_api()
+    papiea.provider_facing_api()
 
     // Start user facing apis
-    user_facing_api()
-
+    papiea.user_facing_api()
 }

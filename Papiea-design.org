@@ -1,0 +1,431 @@
+#+Title: Papiea Design
+#+SETUPFILE: /Users/shlomi.vaknin/work/org-html-themes/setup/theme-readtheorg.setup
+# Export 5 levels as collapsable blocks
+#+Options: H:5
+
+#+HTML_HEAD: <style>pre.src{background:#343131;color:white;} </style>
+#+HTML_HEAD: <style>#content{max-width:70%;} </style>
+
+Papiea is aimed to be a reference implementation to a formal general purpose intent engine. 
+I followed [[http://ehneilsen.net/notebook/orgExamples/org-examples.html][this tutorial]] for making this document through org-mode.
+
+* Definitions
+  - _Spec_ - a map containing the desired state of a particular entity
+  - _Status_ - a map containing the current statue of a particular entity. Always a superset of Spec
+  - _Metadata_ - Information of the identity of the entity. Must contain at least =uuid=, =kind= and =spec_version=
+  - _Spec version_ - an integer representing the version of the current spec. Updates to spec will =CAS= on this field
+  - _Entity_ - The tuple =[Metadata, Spec, Status]=
+  - _Kind_ - The "type" of the entity
+  - _Diff_ - A difference between the current Status and the most recent desired Spec
+  - _Providers_ - Pluggable handlers that can transform an entity from its current state to its desired state
+  - _Tasks_ - a mechanism for following the progress of resolving Diffs
+* Data Structures
+** Spec
+   Status and Spec are both unstructured, and may change at runtime (by changing providers). Go is a little afraid of
+   unstructured types, so we have to be very gentle. Here is an example of how this could be achieved.
+   
+   First, lets declare an untyped json type:
+
+   #+Name: untyped-json-type
+   #+BEGIN_SRC go
+   type untyped_json map[string]interface{}
+   #+END_SRC
+
+   Now, spec is simply an entyped_json
+   #+Name: spec-struct
+   #+BEGIN_SRC go
+   type spec untyped_json
+   #+END_SRC
+** Status
+   For now its strictly untyped, but there may be a better way to denote the fact that status is a super-set of spec
+
+   #+Name: status-struct
+   #+BEGIN_SRC go
+   type status untyped_json
+   #+END_SRC
+
+** Metadata
+   Metadata has a bit more structured then spec and status, it must have at least the following items:
+   - =uuid= - a unique id representing the identity of this entity
+   - =kind= - the "type" of this entity
+   - =spec_version= - the most up-to-date revision of the spec associated with this entity
+   #+Name: metadata-struct
+   #+BEGIN_SRC go
+     type metadata struct {
+         uuid uuid
+         kind string
+         spec_version int
+     }
+   #+END_SRC
+** Kind
+   A Kind of an entity is the entity's type. It denotes the valid fields for spec and status for an instance of this kind.
+
+   #+Name: kind-struct
+   #+BEGIN_SRC go
+     type kind struct {
+         name string
+         entity_structure untyped_json
+     }
+   #+END_SRC
+** Provider description
+   A Provider is a plugglable set of handlers, which is responsible for converging a certain entity kind. Its handlers
+   are responsible to move the entity from a current status to an intended spec.
+   #+Name: provider-desc-struct
+   #+BEGIN_SRC go
+     type provider_description struct {
+         uuid uuid
+         version int
+         uri string
+         kinds []kind
+     }
+   #+END_SRC
+
+   It has a unique identifier and a version, as well as a uri that is a logical name that will be used to access an
+   instance of the provider (since there may be multiple instances with a load-balancer). For example, a uri could be:
+   =https://nunet.nutanix.com/hosts=. A provider may support multiple kinds but we believe it is best practice to have
+   one provider per kind.
+
+* Modules
+** Databases
+   #+BEGIN_note
+   *Multitenancy*: All databases are aware of tenants. It may be implemented as a column or attribute of a table or
+   document, or as a different database with a different connect uri.
+   #+END_note
+   
+*** Status
+    Status database will be a mapping from a metadata (namely, =uuid= and =kind=) to a status json document. 
+
+    It may be implemented using a very fast in-memory database, since it may require frequent access depending on an
+    entity's kind requirement. It is not required to have this database persisted to disk, since its content can always
+    be reaquired by the providers, by asking all the providers to list all the real statuses of all objects known to
+    them.
+
+    Each provider for a kind will supply its entity's structure in its YAML.
+    
+**** Interface
+    #+Name: status-db-interface
+    #+BEGIN_SRC go
+      type status_db interface {
+          update_status(metadata, status) err
+          get_status(metadata) status, err
+          delete_status(metadata) err
+          cleanup() err
+      }
+    #+END_SRC
+
+*** Spec
+    Unlike status which can always be fetched from the providers, spec is a record of the user's intent and must be
+    persisted to disk. It must also be scalable and highly available. It must have a clear notion of CAS
+    (compare-and-set/swap) in order to atomically update spec values.
+
+**** Interface
+    #+Name: spec-db-interface
+    #+BEGIN_SRC go
+      type spec_db interface {
+          cas_spec_change(metadata, status) task, err
+          get_latest_spec(metadata) metadata, spec, err
+          cleanup() err
+      }
+    #+END_SRC
+
+*** Providers
+    Providers database stores all the configurations a provider may need, which is encoded in [[*Provider description][Provider description]] section.
+
+**** Interface
+    #+Name: providers-db-interface
+    #+BEGIN_SRC go
+      type providers_db interface {
+          add_provider(provider_description) err
+          upgrade_provider(from provider_description, to provider_description) err
+          list_providers() []provider_description
+          delete_provider(provider_uuid) err
+      }
+    #+END_SRC
+
+** Dependent services
+*** Tasks
+    Tasks in Papiea's sense is not a process tracking mechanism. In a normal system, a process is started and it is
+    assigned to a task which reflects the status of the running process, whether it succeeds or fails, return values or
+    error messages etc.
+
+    Papiea does not start a particular thread or process to converge a =Diff=. It may be converge by user interaction
+    (such as changing the real underlying resource) or by invoking a provider's function. Such a function may succeed or
+    fail and re-run again which may later succeed.
+
+    A task is thus defined as a mechanism to track the progress of change towards a *particular* spec version. To get a
+    clear understanding of the logic underlying this please see [[*Tasks][Tasks]] section below.
+
+**** Interface
+     #+Name: task-interface
+     #+BEGIN_SRC go
+       type task interface {
+           new_task(metadata) task
+       }
+     #+END_SRC
+    
+** Papiea Engine
+*** Initialize
+    When Papiea loads up, it needs to initialize its database connections, load the providers, generate entity
+    validators and expose CRUD and [[*Procedures][Procedural]] APIs.
+   
+**** Interface    
+    #+Name: initialize-papiea
+    #+BEGIN_SRC go
+      type papiea struct {
+          api rest.api
+          status_db
+          spec_db
+          providers_db
+      }
+
+      type papiea-init interface {
+          initialize() papiea, err
+      }
+    #+END_SRC
+
+**** Pseudocode
+     #+Name: initialize-papiea-pc
+     #+BEGIN_SRC go
+       // Initialize papiea engine
+       func (papiea papiea) initialize() papiea, err {
+           // Load databases
+           papiea.status_db // initialize db connection
+           papiea.spec_db // initialize db connection
+           papiea.providers_db // initialize db connection
+
+           // Sets up the rest api engine
+           papiea.api = new rest.api()
+
+           // Start admin facing apis
+           admin_facing_apis()
+
+           // Start providers facing apis
+           provider_facing_api()
+
+           // Start user facing apis
+           user_facing_api()
+
+       }
+     #+END_SRC
+*** Exporting APIs
+**** Interface
+    #+Name: exporting-apis
+    #+BEGIN_SRC go
+      type papiea_apis interface {
+          admin_facing_apis() err
+          providers_facing_api() err
+          user_facing_api() err
+      }
+    #+END_SRC
+    
+**** Admin
+**** Providers
+**** User
+*** Change Spec
+*** Update Status
+*** SFS - Status Fields Signature
+*** Understanding Deltas
+**** Matching SFSs to Deltas
+**** Determining Order
+*** Provider Invocation
+*** RBAC
+*** Scalability and Reliability
+**** Leader election
+**** Fault tolerance
+***** Dead Papiea Instance
+***** Dead Provider
+*** Auditing
+** Tasks
+*** Tracking change
+*** Finished
+** Provider Library
+*** Define Entity Model
+**** YAML
+**** CRUD
+*** Initialize
+*** Callback Mechanism
+*** Running Effect Validator
+*** Status Changes Handlers
+**** Registring
+**** Running using context
+*** Procedures
+**** Registring
+**** Running using context
+*** Example Provider
+
+* Papiea 
+**  Definitions:
+  
+  - _Spec_ - a map containing the desired state of a particular entity
+  - _Status_ - a map containing the current statue of a particular entity. Always a superset of Spec
+  - _Diff_ - A difference between the current Status and the most recent desired Spec
+  - _Providers_ - Pluggable handlers that can transform an entity from its current state to its desired state
+  - _Tasks_ - a mechanism for following the progress of resolving Diffs
+** Updating Status
+   Status is updated immediately in a db called =status_db=. Status is updated per entity (we may support batched
+   operations but that would only be an optimization). Once status is updated, all listeners on that entity will fire an
+   event. See [[*Callback mechanism][Callback mechanism]].
+   
+   #+Name: Status-update
+   #+BEGIN_SRC go
+     func update_status_in_db(uuid, status) err {
+         err =  status_db.update(uuid, status);
+         notify_relevant_listeners(uuid)
+         return err
+     }
+   #+END_SRC
+
+** Updating Spec
+   Updating spec is a little more involved. A Spec change must be successfully CAS'ed in for it to take effect. However,
+   a =Task= is always generated. If a Spec change could not be CAS'ed, the task will fail with a =CAS Error=
+   message. See [[*Tasks][Tasks]] for more details.
+
+   #+Name: Spec-change
+   #+BEGIN_SRC go
+     func update_spec(metadata, spec) task,err {
+         // creates a task
+         task = task_client.new_task(metadata, spec)
+         // tries to CAS in the spec
+         if (old_spec = cas(metadata, spec)) {
+             status_fields_to_change = compute_delta(spec, status)
+             task.update_status_fields_to_change(status_fields_to_change)
+             go attempt_to_process_task(task)
+         }
+         else {
+             task.fail("CAS Error");
+         }
+         return task;
+     }
+   #+END_SRC
+
+** Providers
+   Providers are the individual handlers that gets tasks done. This section
+   describes the backend of the providers, meaning the way they work from the
+   Papiea server. Please see [[*Client Provider][Client Provider]] section for details about writing a
+   new provider.
+   
+*** Registration and Upgrade
+    Since providers are dynamic in nature, there need to be a mechanism of
+    adding, upgrading and removing providers. A =provider_db= will store all
+    providers metadata and configuration.
+    
+    To register a new provider, it must be added to the provider db, and all the
+    endpoints this provider exposes are to be generated.
+    #+Name: register-new-provider
+    #+BEGIN_SRC go
+      func register_or_upgrade_provider(provider_description) {
+          provider_db.upsert(provider_description);
+          
+          // We could make this more granular, and we should!
+          reregister_all_providers();
+      }
+    #+END_SRC
+
+    When upgrading a provider, we must put the provider in a stale state when it does not accept new 
+    #+Name: register-provider-detailed
+    #+BEGIN_SRC go
+      func upgrade_provider(provider_description_from, provider_description_to) {
+          provider_db.update(provider_description_from, dont_accept_new_work);
+          provider_db.upsert(provider_description_to);
+	
+          // When no more tasks are happening on old provider shut it down
+          when_done(provider_description_from, effect(provider) {provider.terminate();})
+	      
+          // We could make this more granular, and we should!
+          reregister_all_providers()
+      }
+    #+END_SRC
+    
+    Once we update the providers, we need to reexport 
+    #+Name: re-register-all-providers
+    #+BEGIN_SRC go
+      func reregister_all_providers() {
+          // Regenerate the new swagger based on updated provider_db 
+          Papiea.generate_swagger();
+
+          // Will remove all endpoints by the old provider and
+          // register all endpoints by the new provider
+
+          // This code removes everything and reregisters everything,
+          // but we could be more specific in the real case.
+          Papiea.stop_main_server(api);
+          Papiea.start_main_server(api); 
+      }
+    #+END_SRC
+
+
+*** Deletion
+
+** Rest API
+   The system will have a rest api engine that could define routes at runtime
+
+   #+Name: define-rest-api
+   #+BEGIN_SRC go
+     api = new rest.api
+   #+END_SRC
+
+*** Admin facing APIs
+    Admin apis are apis that will manage the intent engine. Such as registering a provider:
+    #+Name: admin-facing-apis
+    #+BEGIN_SRC go
+      func admin_facing_api(api) {
+          api.post(papiea_prefix+"/providers", func(req, res) {
+              register_or_upgrade_provider(req.provider_description);
+          });
+      }
+    #+END_SRC
+** Callback mechanism                                                   :TBD:
+   #+Name: callback-mechanism
+   #+BEGIN_SRC go
+     func notify_relevant_listeners(uuid) err {
+     }
+   #+END_SRC
+
+** Tasks
+   To process a task we will need to get the most up-to-date matching functions. These functions will be sorted by the
+   topological order manually imposed by the provider at registration time. Updates to the task will be done by the
+   executing function. 
+   
+   #+Name: Process-tasks
+   #+BEGIN_SRC go
+     func attempt_to_process_task(task) err {
+         status = get_status_from_db(task.metadata)
+         spec   = get_spec_from_db(task.metadata)
+         fields = task.get_status_fields_to_change
+	
+         // We may store the attempts count, to be able to TTL the number of
+         // execution attempts
+         task.attempts.inc()
+	
+         // Get the provider relevant to our kind
+         provider = get_provider(task.metadata)
+	
+         // Get the matching functions based on the fields we are listening on
+         // and the current status
+         provider_functions = get_matching_functions(fields, status)
+         async invoke_function(provider, exec_strategy, provider_functions)
+     }
+   #+END_SRC
+
+   In order to give full control to the provider, a provider may register just a single function that handles all diffs
+   
+   
+* Client Provider
+
+* Full files
+** /papiea/engine/server.go
+  #+BEGIN_SRC go :noweb yes :tangle papiea/engine/server.go :exports code :mkdirp yes
+    // First, lets define the rest-api route handler
+    <<define-rest-api>>
+
+    // thei diffing and callback mechanism
+    <<callback-mechanism>>
+
+    // Status is being updated
+    <<Status-update>>
+
+    // APIS
+    // We need to handle admin apis for manging providers: Adding, upgrading and removing them.
+    <<register-provider-detailed>>
+   #+END_SRC
+   

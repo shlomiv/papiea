@@ -253,179 +253,42 @@ I followed [[http://ehneilsen.net/notebook/orgExamples/org-examples.html][this t
 **** Running using context
 *** Example Provider
 
-* Papiea 
-**  Definitions:
-  
-  - _Spec_ - a map containing the desired state of a particular entity
-  - _Status_ - a map containing the current statue of a particular entity. Always a superset of Spec
-  - _Diff_ - A difference between the current Status and the most recent desired Spec
-  - _Providers_ - Pluggable handlers that can transform an entity from its current state to its desired state
-  - _Tasks_ - a mechanism for following the progress of resolving Diffs
-** Updating Status
-   Status is updated immediately in a db called =status_db=. Status is updated per entity (we may support batched
-   operations but that would only be an optimization). Once status is updated, all listeners on that entity will fire an
-   event. See [[*Callback mechanism][Callback mechanism]].
-   
-   #+Name: Status-update
-   #+BEGIN_SRC go
-     func update_status_in_db(uuid, status) err {
-         err =  status_db.update(uuid, status);
-         notify_relevant_listeners(uuid)
-         return err
-     }
-   #+END_SRC
-
-** Updating Spec
-   Updating spec is a little more involved. A Spec change must be successfully CAS'ed in for it to take effect. However,
-   a =Task= is always generated. If a Spec change could not be CAS'ed, the task will fail with a =CAS Error=
-   message. See [[*Tasks][Tasks]] for more details.
-
-   #+Name: Spec-change
-   #+BEGIN_SRC go
-     func update_spec(metadata, spec) task,err {
-         // creates a task
-         task = task_client.new_task(metadata, spec)
-         // tries to CAS in the spec
-         if (old_spec = cas(metadata, spec)) {
-             status_fields_to_change = compute_delta(spec, status)
-             task.update_status_fields_to_change(status_fields_to_change)
-             go attempt_to_process_task(task)
-         }
-         else {
-             task.fail("CAS Error");
-         }
-         return task;
-     }
-   #+END_SRC
-
-** Providers
-   Providers are the individual handlers that gets tasks done. This section
-   describes the backend of the providers, meaning the way they work from the
-   Papiea server. Please see [[*Client Provider][Client Provider]] section for details about writing a
-   new provider.
-   
-*** Registration and Upgrade
-    Since providers are dynamic in nature, there need to be a mechanism of
-    adding, upgrading and removing providers. A =provider_db= will store all
-    providers metadata and configuration.
-    
-    To register a new provider, it must be added to the provider db, and all the
-    endpoints this provider exposes are to be generated.
-    #+Name: register-new-provider
-    #+BEGIN_SRC go
-      func register_or_upgrade_provider(provider_description) {
-          provider_db.upsert(provider_description);
-          
-          // We could make this more granular, and we should!
-          reregister_all_providers();
-      }
-    #+END_SRC
-
-    When upgrading a provider, we must put the provider in a stale state when it does not accept new 
-    #+Name: register-provider-detailed
-    #+BEGIN_SRC go
-      func upgrade_provider(provider_description_from, provider_description_to) {
-          provider_db.update(provider_description_from, dont_accept_new_work);
-          provider_db.upsert(provider_description_to);
-	
-          // When no more tasks are happening on old provider shut it down
-          when_done(provider_description_from, effect(provider) {provider.terminate();})
-	      
-          // We could make this more granular, and we should!
-          reregister_all_providers()
-      }
-    #+END_SRC
-    
-    Once we update the providers, we need to reexport 
-    #+Name: re-register-all-providers
-    #+BEGIN_SRC go
-      func reregister_all_providers() {
-          // Regenerate the new swagger based on updated provider_db 
-          Papiea.generate_swagger();
-
-          // Will remove all endpoints by the old provider and
-          // register all endpoints by the new provider
-
-          // This code removes everything and reregisters everything,
-          // but we could be more specific in the real case.
-          Papiea.stop_main_server(api);
-          Papiea.start_main_server(api); 
-      }
-    #+END_SRC
-
-
-*** Deletion
-
-** Rest API
-   The system will have a rest api engine that could define routes at runtime
-
-   #+Name: define-rest-api
-   #+BEGIN_SRC go
-     api = new rest.api
-   #+END_SRC
-
-*** Admin facing APIs
-    Admin apis are apis that will manage the intent engine. Such as registering a provider:
-    #+Name: admin-facing-apis
-    #+BEGIN_SRC go
-      func admin_facing_api(api) {
-          api.post(papiea_prefix+"/providers", func(req, res) {
-              register_or_upgrade_provider(req.provider_description);
-          });
-      }
-    #+END_SRC
-** Callback mechanism                                                   :TBD:
-   #+Name: callback-mechanism
-   #+BEGIN_SRC go
-     func notify_relevant_listeners(uuid) err {
-     }
-   #+END_SRC
-
-** Tasks
-   To process a task we will need to get the most up-to-date matching functions. These functions will be sorted by the
-   topological order manually imposed by the provider at registration time. Updates to the task will be done by the
-   executing function. 
-   
-   #+Name: Process-tasks
-   #+BEGIN_SRC go
-     func attempt_to_process_task(task) err {
-         status = get_status_from_db(task.metadata)
-         spec   = get_spec_from_db(task.metadata)
-         fields = task.get_status_fields_to_change
-	
-         // We may store the attempts count, to be able to TTL the number of
-         // execution attempts
-         task.attempts.inc()
-	
-         // Get the provider relevant to our kind
-         provider = get_provider(task.metadata)
-	
-         // Get the matching functions based on the fields we are listening on
-         // and the current status
-         provider_functions = get_matching_functions(fields, status)
-         async invoke_function(provider, exec_strategy, provider_functions)
-     }
-   #+END_SRC
-
-   In order to give full control to the provider, a provider may register just a single function that handles all diffs
-   
-   
-* Client Provider
-
 * Full files
-** /papiea/engine/server.go
-  #+BEGIN_SRC go :noweb yes :tangle papiea/engine/server.go :exports code :mkdirp yes
-    // First, lets define the rest-api route handler
-    <<define-rest-api>>
+** /src/papiea/engine/core.go
+   #+BEGIN_SRC go :noweb yes :tangle src/papiea/engine/core.go :exports code :mkdirp yes
+   // all our structs and interfaces
+   
+   // Define our structs and types
 
-    // thei diffing and callback mechanism
-    <<callback-mechanism>>
+   // Untyped json for now. We should probably use some better library for that
+   <<untyped-json-type>>
 
-    // Status is being updated
-    <<Status-update>>
+   // Spec, status and metadata
+   <<spec-struct>>
+   <<status-struct>>
+   <<metadata-struct>>
+   
+   // Kind and providers
+   <<kind-struct>>
+   <<provider-desc-struct>>
 
-    // APIS
-    // We need to handle admin apis for manging providers: Adding, upgrading and removing them.
-    <<register-provider-detailed>>
+   // Define our database interfaces
+   <<stataus-db-interface>>
+   <<spec-db-interface>>
+   <<providers-db-interface>>
+   
+   // Services interfaces
+   <<task-interface>>
+
+   // Papiea
+   <<initialize-papiea>>
+   
    #+END_SRC
+** /src/papiea/engine/server.go
+  #+BEGIN_SRC go :noweb yes :tangle src/papiea/engine/server.go :exports code :mkdirp yes
+    #import stuff
+
+    // Initialize Papiea
+    <<initialize-papiea-pc>>
+  #+END_SRC
    

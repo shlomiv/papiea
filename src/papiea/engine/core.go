@@ -45,6 +45,23 @@ type task interface {
     new_task(metadata) task
 }
 
+// Provider APIs signatures
+// Status Fields Signatures
+type sfs_signature struct {
+    signature string
+    parsed_signature_ast ...
+}
+
+// Procedure Signatures
+type procedure_signature struct { signature string
+    parsed_signature_ast ...  }
+
+// Provider handlers
+type provider_callbacks interface {
+    register_intentful_callback(sig sfs_signature, callback_url string) err
+    register_procedural_callback(sig sfs_signature, callback_url string) err
+}
+
 // Papiea
 type papiea struct {
     api rest.api

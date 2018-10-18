@@ -5,7 +5,7 @@
 #+HTML_HEAD: <style>pre.src{background:#343131;color:white;} </style>
 #+HTML_HEAD: <style>#content{max-width:70%;} </style>
 
-Papiea is aimed to be a reference implementation to a formal general purpose intent engine. 
+Papiea is aimed to be a reference implementation of a formal general purpose intent engine. 
 
 * Definitions
   - _Spec_ - a map containing the desired state of a particular entity
@@ -29,7 +29,7 @@ Papiea is aimed to be a reference implementation to a formal general purpose int
    type untyped_json map[string]interface{}
    #+END_SRC
 
-   Now, spec is simply an entyped_json
+   Now, spec is simply an untyped_json
    #+Name: spec-struct
    #+BEGIN_SRC go
    type spec untyped_json
@@ -43,7 +43,7 @@ Papiea is aimed to be a reference implementation to a formal general purpose int
    #+END_SRC
 
 ** Metadata
-   Metadata has a bit more structured then spec and status, it must have at least the following items:
+   Metadata has a bit more structure than spec and status, it must have at least the following items:
    - =uuid= - a unique id representing the identity of this entity
    - =kind= - the "type" of this entity
    - =spec_version= - the most up-to-date revision of the spec associated with this entity
@@ -53,6 +53,10 @@ Papiea is aimed to be a reference implementation to a formal general purpose int
          uuid uuid
          kind string
          spec_version int
+         creation_time time
+         deletion_time time
+         annotation string
+         is_spec_disabled bool
      }
    #+END_SRC
 ** Kind
@@ -91,11 +95,11 @@ Papiea is aimed to be a reference implementation to a formal general purpose int
    #+END_note
    
 *** Status
-    Status database will be a mapping from a metadata (namely, =uuid= and =kind=) to a status json document. 
+    Status database will be a mapping from a metadata (namely, =uuid= and =kind=) to a status json document.
 
     It may be implemented using a very fast in-memory database, since it may require frequent access depending on an
     entity's kind requirement. It is not required to have this database persisted to disk, since its content can always
-    be reaquired by the providers, by asking all the providers to list all the real statuses of all objects known to
+    be reacquired by the providers, by asking all the providers to list all the real statuses of all objects known to
     them.
 
     Each provider for a kind will supply its entity's structure in its YAML.
@@ -205,14 +209,15 @@ Papiea is aimed to be a reference implementation to a formal general purpose int
        }
      #+END_SRC
 *** Exporting APIs
-    Papiea provides three tiers of APIs: Admin, Provider and User facing.
+    Papiea provides three tiers of APIs: Admin, Provider and User facing. 
 
-    The struct that we need for the api will maintain an embedded =papiea= struct, and will add a
-    =prefix=. Prefix is the http prefix for papiea api server, such as "/papiea/api/v1".
+    The struct that we need for the api will maintain an embedded =papiea=
+    struct, and will add a =prefix=. Prefix is the http prefix for papiea api
+    server, such as "/papiea/api/v1".
 
     #+Name: papiea-api-struct
     #+BEGIN_SRC go
-      type papiea_api_ctx struct {
+      type apis struct {
           *papiea
           prefix string
       }
@@ -235,7 +240,7 @@ Papiea is aimed to be a reference implementation to a formal general purpose int
 ***** Pseudocode     
       #+Name: admin-api-pc
       #+BEGIN_SRC go
-        func (papiea_apis papiea_api_ctx) admin_facing_apis() err {
+        func (papiea_apis apis) admin_facing_apis() err {
             papiea_apis.api.post(papiea_apis.prefix+"/providers", func(req, res) {
                 register_or_upgrade_provider(req.provider_description)
             })
@@ -249,20 +254,14 @@ Papiea is aimed to be a reference implementation to a formal general purpose int
      the user.
 
      Three apis are exposed:
-     - =POST "/on"= - recieves an [[*SFS - Status Fields Signature][SF Signature]] and a callback url from the client. Registers the
-       callback url to a component that listen on status changes and calls the callback url when a
-       matching status change has taken place
-     - =POST "/procedure"= - receives a [[*Procedures Signatures][Procedures Signatures]] and a callback url from the
-       client. The signature is then used to expose a user facing api. When the user uses this api
-       endpoint, the callback will get called
-     - =POST "/status"= - sends a voluntary status update regarding an entity. Recieves a context
-       which identifies the context in which this was called, the metadata of entity and its new
-       status. This functionality is only exposed to the providers, since they are the only view
-       Papiea has of the real world. 
+     - =POST "/on/"= - gets an [[*SFS - Status Fields Signature][SF Signature]] and a callback url from the client, and registers it to a component that
+       listen on status changes and calls the callback url when a matching status change has taken place
+     - =POST "/procedure"= - 
+     - =POST "/status"= -
 
      #+Name: provider-api-pc
      #+BEGIN_SRC go
-       func (papiea_apis papiea_api_ctx) provider_facing_api() err {
+       func (papiea_apis papiea_apis) provider_facing_api() err {
            // Registering Provider Facing APIs
            api = papiea_apis.api
            papiea_prefix = papiea_apis.prefix
@@ -302,173 +301,11 @@ Papiea is aimed to be a reference implementation to a formal general purpose int
      #+END_SRC
 *** Change Spec
 *** Update Status
-*** Procedures Signatures
 *** SFS - Status Fields Signature
-    When a spec change is submitted and successfully CAS'ed in, it is evaluated against the current
-    status. The difference between this spec change and current status yields a Diff which is then
-    evaluated using =Status Fields Signatures=. An SFS describes what changes in status needs to
-    happen in order for the Diff to converge.
-
-    This is a crucial element of the intent engine formalism, since it describes a way for the
-    engine to "infer" which procedural actions are to be taken to complete an intentful
-    specification.
-
-    Here are a few examples of the proposed SFS syntax:
-    1. =hosts.+{metadata.uuid}= - Matches when a new host entity (identified by =metadata.uuid=) has
-       been added to the system. Typically this will the signature of a "create entity"
-       function. 
-
-    2. =hosts.-{metadata.uuid}= - Similar to the previous example, but this time the entity has been removed.
-       
-    3. =hosts.{metadata.uuid}.name= - Matches when an existing host is asking to rename. See the following example:
-       #+BEGIN_EXAMPLE
-         current host entity : {metadata {uuid "1234"
-                                          kind "host"
-                                          spec_version 3}
-                                status   {name "a"
-                                          network  [{mac "1.1.1.1.1"
-                                                     cidr "10.0.0.0"
-                                                     prefix_length 24}]}
-                                spec     {name "a"
-                                          network  [{mac "1.1.1.1.1"
-                                                     cidr "10.0.0.0"
-                                                     prefix_length 24}]}}
-
-         new spec change: {metadata {uuid "1234"
-                                          kind "host"
-                                          spec_version 4}
-                           spec     {name "new name"                    << DIFF
-                                     network  [{mac "1.1.1.1.1"
-                                                cidr "10.0.0.0"
-                                                prefix_length 24}]}}
-       #+END_EXAMPLE
-
-       In this example, after successfully CASing the new spec, the entity would look like this:
-       #+BEGIN_EXAMPLE
-         current host entity : {metadata {uuid "1234"
-                                          kind "host"
-                                          spec_version 4}               << Updated
-                                status   {name "a"
-                                          network  [{mac "1.1.1.1.1"
-                                                     cidr "10.0.0.0"
-                                                     prefix_length 24}]}
-                                spec     {name "new name"               << DIFF
-                                          network  [{mac "1.1.1.1.1"
-                                                     cidr "10.0.0.0"
-                                                     prefix_length 24}]}}
-
-       #+END_EXAMPLE
-
-       We can see that the difference for the a particular host entity (as identified by the
-       =metadata.uuid= value) is only in the =name= field. Thus, we want to find a function that
-       knows how to transform the =name= status field. The engine will invoke the function that can
-       resolve this diff.
-
-    4. =hosts.{metadata.uuid}.networks.+{mac}= a handler that will get triggered when a new network
-       is added to a vector found for key "networks", where the new network is identified by a field
-       called "mac". Lets see this in the example, considering the =current host entity= as before:
-       #+BEGIN_EXAMPLE
-         new spec change: {metadata {uuid "1234"
-                                     kind "host"
-                                     spec_version 4}
-                           spec     {name "a"
-                                     network  [{mac "1.1.1.1.1"
-                                                cidr "10.0.0.0"
-                                                prefix_length 24}
-                                               {mac "2.2.2.2.2"     << DIFF
-                                                cidr "10.1.0.0"
-                                                prefix_length 24}]}}
-       #+END_EXAMPLE
-
-       And we can see that once this new spec change will be CAS'ed in, there will be a diff only in
-       the =network= key, and a new item (identifiable by =mac=) will be added. We need to invoke a
-       function that knows how to add new networks to existing hosts.
-
-    5. =hosts.{metadata.uuid}.networks.{mac}.cidr= Similar to the previous one, however, in here we
-       are listening on a change of the =cidr= field inside an already existing network identifiable
-       by =mac=. Now a function that changes cidr values for existing networks in existing hosts
-       whould be invoked.
-       
-    6. =hosts.{metadata.uuid}.field_a, hosts.{metadata.uuid}.field_b= this is an example of a
-       compound signature, which is matched when a single spec change has caused a difference in
-       both =field_a= and =field_b= of a particular host, identified by =metadata.uuid=
-       - We could revise the syntax to be something like =hosts.{metadata.uuid}.[field_a, field_b]= instead
-
-    7. =hosts.{metadata.uuid}.field_a, hosts.{metadata.uuid}.inner.{id}.field_b= this is another
-       example of a more complex signature, where a single spec change causes a difference in both
-       =field_a= and =field_b= which is a compound object that lies inside a vector =inner= which is
-       identified by =id=. Lets consider the following example:
-       #+BEGIN_EXAMPLE
-         current host entity : {metadata {uuid "1234"
-                                          kind "host"
-                                          spec_version 3}
-                                status   {field_a "value 1"
-                                          inner   [{id 1
-                                                    field_b "value 2"}]}
-                                spec     {field_a "value 1"
-                                          inner   [{id 1
-                                                    field_b "value 2"}]}}
-
-         new spec change: {metadata {uuid "1234"
-                                          kind "host"
-                                          spec_version 4}
-                            spec     {field_a "another val 1"               << DIFF
-                                      inner   [{id 1
-                                                field_b "another val 2"}]}} << DIFF
-
-       #+END_EXAMPLE
-
-       In this example, the SFS would match the spec change if it gets CAS'ed in properly. This
-       syntax could also be revised to something like =hosts.{metadata.uuid}.[field_a, inner.{id}.field_b]=
-       
-
-**** Formal syntax of SFS
-     The following is a formal syntax describing SFS:
-
-     #+BEGIN_EXAMPLE
-      S                = (Single-diff ',')* Single-diff
-      Single-diff      = Same-path Terminal
-      Terminal         = Different-field | Added-by-field | Removed-by-field
-      Same-path        = ((Key '.') | Id-into-vector)+
-      Id-into-vector   = '{' (Key '.')* Key '}' '.'
-      Key              = #'[a-zA-Z_]+'
-      Added-by-field   = '+' Id-field
-      Removed-by-field = '-' Id-field
-      Id-field         = '{' (Key '.')* Key '}'
-      Different-field  = Key
-    #+END_EXAMPLE
-    
-**** SFS struct
-    #+Name: sfs-signature
-    #+BEGIN_SRC go
-      type sfs_signature struct {
-          signature string
-      }
-    #+END_SRC
 *** Understanding Deltas
 **** Matching SFSs to Deltas
 **** Determining Order
-*** Provider
-    This section describes provider handling on Papiea's side. For the provider itself, please see [[*Provider Library][Provider Library]].
-    
-    #+Name: provider-handler-interface
-    #+BEGIN_SRC go
-      type provider_callbacks interface {
-          register_intentful_callback(sig sfs_signature, callback_url string) err
-          register_procedural_callback(sig sfs_signature, callback_url string) err
-      }
-    #+END_SRC
-
-    #+Name: provider-handler-pc
-    #+BEGIN_SRC go
-      func (api_ctx papiea_api_ctx) register_intentful_callback(sfs sfs_signature, callback_url string) err {
-
-      }
-
-      func (api_ctx papiea_api_ctx) register_procedural_callback(sfs sfs_signature, callback_url string) err {
-          procedures.insert(procedure_signature, callback_url);
-      }
-    #+END_SRC
+*** Provider Invocation
 *** RBAC
 *** Scalability and Reliability
 **** Leader election

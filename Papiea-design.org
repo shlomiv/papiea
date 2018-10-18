@@ -11,7 +11,8 @@ Papiea is aimed to be a reference implementation to a formal general purpose int
   - _Spec_ - a map containing the desired state of a particular entity
   - _Status_ - a map containing the current statue of a particular entity. Always a superset of Spec
   - _Metadata_ - Information of the identity of the entity. Must contain at least =uuid=, =kind= and =specVersion=
-  - _Spec version_ - an integer representing the version of the current spec. Updates to spec will =CAS= on this field
+  - _Spec version_ - an integer representing the version of the current spec. Updates to spec will
+    use this field to ensure that the change will be atomic
   - _Entity_ - The tuple =[Metadata, Spec, Status]=
   - _Kind_ - The "type" of the entity
   - _Diff_ - A difference between the current Status and the most recent desired Spec
@@ -43,20 +44,36 @@ Papiea is aimed to be a reference implementation to a formal general purpose int
    #+END_SRC
 
 ** Metadata
-   Metadata has a bit more structured then spec and status, it must have at least the following items:
+   Metadata has a bit more structured then spec and status. It contains fields that defines the
+   identity of a particular entity. The fields that identify the entity are:
    - =uuid= - a unique id representing the identity of this entity
    - =kind= - the "type" of this entity
    - =specVersion= - the most up-to-date revision of the spec associated with this entity
+
+   Other fields are also important:
+   - =created_at= - logs when this entity was created
+   - =delete_at= - annouces if and when will this entity be deleted. If this field is set the entity
+     will be deleted by a [[*Cleanup process][Cleanup process]].
+    
    #+Name: metadata-struct
    #+BEGIN_SRC go
      type metadata struct {
+         // Identity fields
          uuid uuid
          kind string
          specVersion int
+
+         // Additional fields
+         created_at timestamp
+         delete_at timestamp
      }
    #+END_SRC
+   
 ** Kind
-   A Kind of an entity is the entity's type. It denotes the valid fields for spec and status for an instance of this kind.
+   A Kind of an entity is the entity's type. It denotes the valid fields for spec and status for an
+   instance of this kind. In Papiea, the kind struct maintains metadata about this kind, such as the
+   description of an entity of that kind (its spec and status). This will be provided by the
+   provider through the Swagger YAML
 
    #+Name: kind-struct
    #+BEGIN_SRC go
@@ -65,6 +82,24 @@ Papiea is aimed to be a reference implementation to a formal general purpose int
          entityStructure untypedJson
      }
    #+END_SRC
+
+** Entity Reference
+   Entities can point to other entities, based on a reference. A reference only refers to the
+   identity of an entity, and it is up to the intent engine to return the entity's most recent spec
+   and most current status.
+
+   #+Name: entity-reference-struct
+   #+BEGIN_SRC go
+     type entityReference struct {
+         uuid uuid
+         kind string
+
+         // This field is optional and is only used help the user identify
+         // what this reference is pointing to
+         name string 
+     }
+   #+END_SRC
+
 ** Provider description
    A Provider is a plugglable set of handlers, which is responsible for converging a certain entity kind. Its handlers
    are responsible to move the entity from a current status to an intended spec.
@@ -104,25 +139,26 @@ Papiea is aimed to be a reference implementation to a formal general purpose int
     #+Name: status-db-interface
     #+BEGIN_SRC go
       type statusDb interface {
-          updateStatus(metadata, status) err
-          getStatus(metadata) status, err
-          deleteStatus(metadata) err
-          cleanup() err
+          updateStatus(entityReference, status) err
+          getStatus(entityReference) status, err
+          deleteStatus(entityReference) err
       }
     #+END_SRC
 
 *** Spec
-    Unlike status which can always be fetched from the providers, spec is a record of the user's intent and must be
-    persisted to disk. It must also be scalable and highly available. It must have a clear notion of CAS
-    (compare-and-set/swap) in order to atomically update spec values.
+    Unlike status which can always be fetched from the providers, spec is a record of the user's
+    intent and must be persisted to disk. It must also be scalable and highly available. It must
+    have a clear notion of atomicity (such as compare-and-set/swap) in order to atomically update
+    spec values.
 
 **** Interface
     #+Name: spec-db-interface
     #+BEGIN_SRC go
       type specDb interface {
-          casSpecChange(metadata, status) task, err
-          getLatestSpec(metadata) metadata, spec, err
-          cleanup() err
+          // AtomicSpecChange guarantees that changing the spec will be done
+          // atomically. It could be implemented in terms of locks or CAS
+          AtomicSpecChange(entityReference, status) task, err
+          getLatestSpec(entityReference) metadata, spec, err
       }
     #+END_SRC
 
@@ -133,31 +169,43 @@ Papiea is aimed to be a reference implementation to a formal general purpose int
     #+Name: providers-db-interface
     #+BEGIN_SRC go
       type providersDb interface {
+
+          // Register a new provider with the intent engine
           addProvider(providerDescription) err
+
+          // TODO: I am debating if to keep the =from= argument a
+          // providerDescription which contains the uuid or to only get a
+          // uuid.
+          // Upgrade a provider
           upgradeProvider(from providerDescription, to providerDescription) err
-          listProvider() []providerDescription
+
+          listProviders() []providerDescription
+
+          // Removes and de-registers a provider from the intent engine
           deleteProvider(providerUuid) err
       }
     #+END_SRC
 
 ** Dependent services
 *** Tasks
-    Tasks in Papiea's sense is not a process tracking mechanism. In a normal system, a process is started and it is
-    assigned to a task which reflects the status of the running process, whether it succeeds or fails, return values or
-    error messages etc.
+    Papiea defines a task to be a mechanism that tracks the progress of change towards a
+    *particular* spec version. It does not matter how the change took place: through a provider,
+    manually or by an error. A task will listen on the relevant status changes and mark off the
+    different fields as they get resolved. To get a clearer understanding of the logic underlying
+    this please see [[*Intentful Tasks][Intentful Tasks]] section below.
 
-    Papiea does not start a particular thread or process to converge a =Diff=. It may be converge by user interaction
-    (such as changing the real underlying resource) or by invoking a provider's function. Such a function may succeed or
-    fail and re-run again which may later succeed.
-
-    A task is thus defined as a mechanism to track the progress of change towards a *particular* spec version. To get a
-    clear understanding of the logic underlying this please see [[*Tasks][Tasks]] section below.
-
+    #+BEGIN_note
+    Unlike the traditional definition of a task as a handle to a running process, Papiea does not
+    start a particular thread or process to that works on a =Diff=. Instead the task simply listens
+    the relevant changes in the entity and tracks its progress. 
+    #+END_note
+    
 **** Interface
      #+Name: task-interface
      #+BEGIN_SRC go
        type task interface {
-           newTask(metadata) task
+           newTask(entityReference, spec) task
+           // TODO: More will be added
        }
      #+END_SRC
     
@@ -224,7 +272,7 @@ Papiea is aimed to be a reference implementation to a formal general purpose int
     #+BEGIN_SRC go
       type papieaApis interface {
           adminFacingApis() err
-          providersFacingApi() err
+          providerFacingApi() err
           userFacingApi() err
       }
     #+END_SRC
@@ -303,10 +351,10 @@ Papiea is aimed to be a reference implementation to a formal general purpose int
 *** Change Spec
 *** Update Status
 *** SFS - Status Fields Signature
-    When a spec change is submitted and successfully CAS'ed in, it is evaluated against the current
-    status. The difference between this spec change and current status yields a Diff which is then
-    evaluated using =Status Fields Signatures=. An SFS describes what changes in status needs to
-    happen in order for the Diff to converge.
+    When a spec change is submitted and successfully atomically swapped in, it is evaluated against
+    the current status. The difference between this spec change and current status yields a Diff
+    which is then evaluated using =Status Fields Signatures=. An SFS describes what changes in
+    status needs to happen in order for the Diff to converge.
 
     This is a crucial element of the intent engine formalism, since it describes a way for the
     engine to "infer" which procedural actions are to be taken to complete an intentful
@@ -342,7 +390,7 @@ Papiea is aimed to be a reference implementation to a formal general purpose int
                                                 prefix_length 24}]}}
        #+END_EXAMPLE
 
-       In this example, after successfully CASing the new spec, the entity would look like this:
+       In this example, after a successfully setting the new spec, the entity would look like this:
        #+BEGIN_EXAMPLE
          current host entity : {metadata {uuid "1234"
                                           kind "host"
@@ -379,9 +427,9 @@ Papiea is aimed to be a reference implementation to a formal general purpose int
                                                 prefix_length 24}]}}
        #+END_EXAMPLE
 
-       And we can see that once this new spec change will be CAS'ed in, there will be a diff only in
-       the =network= key, and a new item (identifiable by =mac=) will be added. We need to invoke a
-       function that knows how to add new networks to existing hosts.
+       And we can see that once this new spec change will be atomically swapped in, there will be a
+       diff only in the =network= key, and a new item (identifiable by =mac=) will be added. We need
+       to invoke a function that knows how to add new networks to existing hosts.
 
     5. =hosts.{metadata.uuid}.networks.{mac}.cidr= Similar to the previous one, however, in here we
        are listening on a change of the =cidr= field inside an already existing network identifiable
@@ -417,8 +465,9 @@ Papiea is aimed to be a reference implementation to a formal general purpose int
 
        #+END_EXAMPLE
 
-       In this example, the SFS would match the spec change if it gets CAS'ed in properly. This
-       syntax could also be revised to something like =hosts.{metadata.uuid}.[field_a, inner.{id}.field_b]=
+       In this example, the SFS would match the spec change if it gets atomically swapped in
+       properly. This syntax could also be revised to something like
+       =hosts.{metadata.uuid}.[field_a, inner.{id}.field_b]=
        
 
 **** Formal syntax of SFS
@@ -508,16 +557,53 @@ Papiea is aimed to be a reference implementation to a formal general purpose int
           procedures.register(sig, callbackUrl)
       }
     #+END_SRC
-*** RBAC
+*** RBCA
 *** Scalability and Reliability
 **** Leader election
 **** Fault tolerance
 ***** Dead Papiea Instance
 ***** Dead Provider
+*** Cleanup process
+    - automatic deletion?
 *** Auditing
-** Tasks
-*** Tracking change
-*** Finished
+** Intentful Tasks
+   Tasks are intentful in our intent engine. This means that a task defines an intent to "get
+   notified when a certain change request has completed". 
+
+   A new task is started in the context of providing a new spec change. Since a spec change is
+   atomically swapped by the engine, a task for a particular spec change may fail simply for not
+   being able to atomically perform the swap (such as CAS failures in certain atomicity
+   models). Once a spec change has been properly and atomically swapped in, the task registers a
+   status change listener using [[*SFS - Status Fields Signature][SFS - Status Fields Signature]]. It will listen on all the fields that
+   the spec change has requested to change. On every field, the following actions can happen:
+   1. The field will get updated to the value that the spec change was requesting
+      - Once this happens, this field is marked as successfully being fulfilled, the context of the
+        status change may be logged for later auditing and the SFS for this field is stopped
+   2. The field will get updated to a value that is *other* than the spec change was requesting
+      - If this happens, the task will look to see if the spec version of the entity has increased
+        - If it has, this field will be marked as *outdated* and teh SFS for this field is
+          stopped. A reference to the outdating spec change may be maintained for later auditing.
+        - If it still has the same spec version as the task, the task will not get updated
+   
+   Using this scheme, the task is said to be complete if there are no more active SFS listeners. It
+   may be completed in three ways:
+   1. Completed Successfully - All fields were set to the spec value at some point after the spec
+      change was issued
+   2. Completed Partially - Some fields were set to the spec value, and some were not due to a newer
+      spec version
+   3. Failed - non of the fields was changed to the given spec values, and there is already a newer
+      spec version
+   
+   As long as there are still active SFS listeners in the task, it will be *pending*. It can show
+   progress in terms of how many fields are left of the total fields. The intent engine will have to
+   query pending tasks periodically to see if work has to be restarted.
+   
+   #+Name: task-pc
+   #+BEGIN_SRC go
+     func () newTask() {
+	
+     }
+   #+END_SRC
 ** Provider Library
 *** Define Entity Model
 **** YAML
@@ -596,6 +682,13 @@ Papiea is aimed to be a reference implementation to a formal general purpose int
    // Provider handler registration:
    <<provider-handler-pc>>
    #+END_SRC
+
+** /src/papiea/engine/tasks.go
+   #+BEGIN_SRC go :noweb yes :tangle src/papiea/engine/tasks.go :exports code :mkdirp yes
+   // Provider handler registration:
+   <<task-pc>>
+   #+END_SRC
+
 
 * Last notes
   - I followed [[http://ehneilsen.net/notebook/orgExamples/org-examples.html][this tutorial]] for generating the source files through this org-mode.

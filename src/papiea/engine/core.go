@@ -7,9 +7,14 @@ type untypedJson map[string]interface{}
 type spec untypedJson
 type status untypedJson
 type metadata struct {
+    // Identity fields
     uuid uuid
     kind string
     specVersion int
+
+    // Additional fields
+    created_at timestamp
+    delete_at timestamp
 }
 
 // Kind and providers:
@@ -27,20 +32,32 @@ type providerDescription struct {
 // Define our database interfaces:
 
 type specDb interface {
-    casSpecChange(metadata, status) task, err
-    getLatestSpec(metadata) metadata, spec, err
-    cleanup() err
+    // AtomicSpecChange guarantees that changing the spec will be done
+    // atomically. It could be implemented in terms of locks or CAS
+    AtomicSpecChange(entityReference, status) task, err
+    getLatestSpec(entityReference) metadata, spec, err
 }
 type providersDb interface {
+
+    // Register a new provider with the intent engine
     addProvider(providerDescription) err
+
+    // TODO: I am debating if to keep the =from= argument a
+    // providerDescription which contains the uuid or to only get a
+    // uuid.
+    // Upgrade a provider
     upgradeProvider(from providerDescription, to providerDescription) err
-    listProvider() []providerDescription
+
+    listProviders() []providerDescription
+
+    // Removes and de-registers a provider from the intent engine
     deleteProvider(providerUuid) err
 }
 
 // Services interfaces:
 type task interface {
-    newTask(metadata) task
+    newTask(entityReference, spec) task
+    // TODO: More will be added
 }
 
 // Provider APIs signatures.

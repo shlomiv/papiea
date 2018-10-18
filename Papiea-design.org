@@ -5,7 +5,7 @@
 #+HTML_HEAD: <style>pre.src{background:#343131;color:white;} </style>
 #+HTML_HEAD: <style>#content{max-width:70%;} </style>
 
-Papiea is aimed to be a reference implementation to a formal general purpose intent engine. 
+Papiea is aimed to be a reference implementation of a formal general purpose intent engine. 
 
 * Definitions
   - _Spec_ - a map containing the desired state of a particular entity
@@ -130,7 +130,7 @@ Papiea is aimed to be a reference implementation to a formal general purpose int
 
     It may be implemented using a very fast in-memory database, since it may require frequent access depending on an
     entity's kind requirement. It is not required to have this database persisted to disk, since its content can always
-    be reaquired by the providers, by asking all the providers to list all the real statuses of all objects known to
+    be reacquired by the providers, by asking all the providers to list all the real statuses of all objects known to
     them.
 
     Each provider for a kind will supply its entity's structure in its YAML.
@@ -290,10 +290,10 @@ Papiea is aimed to be a reference implementation to a formal general purpose int
         }
       #+END_SRC
      
-**** Providers facing APIs
-     Provider facing defines the interactions between a provider and the
-     intent-engine.  It lets the provider register [[*SFS - Status Fields Signature][Status Fields Signature]]
-     handlers for intentful apis, and procedural apis which will be exposed to
+**** Provider facing APIs
+     Provider facing APIs define the interactions between a provider and the
+     intent-engine.  They let the provider register [[*SFS - Status Fields Signature][Status Fields Signature]]
+     handlers for intentful apis, and handlers for procedural apis which will be exposed to
      the user.
 
      Three apis are exposed:

@@ -530,7 +530,7 @@ Papiea is aimed to be a reference implementation of a formal general purpose int
 *** Provider
     This section describes provider handling on Papiea's side. For the provider itself, please see [[*Provider Library][Provider Library]].
     
-    As described in [[*Providers facing APIs][Providers facing APIs]] section, providers interact with the intetful engine by
+    As described in [[*Provider facing APIs][Provider facing APIs]] section, providers interact with the intetful engine by
     registring callbacks for two styles of actions:
     - Intentful actions - which are executed by analyzing their [[*SFS - Status Fields Signature][Status Fields Signature]]
     - Procedural actions - which are executed by a user interaction

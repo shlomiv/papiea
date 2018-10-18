@@ -1,4 +1,4 @@
-// Provider handler registration
+// Provider handler registration:
 func (api_ctx papieaApiContext) registerIntentfulCallback(sig sfsSignature, callbackUrl string) err {
     deltaAnalyzer.register(sig, callbackUrl)
 }

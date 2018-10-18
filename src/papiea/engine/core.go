@@ -1,11 +1,9 @@
-// all our structs and interfaces
+// All our structs and interfaces:
 
-// Define our structs and types
-
-// Untyped json for now. We should probably use some better library for that
+// Untyped json for now. We should probably use some better library for that:
 type untypedJson map[string]interface{}
 
-// Spec, status and metadata
+// Spec, status and metadata:
 type spec untypedJson
 type status untypedJson
 type metadata struct {
@@ -14,7 +12,7 @@ type metadata struct {
     specVersion int
 }
 
-// Kind and providers
+// Kind and providers:
 type kind struct {
     name string
     entityStructure untypedJson
@@ -26,7 +24,7 @@ type providerDescription struct {
     kinds []kind
 }
 
-// Define our database interfaces
+// Define our database interfaces:
 
 type specDb interface {
     casSpecChange(metadata, status) task, err
@@ -40,31 +38,31 @@ type providersDb interface {
     deleteProvider(providerUuid) err
 }
 
-// Services interfaces
+// Services interfaces:
 type task interface {
     newTask(metadata) task
 }
 
-// Provider APIs signatures
-// Status Fields Signatures
+// Provider APIs signatures.
+// Status Fields Signatures:
 type sfsSignature struct {
     signature string
     parsedSignatureAst ...
 }
 
-// Procedure Signatures
+// Procedure Signatures:
 type procedureSignature struct {
     signature string
     parsedSignatureAst ...
 }
 
-// Provider handlers
+// Provider handlers:
 type provider_callbacks interface {
     registerIntentfulCallback(sig sfsSignature, callbackUrl string) err
     registerProceduralCallback(sig procedureSignature, callbackUrl string) err
 }
 
-// Papiea
+// Papiea:
 type papiea struct {
     api rest.api
     statusDb

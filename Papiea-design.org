@@ -242,10 +242,10 @@ Papiea is aimed to be a reference implementation of a formal general purpose int
         }
       #+END_SRC
      
-**** Providers facing APIs
-     Provider facing defines the interactions between a provider and the
-     intent-engine.  It lets the provider register [[*SFS - Status Fields Signature][Status Fields Signature]]
-     handlers for intentful apis, and procedural apis which will be exposed to
+**** Provider facing APIs
+     Provider facing APIs define the interactions between a provider and the
+     intent-engine.  They let the provider register [[*SFS - Status Fields Signature][Status Fields Signature]]
+     handlers for intentful apis, and handlers for procedural apis which will be exposed to
      the user.
 
      Three apis are exposed:

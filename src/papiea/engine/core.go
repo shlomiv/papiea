@@ -3,23 +3,23 @@
 // Define our structs and types
 
 // Untyped json for now. We should probably use some better library for that
-type untyped_json map[string]interface{}
+type untypedJson map[string]interface{}
 
 // Spec, status and metadata
-type spec untyped_json
-type status untyped_json
+type spec untypedJson
+type status untypedJson
 type metadata struct {
     uuid uuid
     kind string
-    spec_version int
+    specVersion int
 }
 
 // Kind and providers
 type kind struct {
     name string
-    entity_structure untyped_json
+    entityStructure untypedJson
 }
-type provider_description struct {
+type providerDescription struct {
     uuid uuid
     version int
     uri string
@@ -28,48 +28,50 @@ type provider_description struct {
 
 // Define our database interfaces
 
-type spec_db interface {
-    cas_spec_change(metadata, status) task, err
-    get_latest_spec(metadata) metadata, spec, err
+type specDb interface {
+    casSpecChange(metadata, status) task, err
+    getLatestSpec(metadata) metadata, spec, err
     cleanup() err
 }
-type providers_db interface {
-    add_provider(provider_description) err
-    upgrade_provider(from provider_description, to provider_description) err
-    list_providers() []provider_description
-    delete_provider(provider_uuid) err
+type providersDb interface {
+    addProvider(providerDescription) err
+    upgradeProvider(from providerDescription, to providerDescription) err
+    listProvider() []providerDescription
+    deleteProvider(providerUuid) err
 }
 
 // Services interfaces
 type task interface {
-    new_task(metadata) task
+    newTask(metadata) task
 }
 
 // Provider APIs signatures
 // Status Fields Signatures
-type sfs_signature struct {
+type sfsSignature struct {
     signature string
-    parsed_signature_ast ...
+    parsedSignatureAst ...
 }
 
 // Procedure Signatures
-type procedure_signature struct { signature string
-    parsed_signature_ast ...  }
+type procedureSignature struct {
+    signature string
+    parsedSignatureAst ...
+}
 
 // Provider handlers
 type provider_callbacks interface {
-    register_intentful_callback(sig sfs_signature, callback_url string) err
-    register_procedural_callback(sig sfs_signature, callback_url string) err
+    registerIntentfulCallback(sig sfsSignature, callbackUrl string) err
+    registerProceduralCallback(sig procedureSignature, callbackUrl string) err
 }
 
 // Papiea
 type papiea struct {
     api rest.api
-    status_db
-    spec_db
-    providers_db
+    statusDb
+    specDb
+    providersDb
 }
 
-type papiea-init interface {
+type papieaInit interface {
     initialize() papiea, err
 }

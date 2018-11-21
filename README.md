@@ -1,4 +1,4 @@
-# papiea-go
+# papiea-js
 <img src="https://upload.wikimedia.org/wikipedia/commons/1/13/Papaya.svg" width="150" height="150">
 
 Papiea, pronounced like the fruit, is an Intent engine based on perscriptions or recipes for handling differences
@@ -6,7 +6,7 @@ between intended state and real world state.
 
 
 # Design document
-Please see [Papiea's design document](https://nutanix.github.io/papiea-go/Papiea-design.html)
+Please see [Papiea's design document](https://nutanix.github.io/papiea-js/Papiea-design.html)
 
 # License and copyright
 

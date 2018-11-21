@@ -14,19 +14,19 @@ interface entity{
     status:status;
 }
 
-interface data_description any;
+type data_description = any;
 
-interface provider_callback string;
+type provider_callback = string;
 
 interface intentful_signature {
-    signature string;
-    AST any;
+    signature: string;
+    AST: any;
     function_callback: provider_callback;
 }
 
 interface procedural_signature {
     // The name of the procedure to be exported by the engine.
-    name string;
+    name: string;
 
     // The representation of the data to be passed to this procedure
     argument: data_description;
@@ -34,6 +34,10 @@ interface procedural_signature {
     // Does the engine pauses all intentful operation invocations for
     // the duration of the procedural call
     pause_intentfulness: boolean;
+}
+
+interface test {
+    test(a:number):[string, boolean];
 }
 
 interface provider_kind {
@@ -63,11 +67,11 @@ interface SpecDB {
     // implementation needs to CAS the spec_version to the increment
     // of itself, and return the new metadata with the new
     // spec_version and the new CASed in spec.
-    update_spec(meta:metadata, spec:spec):(boolean, metadata, spec);
+    update_spec(meta:metadata, spec:spec):[boolean, metadata, spec];
 
     // Get the spec of a particular entity from the db. Returns both
     // current metadata and the spec of that entity.
-    get_spec(meta:metadata):(metadata, spec);
+    get_spec(meta:metadata):[metadata, spec];
 
     // List all specs that have their fields match the ones given in
     // fields_map. E.g. we could look for all specs for `vm` kind that
@@ -78,7 +82,7 @@ interface SpecDB {
     // We could come up with command such as greater-than etc at some
     // later point, or we could use a similar dsl to mongodb search
     // dsl.
-    list_specs(fields_map: any): [(metadata, spec)]
+    list_specs(fields_map: any): [metadata, spec][];
 }
 
 interface StatusDB{
@@ -88,7 +92,7 @@ interface StatusDB{
 
     // Gets the status of a particular entity from the db. Returns
     // both current metadata and status of the entity.
-    get_status(meta:metadata):(metadata, status);
+    get_status(meta:metadata):[metadata, status];
 
     // List all status that have their fields match the ones given in
     // fields_map. E.g. we could look for all specs for `vm` kind that
@@ -99,7 +103,7 @@ interface StatusDB{
     // We could come up with command such as greater-than etc at some
     // later point, or we could use a similar dsl to mongodb search
     // dsl.
-    list_specs(fields_map: any): [(metadata, status)]
+    list_specs(fields_map: any): [metadata, status][];
 }
 
 enum DifferResults {
@@ -113,14 +117,14 @@ interface Differ {
 
     // Applies an entity on the Differ. Can get `All results`, just
     // the first, or top-k results. Returns an array of callbacks
-    apply_diff(entity: entity, results:DifferResults|number) provider_callback[];
+    apply_diff(entity: entity, results:DifferResults|number): provider_callback[];
 
     // The actual differ structure
-    differ_internals: any
+    differ_internals: any;
 }
 
 interface Task {
     task_url: string;
     create_task(metadata:metadata, spec:spec): Task;
-    update_task(task:Task)
+    update_task(task:Task):Task;
 }

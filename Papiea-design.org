@@ -690,8 +690,8 @@ Papiea is aimed to be a reference implementation of a formal general purpose int
 *** Example Provider
 
 * Full files
-** /src/papiea/engine/core.go
-   #+BEGIN_SRC go :noweb yes :tangle src/papiea/engine/core.go :exports code :mkdirp yes
+** /src-go/papiea/engine/core.go
+   #+BEGIN_SRC go :noweb yes :tangle src-go/papiea/engine/core.go :exports code :mkdirp yes
    // All our structs and interfaces:
    
    // Untyped json for now. We should probably use some better library for that:
@@ -730,8 +730,8 @@ Papiea is aimed to be a reference implementation of a formal general purpose int
    <<papiea_apis>>
    
    #+END_SRC
-** /src/papiea/engine/server.go
-  #+BEGIN_SRC go :noweb yes :tangle src/papiea/engine/server.go :exports code :mkdirp yes
+** /src-go/papiea/engine/server.go
+  #+BEGIN_SRC go :noweb yes :tangle src-go/papiea/engine/server.go :exports code :mkdirp yes
     #import stuff
 
     // Initialize Papiea.
@@ -747,14 +747,14 @@ Papiea is aimed to be a reference implementation of a formal general purpose int
     <<user-api-pc>>
   #+END_SRC
   
-** /src/papiea/engine/provider.go 
-   #+BEGIN_SRC go :noweb yes :tangle src/papiea/engine/provider.go :exports code :mkdirp yes
+** /src-go/papiea/engine/provider.go 
+   #+BEGIN_SRC go :noweb yes :tangle src-go/papiea/engine/provider.go :exports code :mkdirp yes
    // Provider handler registration:
    <<provider-handler-pc>>
    #+END_SRC
 
-** /src/papiea/engine/tasks.go
-   #+BEGIN_SRC go :noweb yes :tangle src/papiea/engine/tasks.go :exports code :mkdirp yes
+** /src-go/papiea/engine/tasks.go
+   #+BEGIN_SRC go :noweb yes :tangle src-go/papiea/engine/tasks.go :exports code :mkdirp yes
    // Provider handler registration:
    <<task-pc>>
    #+END_SRC

@@ -4,9 +4,9 @@ interface metadata {
     spec_version: number;
 }
 
-interface spec{}
+type spec = any;
 
-interface status{}
+type status = any;
 
 interface entity{
     metadata:metadata;
@@ -34,10 +34,6 @@ interface procedural_signature {
     // Does the engine pauses all intentful operation invocations for
     // the duration of the procedural call
     pause_intentfulness: boolean;
-}
-
-interface test {
-    test(a:number):[string, boolean];
 }
 
 interface provider_kind {

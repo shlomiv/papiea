@@ -20,27 +20,20 @@ Papiea is aimed to be a reference implementation of a formal general purpose int
   - _Tasks_ - a mechanism for following the progress of resolving Diffs
 * Data Structures
 ** Spec
-   Status and Spec are both unstructured, and may change at runtime (by changing providers). Go is a little afraid of
-   unstructured types, so we have to be very gentle. Here is an example of how this could be achieved.
+   Status and Spec are both unstructured, and may change at runtime (e.g. by changing provider
+   versions). 
    
-   First, lets declare an untyped json type:
-
-   #+Name: untyped-json-type
-   #+BEGIN_SRC go
-   type untypedJson map[string]interface{}
-   #+END_SRC
-
-   Now, spec is simply an entyped_json
+   Spec is simply a map that can contain anything (strings, numbers, vectors and maps)
    #+Name: spec-struct
-   #+BEGIN_SRC go
-   type spec untypedJson
+   #+BEGIN_SRC typescript
+   type Spec = any;
    #+END_SRC
 ** Status
-   For now its strictly untyped, but there may be a better way to denote the fact that status is a super-set of spec
+   Status is also simply a map 
 
    #+Name: status-struct
-   #+BEGIN_SRC go
-   type status untypedJson
+   #+BEGIN_SRC typescript
+   type Status = any;
    #+END_SRC
 
 ** Metadata
@@ -48,7 +41,7 @@ Papiea is aimed to be a reference implementation of a formal general purpose int
    identity of a particular entity. The fields that identify the entity are:
    - =uuid= - a unique id representing the identity of this entity
    - =kind= - the "type" of this entity
-   - =specVersion= - the most up-to-date revision of the spec associated with this entity
+   - =spec_version= - the most up-to-date revision of the spec associated with this entity
 
    Other fields are also important:
    - =created_at= - logs when this entity was created
@@ -56,92 +49,170 @@ Papiea is aimed to be a reference implementation of a formal general purpose int
      will be deleted by a [[*Cleanup process][Cleanup process]].
     
    #+Name: metadata-struct
-   #+BEGIN_SRC go
-     type metadata struct {
+   #+BEGIN_SRC typescript
+     interface Metadata {
          // Identity fields
-         uuid uuid
-         kind string
-         specVersion int
+         uuid: uuid4;
+         kind: string;
+         specVersion: number;
 
          // Additional fields
-         created_at timestamp
-         delete_at timestamp
+         created_at: timestamp;
+         delete_at: timestamp;
+     }
+   #+END_SRC
+
+** Entity
+   An Entity is the tuple =(metadata, spec, status)=. It usually denotes a snapshot in time of a particular entity.
+
+   #+Name: entity-struct
+   #+BEGIN_SRC typescript
+     interface Entity {
+       metadata: Metadata;
+       spec: Spec;
+       status: Status
+     }
+   #+END_SRC
+
+** Kind
+   A Kind of an entity is the entity's type metadata. It contains everything needed for provideing
+   full CRUD operation on the entity structure, along with special procedures and intentful handlers.
+
+   #+Name: kind-struct
+   #+BEGIN_SRC typescript
+
+     // Intentful signature
+     type sfs: string;
+
+     type provider_callback_url: string;
+     
+     interface Kind {
+         name: string;
+         name_plural: string;
+
+         //// Entity structure
+         kind_structure: parsed_yaml;
+         validator_fn: (entity:entity)=>boolean;
+         semantic_validator_fn?: provider_callback_url; 
+
+         //// Intentful behavior
+         intentful_tasks: map<sfs, Intentful_Behavior>;
+
+         // Every sfs lists the sfs's it has to execute before
+         dependency_tree: map<sfs, sfs[]>;
+         
+         differ: Differ<Kind>;
+
+         //// Procedural behavior
+         procedures: map<string, Procedure>;
      }
    #+END_SRC
    
-** Kind
-   A Kind of an entity is the entity's type. It denotes the valid fields for spec and status for an
-   instance of this kind. In Papiea, the kind struct maintains metadata about this kind, such as the
-   description of an entity of that kind (its spec and status). This will be provided by the
-   provider through the Swagger YAML
+   A Kind metadata contains the following pieces:
+   1. Identification and structure:
+      1. Its unique name and along with its plural form, to generate idiomatic REST API.
 
-   #+Name: kind-struct
-   #+BEGIN_SRC go
-     type kind struct {
-         name string
-         entityStructure untypedJson
-     }
-   #+END_SRC
+      2. The description of the data structre defined by this kind. The structure is defined using
+         OpenAPI's model format (Swagger), which is parsed into a walkable tree.
 
+      3. A Validator is generated from this OpenAPI description. The purpose of the validator is to
+         ensure that the entity that was recieved by the user is syntactically (structurally) correct.
+
+      4. a semantic validator is also optional, and it will be a predicate exposed by the
+         provider_sdk. It will be responsible for ensuring the content of the entity is correct.
+
+   2. Intentful behavior
+      1. A map from an intentful signature (see [[*SFS - Status Fields Signature][SFS - Status Fields Signature]]) to a structure
+         representing the intentful behavior (see TODO:).
+
+      2. Dependency tree between the different intentful behaviors.
+
+      3. Using the two items above, a =Differ= is compiled. The Differ's task is to determine if
+         there are any relevant differences between an entity's spec and status (relevant in this
+         context means "a diff that there is at least one intentful behavior which can resolve it").
+
+   3. Procedural behavior
+      1. a map from the procedure name to a structure defining how to invoke that procedure, its
+         input argument and output structre, execution strategy, etc. (see TODO:)
+  
 ** Entity Reference
    Entities can point to other entities, based on a reference. A reference only refers to the
    identity of an entity, and it is up to the intent engine to return the entity's most recent spec
    and most current status.
 
    #+Name: entity-reference-struct
-   #+BEGIN_SRC go
-     type entityReference struct {
-         uuid uuid
-         kind string
+   #+BEGIN_SRC typescript
+     interface entity_reference  {
+         uuid: uuid4;
+         kind: string;
 
          // This field is optional and is only used help the user identify
          // what this reference is pointing to
-         name string 
+         name?: string;
      }
    #+END_SRC
 
 ** Provider description
-   A Provider is a plugglable set of handlers, which is responsible for converging a certain entity kind. Its handlers
-   are responsible to move the entity from a current status to an intended spec.
+   A Provider in Papiea defines entities by providing their structure, intentful handlers and
+   procedures, and is has the sole responsibilty of converging an entity's spec into its status. The
+   Provider is pluggable, and should maintain no state which should make it rather trivial to scale.
+
    #+Name: provider-desc-struct
-   #+BEGIN_SRC go
-     type providerDescription struct {
-         uuid uuid
-         version int
-         uri string
-         kinds []kind
+   #+BEGIN_SRC typescript
+     type Provider_Description struct {
+         uuid: uuid4;
+         version: Version;
+         kinds: Kind[]
      }
    #+END_SRC
 
-   It has a unique identifier and a version, as well as a uri that is a logical name that will be used to access an
-   instance of the provider (since there may be multiple instances with a load-balancer). For example, a uri could be:
-   =https://nunet.nutanix.com/hosts=. A provider may support multiple kinds but we believe it is best practice to have
-   one provider per kind.
+   A =Provider Description= contains:
+   1. A unique identifier for that provider
+   2. A version of that provider
+   3. The list of Kinds supported by this provider
 
 * Modules
 ** Databases
    #+BEGIN_note
-   *Multitenancy*: All databases are aware of tenants. It may be implemented as a column or attribute of a table or
-   document, or as a different database with a different connect uri.
+   *Multitenancy*: All databases are aware of tenants. It may be implemented as a column or
+   attribute of a table or document, or as a different database with a different connect uri.
    #+END_note
    
 *** Status
     Status database will be a mapping from a metadata (namely, =uuid= and =kind=) to a status json document. 
 
-    It may be implemented using a very fast in-memory database, since it may require frequent access depending on an
-    entity's kind requirement. It is not required to have this database persisted to disk, since its content can always
-    be reacquired by the providers, by asking all the providers to list all the real statuses of all objects known to
-    them.
+    It may be implemented using a very fast in-memory database, since it may require frequent access
+    depending on an entity's kind requirement. It is not required that this database be persisted to
+    disk, since its content can always be reacquired by the providers, by asking all the providers
+    to list all the real statuses of all objects known to them.
 
     Each provider for a kind will supply its entity's structure in its YAML.
     
 **** Interface
     #+Name: status-db-interface
-    #+BEGIN_SRC go
-      type statusDb interface {
-          updateStatus(entityReference, status) err
-          getStatus(entityReference) status, err
-          deleteStatus(entityReference) err
+    #+BEGIN_SRC typescript
+      interface Spec_DB {
+          // Tries to update the spec. Succeeds only if the spec_version
+          // field in metadata is currently equals to the one on record. The
+          // implementation needs to CAS the spec_version to the increment
+          // of itself, and return the new metadata with the new
+          // spec_version and the new CASed in spec.
+          update_spec(meta:metadata, spec:spec):[boolean, metadata, spec];
+
+          // Get the spec of a particular entity from the db. Returns both
+          // current metadata and the spec of that entity.
+          get_spec(meta:metadata):[metadata, spec];
+
+          // List all specs that have their fields match the ones given in
+          // fields_map. E.g. we could look for all specs for `vm` kind that
+          // have a certain ip:
+          // list_specs({"metadata": {"kind": "vm"},
+          //             "spec":     {"ip":   "10.0.0.10"}})
+          //
+          // We could come up with command such as greater-than etc at some
+          // later point, or we could use a similar dsl to mongodb search
+          // dsl.
+          list_specs(fields_map: any): [metadata, spec][];
       }
     #+END_SRC
 
@@ -154,35 +225,50 @@ Papiea is aimed to be a reference implementation of a formal general purpose int
 **** Interface
     #+Name: spec-db-interface
     #+BEGIN_SRC go
-      type specDb interface {
-          // AtomicSpecChange guarantees that changing the spec will be done
-          // atomically. It could be implemented in terms of locks or CAS
-          AtomicSpecChange(entityReference, status) task, err
-          getLatestSpec(entityReference) metadata, spec, err
+      interface Status_DB{
+          // Update the status in the status db. As long as the input is
+          // correct this always succeeds.
+          update_status(meta:metadata, status:status):boolean;
+
+          // Gets the status of a particular entity from the db. Returns
+          // both current metadata and status of the entity.
+          get_status(meta:metadata):[metadata, status];
+
+          // List all status that have their fields match the ones given in
+          // fields_map. E.g. we could look for all specs for `vm` kind that
+          // have a certain ip:
+          // list_specs({"metadata": {"kind": "vm"},
+          //             "status":   {"ip":   "10.0.0.10"}})
+          //
+          // We could come up with command such as greater-than etc at some
+          // later point, or we could use a similar dsl to mongodb search
+          // dsl.
+          list_specs(fields_map: any): [metadata, status][];
       }
     #+END_SRC
 
 *** Providers
-    Providers database stores all the configurations a provider may need, which is encoded in [[*Provider description][Provider description]] section.
+    Providers database stores all the configurations a provider has registered (encoded in [[*Provider description][Provider
+    description]] section). It is used by the engine to record which providers are registered. The
+    engine uses this indirectly to initialize all user-facing APIs. This seperation makes it easy to
+    scale the engine to many instances.
 
 **** Interface
     #+Name: providers-db-interface
-    #+BEGIN_SRC go
-      type providersDb interface {
+    #+BEGIN_SRC typescript
+      interface Providers_DB {
 
           // Register a new provider with the intent engine
-          addProvider(providerDescription) err
+          register_provider(provider: Provider_Description):void;
 
-          // TODO: I am debating if to keep the =from= argument a
-          // providerDescription which contains the uuid or to only get a
-          // uuid.
-          // Upgrade a provider
-          upgradeProvider(from providerDescription, to providerDescription) err
+          //Upgrade a provider
+          upgrade_provider(from_provider: uuid4, to: providerDescription): ProviderUpgradeTask;
 
-          listProviders() []providerDescription
+          // List all registered providers
+          listProviders(): providerDescription[]
 
           // Removes and de-registers a provider from the intent engine
-          deleteProvider(providerUuid) err
+          deleteProvider(provider: uuid4): boolean;
       }
     #+END_SRC
 
@@ -200,10 +286,11 @@ Papiea is aimed to be a reference implementation of a formal general purpose int
     the relevant changes in the entity and tracks its progress. 
     #+END_note
     
-**** Interface
+**** Interface                                             :CONTINUE_EDITING:
+     
      #+Name: task-interface
-     #+BEGIN_SRC go
-       type task interface {
+     #+BEGIN_SRC typescript
+       interface Task {
            newTask(entityReference, spec) task
            // TODO: More will be added
        }
@@ -214,7 +301,7 @@ Papiea is aimed to be a reference implementation of a formal general purpose int
     When Papiea loads up, it needs to initialize its database connections, load the providers, generate entity
     validators and expose CRUD and [[*Procedures][Procedural]] APIs.
    
-**** Interface    
+**** Interface
     #+Name: initialize-papiea
     #+BEGIN_SRC go
       type papiea struct {

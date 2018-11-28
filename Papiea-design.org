@@ -18,27 +18,18 @@ Papiea is aimed to be a reference implementation of a formal general purpose int
   - _Diff_ - A difference between the current Status and the most recent desired Spec
   - _Providers_ - Pluggable handlers that can transform an entity from its current state to its desired state
   - _Tasks_ - a mechanism for following the progress of resolving Diffs
-* Data Structures
-** Spec
-   Status and Spec are both unstructured, and may change at runtime (e.g. by changing provider
-   versions). 
-   
-   Spec is simply a map that can contain anything (strings, numbers, vectors and maps)
-   #+Name: spec-struct
-   #+BEGIN_SRC typescript
-   type Spec = any;
-   #+END_SRC
-** Status
-   Status is also simply a map 
+* Basic Interfaces
+  The main concept behind the intentful approach is the ability to know what is the desired state of
+  our system and what is the actual current state. Once we have this knowledge, many different kinds
+  of engines could be built that would attempt to resolve to tension formed when the intended state,
+  termed the =Spec=, is different from the current state of the system, termed the =Status=.
 
-   #+Name: status-struct
-   #+BEGIN_SRC typescript
-   type Status = any;
-   #+END_SRC
+  In Papiea, we use both =Spec= and =Status= to have a complete view of the state of a given entity
+  identity, marked by the =Metadata=. The following interfaces capture these most basic concepts.
 
 ** Metadata
-   Metadata has a bit more structured then spec and status. It contains fields that defines the
-   identity of a particular entity. The fields that identify the entity are:
+   Metadata has a structured portion which contains fields that defines the identity of a particular
+   entity. The fields that identify the entity are:
    - =uuid= - a unique id representing the identity of this entity
    - =kind= - the "type" of this entity
    - =spec_version= - the most up-to-date revision of the spec associated with this entity
@@ -61,9 +52,34 @@ Papiea is aimed to be a reference implementation of a formal general purpose int
          delete_at: timestamp;
      }
    #+END_SRC
+  
+** Spec
+   The =Spec=, which is the desired state, is simply a json object, or an unstructured map. It can
+   and should get a structure when used specifically by any particular entity [[*Kind][Kind]]. However, at the
+   engine level, a spec is an unstructured map that can be compared to the mirroring =Status= map to
+   find any differences. The structure definintion may change by the provider which defines it, say
+   by upgrading to a newer version (See TODO:).
+
+   #+Name: spec-struct
+   #+BEGIN_SRC typescript
+   type Spec = any;
+   #+END_SRC
+
+** Status
+   The =Status=, which is a representation of the true current state of the entity, is also simply a
+   json. Its content and structure is a superset of [[*Spec][Spec]], meaning that every field in =Spec= will
+   also appear in =Status=, but may contain any extra fields as desired by the provider.
+
+   I am just learning typescript, so still not sure how to express that =Status= is an extension of
+   =Spec=, but it should be explicit.
+
+   #+Name: status-struct
+   #+BEGIN_SRC typescript
+   type Status = any;
+   #+END_SRC
 
 ** Entity
-   An Entity is the tuple =(metadata, spec, status)=. It usually denotes a snapshot in time of a particular entity.
+   An Entity is simply the tuple =(Metadata, Spec, Status)=. It usually denotes a snapshot in time of a particular entity.
 
    #+Name: entity-struct
    #+BEGIN_SRC typescript
@@ -75,12 +91,12 @@ Papiea is aimed to be a reference implementation of a formal general purpose int
    #+END_SRC
 
 ** Kind
-   A Kind of an entity is the entity's type metadata. It contains everything needed for provideing
-   full CRUD operation on the entity structure, along with special procedures and intentful handlers.
+   A Kind is the entity's metadata. It contains an entire description of what the entity is and what
+   it may do. This information will be used to provideing full CRUD operation on the entity
+   structure along with custom procedures and intentful handlers.
 
    #+Name: kind-struct
    #+BEGIN_SRC typescript
-
      // Intentful signature
      type sfs: string;
 
@@ -110,16 +126,18 @@ Papiea is aimed to be a reference implementation of a formal general purpose int
    
    A Kind metadata contains the following pieces:
    1. Identification and structure:
-      1. Its unique name and along with its plural form, to generate idiomatic REST API.
+      1. a unique name along with its plural form, to generate idiomatic REST API. There may be a
+         library function that create plural form, if so it should be used instead.
 
       2. The description of the data structre defined by this kind. The structure is defined using
          OpenAPI's model format (Swagger), which is parsed into a walkable tree.
 
-      3. A Validator is generated from this OpenAPI description. The purpose of the validator is to
-         ensure that the entity that was recieved by the user is syntactically (structurally) correct.
+      3. A Validator function is generated from this OpenAPI model specification. The purpose of the
+         validator function is to ensure that the entity that was sent by the user is syntactically
+         (structurally) correct.
 
-      4. a semantic validator is also optional, and it will be a predicate exposed by the
-         provider_sdk. It will be responsible for ensuring the content of the entity is correct.
+      4. an optional semantic validator function is defined as a predicate exposed by the [[*Provider's SDK][Provider's
+         SDK]]. It will be used to ensure that the content of the entity is correct.
 
    2. Intentful behavior
       1. A map from an intentful signature (see [[*SFS - Status Fields Signature][SFS - Status Fields Signature]]) to a structure
@@ -129,16 +147,17 @@ Papiea is aimed to be a reference implementation of a formal general purpose int
 
       3. Using the two items above, a =Differ= is compiled. The Differ's task is to determine if
          there are any relevant differences between an entity's spec and status (relevant in this
-         context means "a diff that there is at least one intentful behavior which can resolve it").
+         context means "a diff such that there exists at least one intentful behavior which can
+         resolve it").
 
    3. Procedural behavior
-      1. a map from the procedure name to a structure defining how to invoke that procedure, its
-         input argument and output structre, execution strategy, etc. (see TODO:)
+      1. a map from the procedure name to a structure defining that procedure, its input argument
+         and output result structures, execution strategy, etc. (see TODO:)
   
 ** Entity Reference
-   Entities can point to other entities, based on a reference. A reference only refers to the
-   identity of an entity, and it is up to the intent engine to return the entity's most recent spec
-   and most current status.
+   Entities can point to other entities using a reference. A reference may onlu refers to the
+   identity of an entity, and it is the intent engine that returns the entity's most recent spec and
+   most current status.
 
    #+Name: entity-reference-struct
    #+BEGIN_SRC typescript
@@ -147,15 +166,17 @@ Papiea is aimed to be a reference implementation of a formal general purpose int
          kind: string;
 
          // This field is optional and is only used help the user identify
-         // what this reference is pointing to
+         // what this reference is pointing to. 
          name?: string;
      }
    #+END_SRC
 
 ** Provider description
-   A Provider in Papiea defines entities by providing their structure, intentful handlers and
-   procedures, and is has the sole responsibilty of converging an entity's spec into its status. The
-   Provider is pluggable, and should maintain no state which should make it rather trivial to scale.
+   Papiea is extensible by the use of =Providers=.  A Provider defines entities by providing their
+   structure, their procedures and intentful behaviors. Along with declaratively define the entity's
+   structure, it also enables intentful behaviors by defining how differences between spec and
+   status may be resolved. The Provider is pluggable at runtime, and should maintain no internal
+   state, which should allow for simpler methods of scaling.
 
    #+Name: provider-desc-struct
    #+BEGIN_SRC typescript
@@ -181,10 +202,10 @@ Papiea is aimed to be a reference implementation of a formal general purpose int
 *** Status
     Status database will be a mapping from a metadata (namely, =uuid= and =kind=) to a status json document. 
 
-    It may be implemented using a very fast in-memory database, since it may require frequent access
-    depending on an entity's kind requirement. It is not required that this database be persisted to
-    disk, since its content can always be reacquired by the providers, by asking all the providers
-    to list all the real statuses of all objects known to them.
+    It may be implemented using a fast in-memory database, since it may require frequent rapid
+    access depending on an entity's kind requirement. It is not required that this database be
+    persisted to disk. Its content MUST always be re-acquirable by the providers, simply by asking
+    all the providers to list up-to-date status of all objects known to them.
 
     Each provider for a kind will supply its entity's structure in its YAML.
     
@@ -218,9 +239,9 @@ Papiea is aimed to be a reference implementation of a formal general purpose int
 
 *** Spec
     Unlike status which can always be fetched from the providers, spec is a record of the user's
-    intent and must be persisted to disk. It must also be scalable and highly available. It must
-    have a clear notion of atomicity (such as compare-and-set/swap) in order to atomically update
-    spec values.
+    intent and must be persistent. It must also be scalable and highly available. It must have a
+    clear notion of atomicity (such as compare-and-set/swap) in order to atomically update spec
+    values.
 
 **** Interface
     #+Name: spec-db-interface
@@ -297,7 +318,7 @@ Papiea is aimed to be a reference implementation of a formal general purpose int
        function new_intentful_task (ent: Entity_reference, spec: spec): Task;
      #+END_SRC
     
-     A Task allows you to wait for it to finish. 
+     A Task allows you to wait for it to finish.
 
 ** Papiea Engine
 *** Initialize

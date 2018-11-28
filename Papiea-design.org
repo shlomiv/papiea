@@ -262,7 +262,7 @@ Papiea is aimed to be a reference implementation of a formal general purpose int
           register_provider(provider: Provider_Description):void;
 
           //Upgrade a provider
-          upgrade_provider(from_provider: uuid4, to: providerDescription): ProviderUpgradeTask;
+          upgrade_provider(from_provider: uuid4, to: providerDescription): Task;
 
           // List all registered providers
           listProviders(): providerDescription[]
@@ -286,41 +286,46 @@ Papiea is aimed to be a reference implementation of a formal general purpose int
     the relevant changes in the entity and tracks its progress. 
     #+END_note
     
-**** Interface                                             :CONTINUE_EDITING:
-     
+**** Interface
      #+Name: task-interface
      #+BEGIN_SRC typescript
        interface Task {
-           newTask(entityReference, spec) task
-           // TODO: More will be added
-       }
+           wait():any;
+       } 
+
+       function new_task (): Task;
+       function new_intentful_task (ent: Entity_reference, spec: spec): Task;
      #+END_SRC
     
+     A Task allows you to wait for it to finish. 
+
 ** Papiea Engine
 *** Initialize
-    When Papiea loads up, it needs to initialize its database connections, load the providers, generate entity
-    validators and expose CRUD and [[*Procedures][Procedural]] APIs.
+    When Papiea loads up, it needs to initialize its database connections, load the providers,
+    generate entity validators and expose CRUD and [[*Procedures][Procedural]] APIs.
    
 **** Interface
     #+Name: initialize-papiea
-    #+BEGIN_SRC go
-      type papiea struct {
-          api rest.api
-          statusDb
-          specDb
-          providersDb
-      }
+    #+BEGIN_SRC typescript
+      interface Papiea {
 
-      type papieaInit interface {
-          initialize() papiea, err
-      }
+          // api is the mechanism which adds REST endpoints to Papiea.
+          api: route;
+          prefix: string;
+
+          statuses: Status_DB;
+          specs: Spec_DB;
+          providers: Providers_DB;
+      } 
+      
+      function initialize_papiea(): Papiea;
     #+END_SRC
 
 **** Pseudocode
      #+Name: initialize-papiea-pc
-     #+BEGIN_SRC go
+     #+BEGIN_SRC typescript
        // Initialize papiea engine.
-       func (papiea papiea) initialize() papiea, err {
+       function initialize_papiea(): Papiea {
            // Load databases, initialize db connections.
            papiea.statusDb
            papiea.specDb 
@@ -330,114 +335,261 @@ Papiea is aimed to be a reference implementation of a formal general purpose int
            papiea.api = new rest.api()
 
            // Start admin facing apis.
-           papiea.adminFacingApis()
+           papiea.create_admin_facing_API();
 
            // Start providers facing apis.
-           papiea.providerFacingApi()
+           papiea.create_providers_facing_API();
 
            // Start user facing apis.
-           papiea.userFacingApi()
+           papiea.create_user_facing_API();
        }
      #+END_SRC
 *** Exporting APIs
     Papiea provides three tiers of APIs: Admin, Provider and User facing.
 
-    The struct that we need for the api will maintain an embedded =papiea= struct, and will add a
-    =prefix=. Prefix is the http prefix for papiea api server, such as "/papiea/api/v1".
-
-    #+Name: papiea-api-struct
-    #+BEGIN_SRC go
-      type papieaApiContext struct {
-          *papiea
-          prefix string
-      }
-    #+END_SRC
-    
-    Here is the interface for registring these apis:
-
     #+Name: exporting-apis
     #+BEGIN_SRC go
-      type papieaApis interface {
-          adminFacingApis() err
-          providerFacingApi() err
-          userFacingApi() err
+      interface papiea_APIs {
+          create_admin_facing_API(papiea:Papiea):void
+          create_provider_facing_API(papiea:Papiea):void
+          create_user_facing_API(papiea:Papiea):void
       }
     #+END_SRC
     
     Next sections go into greater details into each of the apis.
 **** Admin facing APIs
      The admin apis exposed by Papiea are used to manage providers: registrating, upgrading, deleting etc.
-***** Pseudocode     
+***** Pseudocode
       #+Name: admin-api-pc
-      #+BEGIN_SRC go
-        func (papieaApis papieaApiContext) adminFacingApis() err {
-            papieaApis.api.post(papieaApis.prefix+"/providers", func(req, res) procedureSignature{
-                registerOrUpgradeProvider(req.providerDescription)
-            })
+      #+BEGIN_SRC typescript
+        function create_admin_facing_API(papiea:Papiea) {
+    
+            // An example for registring a new provider from a provider description
+            papiea.api.POST(papiea.api.prefix+ "/providers", function(req, res) {
+                registerOrUpgradeProvider(req.providerDescription);
+            });
+
+            // ...
         }
       #+END_SRC
      
 **** Provider facing APIs
+     Provider has two sets of APIs:
+***** Provider's SDK    
+      This is actually an SDK rather than an API. The distinction is that this is used by the
+      providers developers to define and expose behaviors and APIs to the end user.
+
+      This SDK will be availagble in a few languages: Javascript and golang are planned first, but
+      more should come.
+
+      The core is the =Provider= abstraction:
+      #+BEGIN_SRC typescript
+        // Api for the provider-sdk
+        enum ProviderPower {On, Off, Suspended};
+
+        interface Provider {
+            new_kind(entity_yaml:string):Kind;
+            version(major:number, minor:number, build: number, extra: string):void;
+            power(state: ProviderPower): ProviderPower;
+        }
+      #+END_SRC
+
+      This allows us to register a new kind (see below), establish a version and change the "Power
+      state" of this provider instance. 
+
+      A Kind is added when the user supplies a valid description for the entity handled by this
+      kind. Once the kind's entity description is validated, an object of type =Kind= is returned on
+      which we can do the following things:
+
+      #+BEGIN_SRC typescript
+        enum ProceduralExecStrategy {HaltIntentful};
+
+        interface Kind {
+
+            // Adds an intentful handler. Dispatched based on the signautre passed
+            on(signature: string, name: string, rbac: any, handler: (ctx:IntentfulCtx, entity:any)=>void):IntentfulHandler;
+
+            // Convenient functions for constructing/destructing an entity. Could be implemented in terms of "on above"
+            on_new(name: string, rbac: any, handler: (ctx:IntentfulCtx, entity:any)=>void):void;
+            on_del(name: string, rbac: any, handler: (ctx:IntentfulCtx, entity:any)=>void):void;
+
+            // Adds a procedural behaviour to the entity
+            procedure(name: string, rbac: any,
+                      strategy: ProceduralExecStrategy,
+                      input_desc: string,
+                      output_desc: string,
+                      handler: (ctx:ProceduralCtx, input:any)=>any):void;
+
+
+            // Visualize all the intentful handlers and their priority
+            visualize_intentful_handlers(filename:string):boolean;
+        }
+      #+END_SRC
+      
+      We can add an intentful behavior to any set of changes to the entity's fields, either spec (a
+      user's intent) or a status with the =on= function.
+
+      We could also register a procedure on that entity. The procedure should not change status is
+      ways that may cause diffs, otherwise the intent engine will try to "resolve" the diff incured
+      by the procedure. A procedure may state that during its execution, no intentful behavior
+      should be handled. If that is the case, when the procedure finishes execution, the =Differ=
+      will run on the entity to see if any deltas are needed to get resolved.
+
+      When we have multiple intentful handlers, it may be desirable to be able to define a
+      dependency tree between the different intentful handlers. Which should execute before which:
+      
+      #+BEGIN_SRC typescript
+        interface IntentfulHandler {
+            // Establishes a dependency tree between the various handlers
+            before(...handlers: IntentfulHandler[]):void;
+        }
+      #+END_SRC
+
+      In this snippet, =h1.before(h2, h3)= would mean that if the =Differ= discovered that both
+      =h1=, =h2= and =h3= are possibilities of execution, the handler =h1= should execute first,
+      then =h2= and =h3= have no specific ordering. In cases of no order, the handler with the most
+      specific signature (i.e. longest) should run first, if both are equal one would be selected at
+      random.
+
+      During the execution of an intentful handler, the following functionality could be used:
+      #+BEGIN_SRC typescript
+
+        interface IntentfulCtx {
+            update_status(metadata:any, status: any):boolean;
+            update_progress(message:string, done_percent:number):boolean;
+        }
+
+        // For the time being these are equal. Later they may differ
+        type ProceduralCtx=IntentfulCtx;
+      #+END_SRC
+
+      During the execution of a handler we may want to set up the status of the entity we are
+      working on, or perhaps update the task with our progress (if we have one). 
+
+      I would say that best practice is to have a single =get_status(entity_metadata)= function that
+      constructs a full status map out of the real resource, and only call =update_status(metadata,
+      get_status(metadata))=, as this will ensure that even in case of a crash the status we saved
+      is the exact one that would any way be generated by looking at the real resource.
+
+***** Provider to Papiea APIs
      Provider facing APIs define the interactions between a provider and the
      intent-engine.  They let the provider register [[*SFS - Status Fields Signature][Status Fields Signature]]
      handlers for intentful apis, and handlers for procedural apis which will be exposed to
      the user.
 
      Three apis are exposed:
-     - =POST "/on"= - recieves an [[*SFS - Status Fields Signature][SF Signature]] and a callback url from the client. Registers the
-       callback url to a component that listen on status changes and calls the callback url when a
-       matching status change has taken place
-     - =POST "/procedure"= - receives a [[*Procedures Signatures][Procedures Signatures]] and a callback url from the
-       client. The signature is then used to expose a user facing api. When the user uses this api
-       endpoint, the callback will get called
      - =POST "/status"= - sends a voluntary status update regarding an entity. Recieves a context
        which identifies the context in which this was called, the metadata of entity and its new
        status. This functionality is only exposed to the providers, since they are the only view
        Papiea has of the real world. 
+     - =POST "/progress= - sends a voluntary progress update for the task, should one exist. 
 
      #+Name: provider-api-pc
-     #+BEGIN_SRC go
-       func (papieaApis papieaApiContext) providerFacingApi() err {
+     #+BEGIN_SRC typescript
+       function create_provider_facing_API(papiea: Papiea) {
            // Registering Provider Facing APIs.
            api = papieaApis.api
            papieaPrefix = papieaApis.prefix
-	
-           api.post(papieaPrefix+"/on", func(req, res) {
-               // Callback url is being generated by the papiea provider library and passed on the request.
-               papieaApis.registerIntentfulCallback(req.signature, req.callbackUrl)
-           })
-
-           api.post(papieaPrefix+"/procedure", func(req, res) {
-               // Callback url is being generated by the papiea provider library and passed on the request.
-               papiea_apis.registerProceduralCallback(req.signature, req.callbackUrl)
-           })
 
            // Status update is only exposed to providers. Users can't update status.
-           api.post(papiea+"/status", func(req, res) {
+           api.POST(papiea+"/status", function(req, res) {
                res.status(statusDb.updateStatus(req.uuid, req.status) ? 200 : 400)
                return res;
            })
+
+           // 
+           api.POST(papiea+"/progress", function(req, res) {
+               //...
+               return res;
+           })
        }
-
-
      #+END_SRC
 **** User facing APIs
-     
-     #+Name: user-api-pc
-     #+BEGIN_SRC go
-       func (papiea papiea) userFacingApis() err {
-           registeredProviders = papiea.providersDb.listProviders()
+     The user facing APIs will be generated from all the registered kinds of all registered
+     providers. The following pseudo-code will be demosstrating how the CRUD may be implemented.
 
-           for _, provider := range registeredProviders {
-               for _, kind := range provider.kinds{
-			
-               }
-           }
-       }
+     #+Name: user-api-pc
+     #+BEGIN_SRC typescript
+       function create_user_facing_API(papiea: Papiea) {
+           papiea.providers.listProviders.forEach((provider_desc)=>{
+               provider_desc.kinds.forEach((kind)=>{
+
+                   // define CRUD for entity:
+                   // Create: 
+                   papiea.api.POST(papiea.prefix + "/" + kind.name_plural, (req, res)=>{
+                       if (!kind.validator_fn(req.spec)) {
+                           res.status(400).send("Does not conform syntactically");
+                           return;
+                       }
+
+                       if (kind.semantic_validator_fn && rest.post(kind.semantic_validator_fn, req.spec)!=200) {
+                           res.status(400).send("Does not conform semantically");
+                           return;
+                       }
+
+                       // create and return the task
+                       let task = create_task(...);
+                       return task; // magically return here.
+
+                       // The followin code should run after the return, so
+                       // maybe async, maybe some event loop etc.
+                       if (!papiea.spec_db.update_spec(req.metadata, req.spec)) {
+                           task.fail("could not cas task")
+                       }
+
+                       // invoke on_new
+
+                   });
+
+                   // Update: The core of our intentfullness
+                   papiea.api.PUT(papiea.prefix + "/" + kind.name_plural + "/{uuid}", (req, res)=>{
+                       if (!kind.validator_fn(req.spec)) {
+                           res.status(400).send("Does not conform syntactically");
+                           return;
+                       }
+
+                       if (kind.semantic_validator_fn && rest.post(kind.semantic_validator_fn, req.spec)!=200) {
+                           res.status(400).send("Does not conform semantically");
+                           return;
+                       }
+
+                       // create and return the task
+                       let task = create_task(...);
+                       return task; // magically return here.
+
+                       // The followin code should run after the return, so
+                       // maybe async, maybe some event loop etc.
+                       if (!papiea.spec_db.update_spec(req.metadata, req.spec)) {
+                           task.fail("could not cas task")
+                       }
+
+                       let status = papiea.status_db.get_status({kind: kind.name, uuid: kind.uuid});
+
+                       // Get the next diff
+                       let next_func = provider_desc.differ(req.spec, status);
+
+                       // invoke it
+                       rest.post(next_func);
+                   });
+
+                   // Read
+                   papiea.api.GET(papiea.prefix + "/" + kind.name_plural + "/{uuid}", (req, res)=>{
+
+                       // metadata is stored in spec as well
+                       let spec   = papiea.spec_db.get_spec({kind: kind.name, uuid: kind.uuid});
+                       let status = papiea.status_db.get_status({kind: kind.name, uuid: kind.uuid});
+
+                       res.status(200).send(entity(spec, status));
+                       return;
+                   });
+               });
+           });
+       };
+
      #+END_SRC
 *** Change Spec
 *** Update Status
-*** SFS - Status Fields Signature
+*** SFS - Status Fields Signature                             :CONTINUE_HERE:
     When a spec change is submitted and successfully atomically swapped in, it is evaluated against
     the current status. The difference between this spec change and current status yields a Diff
     which is then evaluated using =Status Fields Signatures=. An SFS describes what changes in

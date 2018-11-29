@@ -1,10 +1,9 @@
 #+Title: Papiea Design
-#+SETUPFILE: https://raw.githubusercontent.com/fniessen/org-html-themes/master/setup/theme-readtheorg.setup
+#+SETUPFILE: https://shlomiv.github.io/org-html-themes/setup/theme-readtheorg.setup
 #+Options: H:5
 
 #+HTML_HEAD: <style>pre.src{background:#343131;color:white;} </style>
 #+HTML_HEAD: <style>#content{max-width:70%;} </style>
-# +HTML_HEAD: <style>ul.org-ul{margin-bottom:100px !important; color:red !important} </style>
 #+HTML_HEAD: <style>div > ol.org-ol > li {margin-bottom:5px !important; /*color:red !important*/} </style>
 
 

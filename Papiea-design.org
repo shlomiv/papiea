@@ -767,10 +767,6 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
       Different-field  = Key
     #+END_EXAMPLE
     
-**** SFS struct
-    #+Name: sfs-signature
-    #+BEGIN_SRC typescript
-    #+END_SRC
 *** Intentful core
     At the core of Papiea lies the intentful behavior mechanism. To establish this mechanism we need the following:
     1. A representation of the user desire ([[*Spec][Spec]])
@@ -1023,7 +1019,7 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
 *** Cleanup process
     - automatic deletion?
 *** Auditing
-** Intentful Tasks
+** Intentful Tasks                                          :Continue_Fixing:
    Tasks are intentful in our intent engine. This means that a task defines an intent to "get
    notified when a certain change request has completed". 
 

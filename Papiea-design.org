@@ -1,5 +1,5 @@
 #+Title: Papiea Design
-#+SETUPFILE: https://shlomiv.github.io/org-html-themes/setup/theme-readtheorg.setup
+#+SETUPFILE: https://fniessen.github.io/org-html-themes/setup/theme-readtheorg.setup
 #+Options: H:5
 #+HTML_MATHJAX: align: left indent: 5em tagside: left font: Neo-Euler
 
@@ -10,12 +10,6 @@
 
 #+EMAIL: shlomi.vaknin@nutanix.com
 
-#+LINK: gh    https://github.com/
-#+LINK: rfc   https://tools.ietf.org/html/
-#+LINK: thing https://github.com/thi-ng/
-#+LINK: w3    https://w3.org/TR/
-#+LINK: wiki  https://en.wikipedia.org/wiki/
-
 #+OPTIONS: prop:("VERSION")
 
 #+HTML: <div class="outline-2" id="meta">
@@ -24,7 +18,8 @@
 | *Revision* | DRAFT                         |
 #+HTML: </div>
 
- Papiea is aimed to be a reference implementation of a [[*Formalities][formal general purpose intent engine]].
+Papiea is aimed to be a reference implementation of a [[*Formalities][formal general purpose intent engine]].
+
 * Definitions
   - _Spec_ - a map containing the desired state of a particular entity
   - _Status_ - a map containing the current statue of a particular entity. Always a superset of Spec
@@ -330,10 +325,11 @@
      #+BEGIN_SRC typescript
        interface Task {
            wait():any;
+           register_delta(Diff[]);
        } 
 
        function new_task (): Task;
-       function new_intentful_task (ent: Entity_reference, spec: spec): Task;
+       function new_intentful_task (papiea: Papiea, entity: entity_reference, kind: Kind, spec: Spec): Task;
      #+END_SRC
     
      A Task allows you to wait for it to finish.
@@ -560,61 +556,10 @@
 
                    // define CRUD for entity:
                    // Create: 
-                   papiea.api.POST(papiea.prefix + "/" + kind.name_plural, (req, res)=>{
-                       if (!kind.validator_fn(req.spec)) {
-                           res.status(400).send("Does not conform syntactically");
-                           return;
-                       }
-
-                       if (kind.semantic_validator_fn && rest.post(kind.semantic_validator_fn, req.spec)!=200) {
-                           res.status(400).send("Does not conform semantically");
-                           return;
-                       }
-
-                       // create and return the task
-                       let task = create_task(...);
-                       return task; // magically return here.
-
-                       // The followin code should run after the return, so
-                       // maybe async, maybe some event loop etc.
-                       if (!papiea.spec_db.update_spec(req.metadata, req.spec)) {
-                           task.fail("could not cas task")
-                       }
-
-                       // invoke on_new
-
-                   });
+                   papiea.api.POST(papiea.prefix + "/" + kind.name_plural, handler_spec_change(kind, papiea));
 
                    // Update: The core of our intentfullness
-                   papiea.api.PUT(papiea.prefix + "/" + kind.name_plural + "/{uuid}", (req, res)=>{
-                       if (!kind.validator_fn(req.spec)) {
-                           res.status(400).send("Does not conform syntactically");
-                           return;
-                       }
-
-                       if (kind.semantic_validator_fn && rest.post(kind.semantic_validator_fn, req.spec)!=200) {
-                           res.status(400).send("Does not conform semantically");
-                           return;
-                       }
-
-                       // create and return the task
-                       let task = create_task(...);
-                       return task; // magically return here.
-
-                       // The followin code should run after the return, so
-                       // maybe async, maybe some event loop etc.
-                       if (!papiea.spec_db.update_spec(req.metadata, req.spec)) {
-                           task.fail("could not cas task")
-                       }
-
-                       let status = papiea.status_db.get_status({kind: kind.name, uuid: kind.uuid});
-
-                       // Get the next diff
-                       let next_func = provider_desc.differ(req.spec, status);
-
-                       // invoke it
-                       rest.post(next_func);
-                   });
+                   papiea.api.PUT(papiea.prefix + "/" + kind.name_plural + "/{uuid}", handler_spec_change(kind, papiea));
 
                    // Read
                    papiea.api.GET(papiea.prefix + "/" + kind.name_plural + "/{uuid}", (req, res)=>{
@@ -629,28 +574,87 @@
                });
            });
        };
-
      #+END_SRC
+     
+     =Create= and =Update= are essentially the same, and the functionality that handles them is
+     captured in [[*Change Spec Handler Pseudocode][=handle_spec_change=]].
+
+*** Handling Potential Diffs    
+    The engine will check for potential diffs on entities as a response to a few events:
+    1. A spec change took place
+    2. A status change took place
+    3. A predefined timeout happened
+     
 *** Change Spec
+    A spec can only change through the [[*User facing APIs][User facing APIs]]. It returns an [[*Intentful Tasks][Intentful Tasks]] which is then
+    used to track this change. After the task is returned the system verifies that the change is
+    correct, both syntactically and optionally semantically (See [[*Kind][Kind]]). If this passes, it then
+    attempts to atomically apply this spec change. If it succeeds, the [[*Differ][Differ]] is invoked on the
+    entity and the resulting =Diffs= are [[*Intentful Execution][Intentfuly Executed]]. However, if the engine fails to
+    atomically swap in the new spec change, the returned =Task= will contain a failure. It is up to
+    the user to get the new entity state, reaply the relevant changes and re-submit a new spec
+    change.
+
+**** Change Spec Handler Pseudocode
+     #+BEGIN_SRC typescript
+       function handle_spec_change(kind: Kind, papiea: Papiea) {
+           return (req, res) => {
+               if (!kind.validator_fn(req.spec)) {
+                   res.status(400).send("Does not conform syntactically");
+                   return;
+               }
+
+               if (kind.semantic_validator_fn && rest.post(kind.semantic_validator_fn, req.spec)!=200) {
+                   res.status(400).send("Does not conform semantically");
+                   return;
+               }
+
+               // create and return the task
+               let task = create_task(...);
+               return task; // magically return here.
+
+               // The followin code should run after the return, so
+               // maybe async, maybe some event loop etc.
+               if (!papiea.spec_db.update_spec(req.metadata, req.spec)) {
+                   task.fail("could not cas task")
+               }
+
+               // Get the newest status
+               let status = papiea.status_db.get_status({kind: kind.name, uuid: req.entity.metadata.uuid});
+
+               // Get the next diff. If the diff is a brand new item, the
+               // next_func is an "on_new" func, similarly, if the spec is one
+               // that removes the item the next func is an "on_del" func.
+               let next_func : Diff = provider_desc.differ.next_diff(req.metadata, req.spec, status);
+
+               // invoke it
+               next_func.invoke();
+           }
+       }
+     #+END_SRC
+
 *** Update Status
-*** SFS - Status Fields Signature                             :CONTINUE_HERE:
-    When a spec change is submitted and successfully atomically swapped in, it is evaluated against
-    the current status. The difference between this spec change and current status yields a Diff
-    which is then evaluated using =Status Fields Signatures=. An SFS describes what changes in
-    status needs to happen in order for the Diff to converge.
+    A change of status may only arrive from a provider through the [[*Provider's SDK][Provider's SDK]]'s =update_status=
+    function. A change of status may cause differences with regards to a the current spec, and so it
+    may also be a cause for executing intentful actions. Although it does not return an explicit
+    =Task= an implicit one may be created (see [[*Intentful Tasks][Intentful Tasks]]). 
 
-    This is a crucial element of the intent engine formalism, since it describes a way for the
-    engine to "infer" which procedural actions are to be taken to complete an intentful
-    specification.
+*** SFS - Status Fields Signature
+    
+    The Status Fields Signature is a formal dsl that describes which fields in status have to change
+    in order to resolve some difference. It is at the core of our Intentful Dispatch mechanism.
 
-    Here are a few examples of the proposed SFS syntax:
-    1. =hosts.+{metadata.uuid}= - Matches when a new host entity (identified by =metadata.uuid=) has
-       been added to the system. Typically this will the signature of a "create entity"
-       function. 
+    Ths signature is essentially a string consisting of field names concatenated with a ".". All of
+    the fields but the last one constitutes the =Path= that must be taken, and the last fields of
+    the string describes the field which should differ. 
 
-    2. =hosts.-{metadata.uuid}= - Similar to the previous example, but this time the entity has been removed.
-       
-    3. =hosts.{metadata.uuid}.name= - Matches when an existing host is asking to rename. See the following example:
+    A special case in this definition is when a value for a field is a vector. In this case, instead
+    of a field we have an "Item identifier", which is also a list of fields concatenated with a ".",
+    that describes the identity or the item we are looking for.
+
+    Lets see some examples for a kind =hosts=:
+
+    1. =name= - Matches when an existing host is asking to rename itself. See the following example:
        #+BEGIN_EXAMPLE
          current host entity : {metadata {uuid "1234"
                                           kind "host"
@@ -665,15 +669,15 @@
                                                      prefix_length 24}]}}
 
          new spec change: {metadata {uuid "1234"
-                                          kind "host"
-                                          specVersion 4}
+                                     kind "host"
+                                     specVersion 4}
                            spec     {name "new name"                    << DIFF
                                      network  [{mac "1.1.1.1.1"
                                                 cidr "10.0.0.0"
                                                 prefix_length 24}]}}
        #+END_EXAMPLE
 
-       In this example, after a successfully setting the new spec, the entity would look like this:
+       In this example, after successfully setting the new spec, the entity would look like this:
        #+BEGIN_EXAMPLE
          current host entity : {metadata {uuid "1234"
                                           kind "host"
@@ -689,13 +693,12 @@
 
        #+END_EXAMPLE
 
-       We can see that the difference for the a particular host entity (as identified by the
-       =metadata.uuid= value) is only in the =name= field. Thus, we want to find a function that
-       knows how to transform the =name= status field. The engine will invoke the function that can
-       resolve this diff.
+       We can see that the difference for the a particular host entity is only in the =name=
+       field. Thus, we want to find a function that knows how to transform the =name= status
+       field. The engine will invoke the function that can resolve this diff.
 
-    4. =hosts.{metadata.uuid}.networks.+{mac}= a handler that will get triggered when a new network
-       is added to a vector found for key "networks", where the new network is identified by a field
+    2. =networks.+{mac}= a signature that matches when a new network is added into a vector found
+       for key "networks" on an existing entity, where the new network is identified by a field
        called "mac". Lets see this in the example, considering the =current host entity= as before:
        #+BEGIN_EXAMPLE
          new spec change: {metadata {uuid "1234"
@@ -714,20 +717,17 @@
        diff only in the =network= key, and a new item (identifiable by =mac=) will be added. We need
        to invoke a function that knows how to add new networks to existing hosts.
 
-    5. =hosts.{metadata.uuid}.networks.{mac}.cidr= Similar to the previous one, however, in here we
-       are listening on a change of the =cidr= field inside an already existing network identifiable
-       by =mac=. Now a function that changes cidr values for existing networks in existing hosts
-       whould be invoked.
+    3. =networks.{mac}.cidr= Similar to the previous example, however, in here we are listening on a
+       change of the =cidr= field inside an _already existing network_ identifiable by =mac=. Now a
+       function that changes cidr values for existing networks in existing hosts whould be invoked.
        
-    6. =hosts.{metadata.uuid}.field_a, hosts.{metadata.uuid}.field_b= this is an example of a
-       compound signature, which is matched when a single spec change has caused a difference in
-       both =field_a= and =field_b= of a particular host, identified by =metadata.uuid=
-       - We could revise the syntax to be something like =hosts.{metadata.uuid}.[field_a, field_b]= instead
+    4. =field_a, field_b= this is an example of a compound signature, which is matched when a single
+       spec change has caused a difference in both =field_a= and =field_b= of a particular host.
 
-    7. =hosts.{metadata.uuid}.field_a, hosts.{metadata.uuid}.inner.{id}.field_b= this is another
-       example of a more complex signature, where a single spec change causes a difference in both
-       =field_a= and =field_b= which is a compound object that lies inside a vector =inner= which is
-       identified by =id=. Lets consider the following example:
+    5. =field_a, inner.{id}.field_b= this is another example of a more complex signature, where a
+       single spec change causes a difference in both =field_a= and =field_b= which is an existing
+       compound object that lies inside a vector =inner= which is identified by =id=. Lets consider
+       the following example:
        #+BEGIN_EXAMPLE
          current host entity : {metadata {uuid "1234"
                                           kind "host"
@@ -749,9 +749,7 @@
        #+END_EXAMPLE
 
        In this example, the SFS would match the spec change if it gets atomically swapped in
-       properly. This syntax could also be revised to something like
-       =hosts.{metadata.uuid}.[field_a, inner.{id}.field_b]=
-       
+       properly.
 
 **** Formal syntax of SFS
      The following is a formal syntax describing SFS:
@@ -771,11 +769,7 @@
     
 **** SFS struct
     #+Name: sfs-signature
-    #+BEGIN_SRC go
-      type sfsSignature struct {
-          signature string
-          parsedSignatureAst ...
-      }
+    #+BEGIN_SRC typescript
     #+END_SRC
 *** Intentful core
     At the core of Papiea lies the intentful behavior mechanism. To establish this mechanism we need the following:
@@ -886,11 +880,11 @@
       // current status and the desired state. 
       interface Differ {
           // Get the next diff from an entity based on the 
-          next_diff(entity:Entity):Diff;
+          next_diff(ref:entity_reference, spec: Spec, status: Status):Diff;
 
           // We could also get the entire list of diffs, ordered by the
           // original dependency tree
-          all_diffs(entity:Entity):Diff[];
+          all_diffs(ref:entity_reference, spec: Spec, status: Status):Diff[];
       }
     #+END_SRC
 
@@ -1033,9 +1027,9 @@
    Tasks are intentful in our intent engine. This means that a task defines an intent to "get
    notified when a certain change request has completed". 
 
-   A new task is started in the context of providing a new spec change. Since a spec change is
-   atomically swapped by the engine, a task for a particular spec change may fail simply for not
-   being able to atomically perform the swap (such as CAS failures in certain atomicity
+   A new task may be created in the context of providing a new spec change or a status change. Since
+   a spec change is atomically swapped by the engine, a task for a particular spec change may fail
+   simply for not being able to atomically perform the swap (such as CAS failures in certain
    models). Once a spec change has been properly and atomically swapped in, the task registers a
    status change listener using [[*SFS - Status Fields Signature][SFS - Status Fields Signature]]. It will listen on all the fields that
    the spec change has requested to change. On every field, the following actions can happen:
@@ -1069,11 +1063,10 @@
      listening.. Need to think about this
    
    #+Name: task-pc
-   #+BEGIN_SRC go
-     func (papiea papiea) newTask(entity entityReference, spec spec) {
+   #+BEGIN_SRC typescript
+     function new_intentful_task(papiea: Papiea, entity: entity_reference, kind: Kind, spec: Spec): Task {
          // Get the status of the entity we are trying to change.
-         status,err = papiea.statusDb.getStatus(entity)
-
+         status = papiea.status_db.get_status(entity);
 
          // Calculate the delta between the spec and the status. calc_delta
          // will take into consideration all registered SFS for the
@@ -1081,15 +1074,15 @@
          // elements. See more details in calc_delta. Each delta found will
          // record the corresponding SFS that could is registered which
          // should be able to resolve the diff
-         delta = calc_delta(spec, status)
+         deltas = kind.differ.all_difs(entity, spec, status);
 
          // we are the task
-         task = this
+         task = new Task();
 
          // Register all the relevant deltas we could listen on
-         task.registerDelta(delta)
+         task.register_delta(delta);
 
-         for (field in delta) {
+         for (field in deltaho) {
              // TBD: define on, define context
              fieldListener = papiea.on(field.sfs, func(context, updatedEntity entityReference, status status){
                  newValue = status.get(field.path)
@@ -1271,10 +1264,10 @@
 
   To make an action, we need to examine the different possibilities:
   1. If $\{(hydration, thirsty, quenched), (cup, _, full)\} \in diff$ then $drink$ 
-  2. If $\{(hydration, thirsty, quenched), (cup, empty, full), (faucet, closed, open\}\in diff$ then
+  2. If $\{(hydration, thirsty, quenched), (cup, empty, full), (faucet, closed, open)\}\in diff$ then
      $faucet_{open}$
-  3. If $\{(hydration, thirsty, quenched), (cup, empty, full), (faucet, open, open\}\in diff$ then $fillcup$
-  4. If $\{(faucet, open, closed\}\in diff$ then $faucet_{close}$
+  3. If $\{(hydration, thirsty, quenched), (cup, empty, full), (faucet, open, open)\}\in diff$ then $fillcup$
+  4. If $\{(faucet, open, closed)\}\in diff$ then $faucet_{close}$
 
   Lets generalize:
   1. Let $pred=\wp(diff)$, the power-set of $diff$
@@ -1294,10 +1287,8 @@
   perceived priorities. For example, do we first drink or do we first close the faucet?
 
   Let $dlist=(dispatch_{fn_1}, ..., dispatch_{fn_k})$, at every time we recalculate $diff$, we
-  iterate through this ordered list one item at a time, see if $dispatch_{fn_i} \in diff$. If it is,
-  ${fn_i}$ is applied, $cs$ and $diff$ are recalculated, and we run thrugh $dlist$ again.
-
-
+  iterate through this ordered list one item at a time, see if $dispatch_{fn_i} \subset diff$. If it is,
+  ${fn_i}$ is applied, $cs$ and $diff$ are recalculated, and we run thrugh $dlist$ again from the top.
 
 * Last notes
   - I followed [[http://ehneilsen.net/notebook/orgExamples/org-examples.html][this tutorial]] for generating the source files through this org-mode.

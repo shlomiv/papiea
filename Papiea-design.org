@@ -1239,11 +1239,8 @@
   1. Let $T=\{(p,v)|p \in properties, v \in values\}$ be a representation of a state in our
      world. For practical reasons, lets define it to be a set of properties and their values, which
      collectively define the state.
-      
-  2. Let $S=$ be the set of all $T$. This is essentially the space of all states our world could be
-     in.
-  3. Let $cs \in S$ be a represention of "what it is we *actually have*"
-  4. Let $ds \in S$ be a represention of "what it is we *desire to have*"
+  3. Let $cs \in T$ be a represention of "what it is we *actually have*"
+  4. Let $ds \in T$ be a represention of "what it is we *desire to have*"
   5. Let $have=cs \setminus ds$ be all the things that we *have* and dont want
   6. Let $want=ds \setminus cs$ be all the things that we do *want*
   7. Let $diff=\{(p, v_{old}, v_{new})|(p,v_{old})\in have, (p, v_{new})\in want\}$

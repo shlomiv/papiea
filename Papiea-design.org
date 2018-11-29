@@ -4,6 +4,9 @@
 
 #+HTML_HEAD: <style>pre.src{background:#343131;color:white;} </style>
 #+HTML_HEAD: <style>#content{max-width:70%;} </style>
+# +HTML_HEAD: <style>ul.org-ul{margin-bottom:100px !important; color:red !important} </style>
+#+HTML_HEAD: <style>div > ol.org-ol > li {margin-bottom:5px !important; /*color:red !important*/} </style>
+
 
 Papiea is aimed to be a reference implementation of a formal general purpose intent engine. 
 
@@ -117,7 +120,7 @@ Papiea is aimed to be a reference implementation of a formal general purpose int
          // Every sfs lists the sfs's it has to execute before
          dependency_tree: map<sfs, sfs[]>;
          
-         differ: Differ<Kind>;
+         differ: Differ;
 
          //// Procedural behavior
          procedures: map<string, Procedure>;
@@ -334,23 +337,24 @@ Papiea is aimed to be a reference implementation of a formal general purpose int
           api: route;
           prefix: string;
 
-          statuses: Status_DB;
-          specs: Spec_DB;
-          providers: Providers_DB;
+          statusDb: Status_DB;
+          specsDb: Spec_DB;
+          providersDb: Providers_DB;
       } 
-      
-      function initialize_papiea(): Papiea;
     #+END_SRC
 
 **** Pseudocode
+     
      #+Name: initialize-papiea-pc
      #+BEGIN_SRC typescript
        // Initialize papiea engine.
-       function initialize_papiea(): Papiea {
+       function initialize_papiea(config): Papiea {
+           papiea = new Papiea();
+
            // Load databases, initialize db connections.
-           papiea.statusDb
-           papiea.specDb 
-           papiea.providersDb
+           papiea.statusDb = Status_DB.connect(config.status_db);
+           papiea.specDb = Spec_DB.connect(config.spec_db);
+           papiea.providersDb = Provider_DB.connect(config.provider_db);
 
            // Sets up the rest api engine.
            papiea.api = new rest.api()
@@ -363,6 +367,8 @@ Papiea is aimed to be a reference implementation of a formal general purpose int
 
            // Start user facing apis.
            papiea.create_user_facing_API();
+
+           return papiea;
        }
      #+END_SRC
 *** Exporting APIs
@@ -447,14 +453,16 @@ Papiea is aimed to be a reference implementation of a formal general purpose int
         }
       #+END_SRC
       
-      We can add an intentful behavior to any set of changes to the entity's fields, either spec (a
-      user's intent) or a status with the =on= function.
+      We can add an intentful behavior to any set of changes to the entity's fields, either status
+      (through a real change to the underlying resource, or spec (through a newly submitted user's
+      intent), by declaring a handler using the =on= function.
 
-      We could also register a procedure on that entity. The procedure should not change status is
-      ways that may cause diffs, otherwise the intent engine will try to "resolve" the diff incured
-      by the procedure. A procedure may state that during its execution, no intentful behavior
-      should be handled. If that is the case, when the procedure finishes execution, the =Differ=
-      will run on the entity to see if any deltas are needed to get resolved.
+      We could also register a procedure on that entity. The procedure should not change status in
+      ways that may cause a new differences. If that happens, the intent engine will try to
+      "resolve" the diff incured by the procedure. A procedure may state what should happen during
+      its execution. One such strategy is that no intentful behavior should be handled. If that is
+      the case, when the procedure finishes execution, the =Differ= will run again on the entity to
+      see if any new diffs are needed to be resolved.
 
       When we have multiple intentful handlers, it may be desirable to be able to define a
       dependency tree between the different intentful handlers. Which should execute before which:
@@ -754,6 +762,186 @@ Papiea is aimed to be a reference implementation of a formal general purpose int
           parsedSignatureAst ...
       }
     #+END_SRC
+*** Intentful core
+    At the core of Papiea lies the intentful behavior mechanism. To establish this mechanism we need the following:
+    1. A representation of the user desire ([[*Spec][Spec]])
+    2. A representation of the system's state ([[*Status][Status]])
+    3. A way to find the differences between the desired and current state ([[*Differ][Differ]])
+    4. A way to act upon these differences in a deterministic, fault-tolerant way ([[*Intentful Execution][Intentful Execution]])
+    5. A way to track the changes to completion ([[*Intentful Tasks][Intentful Tasks]])
+
+    Once these items are there, the intentful mechanism is rather trivial. Lets see the following pseudo-code:
+    
+    #+BEGIN_SRC typescript
+      // This is just conceptual to show how we are notified that a the
+      // engine needs to look for a diff
+      if (entity.status_changed() || entity.spec_changed() || entity.kind.timeout_reached()) {
+
+          // Based on the intentful handlers registered by the provider
+          // (namely, their SFS signatures), the constructed `differ` will
+          // return the next diff to handle.
+          diff = entity.kind.differ.next_diff(entity.status, entity.spec);
+
+          // Look in Tasks, to see if there is a task that is not yet
+          // resolved and is listening for this particular change.
+          task = Tasks.create_or_get(entity, diff);
+
+          // When the trigger for this change is a `spec change` the
+          // returned task will usually be the task created by the spec
+          // change request itself. When a status change or a timeout
+          // trigger this event, a task may not be present and so a new,
+          // implicit one, should be created.
+
+          // The task then sees if there is a currently working intentful
+          // handler on this entity. If there is one currently working
+          // (including making sure it is actually active), we stop
+          // processing for this round
+          if (task.is_intentful_handler_still_working() || task.is_running_a_procedure()) {
+              return;
+          }
+
+          // If nothing intentful is working and we are also not running
+          // anything procedural, lets invoke the intentful handler to
+          // settle the diff.
+          ret = diff.invoke();
+
+          // The value returned in `ret` is not the result of applying the
+          // intentful handler to the entity. We are not waiting for the
+          // intentful method to complete. The return value is merely a
+          // signal that the handler has started working, and a uuid
+          // representing this currently executing handler.
+
+          if (ret.code() == 200) {
+              // This should actually be done inside the provider_sdk to
+              // address failures:
+              task.set_working_intentful_handler(ret.handler_uuid_url);
+          }
+      }
+    #+END_SRC
+**** Differ
+     The differ is at the core of identifying the next intentful command to be invoked. It is required for a few reasons:
+
+     1. A generic differ is too broad to fit an arbitrary data structure:
+        - There are cases where it is impossible to differentiate between an internal object being
+          changed and it being created or deleted. See the following example:
+
+          Consider the following entity =e=. Lets see two versions of it, =e_1= and =e_2=:
+          #+BEGIN_EXAMPLE
+          e1 = {x: [{a:1, b:2}]
+          e1 = {x: [{a:1, b:1}]
+          #+END_EXAMPLE
+
+          In this example we have a two valid interpertations of what happened to the inner object inside =x='s list:
+          1. The object identity is defined by the field =a=. In this case, the object ={a:1, b:2}=
+             simply changed its =b= component's value to =1=.
+
+          2. The object identity is defined by the field =b=. In this case, the object ={a:1, b:2}=
+             was removed, and a new object ={a:1, b:1}= was created
+
+          This is just a simple case, but we can make it as complicated as we would like.
+
+     2. If the system does not have any method of resolving a diff, then we should not look for that
+        diff. Every field in spec needs to be able to handle a change of value, but that may not be
+        the case in reality. It could be a bug, a partial implementation, a field in spec for future
+        use etc. The best thing we could do with an unhandlable diff is print it.
+
+        Having the Differ look at all possible diff handlers a provider exports, we could have
+        automatic validation of which cases are handled, which cases are not handled and which cases
+        may have more than a single possible handler thus may cause inconsistencies in a diff
+        resolution.
+
+     3. A generic differ may be reflective in nature and may suffer from degraded performance. A
+        compiled diff could use the knowledge of what could be handled and the priority to have
+        minimum number of branches to determine what handler will need to be invoked.
+
+    Due to the items described above, it is desirable to be able to compile the differ from the
+    signatures supplied by the provider, along with the dependency tree.
+    
+    The following interface defines the compiler function as well as the =Differ= interface. Given a
+    kind, namely the intentful handlers signatures and the dependency tree, a =Differ= is built.
+    #+Name: Differ-interface
+    #+BEGIN_SRC typescript
+      // The sfss compiler function. 
+      function compile_kind(sfss: sfs[], dep_tree: map<sfs, sfs[]>): Differ;
+
+      // More concisely this could simply be:
+      function compile_kind(kind: Kind): Differ;
+
+      // The differ is used to locate a diff in an entity between the
+      // current status and the desired state. 
+      interface Differ {
+          // Get the next diff from an entity based on the 
+          next_diff(entity:Entity):Diff;
+
+          // We could also get the entire list of diffs, ordered by the
+          // original dependency tree
+          all_diffs(entity:Entity):Diff[];
+      }
+    #+END_SRC
+
+**** Intentful Execution
+     Once a =Diff= was constructed by the =Differ=, it can then execute the handler function on the
+     proper provider. 
+
+     #+BEGIN_SRC typescript
+      // The Diff structure captures a discovered diff in an entity as well
+      // as the intentful action that may resolve such diff
+      interface Diff {
+          // The uri exposed by the provider which may handle this diff
+          intentful_fn_uri: provider_callback_url
+
+          // If this intent handler has a name, we could use it
+          name?: string;
+
+          // The fields identified by this differ, their path and value.
+          diff_fields: map<sfs, any>;
+
+          // Actually invokes the intentful function
+          invoke(): Response;
+      }
+    #+END_SRC
+
+    The =Diff= interface captures the fields that were matched by the sfs signatures (their path and
+    value), and the actual intentful behavior function url which is then used by the invoke
+    function.
+
+    This =invoke= function will result in the execution of the function registered using
+    =provider_sdk='s =on= command. Invoke is essentially an RPC command (for now over HTTP but my be
+    implemented over other protocols) which only notifies the provider that it should start
+    executing that handler.
+
+*** Execution ID
+    In order for Papiea to keep track of the state of these decoupled execution paths, a simple
+    technique is employed. In the =provider_sdk=, when an intentful command has been invoked, the
+    system generates a unique uuid url which is then stored in perishable memory (meaning RAM,
+    without being persisted) and registerd in the task. The uuid url is directing to a specific
+    instance of the provider, meaning does not go through a load balancer.
+
+    This allows the Papiea engine to handle failures in providers. At any time, such as during
+    recovery or timeouts, Papiea could look at the task to see if any handler is still claimed to be
+    working. It then takes the handler's uuid url, and tries to invoke it. If it succeeds, that
+    means that the provider which is working on it still has that function running. If it failed it
+    means that the provider does not know about this handler, and thus it can be safely removed. 
+
+    Possible reasons why the provider will not recognize a uuid url:
+    1. The provider has crashed and recovered. Since the provider is stateless and this uuid is not
+       saved anywhere other than memory, it will not be familiar with that handler's uuid. This
+       would mean that the engine needs to re-ask for this operation, or other operations if this
+       operation partially succeeded and updated the status fields accordingly.
+
+    2. The intent engine has crashed. The provider may have finished executing just fine and wanted
+       to remove the uuid from the task. If the API it uses goes through Papiea and not directly, it
+       may fail to update the task. Once Papiea has recovered, the task will still seem to be active
+       and working on that handler, however, this mechanism would allow us to clear the task and
+       issue the next handler to work on to the providers.
+
+    3. Any failure in communication that causes the task not to get updated.
+
+    This is not a WAL, it simply a mechanism that allows Papiea and a provider to know if something
+    is still running or not, without having to to rely on waiting for anything to complete. Thus,
+    this is a method for decoupling a caller from having to continuously and uninterruptedly
+    listening to the callee.
+
 *** Procedures Signatures
     Procedures are functions that providers can expose directly to an entity. These functions are
     not intentful by design, and usually cannot be expressed in terms of a spec change.

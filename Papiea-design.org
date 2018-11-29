@@ -1,14 +1,30 @@
 #+Title: Papiea Design
 #+SETUPFILE: https://shlomiv.github.io/org-html-themes/setup/theme-readtheorg.setup
 #+Options: H:5
+#+HTML_MATHJAX: align: left indent: 5em tagside: left font: Neo-Euler
 
 #+HTML_HEAD: <style>pre.src{background:#343131;color:white;} </style>
 #+HTML_HEAD: <style>#content{max-width:70%;} </style>
 #+HTML_HEAD: <style>div > ol.org-ol > li {margin-bottom:5px !important; /*color:red !important*/} </style>
+#+HTML_HEAD: <style>.nav .timestamp {color: inherit;}</style>
 
+#+EMAIL: shlomi.vaknin@nutanix.com
 
-Papiea is aimed to be a reference implementation of a formal general purpose intent engine. 
+#+LINK: gh    https://github.com/
+#+LINK: rfc   https://tools.ietf.org/html/
+#+LINK: thing https://github.com/thi-ng/
+#+LINK: w3    https://w3.org/TR/
+#+LINK: wiki  https://en.wikipedia.org/wiki/
 
+#+OPTIONS: prop:("VERSION")
+
+#+HTML: <div class="outline-2" id="meta">
+| *Author*   | {{{author}}} ({{{email}}})    |
+| *Date*     | {{{time(%Y-%m-%d %H:%M:%S)}}} |
+| *Revision* | DRAFT                         |
+#+HTML: </div>
+
+ Papiea is aimed to be a reference implementation of a [[*Formalities][formal general purpose intent engine]].
 * Definitions
   - _Spec_ - a map containing the desired state of a particular entity
   - _Status_ - a map containing the current statue of a particular entity. Always a superset of Spec
@@ -1205,6 +1221,85 @@ Papiea is aimed to be a reference implementation of a formal general purpose int
    // Provider handler registration:
    <<task-pc>>
    #+END_SRC
+
+* Formalities
+  Handling resources at a large enough scale can become quite a tedious job. There are many loosly
+  connected moving parts that all strive to keep in sync. In reality this keeping in sync is an
+  assumption we cannot have, so we handle errors. Errors are tricky to maintain since recovering
+  from an error is defined by the context of the error. There are many techniques to approach error
+  handling, but for the problem of manipulating resources, we belive that an "Intentful Programming"
+  approach may be more suitable. 
+
+  The word "Intentful" could mean many things. One way would be to treat it as "Fulfilling a
+  desire". Why? because when you have a desire that needs fullfiling, every action that you make,
+  you make with the intent of solving the dissonance between what it is you actually have and what
+  it is you desire to have. 
+
+  This defintion is useful because we can draw some formalities out of it: 
+  1. Let $T=\{(p,v)|p \in properties, v \in values\}$ be a representation of a state in our
+     world. For practical reasons, lets define it to be a set of properties and their values, which
+     collectively define the state.
+      
+  2. Let $S=$ be the set of all $T$. This is essentially the space of all states our world could be
+     in.
+  3. Let $cs \in S$ be a represention of "what it is we *actually have*"
+  4. Let $ds \in S$ be a represention of "what it is we *desire to have*"
+  5. Let $have=cs \setminus ds$ be all the things that we *have* and dont want
+  6. Let $want=ds \setminus cs$ be all the things that we do *want*
+  7. Let $diff=\{(p, v_{old}, v_{new})|(p,v_{old})\in have, (p, v_{new})\in want\}$
+
+  Now we know exactly which properties have to change, from what value and to what value, in order
+  to fulfil our desire. The next step is to define functions that can transform states. Lets develop
+  some intuition about how we approach fulfiling a desire:
+  
+  Lets say that we are thirsty. This sensation is captured in a property. Lets say we also have a
+  cup, and that the cup property has the value "full". In that case, our resolving function would be
+  to drink from the cup. If the cup is not "full", we will have a brand new desire, to fill the
+  cup. We could do that with the "faucet" property, by setting its value to "open", which is yet
+  another desire. So lets model that:
+  1. $properties={hydration, cup, faucet}$
+  2. $values=\{thirsty, quenched, full, empty, open, close\}$. Of course we could split this up so
+     properties may have values from close sets, but lets not get too rigorous for now.
+
+  Now lets define some functions:
+  1. $drink:T \to T$
+  2. $faucet_{open}: T \to T$
+  3. $fillcup: T \to T$
+  2. $faucet_{close}: T \to T$
+
+  At the end of applying any of the above function on $cs$, we get a new, different $cs$. We can
+  also get a new $cs$ spontaniously, say magically the water got spilled from the cup or the faucet
+  broke. When $cs$ changes for whatever reason, we recalculate $diff$. Our goal is to have
+  $|diff|=0$
+
+  To make an action, we need to examine the different possibilities:
+  1. If $\{(hydration, thirsty, quenched), (cup, _, full)\} \in diff$ then $drink$ 
+  2. If $\{(hydration, thirsty, quenched), (cup, empty, full), (faucet, closed, open\}\in diff$ then
+     $faucet_{open}$
+  3. If $\{(hydration, thirsty, quenched), (cup, empty, full), (faucet, open, open\}\in diff$ then $fillcup$
+  4. If $\{(faucet, open, closed\}\in diff$ then $faucet_{close}$
+
+  Lets generalize:
+  1. Let $pred=\wp(diff)$, the power-set of $diff$
+  2. Lets assign to each function $fn$ the set $dispatch_{fn} \in pred$, which is the set such that
+     when it exists in $pred$ this function $fn$ is applied on $cs$
+
+  This last assignment is essentially establising a function dispatch mechanism on top of the $diff$
+  we managed to calculate from our representation of states in our world. The set assigned
+  identifies the action that needs to happen when either a new desire enters the system, or the
+  current status of the system changed without changing the desire. In our example, hydration
+  property of the current state was changed to "thirsty" while the desired state of "quenched" is
+  present. This system makes sure that we are never thirsty, given that we have a cup and a
+  faucet. We effectively not only fulfilled a desire, but also make sure it always stays fulfilled.
+
+  So the next step is what to do when there are a few desires simultaneously. How do we determine
+  what to do first? We could simply keep all our $dispatch_{fn}$s in a list, ordered by our
+  perceived priorities. For example, do we first drink or do we first close the faucet?
+
+  Let $dlist=(dispatch_{fn_1}, ..., dispatch_{fn_k})$, at every time we recalculate $diff$, we
+  iterate through this ordered list one item at a time, see if $dispatch_{fn_i} \in diff$. If it is,
+  ${fn_i}$ is applied, $cs$ and $diff$ are recalculated, and we run thrugh $dlist$ again.
+
 
 
 * Last notes

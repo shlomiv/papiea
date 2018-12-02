@@ -4,7 +4,7 @@
 
 (nodejs/enable-util-print!)
 
-(def sfs-parser
+(def sfs-parser-ambigous
   (insta/parser
    "S = complex
     complex = (simple | vector | group)+
@@ -18,28 +18,37 @@
     <field> = #'[a-zA-Z_0-9]+'    
     "))
 
-(insta/parses sfs-parser "a.v.[+{a}.a,d]")
-
+(insta/parses sfs-parser-ambigous "a.v.[+{a}.a,d]")
 
 (def sfs-parser
   (insta/parser
-   "S = complex
-    complex = (simple | vector | group)+
-    group  = <'['> complex (<','> complex)*  <']'>
-    simple = path
-    <path> = field (<'.'> field)*
-    vector = (add | del | change) <'{'> path <'}'>
-    add = <'+'>
-    del = <'-'>
-    change = epsilon
-    <field> = #'[a-zA-Z_0-9]+'    
+   "S                = simple-complex     
+    <simple-complex> = complex | simple 
+    complex          = (simple <'.'>)? non-simple (<'.'> non-simple)* (<'.'> simple)? (* this trick avoids ambiguity *)
+    <non-simple>     = vector | group
+    group            = <'['> simple-complex (<','> (<' '>)* simple-complex)*  <']'>
+    simple           = path
+    <path>           = field (<'.'> field)*
+    vector           = (add | del | change) <'{'> path <'}'>
+    add              = <'+'>
+    del              = <'-'>
+    change           = epsilon
+    <field>          = #'[a-zA-Z_0-9]+'    
     "))
 
-(insta/parses sfs-parser "{a}.s.a")
-
-
-
-[:S [:complex [:simple "a"] [:simple "v"] [:group [:complex [:vector [:add] "a"] [:simple "a"]] [:complex [:simple "d"]]]]]
+(defn optimize-ast
+  "Optimizer for now simply removes a `complex` node when it consists of
+  only a single operation. This was to obfuscated to describe in the parser"
+  [ast]
+  (insta/transform {:S (fn [a] a)
+                    :complex (fn[& a] (if (= 1 (count a))
+                                        (first a)
+                                        (into [:papiea/complex] a)))
+                    :simple (fn[& a] (into [:papiea/simple] a))
+                    :vector (fn[& a] (into [:papiea/vector] a))
+                    :group (fn[& a] (into [:papiea/group] a))} ast))
+(time(optimize-ast(insta/parse sfs-parser "a.{s}.[a,v]")))
+(time(optimize-ast(insta/parse sfs-parser "a.-{s.c}.[+{d},f.{d}.f.d]")))
 
 
 (defn ^:export foo[a b]
@@ -69,14 +78,37 @@
     (vector? x) x
     :else       [x]))
 
+(defn ensure_vector_action [action {:keys [spec-val status-val]}]
+  (condp = action
+    [:add] (and (empty? status-val) (seq spec-val))
+    [:del] (and (empty? spec-val) (seq status-val))
+    [:change] (and (seq spec-val) (seq status-val))
+    [:all] true
+    (println "Error, dont know what to ensure on vector"))
+  )
+
+(defn get-in' [m ks]
+  (or (get-in m ks)
+      (get-in m (mapv keyword ks))))
+
+(get-in' {:f {:v 3}} ["f" "v"])
 
 (defmulti sfs-compiler (fn[x] (first x)))
+
+(defmethod sfs-compiler :S [[_ q]]
+  (let [c (sfs-compiler q)]
+    (fn[results]
+      (let [r (c results)]
+        (when (every? (fn[{:keys [spec-val status-val]}]
+                        (not= spec-val status-val))
+                      results)
+          results)))))
 
 (defmethod sfs-compiler :papiea/simple [[_ & ks]]
   (fn[results]
     (mapv (fn[{:keys [keys key spec-val status-val]}]
-            (let [s1 (mapv #(get-in % ks) spec-val)
-                  s2 (mapv #(get-in % ks) status-val)
+            (let [s1 (mapv #(get-in' % ks) spec-val)
+                  s2 (mapv #(get-in' % ks) status-val)
                   empty (or (empty? s1) (empty? s2))]
               {:keys keys
                :key (if empty key (last ks))
@@ -84,25 +116,29 @@
                :status-val (if empty status-val (flat-choices s2))}))
           results)))
 
-(defmethod sfs-compiler :papiea/vector [[_ & ks]]
+
+
+(defmethod sfs-compiler :papiea/vector [[_ action & ks]]
   (fn[results]
     (into []
           (mapcat (fn[{:keys [keys key spec-val status-val]}]
-                    (let [g (group-by #(get-in % ks)
+                    (let [g (group-by #(get-in' % ks)
                                       (into
                                        (mapv #(assoc % :papiea/spec true) spec-val)
                                        (mapv #(assoc % :papiea/status true) status-val)))]
-                      (mapv (fn[[id-val [s1 s2]]]              
-                              {:keys (assoc keys (last ks) id-val)
-                               :key key
-                               :spec-val (ensure-vec(cond (:papiea/spec s1) (dissoc s1 :papiea/spec)
-                                                          (:papiea/spec s2) (dissoc s2 :papiea/spec)
-                                                          :else nil))
-                               :status-val (ensure-vec(cond (:papiea/status s1) (dissoc s1 :papiea/status)
-                                                            (:papiea/status s2) (dissoc s2 :papiea/status)
-                                                            :else nil))})
-                            g)))
+                      (->> (mapv (fn[[id-val [s1 s2]]]              
+                                   {:keys (assoc keys (last ks) id-val)
+                                    :key key
+                                    :spec-val (ensure-vec(cond (:papiea/spec s1) (dissoc s1 :papiea/spec)
+                                                               (:papiea/spec s2) (dissoc s2 :papiea/spec)
+                                                               :else nil))
+                                    :status-val (ensure-vec(cond (:papiea/status s1) (dissoc s1 :papiea/status)
+                                                                 (:papiea/status s2) (dissoc s2 :papiea/status)
+                                                                 :else nil))})
+                                 g)
+                           (filterv (partial ensure_vector_action action)))))
                   results))))
+
 
 
 (defmethod sfs-compiler :papiea/complex [[_ & cmds]]
@@ -170,10 +206,15 @@
     {:keys {:id 1, :id2 5}, :key :name, :spec-val ["n2"], :status-val ["o2"]}])
 
 
-(= ((sfs-compiler [:papiea/complex [:papiea/simple :f1] [:papiea/vector :id]
-           [:papiea/group
-            [:papiea/simple :another]
-            [:papiea/complex[:papiea/simple :props] [:papiea/vector :id2] [:papiea/simple :name]]]])
+(= ((sfs-compiler [:papiea/complex
+                   [:papiea/simple :f1]
+                   [:papiea/vector :id]
+                   [:papiea/group
+                    [:papiea/simple :another]
+                    [:papiea/complex
+                     [:papiea/simple :props]
+                     [:papiea/vector :id2]
+                     [:papiea/simple :name]]]])
     (prepare
      {:f1 [{:id 2 :another "a2" :props [{:id2 4 :name "n1"}]}
            {:id 1 :another "a1" :props [{:id2 5 :name "n2"}]}]}
@@ -185,3 +226,22 @@
     {:keys {:id 2, :id2 4}, :key :name, :spec-val ["n1"], :status-val ["o1"]}
     {:keys {:id 1, :id2 5}, :key :name, :spec-val ["n2"], :status-val ["o2"]}])
 
+
+(optimize-ast(insta/parse sfs-parser "f1.{id}.[another,props.{id2}.name]"))
+
+(def a (sfs-compiler (optimize-ast(insta/parse sfs-parser "f1.{id}.[another,props.{id2}.name]"))))
+
+((sfs-compiler (optimize-ast (insta/parse sfs-parser "f1.{id}.[another, props.{id2}.name]")))
+ (prepare
+     {:f1 [{:id 2 :another "a2" :props [{:id2 4 :name "n1"}]}
+           {:id 1 :another "a1" :props [{:id2 5 :name "n2"}]}]}
+     {:f1 [{:id 1 :another "a1_old" :props [{:id2 5 :name "o2"}]}
+           {:id 2 :another "a2_old" :props [{:id2 4 :name "o1"}]}]}))
+
+
+(a
+ (prepare
+  {"f1" [{"id" 2 "another" "a2" "props" [{"id2" 4 "name" "n1"}]}
+         {"id" 1 "another" "a1" "props" [{"id2" 5 "name" "n2"}]}]}
+  {"f1" [{"id" 1 "another" "a1_old" "props" [{"id2" 5 "name" "o2"}]}
+         {"id" 2 "another" "a2_old" "props" [{"id2" 4 "name" "o1"}]}]}))

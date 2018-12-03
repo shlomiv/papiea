@@ -131,11 +131,8 @@
              
              [{:keys {:id 1}, :key :name, :spec-val ["old1"], :status-val ["new1"]}
               {:keys {:id 2}, :key :name, :spec-val ["old2"], :status-val ["new2"]}
-              {:keys {:id 3}, :key :papiea/item, :spec-val [], :status-val [{:id 3, :name "old3"}]}]))
-      )
-    
-    )
-
+              {:keys {:id 3}, :key :papiea/item, :spec-val [], :status-val [{:id 3, :name "old3"}]}]))))
+  
   (testing "vector"
     (testing "all changes"
       (is (= ((c/sfs-compiler[:papiea/vector [:all] :id])
@@ -192,14 +189,14 @@
 
 
     (is (= ((c/sfs-compiler [:papiea/complex
-                           [:papiea/simple :f1]
-                           [:papiea/vector [:all] :id]
-                           [:papiea/group
-                            [:papiea/simple :another]
-                            [:papiea/complex
-                             [:papiea/simple :props]
-                             [:papiea/vector [:all] :id2]
-                             [:papiea/simple :name]]]])
+                             [:papiea/simple :f1]
+                             [:papiea/vector [:all] :id]
+                             [:papiea/group
+                              [:papiea/simple :another]
+                              [:papiea/complex
+                               [:papiea/simple :props]
+                               [:papiea/vector [:all] :id2]
+                               [:papiea/simple :name]]]])
             (c/prepare
              {:f1 [{:id 2 :another "a2" :props [{:id2 4 :name "n1"}]}
                    {:id 1 :another "a1" :props [{:id2 5 :name "n2"}]}]}
@@ -231,15 +228,16 @@
       (is 
        (= (c/optimize-ast (insta/parse c/sfs-parser "f1.{id}.[another,props.{id2}.name]"))
 
-          [:papiea/complex
-           [:papiea/simple "f1"]
-           [:papiea/vector [:change] "id"]
-           [:papiea/group
-            [:papiea/simple "another"]
-            [:papiea/complex
-             [:papiea/simple "props"]
-             [:papiea/vector [:change] "id2"]
-             [:papiea/simple "name"]]]]))))
+          [:S
+           [:papiea/complex
+            [:papiea/simple "f1"]
+            [:papiea/vector [:change] "id"]
+            [:papiea/group
+             [:papiea/simple "another"]
+             [:papiea/complex
+              [:papiea/simple "props"]
+              [:papiea/vector [:change] "id2"]
+              [:papiea/simple "name"]]]]]))))
 
   (testing "optimizer removes singelton `complex` nodes,"
     (testing "not optimized"
@@ -255,9 +253,10 @@
     (testing "optimized"
       (is 
        (= (c/optimize-ast (insta/parse c/sfs-parser "[{a.v},d]"))
-          [:papiea/group
-           [:papiea/vector [:change] "a" "v"]
-           [:papiea/simple "d"]])))))
+          [:S
+           [:papiea/group
+            [:papiea/vector [:change] "a" "v"]
+            [:papiea/simple "d"]]])))))
 
 (deftest complete-compiler-test
   (testing "Multiple features: parsing, optimizing, compiling and running with grouping where one branch has another vector. See the `:keys` attribute in the results."
@@ -286,5 +285,32 @@
            [{:keys {"id" 2},:key "another",:spec-val ["a2"],:status-val ["a2_old"]}
             {:keys {"id" 1},:key "another",:spec-val ["a1"],:status-val ["a1_old"]}
             {:keys {"id" 2, "id2" 4},:key "name",:spec-val ["n1"],:status-val ["o1"]}
-            {:keys {"id" 1, "id2" 5},:key "name",:spec-val ["n2"],:status-val ["o2"]}]))
-      ) ) )
+            {:keys {"id" 1, "id2" 5},:key "name",:spec-val ["n2"],:status-val ["o2"]}])))
+
+    (testing "Even a single diff missing should results in nil"
+      (is (nil? ((c/sfs-compiler (c/optimize-ast (insta/parse c/sfs-parser "f1.{id}.[another, props.{id2}.name]")))
+              (c/prepare
+               {"f1" [{"id" 2 "another" "a2" "props" [{"id2" 4 "name" "n1"}]}
+                      {"id" 1 "another" "a1" "props" [{"id2" 5 "name" "n2"}]}]}
+               {"f1" [{"id" 1 "another" "a1_old" "props" [{"id2" 5 "name" "o2"}]}
+                      {"id" 2 "another" "a2" "props" [{"id2" 4 "name" "o1"}]}]})))))))
+
+(deftest ensure-diff-exists
+  (testing "all potential diffs has to really resolve to different values."
+    (testing "no differences"
+      (is (nil? ((c/sfs-compiler (c/optimize-ast (insta/parse c/sfs-parser "[a,v]")))
+                 (c/prepare {:a 1 :v 2}
+                            {:a 1 :v 2})))))
+
+    (testing "some differences"
+      (is (nil? ((c/sfs-compiler (c/optimize-ast (insta/parse c/sfs-parser "[a,v]")))
+                 (c/prepare {:a 1 :v 2}
+                            {:a 2 :v 2})))))
+
+    (testing "all different"
+      (is (= ((c/sfs-compiler (c/optimize-ast (insta/parse c/sfs-parser "[a,v]")))
+              (c/prepare {:a 1 :v 2}
+                         {:a 2 :v 4}))
+
+             [{:keys {}, :key "a", :spec-val [1], :status-val [2]}
+              {:keys {}, :key "v", :spec-val [2], :status-val [4]}])))))

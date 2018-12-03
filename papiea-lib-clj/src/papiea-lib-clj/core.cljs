@@ -33,8 +33,7 @@
   "Optimizer for now simply removes a `complex` node when it consists of
   only a single operation. This was to obfuscated to describe in the parser"
   [ast]
-  (insta/transform {:S (fn [a] a)
-                    :complex (fn[& a] (if (= 1 (count a))
+  (insta/transform {:complex (fn[& a] (if (= 1 (count a))
                                         (first a)
                                         (into [:papiea/complex] a)))
                     :simple (fn[& a] (into [:papiea/simple] a))
@@ -88,7 +87,7 @@
 (defmethod sfs-compiler :S [[_ q]]
   (let [c (sfs-compiler q)]
     (fn[results]
-      (let [r (c results)]
+      (let [results (c results)]
         (when (every? (fn[{:keys [spec-val status-val]}]
                         (not= spec-val status-val))
                       results)

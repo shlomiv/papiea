@@ -11,8 +11,22 @@
   :repl-options {:nrepl-middleware [cider.piggieback/wrap-cljs-repl]}
   
   :source-paths ["src"]
+  :test-paths ["test"]
 
-  :cljsbuild {:builds [{:source-paths ["src"]
-                        :compiler {:target :nodejs
-                                   :output-to "papiea-lib-clj.js"
-                                   :optimizations :simple}}]})
+  :aliases {"cljs-test"      ["cljsbuild" "test" "unit-tests"]
+            "test-all"       ["do" "clean," "test," "cljsbuild" "once"]
+            "cljs-auto-test" ["cljsbuild" "auto" "tests"]}
+
+  :cljsbuild {:builds {:production {:source-paths ["src"]
+                                    :compiler     {:target        :nodejs
+                                                   :output-to     "papiea-lib-clj.js"
+                                                   :optimizations :simple}}
+                       
+                       :tests {:source-paths   ["src" "test"]
+                               :notify-command ["node" "target/unit-tests.js"]
+                               :compiler       {:output-to     "target/unit-tests.js"
+                                                :optimizations :none
+                                                :target        :nodejs
+                                                :main          papiea-lib-clj.main-test}}}
+              
+              :test-commands {"unit-tests" ["node" "target/unit-tests.js"]}})

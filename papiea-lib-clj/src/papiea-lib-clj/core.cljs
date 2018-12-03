@@ -23,11 +23,20 @@
 (def sfs-parser
   (insta/parser
    "S                = simple-complex     
+
+    (* optimize simple case *)
     <simple-complex> = complex | simple 
-    complex          = (simple <'.'>)? non-simple (<'.'> non-simple)* (<'.'> simple)? (* this trick avoids ambiguity *)
-    <non-simple>     = vector | group
+    <non-simple>     = vector  | group    
+
+    (* this trick avoids ambiguity *)
+    complex          = (simple <'.'>)? c (<'.'> simple)? 
+
+    (* Allows for arbitraty simple/non-simple combination without introducing ambiguity *)
+    <c>              = non-simple (<'.'> non-simple)* | (non-simple <'.'>)+ simple (<'.'> c) 
+
+    (* regular flow *)
     group            = <'['> simple-complex (<','> (<' '>)* simple-complex)*  <']'>
-    simple           = path
+    simple           = path 
     <path>           = field (<'.'> field)*
     vector           = (add | del | change) <'{'> path <'}'>
     add              = <'+'>
@@ -35,6 +44,18 @@
     change           = epsilon
     <field>          = #'[a-zA-Z_0-9]+'    
     "))
+
+(= (insta/parses sfs-parser "a.1.2.{b.1.2}.c.1.2.[d.1.2].e.1.2.{d.1.2}" )
+   [[:S
+     [:complex
+      [:simple "a" "1" "2"]
+      [:vector [:change] "b" "1" "2"]
+      [:simple "c" "1" "2"]
+      [:group [:simple "d" "1" "2"]]
+      [:simple "e" "1" "2"]
+      [:vector [:change] "d" "1" "2"]]]])
+
+(insta/parses sfs-parser "a.{b}.c.[d].e.{f}.g" :partial true)
 
 (defn optimize-ast
   "Optimizer for now simply removes a `complex` node when it consists of
@@ -52,7 +73,7 @@
 
 
 (defn ^:export foo[a b]
-  (println "WITH BAR NO!!!" a b (q a) )
+  (println "WITH BAR NO!!!" a b)
   (str a "." b))
 
 (defn -main [& args]
@@ -84,7 +105,7 @@
     [:del] (and (empty? spec-val) (seq status-val))
     [:change] (and (seq spec-val) (seq status-val))
     [:all] true
-    (println "Error, dont know what to ensure on vector"))
+    (throw (js/Error. "Error, dont know what to ensure on vector")))
   )
 
 (defn get-in' [m ks]
@@ -176,7 +197,7 @@
                      {:name "n"}]}]}])
 
 
-(=((sfs-compiler[:papiea/vector :id])
+(=((sfs-compiler[:papiea/vector [:all] :id])
    [{:keys       {} :key :papiea/item
      :spec-val   [{:id 1 :name "old1"} {:id 2 :name "old2"}]
      :status-val [{:id 2 :name "new2"} {:id 1 :name "new1"} {:id 3 :name "old3"}]}])
@@ -195,7 +216,7 @@
    {:keys {:id 3}, :key :papiea/item, :spec-val [], :status-val [{:id 3, :name "old3"}]}])
 
 
-(= ((sfs-compiler [:papiea/complex [:papiea/simple :f1] [:papiea/vector :id] [:papiea/simple :props] [:papiea/vector :id2] [:papiea/simple :name]])
+(= ((sfs-compiler [:papiea/complex [:papiea/simple :f1] [:papiea/vector [:all] :id] [:papiea/simple :props] [:papiea/vector [:all] :id2] [:papiea/simple :name]])
     (prepare
      {:f1 [{:id 2 :props [{:id2 4 :name "n1"}]}
            {:id 1 :props [{:id2 5 :name "n2"}]}]}
@@ -208,12 +229,12 @@
 
 (= ((sfs-compiler [:papiea/complex
                    [:papiea/simple :f1]
-                   [:papiea/vector :id]
+                   [:papiea/vector [:all] :id]
                    [:papiea/group
                     [:papiea/simple :another]
                     [:papiea/complex
                      [:papiea/simple :props]
-                     [:papiea/vector :id2]
+                     [:papiea/vector [:all] :id2]
                      [:papiea/simple :name]]]])
     (prepare
      {:f1 [{:id 2 :another "a2" :props [{:id2 4 :name "n1"}]}
@@ -245,3 +266,30 @@
          {"id" 1 "another" "a1" "props" [{"id2" 5 "name" "n2"}]}]}
   {"f1" [{"id" 1 "another" "a1_old" "props" [{"id2" 5 "name" "o2"}]}
          {"id" 2 "another" "a2_old" "props" [{"id2" 4 "name" "o1"}]}]}))
+
+(optimize-ast (insta/parse sfs-parser "a.{b}.c.[d]"))
+
+
+(defn ^:export clj_str[a]
+  (str a))
+
+(defn ^:export parse_sfs[sfs-signature]
+  (insta/parse sfs-parser sfs-signature))
+
+(defn ^:export optimize_sfs_ast[ast]
+  (optimize-ast ast))
+
+(defn ^:export compile_sfs_ast[ast]
+  (sfs-compiler ast))
+
+(defn ^:export compile_sfs[sfs-signature]
+  (let [sfs-fn (some-> sfs-signature
+                       parse_sfs
+                       optimize-ast
+                       sfs-compiler
+                       )]
+    (if (fn? sfs-fn) sfs-fn {:error-compiling-sfs :sfs-fn
+                             :sfs-signature sfs-signature})))
+
+(defn ^:export run_compiled_sfs[compiled-sfs-fn spec status]
+  (compiled-sfs-fn (prepare spec status))) 

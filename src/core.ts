@@ -67,6 +67,9 @@ interface Procedural_Signature {
     // Does the engine pauses all intentful operation invocations for
     // the duration of the procedural call
     execution_strategy: Procedural_Execution_Strategy;
+
+    // Action url into the provider
+    procedure_callback: Provider_Callback_URL;
 }
 
 interface Provider_Kind {

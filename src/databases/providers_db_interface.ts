@@ -13,7 +13,7 @@ interface Providers_DB {
     list_providers(): Provider_Description[]
 
     // Removes and de-registers a provider from the intent engine
-    delete_provider(provider_uuid: string): boolean;
+    delete_provider(provider_uuid: uuid4): boolean;
 }
 
 // providers-db-interface ends here

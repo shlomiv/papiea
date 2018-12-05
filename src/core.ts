@@ -2,7 +2,7 @@
 // [[file:~/work/papiea-js/Papiea-design.org::metadata-struct][metadata-struct]]
 interface Metadata {
     // Identity fields
-    uuid: string;
+    uuid: uuid4;
     kind: string;
     spec_version: number;
 

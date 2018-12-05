@@ -56,9 +56,9 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
    #+BEGIN_SRC typescript
      interface Metadata {
          // Identity fields
-         uuid: uuid4;
+         uuid: string;
          kind: string;
-         specVersion: number;
+         spec_version: number;
 
          // Additional fields
          created_at: timestamp;
@@ -113,27 +113,65 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
      // Intentful signature
      type sfs: string;
 
-     type provider_callback_url: string;
-     
-     interface Kind {
+     type Provider_Callback_URL: string;
+
+     interface Intentful_Signature {
+         signature: sfs;
+         compiled_signature: any
+         function_callback: Provider_Callback_URL;
+     }
+
+     // Store a struct description parsed from Swagger Model YAML
+     type Data_Description = any;
+
+     // We may want to support different execution strategies. For now we
+     // can only halt intentful execution for the duration of the
+     // procedural call
+     enum Procedural_Execution_Strategy {Halt_Intentful};
+
+     interface Procedural_Signature {
+         // The name of the procedure to be exported by the engine.
+         name: string;
+
+         // The representation of the data to be passed to this procedure
+         argument: Data_Description;
+
+         // The automatically generated validator
+         arg_validator_fn: (arg:any)=>boolean;
+
+         // The representation of the data to be returned from this procedure
+         result: Data_Description;
+
+         // The automatically generated validator
+         result_validator_fn: (res:any)=>boolean;
+
+         // Does the engine pauses all intentful operation invocations for
+         // the duration of the procedural call
+         execution_strategy: Procedural_Execution_Strategy;
+     }
+
+     interface Provider_Kind {
+
+         // The name of the kind, and its plural form for proper REST naming
          name: string;
          name_plural: string;
 
          //// Entity structure
-         kind_structure: parsed_yaml;
+         kind_structure: Data_Description;
          validator_fn: (entity:entity)=>boolean;
-         semantic_validator_fn?: provider_callback_url; 
+         semantic_validator_fn?: Provider_Callback_URL; 
 
          //// Intentful behavior
-         intentful_tasks: map<sfs, Intentful_Behavior>;
+         intentful_signatures: map<sfs, Intentful_Signatures>;
 
          // Every sfs lists the sfs's it has to execute before
          dependency_tree: map<sfs, sfs[]>;
-         
+
+         // The compiled Differ
          differ: Differ;
 
          //// Procedural behavior
-         procedures: map<string, Procedure>;
+         procedures: map<string, Procedural_Signature>;
      }
    #+END_SRC
    
@@ -174,7 +212,7 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
 
    #+Name: entity-reference-struct
    #+BEGIN_SRC typescript
-     interface entity_reference  {
+     interface Entity_Reference  {
          uuid: uuid4;
          kind: string;
 
@@ -193,7 +231,7 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
 
    #+Name: provider-desc-struct
    #+BEGIN_SRC typescript
-     type Provider_Description struct {
+     interface Provider_Description {
          uuid: uuid4;
          version: Version;
          kinds: Kind[]
@@ -225,29 +263,29 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
 **** Interface
     #+Name: status-db-interface
     #+BEGIN_SRC typescript
-      interface Spec_DB {
-          // Tries to update the spec. Succeeds only if the spec_version
-          // field in metadata is currently equals to the one on record. The
-          // implementation needs to CAS the spec_version to the increment
-          // of itself, and return the new metadata with the new
-          // spec_version and the new CASed in spec.
-          update_spec(meta:metadata, spec:spec):[boolean, metadata, spec];
 
-          // Get the spec of a particular entity from the db. Returns both
-          // current metadata and the spec of that entity.
-          get_spec(meta:metadata):[metadata, spec];
+      interface Status_DB{
 
-          // List all specs that have their fields match the ones given in
+          // Update the status in the status db. As long as the input is
+          // correct this always succeeds.
+          update_status(meta:Metadata, status:Status):boolean;
+
+          // Gets the status of a particular entity from the db. Returns
+          // both current metadata and status of the entity.
+          get_status(meta:Metadata):[Metadata, Status];
+
+          // List all status that have their fields match the ones given in
           // fields_map. E.g. we could look for all specs for `vm` kind that
           // have a certain ip:
           // list_specs({"metadata": {"kind": "vm"},
-          //             "spec":     {"ip":   "10.0.0.10"}})
+          //             "status":   {"ip":   "10.0.0.10"}})
           //
           // We could come up with command such as greater-than etc at some
           // later point, or we could use a similar dsl to mongodb search
           // dsl.
-          list_specs(fields_map: any): [metadata, spec][];
+          list_specs(fields_map: any): [Metadata, Status][];
       }
+
     #+END_SRC
 
 *** Spec
@@ -259,26 +297,32 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
 **** Interface
     #+Name: spec-db-interface
     #+BEGIN_SRC go
-      interface Status_DB{
-          // Update the status in the status db. As long as the input is
-          // correct this always succeeds.
-          update_status(meta:metadata, status:status):boolean;
+    
+      interface Spec_DB {
 
-          // Gets the status of a particular entity from the db. Returns
-          // both current metadata and status of the entity.
-          get_status(meta:metadata):[metadata, status];
+          // Tries to update the spec. Succeeds only if the spec_version
+          // field in metadata is currently equals to the one on record. The
+          // implementation needs to CAS the spec_version to the increment
+          // of itself, and return the new metadata with the new
+          // spec_version and the new CASed in spec.
+          update_spec(meta:Metadata, spec:Spec):[boolean, Metadata, Spec];
 
-          // List all status that have their fields match the ones given in
+          // Get the spec of a particular entity from the db. Returns both
+          // current metadata and the spec of that entity.
+          get_spec(meta:Metadata):[Metadata, Spec];
+
+          // List all specs that have their fields match the ones given in
           // fields_map. E.g. we could look for all specs for `vm` kind that
           // have a certain ip:
           // list_specs({"metadata": {"kind": "vm"},
-          //             "status":   {"ip":   "10.0.0.10"}})
+          //             "spec":     {"ip":   "10.0.0.10"}})
           //
           // We could come up with command such as greater-than etc at some
           // later point, or we could use a similar dsl to mongodb search
           // dsl.
-          list_specs(fields_map: any): [metadata, status][];
+          list_specs(fields_map: any): [Metadata, Spec][];
       }
+
     #+END_SRC
 
 *** Providers
@@ -290,20 +334,22 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
 **** Interface
     #+Name: providers-db-interface
     #+BEGIN_SRC typescript
+
       interface Providers_DB {
 
           // Register a new provider with the intent engine
           register_provider(provider: Provider_Description):void;
 
-          //Upgrade a provider
-          upgrade_provider(from_provider: uuid4, to: providerDescription): Task;
+          //Upgrade a provider - This should be in the admin?
+          //upgrade_provider(from_provider: uuid4, to: providerDescription): Task;
 
           // List all registered providers
-          listProviders(): providerDescription[]
+          list_providers(): Provider_Description[]
 
           // Removes and de-registers a provider from the intent engine
-          deleteProvider(provider: uuid4): boolean;
+          delete_provider(provider_uuid: string): boolean;
       }
+
     #+END_SRC
 
 ** Dependent services
@@ -321,15 +367,15 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
     #+END_note
     
 **** Interface
-     #+Name: task-interface
+     #+Name: task-manager-interface
      #+BEGIN_SRC typescript
-       interface Task {
+       interface Task_Manager {
            wait():any;
            register_delta(Diff[]);
        } 
 
        function new_task (): Task;
-       function new_intentful_task (papiea: Papiea, entity: entity_reference, kind: Kind, spec: Spec): Task;
+       function new_intentful_task (papiea: Papiea, entity: Entity_Reference, kind: Kind, spec: Spec): Task;
      #+END_SRC
     
      A Task allows you to wait for it to finish.
@@ -340,7 +386,7 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
     generate entity validators and expose CRUD and [[*Procedures][Procedural]] APIs.
    
 **** Interface
-    #+Name: initialize-papiea
+    #+Name: papiea-interface
     #+BEGIN_SRC typescript
       interface Papiea {
 
@@ -421,14 +467,15 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
       more should come.
 
       The core is the =Provider= abstraction:
+      #+Name: provider_sdk_ts_provider_interface
       #+BEGIN_SRC typescript
         // Api for the provider-sdk
-        enum ProviderPower {On, Off, Suspended};
+        enum Provider_Power {On, Off, Suspended};
 
         interface Provider {
-            new_kind(entity_yaml:string):Kind;
+            new_kind(entity_yaml:Data_Description):Kind;
             version(major:number, minor:number, build: number, extra: string):void;
-            power(state: ProviderPower): ProviderPower;
+            power(state: Provider_Power): Provider_Power;
         }
       #+END_SRC
 
@@ -438,14 +485,15 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
       A Kind is added when the user supplies a valid description for the entity handled by this
       kind. Once the kind's entity description is validated, an object of type =Kind= is returned on
       which we can do the following things:
-
+      
+      #+Name: provider_sdk_ts_kind_interface
       #+BEGIN_SRC typescript
-        enum ProceduralExecStrategy {HaltIntentful};
+        enum Procedural_Execution_Strategy {Halt_Intentful};
 
         interface Kind {
 
             // Adds an intentful handler. Dispatched based on the signautre passed
-            on(signature: string, name: string, rbac: any, handler: (ctx:IntentfulCtx, entity:any)=>void):IntentfulHandler;
+            on(signature: string, name: string, rbac: any, handler: (ctx:IntentfulCtx, entity:any)=>void):Intentful_Handler;
 
             // Convenient functions for constructing/destructing an entity. Could be implemented in terms of "on above"
             on_new(name: string, rbac: any, handler: (ctx:IntentfulCtx, entity:any)=>void):void;
@@ -453,7 +501,7 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
 
             // Adds a procedural behaviour to the entity
             procedure(name: string, rbac: any,
-                      strategy: ProceduralExecStrategy,
+                      strategy: Procedural_Execution_Strategy,
                       input_desc: string,
                       output_desc: string,
                       handler: (ctx:ProceduralCtx, input:any)=>any):void;
@@ -478,10 +526,11 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
       When we have multiple intentful handlers, it may be desirable to be able to define a
       dependency tree between the different intentful handlers. Which should execute before which:
       
+      #+Name: provider_sdk_ts_intentful_handler_interface
       #+BEGIN_SRC typescript
-        interface IntentfulHandler {
+        interface Intentful_Handler {
             // Establishes a dependency tree between the various handlers
-            before(...handlers: IntentfulHandler[]):void;
+            before(...handlers: Intentful_Handler[]):void;
         }
       #+END_SRC
 
@@ -492,10 +541,10 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
       random.
 
       During the execution of an intentful handler, the following functionality could be used:
+      #+Name: provider_sdk_ts_intentful_ctx_interface
       #+BEGIN_SRC typescript
-
         interface IntentfulCtx {
-            update_status(metadata:any, status: any):boolean;
+            update_status(metadata: Metadata, status: Status):boolean;
             update_progress(message:string, done_percent:number):boolean;
         }
 
@@ -864,23 +913,25 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
     
     The following interface defines the compiler function as well as the =Differ= interface. Given a
     kind, namely the intentful handlers signatures and the dependency tree, a =Differ= is built.
-    #+Name: Differ-interface
+    #+Name: Differ-interface 
     #+BEGIN_SRC typescript
+
       // The sfss compiler function. 
       function compile_kind(sfss: sfs[], dep_tree: map<sfs, sfs[]>): Differ;
 
       // More concisely this could simply be:
-      function compile_kind(kind: Kind): Differ;
+      function compile_kind(kind: Provider_Kind): Differ;
 
       // The differ is used to locate a diff in an entity between the
       // current status and the desired state. 
       interface Differ {
+
           // Get the next diff from an entity based on the 
-          next_diff(ref:entity_reference, spec: Spec, status: Status):Diff;
+          next_diff(entity:Entity_Reference, spec: Spec, status: Status):Diff;
 
           // We could also get the entire list of diffs, ordered by the
           // original dependency tree
-          all_diffs(ref:entity_reference, spec: Spec, status: Status):Diff[];
+          all_diffs(entity:Entity_Reference, spec: Spec, status: Status):Diff[];
       }
     #+END_SRC
 
@@ -888,6 +939,7 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
      Once a =Diff= was constructed by the =Differ=, it can then execute the handler function on the
      proper provider. 
 
+     #+Name: Diff-interface
      #+BEGIN_SRC typescript
       // The Diff structure captures a discovered diff in an entity as well
       // as the intentful action that may resolve such diff
@@ -1060,7 +1112,7 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
    
    #+Name: task-pc
    #+BEGIN_SRC typescript
-     function new_intentful_task(papiea: Papiea, entity: entity_reference, kind: Kind, spec: Spec): Task {
+     function new_intentful_task(papiea: Papiea, entity: Entity_Reference, kind: Kind, spec: Spec): Task {
          // Get the status of the entity we are trying to change.
          status = papiea.status_db.get_status(entity);
 
@@ -1142,8 +1194,73 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
 *** Example Provider
 
 * Full files
+** Core definitions
+*** /src/core.ts
+    #+BEGIN_SRC typescript :noweb yes :tangle src/core.ts :exports code :mkdirp yes :comments noweb
+    
+    <<metadata-struct>>
+
+    <<spec-struct>>
+
+    <<status-struct>>
+
+    <<entity-struct>>
+
+    <<kind-struct>>
+
+    <<entity-reference-struct>>
+
+    <<provider-desc-struct>>
+
+    <<papiea-interface>>
+
+    #+END_SRC
+
+** Databases
+*** /src/intentful_core/differ_interface.ts
+    #+BEGIN_SRC typescript :noweb yes :tangle src/intentful_core/differ_interface.ts :exports code :mkdirp yes :comments noweb
+    <<Differ-interface>>
+
+    <<Diff-interface>>
+    #+END_SRC
+*** /src/databases/spec_db_interface.ts
+    #+BEGIN_SRC typescript :noweb yes :tangle src/databases/spec_db_interface.ts :exports code :mkdirp yes :comments noweb
+    <<spec-db-interface>>
+    #+END_SRC
+
+*** /src/databases/status_db_interface.ts
+    #+BEGIN_SRC typescript :noweb yes :tangle src/databases/status_db_interface.ts :exports code :mkdirp yes :comments noweb
+    <<status-db-interface>>
+    #+END_SRC
+
+*** /src/databases/providers_db_interface.ts
+    #+BEGIN_SRC typescript :noweb yes :tangle src/databases/providers_db_interface.ts :exports code :mkdirp yes :comments noweb
+    <<providers-db-interface>>
+    #+END_SRC
+
+   
+** Tasks
+*** /src/tasks/task_manager_interface.ts
+    #+BEGIN_SRC typescript :noweb yes :tangle src/tasks/task_manager_interface.ts :exports code :mkdirp yes :comments noweb
+    <<task-manager-interface>>
+    #+END_SRC
+
+** Provider SDK
+*** Typescript: /src/provider_sdk/typescript_sdk_interface
+    #+BEGIN_SRC typescript :noweb yes :tangle src/provider_sdk/typescript_sdk_interface.ts :exports code :mkdirp yes :comments noweb
+    <<provider_sdk_ts_provider_interface>>
+
+    <<provider_sdk_ts_kind_interface>>
+
+    <<provider_sdk_ts_intentful_handler_interface>>
+
+    <<provider_sdk_ts_intentful_ctx_interface>>
+    #+END_SRC
+
+
 ** /src-go/papiea/engine/core.go
-   #+BEGIN_SRC go :noweb yes :tangle src-go/papiea/engine/core.go :exports code :mkdirp yes
+   # :noweb yes :tangle src-go/papiea/engine/core.go :exports code :mkdirp yes
+   #+BEGIN_SRC go 
    // All our structs and interfaces:
    
    // Untyped json for now. We should probably use some better library for that:
@@ -1183,7 +1300,8 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
    
    #+END_SRC
 ** /src-go/papiea/engine/server.go
-  #+BEGIN_SRC go :noweb yes :tangle src-go/papiea/engine/server.go :exports code :mkdirp yes
+  # :noweb yes :tangle src-go/papiea/engine/server.go :exports code :mkdirp yes
+  #+BEGIN_SRC go 
     #import stuff
 
     // Initialize Papiea.
@@ -1200,13 +1318,15 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
   #+END_SRC
   
 ** /src-go/papiea/engine/provider.go 
-   #+BEGIN_SRC go :noweb yes :tangle src-go/papiea/engine/provider.go :exports code :mkdirp yes
+   # :noweb yes :tangle src-go/papiea/engine/provider.go :exports code :mkdirp yes
+   #+BEGIN_SRC go 
    // Provider handler registration:
    <<provider-handler-pc>>
    #+END_SRC
 
 ** /src-go/papiea/engine/tasks.go
-   #+BEGIN_SRC go :noweb yes :tangle src-go/papiea/engine/tasks.go :exports code :mkdirp yes
+   # :noweb yes :tangle src-go/papiea/engine/tasks.go :exports code :mkdirp yes
+   #+BEGIN_SRC go 
    // Provider handler registration:
    <<task-pc>>
    #+END_SRC

@@ -234,7 +234,7 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
      interface Provider_Description {
          uuid: uuid4;
          version: Version;
-         kinds: Kind[]
+         kinds: Provider_Kind[]
      }
    #+END_SRC
 

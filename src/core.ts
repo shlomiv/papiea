@@ -109,7 +109,7 @@ interface Entity_Reference  {
 interface Provider_Description {
     uuid: uuid4;
     version: Version;
-    kinds: Kind[]
+    kinds: Provider_Kind[]
 }
 // provider-desc-struct ends here
 

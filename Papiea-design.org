@@ -1217,12 +1217,6 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
     #+END_SRC
 
 ** Databases
-*** /src/intentful_core/differ_interface.ts
-    #+BEGIN_SRC typescript :noweb yes :tangle src/intentful_core/differ_interface.ts :exports code :mkdirp yes :comments noweb
-    <<Differ-interface>>
-
-    <<Diff-interface>>
-    #+END_SRC
 *** /src/databases/spec_db_interface.ts
     #+BEGIN_SRC typescript :noweb yes :tangle src/databases/spec_db_interface.ts :exports code :mkdirp yes :comments noweb
     <<spec-db-interface>>
@@ -1238,7 +1232,13 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
     <<providers-db-interface>>
     #+END_SRC
 
-   
+** Differ   
+*** /src/intentful_core/differ_interface.ts
+    #+BEGIN_SRC typescript :noweb yes :tangle src/intentful_core/differ_interface.ts :exports code :mkdirp yes :comments noweb
+    <<Differ-interface>>
+
+    <<Diff-interface>>
+    #+END_SRC
 ** Tasks
 *** /src/tasks/task_manager_interface.ts
     #+BEGIN_SRC typescript :noweb yes :tangle src/tasks/task_manager_interface.ts :exports code :mkdirp yes :comments noweb

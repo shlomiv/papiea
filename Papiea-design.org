@@ -8,6 +8,8 @@
 #+HTML_HEAD: <style>div > ol.org-ol > li {margin-bottom:5px !important; /*color:red !important*/} </style>
 #+HTML_HEAD: <style>.nav .timestamp {color: inherit;}</style>
 
+#+OPTIONS: auto-id:t
+
 #+EMAIL: shlomi.vaknin@nutanix.com
 
 #+OPTIONS: prop:("VERSION")
@@ -21,6 +23,9 @@
 Papiea is aimed to be a reference implementation of a [[*Formalities][formal general purpose intent engine]].
 
 * Definitions
+  :PROPERTIES:
+  :CUSTOM_ID: h-A6599723-E88D-44A3-A967-AE0C49A54CC6
+  :END:
   - _Spec_ - a map containing the desired state of a particular entity
   - _Status_ - a map containing the current statue of a particular entity. Always a superset of Spec
   - _Metadata_ - Information of the identity of the entity. Must contain at least =uuid=, =kind= and =specVersion=
@@ -32,6 +37,9 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
   - _Providers_ - Pluggable handlers that can transform an entity from its current state to its desired state
   - _Tasks_ - a mechanism for following the progress of resolving Diffs
 * Basic Interfaces
+  :PROPERTIES:
+  :CUSTOM_ID: h-CE2D607E-693A-4AEC-A492-4232FDFB9D78
+  :END:
   The main concept behind the intentful approach is the ability to know what is the desired state of
   our system and what is the actual current state. Once we have this knowledge, many different kinds
   of engines could be built that would attempt to resolve to tension formed when the intended state,
@@ -41,6 +49,9 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
   identity, marked by the =Metadata=. The following interfaces capture these most basic concepts.
 
 ** Metadata
+   :PROPERTIES:
+   :CUSTOM_ID: h-CE60E8C5-765E-4454-A5F9-2780A2464889
+   :END:
    Metadata has a structured portion which contains fields that defines the identity of a particular
    entity. The fields that identify the entity are:
    - =uuid= - a unique id representing the identity of this entity
@@ -67,6 +78,9 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
    #+END_SRC
   
 ** Spec
+   :PROPERTIES:
+   :CUSTOM_ID: h-BAE5B042-453A-4E68-9829-DFEED95D9C4F
+   :END:
    The =Spec=, which is the desired state, is simply a json object, or an unstructured map. It can
    and should get a structure when used specifically by any particular entity [[*Kind][Kind]]. However, at the
    engine level, a spec is an unstructured map that can be compared to the mirroring =Status= map to
@@ -79,6 +93,9 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
    #+END_SRC
 
 ** Status
+   :PROPERTIES:
+   :CUSTOM_ID: h-48BE09F4-1DFC-4110-9F9F-67399113C57C
+   :END:
    The =Status=, which is a representation of the true current state of the entity, is also simply a
    json. Its content and structure is a superset of [[*Spec][Spec]], meaning that every field in =Spec= will
    also appear in =Status=, but may contain any extra fields as desired by the provider.
@@ -92,6 +109,9 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
    #+END_SRC
 
 ** Entity
+   :PROPERTIES:
+   :CUSTOM_ID: h-122002C8-E0B4-40F9-A48B-E75FDA28AAC6
+   :END:
    An Entity is simply the tuple =(Metadata, Spec, Status)=. It usually denotes a snapshot in time of a particular entity.
 
    #+Name: entity-struct
@@ -104,6 +124,9 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
    #+END_SRC
 
 ** Kind
+   :PROPERTIES:
+   :CUSTOM_ID: h-1A45850B-821C-439F-BE1C-5CA5FF2B7A79
+   :END:
    A Kind is the entity's metadata. It contains an entire description of what the entity is and what
    it may do. This information will be used to provideing full CRUD operation on the entity
    structure along with custom procedures and intentful handlers.
@@ -209,6 +232,9 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
          and output result structures, execution strategy, etc. (see TODO:)
   
 ** Entity Reference
+   :PROPERTIES:
+   :CUSTOM_ID: h-72D813C8-1AEE-449B-BE2E-0FB4FC53FD5A
+   :END:
    Entities can point to other entities using a reference. A reference may onlu refers to the
    identity of an entity, and it is the intent engine that returns the entity's most recent spec and
    most current status.
@@ -226,6 +252,9 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
    #+END_SRC
 
 ** Provider description
+   :PROPERTIES:
+   :CUSTOM_ID: h-97314854-673B-4CD4-874A-B9C1F9AE6B44
+   :END:
    Papiea is extensible by the use of =Providers=.  A Provider defines entities by providing their
    structure, their procedures and intentful behaviors. Along with declaratively define the entity's
    structure, it also enables intentful behaviors by defining how differences between spec and
@@ -248,13 +277,22 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
    3. The list of Kinds supported by this provider
 
 * Modules
+  :PROPERTIES:
+  :CUSTOM_ID: h-855804C6-C489-4C0E-97BC-889C0D9634F2
+  :END:
 ** Databases
+   :PROPERTIES:
+   :CUSTOM_ID: h-66558F55-8F93-44E5-9A37-0BD433627126
+   :END:
    #+BEGIN_note
    *Multitenancy*: All databases are aware of tenants. It may be implemented as a column or
    attribute of a table or document, or as a different database with a different connect uri.
    #+END_note
    
 *** Status
+    :PROPERTIES:
+    :CUSTOM_ID: h-9E8BF858-2CCE-4A4D-A786-ED53BA3F79E9
+    :END:
     Status database will be a mapping from a metadata (namely, =uuid= and =kind=) to a status json document. 
 
     It may be implemented using a fast in-memory database, since it may require frequent rapid
@@ -265,6 +303,9 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
     Each provider for a kind will supply its entity's structure in its YAML.
     
 **** Interface
+     :PROPERTIES:
+     :CUSTOM_ID: h-7E3D79F1-DC44-4C08-8EA0-CC683CEB36BA
+     :END:
     #+Name: status-db-interface
     #+BEGIN_SRC typescript
 
@@ -293,12 +334,18 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
     #+END_SRC
 
 *** Spec
+    :PROPERTIES:
+    :CUSTOM_ID: h-67BEA7CF-81F7-4C99-84AB-FC36B20906C6
+    :END:
     Unlike status which can always be fetched from the providers, spec is a record of the user's
     intent and must be persistent. It must also be scalable and highly available. It must have a
     clear notion of atomicity (such as compare-and-set/swap) in order to atomically update spec
     values.
 
 **** Interface
+     :PROPERTIES:
+     :CUSTOM_ID: h-C485E97F-9BAD-4B12-820E-02E408231E6E
+     :END:
     #+Name: spec-db-interface
     #+BEGIN_SRC go
     
@@ -330,12 +377,18 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
     #+END_SRC
 
 *** Providers
+    :PROPERTIES:
+    :CUSTOM_ID: h-8693B55A-1808-4981-B1E1-D07BFF286BD3
+    :END:
     Providers database stores all the configurations a provider has registered (encoded in [[*Provider description][Provider
     description]] section). It is used by the engine to record which providers are registered. The
     engine uses this indirectly to initialize all user-facing APIs. This seperation makes it easy to
     scale the engine to many instances.
 
 **** Interface
+     :PROPERTIES:
+     :CUSTOM_ID: h-48C4E5F4-E98F-4DAA-8DB7-1576C1EC3B09
+     :END:
     #+Name: providers-db-interface
     #+BEGIN_SRC typescript
 
@@ -360,7 +413,13 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
     #+END_SRC
 
 ** Dependent services
+   :PROPERTIES:
+   :CUSTOM_ID: h-DEA1F8F2-7248-4943-8B88-068C4D3207B5
+   :END:
 *** Tasks
+    :PROPERTIES:
+    :CUSTOM_ID: h-A0127E94-8730-4DC2-B3EA-93BEA06DE7F1
+    :END:
     Papiea defines a task to be a mechanism that tracks the progress of change towards a
     *particular* spec version. It does not matter how the change took place: through a provider,
     manually or by an error. A task will listen on the relevant status changes and mark off the
@@ -374,6 +433,9 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
     #+END_note
     
 **** Interface
+     :PROPERTIES:
+     :CUSTOM_ID: h-D04F146F-B16A-481B-9CD6-7552308467FF
+     :END:
      #+Name: task-manager-interface
      #+BEGIN_SRC typescript
        interface Task_Manager {
@@ -388,11 +450,20 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
      A Task allows you to wait for it to finish.
 
 ** Papiea Engine
+   :PROPERTIES:
+   :CUSTOM_ID: h-2DAE1462-7E56-421D-8625-C24A3CF5E16F
+   :END:
 *** Initialize
+    :PROPERTIES:
+    :CUSTOM_ID: h-8A63D538-E97D-4CC4-B11D-18868DABE10B
+    :END:
     When Papiea loads up, it needs to initialize its database connections, load the providers,
     generate entity validators and expose CRUD and [[*Procedures][Procedural]] APIs.
    
 **** Interface
+     :PROPERTIES:
+     :CUSTOM_ID: h-3D76A395-5D87-495F-9138-9373F4CC859C
+     :END:
     #+Name: papiea-interface
     #+BEGIN_SRC typescript
       interface Papiea {
@@ -408,6 +479,9 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
     #+END_SRC
 
 **** Pseudocode
+     :PROPERTIES:
+     :CUSTOM_ID: h-D2D67873-9F25-4339-9391-F10C5114F875
+     :END:
      
      #+Name: initialize-papiea-pc
      #+BEGIN_SRC typescript
@@ -436,6 +510,9 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
        }
      #+END_SRC
 *** Exporting APIs
+    :PROPERTIES:
+    :CUSTOM_ID: h-7899FFEB-F907-4103-B591-11240E8BF9DE
+    :END:
     Papiea provides three tiers of APIs: Admin, Provider and User facing.
 
     #+Name: exporting-apis
@@ -449,8 +526,14 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
     
     Next sections go into greater details into each of the apis.
 **** Admin facing APIs
+     :PROPERTIES:
+     :CUSTOM_ID: h-D6CB7ACB-5E8E-4AC1-92BE-D35612E45558
+     :END:
      The admin apis exposed by Papiea are used to manage providers: registrating, upgrading, deleting etc.
 ***** Pseudocode
+      :PROPERTIES:
+      :CUSTOM_ID: h-CF1BC3A4-03DC-4305-ADFD-D8AADFEA0C2E
+      :END:
       #+Name: admin-api-pc
       #+BEGIN_SRC typescript
         function create_admin_facing_API(papiea:Papiea) {
@@ -465,8 +548,14 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
       #+END_SRC
      
 **** Provider facing APIs
+     :PROPERTIES:
+     :CUSTOM_ID: h-58B8746D-246B-437B-9457-04F667D64751
+     :END:
      Provider has two sets of APIs:
 ***** Provider's SDK    
+      :PROPERTIES:
+      :CUSTOM_ID: h-5256D1D9-391F-40C7-B090-EFC90473CDD0
+      :END:
       This is actually an SDK rather than an API. The distinction is that this is used by the
       providers developers to define and expose behaviors and APIs to the end user.
 
@@ -568,6 +657,9 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
       is the exact one that would any way be generated by looking at the real resource.
 
 ***** Provider to Papiea APIs
+      :PROPERTIES:
+      :CUSTOM_ID: h-3862D814-9E80-414B-B086-16A05A2710FE
+      :END:
      Provider facing APIs define the interactions between a provider and the
      intent-engine.  They let the provider register [[*SFS - Status Fields Signature][Status Fields Signature]]
      handlers for intentful apis, and handlers for procedural apis which will be exposed to
@@ -601,6 +693,9 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
        }
      #+END_SRC
 **** User facing APIs
+     :PROPERTIES:
+     :CUSTOM_ID: h-84C4558F-1E90-402F-8156-B73E6B2CEBEC
+     :END:
      The user facing APIs will be generated from all the registered kinds of all registered
      providers. The following pseudo-code will be demosstrating how the CRUD may be implemented.
 
@@ -636,12 +731,18 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
      captured in [[*Change Spec Handler Pseudocode][=handle_spec_change=]].
 
 *** Handling Potential Diffs    
+    :PROPERTIES:
+    :CUSTOM_ID: h-659F7D9D-30A4-4B82-830A-FBA136DB1151
+    :END:
     The engine will check for potential diffs on entities as a response to a few events:
     1. A spec change took place
     2. A status change took place
     3. A predefined timeout happened
      
 *** Change Spec
+    :PROPERTIES:
+    :CUSTOM_ID: h-73267886-ACA6-4CD7-AB24-E0939F5131A5
+    :END:
     A spec can only change through the [[*User facing APIs][User facing APIs]]. It returns an [[*Intentful Tasks][Intentful Tasks]] which is then
     used to track this change. After the task is returned the system verifies that the change is
     correct, both syntactically and optionally semantically (See [[*Kind][Kind]]). If this passes, it then
@@ -652,6 +753,9 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
     change.
 
 **** Change Spec Handler Pseudocode
+     :PROPERTIES:
+     :CUSTOM_ID: h-5161D1F8-44C7-46E5-8AF9-35BACC9CC8E7
+     :END:
      #+BEGIN_SRC typescript
        function handle_spec_change(kind: Kind, papiea: Papiea) {
            return (req, res) => {
@@ -690,12 +794,18 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
      #+END_SRC
 
 *** Update Status
+    :PROPERTIES:
+    :CUSTOM_ID: h-C7BC0BF7-81D0-45CD-BE03-399A8071F016
+    :END:
     A change of status may only arrive from a provider through the [[*Provider's SDK][Provider's SDK]]'s =update_status=
     function. A change of status may cause differences with regards to a the current spec, and so it
     may also be a cause for executing intentful actions. Although it does not return an explicit
     =Task= an implicit one may be created (see [[*Intentful Tasks][Intentful Tasks]]). 
 
 *** SFS - Status Fields Signature
+    :PROPERTIES:
+    :CUSTOM_ID: h-0AFEADAD-0843-4364-971F-726CFA756F0A
+    :END:
     
     The Status Fields Signature is a formal dsl that describes which fields in status have to change
     in order to resolve some difference. It is at the core of our Intentful Dispatch mechanism.
@@ -808,6 +918,9 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
        properly.
 
 **** Formal syntax of SFS
+     :PROPERTIES:
+     :CUSTOM_ID: h-B64344FB-FD29-40E2-B7B8-336E36E010DC
+     :END:
      The following is a formal syntax describing SFS:
 
      #+BEGIN_EXAMPLE
@@ -824,6 +937,9 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
     #+END_EXAMPLE
     
 *** Intentful core
+    :PROPERTIES:
+    :CUSTOM_ID: h-7AB58359-9E2C-4AB3-BE19-05E0EE8EB8C3
+    :END:
     At the core of Papiea lies the intentful behavior mechanism. To establish this mechanism we need the following:
     1. A representation of the user desire ([[*Spec][Spec]])
     2. A representation of the system's state ([[*Status][Status]])
@@ -880,6 +996,9 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
       }
     #+END_SRC
 **** Differ
+     :PROPERTIES:
+     :CUSTOM_ID: h-8D057AB6-1A0C-410C-9C39-66FFB86E234F
+     :END:
      The differ is at the core of identifying the next intentful command to be invoked. It is required for a few reasons:
 
      1. A generic differ is too broad to fit an arbitrary data structure:
@@ -943,6 +1062,9 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
     #+END_SRC
 
 **** Intentful Execution
+     :PROPERTIES:
+     :CUSTOM_ID: h-3FBDA8BC-C7F9-450F-B2A6-52A71B2953E8
+     :END:
      Once a =Diff= was constructed by the =Differ=, it can then execute the handler function on the
      proper provider. 
 
@@ -952,7 +1074,7 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
       // as the intentful action that may resolve such diff
       interface Diff {
           // The uri exposed by the provider which may handle this diff
-          intentful_fn_uri: provider_callback_url
+          intentful_fn_uri: Provider_Callback_URL
 
           // If this intent handler has a name, we could use it
           name?: string;
@@ -975,6 +1097,9 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
     executing that handler.
 
 *** Execution ID
+    :PROPERTIES:
+    :CUSTOM_ID: h-6A154AB2-B69C-4C91-9338-198DB12F0672
+    :END:
     In order for Papiea to keep track of the state of these decoupled execution paths, a simple
     technique is employed. In the =provider_sdk=, when an intentful command has been invoked, the
     system generates a unique uuid url which is then stored in perishable memory (meaning RAM,
@@ -1007,6 +1132,9 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
     listening to the callee.
 
 *** Procedures Signatures
+    :PROPERTIES:
+    :CUSTOM_ID: h-2D1D7EA5-3FF3-4536-BBCC-6CA2F59AFC53
+    :END:
     Procedures are functions that providers can expose directly to an entity. These functions are
     not intentful by design, and usually cannot be expressed in terms of a spec change.
 
@@ -1029,6 +1157,9 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
       route has been received by the user, the request will be forwarded to the callback url provided at registration time.
     
 **** Procedure Signature struct
+     :PROPERTIES:
+     :CUSTOM_ID: h-33462E2A-9A02-4C95-ADFF-0C6CA0CAE12B
+     :END:
      #+Name: procedure-signature
      #+BEGIN_SRC go
        type procedureSignature struct {
@@ -1037,9 +1168,21 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
        }
      #+END_SRC
 *** Understanding Deltas
+    :PROPERTIES:
+    :CUSTOM_ID: h-7F774C3C-7E2E-44EA-84B9-21E57E4DF769
+    :END:
 **** Matching SFSs to Deltas
+     :PROPERTIES:
+     :CUSTOM_ID: h-A1BBF1FF-5B15-44B9-AF53-3FC413643E18
+     :END:
 **** Determining Order
+     :PROPERTIES:
+     :CUSTOM_ID: h-760CCC2A-F27B-4661-ACC7-02599C7DCDC7
+     :END:
 *** Provider
+    :PROPERTIES:
+    :CUSTOM_ID: h-79A5E9CC-9D3C-41EE-A39C-DCF31ABF20FD
+    :END:
     This section describes provider handling on Papiea's side. For the provider itself, please see [[*Provider Library][Provider Library]].
     
     As described in [[*Provider facing APIs][Provider facing APIs]] section, providers interact with the intetful engine by
@@ -1070,15 +1213,42 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
       }
     #+END_SRC
 *** RBCA - test
+    :PROPERTIES:
+    :CUSTOM_ID: h-00CF1105-6D19-4BFF-B82A-292EC8F658A9
+    :END:
 *** Scalability and Reliability
+    :PROPERTIES:
+    :CUSTOM_ID: h-58305CF9-4FD0-480F-9E33-2704A3A7A5CE
+    :END:
 **** Leader election
+     :PROPERTIES:
+     :CUSTOM_ID: h-1E7F99CC-B4B5-41D7-9305-5C64BF9BC9AF
+     :END:
 **** Fault tolerance
+     :PROPERTIES:
+     :CUSTOM_ID: h-E98DAE25-720F-4593-99F5-C3BEC60C6500
+     :END:
 ***** Dead Papiea Instance
+      :PROPERTIES:
+      :CUSTOM_ID: h-9B9442B5-2DA3-4A8A-9748-703AEBA44DC7
+      :END:
 ***** Dead Provider
+      :PROPERTIES:
+      :CUSTOM_ID: h-9B4A9EFB-8CAE-48CA-AF41-0832D8D6ABC5
+      :END:
 *** Cleanup process
+    :PROPERTIES:
+    :CUSTOM_ID: h-3DE0B4AD-2DEB-42C1-9A59-02F509F51C8B
+    :END:
     - automatic deletion?
 *** Auditing
+    :PROPERTIES:
+    :CUSTOM_ID: h-87758AA9-A73F-4A88-AE6A-463CA2936DEA
+    :END:
 ** Intentful Tasks                                          :Continue_Fixing:
+   :PROPERTIES:
+   :CUSTOM_ID: h-8C40554A-6CC9-4526-881B-2BE3D0A70129
+   :END:
    Tasks are intentful in our intent engine. This means that a task defines an intent to "get
    notified when a certain change request has completed". 
 
@@ -1186,23 +1356,74 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
      }
    #+END_SRC
 ** Provider Library
+   :PROPERTIES:
+   :CUSTOM_ID: h-DCCF80B1-45AB-4C5D-BCF5-A433AC4D37C5
+   :END:
 *** Define Entity Model
+    :PROPERTIES:
+    :CUSTOM_ID: h-89837841-3C06-4788-ABC5-D3B4BE918654
+    :END:
 **** YAML
+     :PROPERTIES:
+     :CUSTOM_ID: h-9E4F86C1-5088-4875-B037-107AD12A73CB
+     :END:
 **** CRUD
+     :PROPERTIES:
+     :CUSTOM_ID: h-AC6A2914-694E-4B7F-AB99-F915E1B7A0B2
+     :END:
 *** Initialize
+    :PROPERTIES:
+    :CUSTOM_ID: h-610E1433-DBCF-4169-974D-47A63004F6CA
+    :END:
 *** Callback Mechanism
+    :PROPERTIES:
+    :CUSTOM_ID: h-576FB59C-5E14-41BB-9D46-253E63A8E082
+    :END:
 *** Running Effect Validator
+    :PROPERTIES:
+    :CUSTOM_ID: h-7009B3C1-3D1B-465A-93ED-F35A5AB3CF4D
+    :END:
 *** Status Changes Handlers
+    :PROPERTIES:
+    :CUSTOM_ID: h-A1199B4C-F994-4548-9A5B-668723B359C2
+    :END:
 **** Registring
+     :PROPERTIES:
+     :CUSTOM_ID: h-E991437E-7322-4F46-92DF-6895F8C7EAC1
+     :END:
 **** Running using context
+     :PROPERTIES:
+     :CUSTOM_ID: h-AA340191-E756-4642-B9F5-426FFEFF4ECB
+     :END:
 *** Procedures
+    :PROPERTIES:
+    :CUSTOM_ID: h-5511BB0C-438F-4EF5-96C3-86642690C568
+    :END:
 **** Registring
+     :PROPERTIES:
+     :CUSTOM_ID: h-CCFBCE3C-C7DB-48C9-B35D-0201EB13D429
+     :END:
 **** Running using context
+     :PROPERTIES:
+     :CUSTOM_ID: h-9B305BB6-112D-4D39-9956-60AE424BBCDA
+     :END:
 *** Example Provider
+    :PROPERTIES:
+    :CUSTOM_ID: h-D6094197-1C78-45BC-9CDD-9E3555897591
+    :END:
 
 * Full files
+  :PROPERTIES:
+  :CUSTOM_ID: h-738F973C-D059-4099-BAE9-94F6882FE791
+  :END:
 ** Core definitions
+   :PROPERTIES:
+   :CUSTOM_ID: h-69C25B02-B7F5-4567-B14F-B33564795341
+   :END:
 *** /src/core.ts
+    :PROPERTIES:
+    :CUSTOM_ID: h-7CD37704-4271-4745-A480-217D94B04ED7
+    :END:
     #+BEGIN_SRC typescript :noweb yes :tangle src/core.ts :exports code :mkdirp yes :comments noweb
     
     <<metadata-struct>>
@@ -1224,36 +1445,66 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
     #+END_SRC
 
 ** Databases
+   :PROPERTIES:
+   :CUSTOM_ID: h-895B51BC-E9D2-4277-88DA-1D57403DAD85
+   :END:
 *** /src/databases/spec_db_interface.ts
+    :PROPERTIES:
+    :CUSTOM_ID: h-3E385A6D-FE01-4147-AC9E-8F814FFF663F
+    :END:
     #+BEGIN_SRC typescript :noweb yes :tangle src/databases/spec_db_interface.ts :exports code :mkdirp yes :comments noweb
     <<spec-db-interface>>
     #+END_SRC
 
 *** /src/databases/status_db_interface.ts
+    :PROPERTIES:
+    :CUSTOM_ID: h-B6BFED5E-E21F-48F2-BDB6-D7DBBB148401
+    :END:
     #+BEGIN_SRC typescript :noweb yes :tangle src/databases/status_db_interface.ts :exports code :mkdirp yes :comments noweb
     <<status-db-interface>>
     #+END_SRC
 
 *** /src/databases/providers_db_interface.ts
+    :PROPERTIES:
+    :CUSTOM_ID: h-3219E22A-305C-4450-B2DD-D4C0D8C9CE16
+    :END:
     #+BEGIN_SRC typescript :noweb yes :tangle src/databases/providers_db_interface.ts :exports code :mkdirp yes :comments noweb
     <<providers-db-interface>>
     #+END_SRC
 
 ** Differ   
+   :PROPERTIES:
+   :CUSTOM_ID: h-18B3FC53-9C2C-4F04-B851-03488558444E
+   :END:
 *** /src/intentful_core/differ_interface.ts
+    :PROPERTIES:
+    :CUSTOM_ID: h-535177EF-5CF0-4663-B7E4-FDB12EEA9D64
+    :END:
     #+BEGIN_SRC typescript :noweb yes :tangle src/intentful_core/differ_interface.ts :exports code :mkdirp yes :comments noweb
     <<Differ-interface>>
 
     <<Diff-interface>>
     #+END_SRC
 ** Tasks
+   :PROPERTIES:
+   :CUSTOM_ID: h-EB9EEF16-2F6E-4F58-98AF-3846EC9E997D
+   :END:
 *** /src/tasks/task_manager_interface.ts
+    :PROPERTIES:
+    :CUSTOM_ID: h-8C021415-DBCE-4114-8612-4E6459B0D1D4
+    :END:
     #+BEGIN_SRC typescript :noweb yes :tangle src/tasks/task_manager_interface.ts :exports code :mkdirp yes :comments noweb
     <<task-manager-interface>>
     #+END_SRC
 
 ** Provider SDK
+   :PROPERTIES:
+   :CUSTOM_ID: h-9C85FED2-F254-40C5-A4BA-17F40E8C2358
+   :END:
 *** Typescript: /src/provider_sdk/typescript_sdk_interface
+    :PROPERTIES:
+    :CUSTOM_ID: h-812BAEAD-238A-458B-AB66-C3E9AA93D621
+    :END:
     #+BEGIN_SRC typescript :noweb yes :tangle src/provider_sdk/typescript_sdk_interface.ts :exports code :mkdirp yes :comments noweb
     <<provider_sdk_ts_provider_interface>>
 
@@ -1266,6 +1517,9 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
 
 
 ** /src-go/papiea/engine/core.go
+   :PROPERTIES:
+   :CUSTOM_ID: h-DACB4BA2-5F6F-4327-B21C-1DC041186E62
+   :END:
    # :noweb yes :tangle src-go/papiea/engine/core.go :exports code :mkdirp yes
    #+BEGIN_SRC go 
    // All our structs and interfaces:
@@ -1307,6 +1561,9 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
    
    #+END_SRC
 ** /src-go/papiea/engine/server.go
+   :PROPERTIES:
+   :CUSTOM_ID: h-00D3A0EA-DB73-4CED-8F7C-4EB3EAA376E9
+   :END:
   # :noweb yes :tangle src-go/papiea/engine/server.go :exports code :mkdirp yes
   #+BEGIN_SRC go 
     #import stuff
@@ -1325,6 +1582,9 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
   #+END_SRC
   
 ** /src-go/papiea/engine/provider.go 
+   :PROPERTIES:
+   :CUSTOM_ID: h-E29103D3-EA85-42F9-BF93-145EEE1BF8E7
+   :END:
    # :noweb yes :tangle src-go/papiea/engine/provider.go :exports code :mkdirp yes
    #+BEGIN_SRC go 
    // Provider handler registration:
@@ -1332,6 +1592,9 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
    #+END_SRC
 
 ** /src-go/papiea/engine/tasks.go
+   :PROPERTIES:
+   :CUSTOM_ID: h-9CA353DE-DC37-4567-B1F7-BEDA37B88D7A
+   :END:
    # :noweb yes :tangle src-go/papiea/engine/tasks.go :exports code :mkdirp yes
    #+BEGIN_SRC go 
    // Provider handler registration:
@@ -1339,6 +1602,9 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
    #+END_SRC
 
 * Formalities
+  :PROPERTIES:
+  :CUSTOM_ID: h-99185D18-042A-41E8-99D9-318CC64F397B
+  :END:
   Handling resources at a large enough scale can become quite a tedious job. There are many loosly
   connected moving parts that all strive to keep in sync. In reality this keeping in sync is an
   assumption we cannot have, so we handle errors. Errors are tricky to maintain since recovering
@@ -1414,4 +1680,7 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
   ${fn_i}$ is applied, $cs$ and $diff$ are recalculated, and we run thrugh $dlist$ again from the top.
 
 * Last notes
+  :PROPERTIES:
+  :CUSTOM_ID: h-D503B966-E8E7-489B-836E-7B52758EE2E2
+  :END:
   - I followed [[http://ehneilsen.net/notebook/orgExamples/org-examples.html][this tutorial]] for generating the source files through this org-mode.

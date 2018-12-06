@@ -30,12 +30,12 @@ interface Entity {
 
 // [[file:~/work/papiea-js/Papiea-design.org::kind-struct][kind-struct]]
 // Intentful signature
-type sfs: string;
+type SFS: string;
 
 type Provider_Callback_URL: string;
 
 interface Intentful_Signature {
-    signature: sfs;
+    signature: SFS;
     compiled_signature: any
     function_callback: Provider_Callback_URL;
 }
@@ -72,7 +72,7 @@ interface Procedural_Signature {
     procedure_callback: Provider_Callback_URL;
 }
 
-interface Provider_Kind {
+interface Kind {
 
     // The name of the kind, and its plural form for proper REST naming
     name: string;
@@ -84,10 +84,10 @@ interface Provider_Kind {
     semantic_validator_fn?: Provider_Callback_URL; 
 
     //// Intentful behavior
-    intentful_signatures: map<sfs, Intentful_Signatures>;
+    intentful_signatures: map<SFS, Intentful_Signatures>;
 
     // Every sfs lists the sfs's it has to execute before
-    dependency_tree: map<sfs, sfs[]>;
+    dependency_tree: map<SFS, SFS[]>;
 
     // The compiled Differ
     differ: Differ;
@@ -109,10 +109,11 @@ interface Entity_Reference  {
 // entity-reference-struct ends here
 
 // [[file:~/work/papiea-js/Papiea-design.org::provider-desc-struct][provider-desc-struct]]
-interface Provider_Description {
-    uuid: uuid4;
+interface Provider {
+    // A unique identifier where all kinds will be under this prefix
+    prefix: string;
     version: Version;
-    kinds: Provider_Kind[]
+    kinds: Kind[]
 }
 // provider-desc-struct ends here
 

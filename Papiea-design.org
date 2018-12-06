@@ -111,12 +111,12 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
    #+Name: kind-struct
    #+BEGIN_SRC typescript
      // Intentful signature
-     type sfs: string;
+     type SFS: string;
 
      type Provider_Callback_URL: string;
 
      interface Intentful_Signature {
-         signature: sfs;
+         signature: SFS;
          compiled_signature: any
          function_callback: Provider_Callback_URL;
      }
@@ -153,7 +153,7 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
          procedure_callback: Provider_Callback_URL;
      }
 
-     interface Provider_Kind {
+     interface Kind {
 
          // The name of the kind, and its plural form for proper REST naming
          name: string;
@@ -165,10 +165,10 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
          semantic_validator_fn?: Provider_Callback_URL; 
 
          //// Intentful behavior
-         intentful_signatures: map<sfs, Intentful_Signatures>;
+         intentful_signatures: map<SFS, Intentful_Signatures>;
 
          // Every sfs lists the sfs's it has to execute before
-         dependency_tree: map<sfs, sfs[]>;
+         dependency_tree: map<SFS, SFS[]>;
 
          // The compiled Differ
          differ: Differ;
@@ -234,10 +234,11 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
 
    #+Name: provider-desc-struct
    #+BEGIN_SRC typescript
-     interface Provider_Description {
-         uuid: uuid4;
+     interface Provider {
+         // A unique identifier where all kinds will be under this prefix
+         prefix: string;
          version: Version;
-         kinds: Provider_Kind[]
+         kinds: Kind[]
      }
    #+END_SRC
 
@@ -271,11 +272,11 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
 
           // Update the status in the status db. As long as the input is
           // correct this always succeeds.
-          update_status(entity_uuid:uuid4, status:Status):boolean;
+          update_status(entity_ref:Entity_Reference, status:Status):boolean;
 
           // Gets the status of a particular entity from the db. Returns
           // both current metadata and status of the entity.
-          get_status(entity_uuid:uuid4):Status;
+          get_status(entity_ref:Entity_Reference):Status;
 
           // List all status that have their fields match the ones given in
           // fields_map. E.g. we could look for all specs for `vm` kind that
@@ -286,7 +287,7 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
           // We could come up with command such as greater-than etc at some
           // later point, or we could use a similar dsl to mongodb search
           // dsl.
-          list_status(fields_map: any): [uuid4, Status][];
+          list_status(fields_map: any): [Entity_Reference, Status][];
       }
 
     #+END_SRC
@@ -308,11 +309,11 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
           // implementation needs to CAS the spec_version to the increment
           // of itself, and return the new metadata with the new
           // spec_version and the new CASed in spec.
-          update_spec(meta:Metadata, spec:Spec):[boolean, Metadata, Spec];
+          update_spec(entity_ref: Entity_Reference, spec:Spec):[boolean, Metadata, Spec];
 
           // Get the spec of a particular entity from the db. Returns both
           // current metadata and the spec of that entity.
-          get_spec(meta:Metadata):[Metadata, Spec];
+          get_spec(entity_ref: Entity_Reference):[Metadata, Spec];
 
           // List all specs that have their fields match the ones given in
           // fields_map. E.g. we could look for all specs for `vm` kind that
@@ -341,13 +342,16 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
       interface Providers_DB {
 
           // Register a new provider with the intent engine
-          register_provider(provider: Provider_Description):void;
+          register_provider(provider: Provider):void;
 
           //Upgrade a provider - This should be in the admin?
           //upgrade_provider(from_provider: uuid4, to: providerDescription): Task;
+          
+          // get a provider
+          get_provider(provider_prefix: string, version?: Version): Provider[]
 
           // List all registered providers
-          list_providers(): Provider_Description[]
+          list_providers(): Provider[]
 
           // Removes and de-registers a provider from the intent engine
           delete_provider(provider_uuid: uuid4): boolean;
@@ -923,7 +927,7 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
       function compile_kind(sfss: sfs[], dep_tree: map<sfs, sfs[]>): Differ;
 
       // More concisely this could simply be:
-      function compile_kind(kind: Provider_Kind): Differ;
+      function compile_kind(kind: Kind): Differ;
 
       // The differ is used to locate a diff in an entity between the
       // current status and the desired state. 

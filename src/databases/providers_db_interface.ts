@@ -4,13 +4,16 @@
 interface Providers_DB {
 
     // Register a new provider with the intent engine
-    register_provider(provider: Provider_Description):void;
+    register_provider(provider: Provider):void;
 
     //Upgrade a provider - This should be in the admin?
     //upgrade_provider(from_provider: uuid4, to: providerDescription): Task;
 
+    // get a provider
+    get_provider(provider_prefix: string, version?: Version): Provider[]
+
     // List all registered providers
-    list_providers(): Provider_Description[]
+    list_providers(): Provider[]
 
     // Removes and de-registers a provider from the intent engine
     delete_provider(provider_uuid: uuid4): boolean;

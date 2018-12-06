@@ -5,7 +5,7 @@
 function compile_kind(sfss: sfs[], dep_tree: map<sfs, sfs[]>): Differ;
 
 // More concisely this could simply be:
-function compile_kind(kind: Provider_Kind): Differ;
+function compile_kind(kind: Kind): Differ;
 
 // The differ is used to locate a diff in an entity between the
 // current status and the desired state. 

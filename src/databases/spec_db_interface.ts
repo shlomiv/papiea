@@ -8,11 +8,11 @@ interface Spec_DB {
     // implementation needs to CAS the spec_version to the increment
     // of itself, and return the new metadata with the new
     // spec_version and the new CASed in spec.
-    update_spec(meta:Metadata, spec:Spec):[boolean, Metadata, Spec];
+    update_spec(entity_ref: Entity_Reference, spec:Spec):[boolean, Metadata, Spec];
 
     // Get the spec of a particular entity from the db. Returns both
     // current metadata and the spec of that entity.
-    get_spec(meta:Metadata):[Metadata, Spec];
+    get_spec(entity_ref: Entity_Reference):[Metadata, Spec];
 
     // List all specs that have their fields match the ones given in
     // fields_map. E.g. we could look for all specs for `vm` kind that

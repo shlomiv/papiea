@@ -4,7 +4,6 @@
 
 (nodejs/enable-util-print!)
 
-
 (def sfs-parser
   (insta/parser
    "S                = simple-complex     
@@ -27,8 +26,7 @@
     add              = <'+'>
     del              = <'-'>
     change           = epsilon
-    <field>          = #'[a-zA-Z_0-9]+'    
-    "))
+    <field>          = #'[a-zA-Z_0-9]+'"))
 
 (defn optimize-ast
   "Optimizer for now simply removes a `complex` node when it consists of
@@ -49,16 +47,13 @@
 
 (defn flat-choices
   "Used to flatten embedded multiple choices"
-  [x]
-  (if (and (vector? x) (= 1 (count x)) (vector? (first x))) (first x) x))
+  [x] (if (and (vector? x) (= 1 (count x)) (vector? (first x))) (first x) x))
 
 (defn ensure-vec
   "ensure the item is a vector. If not, turns to vector. Nil is empty vector"
-  [x]
-  (cond
-    (nil? x)    []
-    (vector? x) x
-    :else       [x]))
+  [x] (cond (nil? x)    []
+            (vector? x) x
+            :else       [x]))
 
 (defn ensure_vector_action [action {:keys [spec-val status-val]}]
   (condp = action
@@ -74,12 +69,6 @@
   [m ks]
   (or (get-in m (mapv name ks))
       (get-in m (mapv keyword ks))))
-
-(defn ensure-diff [results]
-  (when (every? (fn[{:keys [spec-val status-val]}]
-                  (not= spec-val status-val))
-                results)
-    results))
 
 (defn filter-diff [results]
   (filterv #(not= (:spec-val %) (:status-val %)) results))
@@ -99,7 +88,6 @@
   use of namespaced keywords in the AST. Unfortunately there is no way
   to tell instaparse to emit namepsaced keywords yet."
   (fn[x] (first x))) 
-
 
 ;; Node `:S` in the AST is always the top node. This is where the
 ;; compiled code will be checking that the results actually include a diff.
@@ -129,22 +117,21 @@
   (fn[results]
     (into []
           (mapcat (fn[{:keys [keys key spec-val status-val]}]
-                    (let [g (group-by #(get-in' % ks)
-                                      (into
-                                       (mapv #(assoc % :papiea/spec true) spec-val) ;; Should use meta instead?
-                                       (mapv #(assoc % :papiea/status true) status-val)))]
-                      (->> (mapv (fn[[id-val [s1 s2]]]
-                                   {:keys (assoc keys (last ks) id-val)
-                                    :key key
-                                    :spec-val (ensure-vec(cond (:papiea/spec s1) (dissoc s1 :papiea/spec)
+                    (->> (group-by #(get-in' % ks)
+                                   (into
+                                    (mapv #(assoc % :papiea/spec true) spec-val) ;; Should use meta instead?
+                                    (mapv #(assoc % :papiea/status true) status-val)))
+                         (mapv (fn[[id-val [s1 s2]]]
+                                 {:keys       (assoc keys (last ks) id-val)
+                                  :key        key
+                                  :spec-val   (ensure-vec(cond (:papiea/spec s1) (dissoc s1 :papiea/spec)
                                                                (:papiea/spec s2) (dissoc s2 :papiea/spec)
-                                                               :else nil))
-                                    :status-val (ensure-vec(cond (:papiea/status s1) (dissoc s1 :papiea/status)
-                                                                 (:papiea/status s2) (dissoc s2 :papiea/status)
-                                                                 :else nil))})
-                                 g)
-                           (filterv (partial ensure_vector_action action))
-                           ensure-some)))
+                                                               :else             nil))
+                                  :status-val (ensure-vec(cond (:papiea/status s1) (dissoc s1 :papiea/status)
+                                                               (:papiea/status s2) (dissoc s2 :papiea/status)
+                                                               :else               nil))}))
+                         (filterv (partial ensure_vector_action action))
+                         ensure-some))
                   results))))
 
 ;; Node `:papiea/complex` in the AST recieves various commands that are
@@ -216,7 +203,3 @@
   (println "Hello world"))
 
 (set! *main-cli-fn* -main)
-
-
-
-

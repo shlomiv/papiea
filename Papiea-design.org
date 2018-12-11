@@ -16,7 +16,7 @@
 
 #+HTML: <div class="outline-2" id="meta">
 | *Author*   | {{{author}}} ({{{email}}})    |
-| *Date*     | g{{{time(%Y-%m-%d %H:%M:%S)}}} |
+| *Date*     | {{{time(%Y-%m-%d %H:%M:%S)}}} |
 | *Revision* | DRAFT                         |
 #+HTML: </div>
 

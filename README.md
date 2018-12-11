@@ -19,12 +19,12 @@ There are two components that for now are needed to be built separatly:
 # CLJS instructions
 1. Make sure `leiningen` is installed (follow https://github.com/technomancy/leiningen#installation)
 1. To use live repl with clojurescript do the following:
-```
+```bash
 cd papiea-lib-clj
 lein repl
 ```
 and inside the repl type:
-```
+```clojure
 (require 'cljs.repl.nashorn)
 (cider.piggieback/cljs-repl (cljs.repl.nashorn/repl-env))
 ```

@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
-    "build-clj": "lein cljsbuild once"
+    "build-clj": "cd papiea-lib-clj && lein cljsbuild once",
+    "build-clj-auto": "cd papiea-lib-clj && lein cljsbuild auto"
   },
   "author": "Shlomi Vaknin",
   "license": "ISC",

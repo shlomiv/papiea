@@ -14,7 +14,9 @@ There are two components that for now are needed to be built separatly:
 
 1. The clojure-script parts of `intentful-core`.
 
-   At the project's root directory, run either `npm run build-clj` to build once or `npm run build-clj-auto` to have a file system listener that build automatically and runs all tests on every file change.
+At the project's root directory, run either `npm run build-clj` to build once or `npm run build-clj-auto` to have a file system listener that build automatically and runs all tests on every file change.
+
+Alternatively run `docker-compose up` to install all dependencies, build the application and run nodejs server.
 
 # CLJS instructions
 For now this clojurescript library is embedded, but it may end up in a different repository and will be exposed as a regular npm package which will be imported through npm. Until this happens, here are the instructions for developing this library:

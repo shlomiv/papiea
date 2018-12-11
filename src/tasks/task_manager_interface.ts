@@ -1,11 +1,22 @@
 // [[file:~/work/papiea-js/Papiea-design.org::*/src/tasks/task_manager_interface.ts][/src/tasks/task_manager_interface.ts:1]]
-// [[file:~/work/papiea-js/Papiea-design.org::task-manager-interface][task-manager-interface]]
-interface Task_Manager {
+import * as papiea from "../papiea";
+import * as core from "../core";
+import * as differ from "../intentful_core/differ_interface"
+
+// [[file:~/work/papiea-js/Papiea-design.org::#h-Interface-766][task-manager-interface]]
+export interface Task {
     wait():any;
-    register_delta(Diff[]);
+    register_delta(diffs: differ.Diff[]):boolean;
 } 
 
-function new_task (): Task;
-function new_intentful_task (papiea: Papiea, entity: Entity_Reference, kind: Kind, spec: Spec): Task;
+export interface Task_Creator {
+    new_task (): Task;
+    new_intentful_task (papiea: papiea.Papiea, entity: core.Entity_Reference, kind: papiea.Kind, spec: core.Spec): Task;
+}
+
+export interface Task_Manager {
+// Not yet defined..
+}
+
 // task-manager-interface ends here
 // /src/tasks/task_manager_interface.ts:1 ends here

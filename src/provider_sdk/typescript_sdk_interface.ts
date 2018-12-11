@@ -1,16 +1,18 @@
 // [[file:~/work/papiea-js/Papiea-design.org::*Typescript:%20/src/provider_sdk/typescript_sdk_interface][Typescript: /src/provider_sdk/typescript_sdk_interface:1]]
-// [[file:~/work/papiea-js/Papiea-design.org::provider_sdk_ts_provider_interface][provider_sdk_ts_provider_interface]]
+import * as core from "../core";
+
+// [[file:~/work/papiea-js/Papiea-design.org::#h-Providers-SDK-518][provider_sdk_ts_provider_interface]]
 // Api for the provider-sdk
 enum Provider_Power {On, Off, Suspended};
 
 interface Provider {
-    new_kind(entity_yaml:Data_Description):Kind;
-    version(major:number, minor:number, build: number, extra: string):void;
+    new_kind(entity_yaml:core.Data_Description):Kind;
+    version(version: core.Version):void;
     power(state: Provider_Power): Provider_Power;
 }
 // provider_sdk_ts_provider_interface ends here
 
-// [[file:~/work/papiea-js/Papiea-design.org::provider_sdk_ts_kind_interface][provider_sdk_ts_kind_interface]]
+// [[file:~/work/papiea-js/Papiea-design.org::#h-Providers-SDK-518][provider_sdk_ts_kind_interface]]
 enum Procedural_Execution_Strategy {Halt_Intentful};
 
 interface Kind {
@@ -35,16 +37,16 @@ interface Kind {
 }
 // provider_sdk_ts_kind_interface ends here
 
-// [[file:~/work/papiea-js/Papiea-design.org::provider_sdk_ts_intentful_handler_interface][provider_sdk_ts_intentful_handler_interface]]
+// [[file:~/work/papiea-js/Papiea-design.org::#h-Providers-SDK-518][provider_sdk_ts_intentful_handler_interface]]
 interface Intentful_Handler {
     // Establishes a dependency tree between the various handlers
     before(...handlers: Intentful_Handler[]):void;
 }
 // provider_sdk_ts_intentful_handler_interface ends here
 
-// [[file:~/work/papiea-js/Papiea-design.org::provider_sdk_ts_intentful_ctx_interface][provider_sdk_ts_intentful_ctx_interface]]
+// [[file:~/work/papiea-js/Papiea-design.org::#h-Providers-SDK-518][provider_sdk_ts_intentful_ctx_interface]]
 interface IntentfulCtx {
-    update_status(metadata: Metadata, status: Status):boolean;
+    update_status(metadata: core.Metadata, status: core.Status):boolean;
     update_progress(message:string, done_percent:number):boolean;
 }
 

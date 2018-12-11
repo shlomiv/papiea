@@ -15,9 +15,9 @@
 #+OPTIONS: prop:("VERSION")
 
 #+HTML: <div class="outline-2" id="meta">
-| *Author*   | {{{author}}} ({{{email}}}) |
-| *Date*     | 2018-12-06 01:45:27        |
-| *Revision* | DRAFT                      |
+| *Author*   | {{{author}}} ({{{email}}})    |
+| *Date*     | g{{{time(%Y-%m-%d %H:%M:%S)}}} |
+| *Revision* | DRAFT                         |
 #+HTML: </div>
 
 Papiea is aimed to be a reference implementation of a [[*Formalities][formal general purpose intent engine]].

@@ -10,13 +10,15 @@ Please see [Papiea's design document](https://nutanix.github.io/papiea-js/Papiea
 # Build Instructions
 There are two components that for now are needed to be built separatly:
 
-1. Papiea itself using `npm run build` 
+1. Papiea itself using `npm run build`.
 
-1. The clojure-script parts of `intentful-core`. 
+1. The clojure-script parts of `intentful-core`.
 
    At the project's root directory, run either `npm run build-clj` to build once or `npm run build-clj-auto` to have a file system listener that build automatically and runs all tests on every file change.
 
 # CLJS instructions
+For now this clojurescript library is embedded, but it may end up in a different repository and will be exposed as a regular npm package which will be imported through npm. Until this happens, here are the instructions for developing this library:
+
 1. Make sure `leiningen` is installed (follow https://github.com/technomancy/leiningen#installation)
 1. To use live repl with clojurescript do the following:
 ```bash

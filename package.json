@@ -8,7 +8,6 @@
     "test": "jest",
     "dev": "./node_modules/nodemon/bin/nodemon.js",
     "test-watch": "jest --watchAll",
-    "build": "tsc",
     "build-clj": "cd papiea-lib-clj && lein cljsbuild once",
     "build-clj-auto": "cd papiea-lib-clj && lein cljsbuild auto"
   },

@@ -56,3 +56,13 @@ app.get('/', function (req:any, res:any) {
 app.listen(3000, function () {
   console.log('Example app listening on port 3000!');
 });
+
+
+import * as differ from "./intentful_core/differ_impl"
+console.log(differ.compiler.compile_kind);
+
+var a:Map<any, any> = new Map();
+a.set("a", 1);
+a.set(2, "b");
+console.log(a);
+console.log(a.keys(), "here");

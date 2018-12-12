@@ -2,8 +2,19 @@
 // This should probably be imported from some library
 export type uuid4 = string;
 
-// This should be provided by the language, could not figure it out for now.
-export type Map<K,V> = {[k:string]:V};
+// This should be provided by the typescript, could not figure it out for now.
+// See https://stackoverflow.com/a/50826619
+export interface Map<K, V> {
+    clear(): void;
+    delete(key: K): boolean;
+    forEach(callbackfn: (value: V, key: K, map: Map<K, V>) => void,thisArg?: any): void;
+    get(key: K): V | undefined;
+    has(key: K): boolean;
+    set(key: K, value: V): this;
+    readonly size: number;
+} 
+
+//export type Map<K,V> = {[k:string]:V};
 
 // [[file:~/work/papiea-js/Papiea-design.org::#h-Coretypes-732][core-types]]
 // Calback url is just a string

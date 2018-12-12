@@ -5,7 +5,7 @@ import * as papiea from "../papiea";
 // [[file:~/work/papiea-js/Papiea-design.org::#h-Differ-118][Differ-interface]]
 export interface Kind_Compiler {
     // The sfss compiler function. 
-    compile_kind(sfss: core.SFS[], dep_tree: core.Map<core.SFS, core.SFS[]>): Differ;
+    compile_kind_explicit(sfss: core.SFS[], dep_tree: core.Map<core.SFS, core.SFS[]>): Differ;
 
     // More concisely this could simply be:
     compile_kind(kind: papiea.Kind): Differ;

@@ -1106,7 +1106,7 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
     #+BEGIN_SRC typescript
       export interface Kind_Compiler {
           // The sfss compiler function. 
-          compile_kind(sfss: core.SFS[], dep_tree: core.Map<core.SFS, core.SFS[]>): Differ;
+          compile_kind_explicit(sfss: core.SFS[], dep_tree: core.Map<core.SFS, core.SFS[]>): Differ;
 
           // More concisely this could simply be:
           compile_kind(kind: papiea.Kind): Differ;
@@ -1548,25 +1548,36 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
     
     #+BEGIN_SRC typescript :noweb yes :tangle src/core.ts :exports code :mkdirp yes :comments noweb
 
-    // This should probably be imported from some library
-    export type uuid4 = string;
+      // This should probably be imported from some library
+      export type uuid4 = string;
 
-    // This should be provided by the language, could not figure it out for now.
-    export type Map<K,V> = {[k:string]:V};
+      // This should be provided by the typescript, could not figure it out for now.
+      // See https://stackoverflow.com/a/50826619
+      export interface Map<K, V> {
+          clear(): void;
+          delete(key: K): boolean;
+          forEach(callbackfn: (value: V, key: K, map: Map<K, V>) => void,thisArg?: any): void;
+          get(key: K): V | undefined;
+          has(key: K): boolean;
+          set(key: K, value: V): this;
+          readonly size: number;
+      } 
 
-    <<core-types>>
+      //export type Map<K,V> = {[k:string]:V};
 
-    <<metadata-struct>>
-
-    <<spec-struct>>
-
-    <<status-struct>>
-
-    <<entity-struct>>
+      <<core-types>>
     
-    <<SFS-interfaces>>
+      <<metadata-struct>>
 
-    <<entity-reference-struct>>
+      <<spec-struct>>
+
+      <<status-struct>>
+
+      <<entity-struct>>
+
+      <<SFS-interfaces>>
+
+      <<entity-reference-struct>>
     #+END_SRC
 
 *** /src/papiea.ts

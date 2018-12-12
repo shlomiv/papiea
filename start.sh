@@ -1,6 +1,7 @@
 #!/bin/sh
 
+npm install
 npm run build-clj
 npm run build
-#npm run test
-node lib/main.js
+npm run test
+npm run dev

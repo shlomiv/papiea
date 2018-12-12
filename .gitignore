@@ -13,7 +13,7 @@
 
 # npm & tsc
 node_modules
-lib
+build
 
 # clj
 papiea-lib-clj/papiea-lib-clj.js

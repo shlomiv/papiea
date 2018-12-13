@@ -14,8 +14,10 @@
   "author": "Shlomi Vaknin",
   "license": "ISC",
   "dependencies": {
+    "@types/mongodb": "^3.1.17",
     "@types/node": "^10.12.9",
-    "express": "^4.16.4"
+    "express": "^4.16.4",
+    "mongodb": "^3.1.10"
   },
   "devDependencies": {
     "@types/jest": "^23.3.10",

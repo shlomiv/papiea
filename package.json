@@ -21,6 +21,7 @@
     "@types/jest": "^23.3.10",
     "jest": "^23.6.0",
     "nodemon": "^1.18.8",
+    "nyc": "^13.1.0",
     "ts-jest": "^23.10.5",
     "ts-node": "^7.0.1",
     "typescript": "^3.2.2"
@@ -36,5 +37,12 @@
       "js",
       "json"
     ]
+  },
+  "nyc": {
+    "check_coverage": true,
+    "extension": [
+      ".ts",
+      ".tsx"
+    ],
   }
 }

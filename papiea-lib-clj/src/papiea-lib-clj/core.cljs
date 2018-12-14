@@ -36,9 +36,11 @@
                     :complex (fn[& a] (if (= 1 (count a))
                                         (first a)
                                         (into [:papiea/complex] a)))
-                    :simple (fn[& a] (into [:papiea/simple] a))
-                    :vector (fn[& a] (into [:papiea/vector] a))
-                    :group (fn[& a] (into [:papiea/group] a))} ast))
+                    :simple  (fn[& a] (into [:papiea/simple] a))
+                    :vector  (fn[& a] (into [:papiea/vector] a))
+                    :group   (fn[& a] (if (= 1 (count a))
+                                        (first a)
+                                        (into [:papiea/group] a)))} ast))
 
 (defn prepare
   "Prepare a spec/status pair to be diffed by the compiled Differ"

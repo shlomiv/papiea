@@ -70,6 +70,50 @@ describe("MongoDb tests", () => {
             done();
         });
     });
+    test("Get Spec", done => {
+        if (specDb === undefined) {
+            done.fail(new Error("specDb is undefined"));
+            return;
+        }
+        let entity_ref:core.Entity_Reference = {uuid: entityA_uuid, kind: "test"};
+        specDb.get_spec(entity_ref, (err, entity_metadata, spec) => {
+            expect(err).toBeNull();
+            if (entity_metadata === undefined || spec === undefined) {
+                done.fail(new Error("no data returned"));
+                return;
+            }
+            expect(entity_metadata.uuid).toEqual(entity_ref.uuid);
+            expect(spec.a).toEqual("A1");
+            done();
+        });
+    });
+    test("Get Spec for non existing entity should fail", done => {
+        if (specDb === undefined) {
+            done.fail(new Error("specDb is undefined"));
+            return;
+        }
+        let entity_ref:core.Entity_Reference = {uuid: uuid4(), kind: "test"};
+        specDb.get_spec(entity_ref, (err, entity_metadata, spec) => {
+            expect(err).not.toBeNull();
+            done();
+        });
+    });
+    test("List Specs", done => {
+        if (specDb === undefined) {
+            done.fail(new Error("specDb is undefined"));
+            return;
+        }
+        specDb.list_specs({"metadata.kind": "test"}, (err, res) => {
+            expect(err).toBeNull();
+            expect(res).not.toBeNull();
+            if (res === undefined) {
+                done.fail(new Error("no data returned"));
+                return;
+            }
+            expect(res.length).toBeGreaterThanOrEqual(1);
+            done();
+        });
+    });
     test("Verify Mongo connection close", done => {
         connection.close((err) => {
             if (err)

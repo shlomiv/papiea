@@ -15,7 +15,7 @@ export interface Spec_DB {
 
     // Get the spec of a particular entity from the db. Returns both
     // current metadata and the spec of that entity.
-    get_spec(entity_ref: core.Entity_Reference):[core.Metadata, core.Spec];
+    get_spec(entity_ref: core.Entity_Reference, cb: (err: Error|null, entity_metadata?: core.Metadata, spec?: core.Spec) => void):void;
 
     // List all specs that have their fields match the ones given in
     // fields_map. E.g. we could look for all specs for `vm` kind that
@@ -26,7 +26,7 @@ export interface Spec_DB {
     // We could come up with command such as greater-than etc at some
     // later point, or we could use a similar dsl to mongodb search
     // dsl.
-    list_specs(fields_map: any): [core.Metadata, core.Spec][];
+    list_specs(fields_map: any, cb: (err: Error|null, res?:[core.Metadata, core.Spec][]) => void):void;
 }
 
 // spec-db-interface ends here

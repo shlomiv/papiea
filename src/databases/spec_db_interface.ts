@@ -15,7 +15,8 @@ export interface Spec_DB {
 
     // Get the spec of a particular entity from the db. Returns both
     // current metadata and the spec of that entity.
-    get_spec(entity_ref: core.Entity_Reference):[core.Metadata, core.Spec];
+    // This needs to be Promise<T> because of async nature of Mongo Driver
+    get_spec(entity_ref: core.Entity_Reference):Promise<[core.Metadata, core.Spec]>;
 
     // List all specs that have their fields match the ones given in
     // fields_map. E.g. we could look for all specs for `vm` kind that

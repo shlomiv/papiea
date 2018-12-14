@@ -4,8 +4,10 @@
   "description": "",
   "main": "main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc",
+    "start": "ts-node src/main.ts",
+    "test": "nyc jest",
+    "dev": "./node_modules/nodemon/bin/nodemon.js",
+    "test-watch": "jest --watchAll",
     "build-clj": "cd papiea-lib-clj && lein cljsbuild once",
     "build-clj-auto": "cd papiea-lib-clj && lein cljsbuild auto"
   },
@@ -16,6 +18,31 @@
     "express": "^4.16.4"
   },
   "devDependencies": {
+    "@types/jest": "^23.3.10",
+    "jest": "^23.6.0",
+    "nodemon": "^1.18.8",
+    "nyc": "^13.1.0",
+    "ts-jest": "^23.10.5",
+    "ts-node": "^7.0.1",
     "typescript": "^3.2.2"
+  },
+  "jest": {
+    "transform": {
+      ".(ts|tsx)": "ts-jest"
+    },
+    "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(ts|tsx|js)$",
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "json"
+    ]
+  },
+  "nyc": {
+    "check_coverage": true,
+    "extension": [
+      ".ts",
+      ".tsx"
+    ]
   }
 }

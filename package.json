@@ -5,7 +5,7 @@
   "main": "main.js",
   "scripts": {
     "start": "ts-node src/main.ts",
-    "test": "nyc --all jest",
+    "test": "jest --coverage",
     "dev": "./node_modules/nodemon/bin/nodemon.js",
     "test-watch": "jest --watchAll",
     "build-clj": "cd papiea-lib-clj && lein cljsbuild once",
@@ -36,6 +36,9 @@
       "tsx",
       "js",
       "json"
+    ],
+    "collectCoverageFrom": [
+      "src/**"
     ]
   },
   "nyc": {
@@ -45,8 +48,7 @@
       ".tsx"
     ],
     "exclude": [
-      "papiea-lib-clj",
-      "__tests__"
+      "papiea-lib-clj"
     ]
   }
 }

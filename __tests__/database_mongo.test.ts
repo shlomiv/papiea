@@ -67,6 +67,11 @@ describe("MongoDb tests", () => {
         let spec:core.Spec = {a: "A2"};
         specDb.update_spec(entity_metadata, spec, (err, entity_metadata, spec) => {
             expect(err).not.toBeNull();
+            if (entity_metadata === undefined)
+                return done.fail(new Error("Should return existing entity"));
+            if (spec === undefined)
+                return done.fail(new Error("Should return existing entity"));
+            expect(entity_metadata.spec_version).toEqual(2);
             done();
         });
     });

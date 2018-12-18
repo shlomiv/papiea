@@ -14,8 +14,16 @@ declare var process : {
 
 describe("MongoDb tests", () => {
     const connection:MongoConnection = new MongoConnection(process.env.MONGO_URL, process.env.MONGO_DB);
-    test("Verify Mongo connection open", done => {
+    beforeAll(done => {
         connection.connect((err) => {
+            if (err)
+                done.fail(err);
+            else
+                done();
+        });
+    });
+    afterAll(done => {
+        connection.close((err) => {
             if (err)
                 done.fail(err);
             else
@@ -41,8 +49,8 @@ describe("MongoDb tests", () => {
         }
         let entity_metadata:core.Metadata = {uuid: entityA_uuid, kind: "test", spec_version: 0, created_at: new Date(), delete_at: null};
         let spec:core.Spec = {a: "A"};
-        specDb.update_spec(entity_metadata, spec, (res, entity_metadata, spec) => {
-            expect(res).toEqual(true);
+        specDb.update_spec(entity_metadata, spec, (err, entity_metadata, spec) => {
+            expect(err).toBeNull();
             done();
         });
     });
@@ -53,8 +61,8 @@ describe("MongoDb tests", () => {
         }
         let entity_metadata:core.Metadata = {uuid: entityA_uuid, kind: "test", spec_version: 1, created_at: new Date(), delete_at: null};
         let spec:core.Spec = {a: "A1"};
-        specDb.update_spec(entity_metadata, spec, (res, entity_metadata, spec) => {
-            expect(res).toEqual(true);
+        specDb.update_spec(entity_metadata, spec, (err, entity_metadata, spec) => {
+            expect(err).toBeNull();
             done();
         });
     });
@@ -65,8 +73,13 @@ describe("MongoDb tests", () => {
         }
         let entity_metadata:core.Metadata = {uuid: entityA_uuid, kind: "test", spec_version: 1, created_at: new Date(), delete_at: null};
         let spec:core.Spec = {a: "A2"};
-        specDb.update_spec(entity_metadata, spec, (res, entity_metadata, spec) => {
-            expect(res).toEqual(false);
+        specDb.update_spec(entity_metadata, spec, (err, entity_metadata, spec) => {
+            expect(err).not.toBeNull();
+            if (entity_metadata === undefined)
+                return done.fail(new Error("Should return existing entity"));
+            if (spec === undefined)
+                return done.fail(new Error("Should return existing entity"));
+            expect(entity_metadata.spec_version).toEqual(2);
             done();
         });
     });
@@ -112,14 +125,6 @@ describe("MongoDb tests", () => {
             }
             expect(res.length).toBeGreaterThanOrEqual(1);
             done();
-        });
-    });
-    test("Verify Mongo connection close", done => {
-        connection.close((err) => {
-            if (err)
-                done.fail(err);
-            else
-                done();
         });
     });
 })

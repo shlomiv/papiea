@@ -18,24 +18,37 @@ export class Spec_DB_Mongo implements Spec_DB {
         );
     }
 
-    update_spec(entity_metadata: core.Metadata, spec:core.Spec, cb: (res: boolean, entity_metadata?: core.Metadata, spec?: core.Spec) => void):void {
-        var entity_metadata_update = Object.assign({}, entity_metadata);
-        entity_metadata_update.spec_version++;
+    update_spec(entity_metadata: core.Metadata, spec:core.Spec, cb: (err: Error|null, entity_metadata?: core.Metadata, spec?: core.Spec) => void):void {
         this.collection.updateOne({
             "metadata.uuid": entity_metadata.uuid,
+            "metadata.kind": entity_metadata.kind,
             "metadata.spec_version": entity_metadata.spec_version
         }, {
+            $inc: {
+                "metadata.spec_version": 1
+            },
             $set: {
-                "metadata": entity_metadata_update,
                 "spec": spec
             }
         }, {
             upsert: true
         }, (err, result) => {
-            if (err || result.result.n !== 1)
-                return cb(false);
+            if (err && err.code === 11000) {
+                // E11000 duplicate key error collection: papiea.entity index: entity_uuid dup key
+                // means Entity with conflicting spec_version exists
+                const entity_ref:core.Entity_Reference = {uuid: entity_metadata.uuid, kind: entity_metadata.kind};
+                return this.get_spec(entity_ref, (error, entity_metadata, spec) => {
+                    if (error)
+                        return cb(error);
+                    cb(err, entity_metadata, spec);
+                });
+            }
+            if (err)
+                return cb(err);
+            if (result.result.n !== 1)
+                return new Error("Amount of updated entries doesn't equal to 1: " + result.result.n);
             entity_metadata.spec_version++;
-            cb(true, entity_metadata, spec);
+            cb(null, entity_metadata, spec);
         });
     }
 

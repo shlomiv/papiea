@@ -8,14 +8,14 @@ export interface Status_DB{
 
     // Update the status in the status db. As long as the input is
     // correct this always succeeds.
-    update_status(entity_ref:core.Entity_Reference, status:core.Status):boolean;
+    update_status(entity_ref:core.Entity_Reference, status:core.Status, cb: (err?: Error) => void):void;
 
     // Gets the status of a particular entity from the db. Returns
     // both current metadata and status of the entity.
-    get_status(entity_ref:core.Entity_Reference):core.Status;
+    get_status(entity_ref:core.Entity_Reference, cb: (err: Error|null, entity_metadata?: core.Metadata, status?: core.Status) => void):void;
 
     // List all status that have their fields match the ones given in
-    // fields_map. E.g. we could look for all specs for `vm` kind that
+    // fields_map. E.g. we could look for all statuses for `vm` kind that
     // have a certain ip:
     // list_status({"metadata": {"kind": "vm"},
     //              "status":   {"ip":   "10.0.0.10"}})
@@ -23,7 +23,7 @@ export interface Status_DB{
     // We could come up with command such as greater-than etc at some
     // later point, or we could use a similar dsl to mongodb search
     // dsl.
-    list_status(fields_map: any): [core.Entity_Reference, core.Status][];
+    list_status(fields_map: any, cb: (err: Error|null, res?:[core.Metadata, core.Status][]) => void):void;
 }
 
 // status-db-interface ends here

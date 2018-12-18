@@ -127,4 +127,21 @@ describe("MongoDb tests", () => {
             done();
         });
     });
+    test("List Specs - check spec data", done => {
+        if (specDb === undefined) {
+            done.fail(new Error("specDb is undefined"));
+            return;
+        }
+        specDb.list_specs({"metadata.kind": "test", "spec.a": "A1"}, (err, res) => {
+            expect(err).toBeNull();
+            expect(res).not.toBeNull();
+            if (res === undefined) {
+                done.fail(new Error("no data returned"));
+                return;
+            }
+            expect(res.length).toBeGreaterThanOrEqual(1);
+            expect(res[0][1].a).toEqual("A1");
+            done();
+        });
+    });
 })

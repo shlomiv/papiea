@@ -46,7 +46,7 @@ export class Spec_DB_Mongo implements Spec_DB {
             if (err)
                 return cb(err);
             if (result.result.n !== 1)
-                return new Error("Amount of updated entries doesn't equal to 1: " + result.result.n);
+                return cb(new Error("Amount of updated entries doesn't equal to 1: " + result.result.n));
             entity_metadata.spec_version++;
             cb(null, entity_metadata, spec);
         });
@@ -54,7 +54,8 @@ export class Spec_DB_Mongo implements Spec_DB {
 
     get_spec(entity_ref: core.Entity_Reference, cb: (err: Error|null, entity_metadata?: core.Metadata, spec?: core.Spec) => void):void {
         this.collection.findOne({
-            "metadata.uuid": entity_ref.uuid
+            "metadata.uuid": entity_ref.uuid,
+            "metadata.kind": entity_ref.kind
         }, (err, result) => {
             if (err)
                 return cb(err);

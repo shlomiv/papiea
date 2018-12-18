@@ -39,7 +39,8 @@ export class Status_DB_Mongo implements Status_DB {
 
     get_status(entity_ref:core.Entity_Reference, cb: (err: Error|null, entity_metadata?: core.Metadata, status?: core.Status) => void):void {
         this.collection.findOne({
-            "metadata.uuid": entity_ref.uuid
+            "metadata.uuid": entity_ref.uuid,
+            "metadata.kind": entity_ref.kind
         }, (err, result) => {
             if (err)
                 return cb(err);

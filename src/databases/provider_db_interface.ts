@@ -13,13 +13,13 @@ export interface Provider_DB {
     //upgrade_provider(from_provider: uuid4, to: providerDescription): Task;
 
     // get a provider
-    get_provider(provider_prefix: string, version?: core.Version): papiea.Provider[]
+    get_provider(provider_prefix: string, version?: core.Version): Promise<papiea.Provider>
 
     // List all registered providers
-    list_providers(): papiea.Provider[]
+    list_providers(): Promise<papiea.Provider[]>
 
     // Removes and de-registers a provider from the intent engine
-    delete_provider(provider_uuid: core.uuid4): boolean;
+    delete_provider(provider_uuid: core.uuid4): Promise<boolean>;
 }
 
 // provider-db-interface ends here

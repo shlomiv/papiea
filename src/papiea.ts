@@ -65,6 +65,8 @@ export interface Procedural_Signature {
 
 // [[file:~/work/papiea-js/Papiea-design.org::#h-Provider-description-189][provider-desc-struct]]
 export interface Provider {
+    // Not sure that we need this, however src/databases/provider_db_interface.ts delete_provider requires this
+    uuid: string;
     // A unique identifier where all kinds will be under this prefix
     prefix: string;
     version: core.Version;

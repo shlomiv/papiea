@@ -131,6 +131,98 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
        status: Status
      }
    #+END_SRC
+
+   An Entity may be one of three types:
+   1. =Spec-only entity= - an entity that has no real resource behind it. Meaning whatever the user desires is
+      immediately fulfilled. This entity has no notion of =status=, and never contains a diff.
+   2. =Status-only entity= - an entity that has a resource that is fully managed by something other than Papiea. We may
+      observe its continuesly changing status, but since we have no notion of =spec=, there can be no diff.
+   3. =Regular entity= - has both spec and status. May have status-only fields (read-only) or spec-only fields
+      (write-only)
+
+   Although these three types of entities make sense, in reality we may only distinguish between a =spec-only= entity
+   and a =regular entity=. A =Status-only= entity could be achieved simply by marking every field as
+   =status-only=. However, we could have =status-only= flag on an entity definition as a syntax sugar instead of
+   manually marking each and every field as =status-only=.
+
+   Here are some examples of an entity yaml:
+   
+   1. A regular entity that have one field as a =status-only= field
+     #+BEGIN_SRC yaml
+       File:
+         type: object
+         title: A File
+         description: a file entity
+         properties:
+           name:
+             type: string
+           path:
+             type: string
+           md5-sum:
+             type: string
+             x-papiea-field: status-only
+     #+END_SRC
+
+     In here we will have the two following schemas:
+       #+BEGIN_EXAMPLE
+       Spec 'File':
+         String name
+         String path
+
+       Status 'File':
+         String name
+         String path
+         String md5-sum
+       #+END_EXAMPLE
+
+   2. A spec only entity:
+      #+BEGIN_SRC yaml
+        Geolocation:
+          type: object
+          title: Geographic Location
+          description: A physical location of a data center
+          x-papiea-entity: spec-only
+          properties:
+            name:
+              type: string
+            coordinates:
+              type: object
+              properties:
+                lat:
+                  type: number
+                lon:
+                  type: number
+      #+END_SRC
+
+      In this example we will not have a status schema generated at all, and we will also never find diffs:
+      #+BEGIN_EXAMPLE
+        Spec 'Geolocation':
+          String name
+          coordinates:
+            Number lat
+            Number lon
+      #+END_EXAMPLE
+
+      We may definetly come up with a better syntax than this verbose yaml, but its a good place to start. It also
+      allows for an easier generaration of the resulting system-wide swagger yaml file for later consumption by
+      users. Here is an example of such DSL:
+
+      #+BEGIN_EXAMPLE
+        Entity File (Files):
+         "Some nice description"
+         - String name
+         - String type
+         - String md5-sum (Status-only)
+
+        Spec-only Entity Geolocation (geolocations):
+         "another
+          multiline description"
+         - String name
+         - coordinates:
+           - Number lat
+           - Number lon
+      #+END_EXAMPLE
+
 ** Core types
    :PROPERTIES:
    :CUSTOM_ID: h-Coretypes-732
@@ -1561,7 +1653,7 @@ Papiea is aimed to be a reference implementation of a [[*Formalities][formal gen
           has(key: K): boolean;
           set(key: K, value: V): this;
           readonly size: number;
-      } 
+      }
 
       //export type Map<K,V> = {[k:string]:V};
 

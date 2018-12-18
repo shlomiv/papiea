@@ -14,6 +14,7 @@
 # npm & tsc
 node_modules
 build
+.nyc_output
 
 # clj
 papiea-lib-clj/papiea-lib-clj.js

@@ -18,7 +18,7 @@ export class Spec_DB_Mongo implements Spec_DB {
         );
     }
 
-    update_spec(entity_metadata: core.Metadata, spec:core.Spec, cb: (res: boolean, entity_metadata?: core.Metadata, spec?: core.Spec) => void):void {
+    update_spec(entity_metadata: core.Metadata, spec:core.Spec, cb: (err: Error|null, entity_metadata?: core.Metadata, spec?: core.Spec) => void):void {
         var entity_metadata_update = Object.assign({}, entity_metadata);
         entity_metadata_update.spec_version++;
         this.collection.updateOne({
@@ -32,10 +32,12 @@ export class Spec_DB_Mongo implements Spec_DB {
         }, {
             upsert: true
         }, (err, result) => {
-            if (err || result.result.n !== 1)
-                return cb(false);
+            if (err)
+                return cb(err);
+            if (result.result.n !== 1)
+                return new Error("Amount of updated entries doesn't equal to 1: " + result.result.n);
             entity_metadata.spec_version++;
-            cb(true, entity_metadata, spec);
+            cb(null, entity_metadata, spec);
         });
     }
 

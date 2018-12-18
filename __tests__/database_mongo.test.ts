@@ -41,8 +41,8 @@ describe("MongoDb tests", () => {
         }
         let entity_metadata:core.Metadata = {uuid: entityA_uuid, kind: "test", spec_version: 0, created_at: new Date(), delete_at: null};
         let spec:core.Spec = {a: "A"};
-        specDb.update_spec(entity_metadata, spec, (res, entity_metadata, spec) => {
-            expect(res).toEqual(true);
+        specDb.update_spec(entity_metadata, spec, (err, entity_metadata, spec) => {
+            expect(err).toBeNull();
             done();
         });
     });
@@ -53,8 +53,8 @@ describe("MongoDb tests", () => {
         }
         let entity_metadata:core.Metadata = {uuid: entityA_uuid, kind: "test", spec_version: 1, created_at: new Date(), delete_at: null};
         let spec:core.Spec = {a: "A1"};
-        specDb.update_spec(entity_metadata, spec, (res, entity_metadata, spec) => {
-            expect(res).toEqual(true);
+        specDb.update_spec(entity_metadata, spec, (err, entity_metadata, spec) => {
+            expect(err).toBeNull();
             done();
         });
     });
@@ -65,8 +65,8 @@ describe("MongoDb tests", () => {
         }
         let entity_metadata:core.Metadata = {uuid: entityA_uuid, kind: "test", spec_version: 1, created_at: new Date(), delete_at: null};
         let spec:core.Spec = {a: "A2"};
-        specDb.update_spec(entity_metadata, spec, (res, entity_metadata, spec) => {
-            expect(res).toEqual(false);
+        specDb.update_spec(entity_metadata, spec, (err, entity_metadata, spec) => {
+            expect(err).not.toBeNull();
             done();
         });
     });

@@ -14,8 +14,16 @@ declare var process : {
 
 describe("MongoDb tests", () => {
     const connection:MongoConnection = new MongoConnection(process.env.MONGO_URL, process.env.MONGO_DB);
-    test("Verify Mongo connection open", done => {
+    beforeAll(done => {
         connection.connect((err) => {
+            if (err)
+                done.fail(err);
+            else
+                done();
+        });
+    });
+    afterAll(done => {
+        connection.close((err) => {
             if (err)
                 done.fail(err);
             else
@@ -117,14 +125,6 @@ describe("MongoDb tests", () => {
             }
             expect(res.length).toBeGreaterThanOrEqual(1);
             done();
-        });
-    });
-    test("Verify Mongo connection close", done => {
-        connection.close((err) => {
-            if (err)
-                done.fail(err);
-            else
-                done();
         });
     });
 })

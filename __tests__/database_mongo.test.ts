@@ -17,7 +17,7 @@ declare var process: {
 };
 
 describe("MongoDb tests", () => {
-    const connection:MongoConnection = new MongoConnection(process.env.MONGO_URL, process.env.MONGO_DB);
+    const connection: MongoConnection = new MongoConnection(process.env.MONGO_URL, process.env.MONGO_DB);
     beforeEach(() => {
         jest.setTimeout(50000);
     });
@@ -37,7 +37,7 @@ describe("MongoDb tests", () => {
                 done();
         });
     });
-    let specDb:Spec_DB|undefined;
+    let specDb: Spec_DB | undefined;
     test("Get Spec_DB", done => {
         connection.get_spec_db().then(res => {
             specDb = res;
@@ -61,8 +61,14 @@ describe("MongoDb tests", () => {
             done.fail(new Error("specDb is undefined"));
             return;
         }
-        let entity_metadata:core.Metadata = {uuid: entityA_uuid, kind: "test", spec_version: 0, created_at: new Date(), delete_at: null};
-        let spec:core.Spec = {a: "A"};
+        let entity_metadata: core.Metadata = {
+            uuid: entityA_uuid,
+            kind: "test",
+            spec_version: 0,
+            created_at: new Date(),
+            delete_at: null
+        };
+        let spec: core.Spec = {a: "A"};
         specDb.update_spec(entity_metadata, spec).then(res => {
             done();
         }).catch(err => {
@@ -89,8 +95,14 @@ describe("MongoDb tests", () => {
             done.fail(new Error("specDb is undefined"));
             return;
         }
-        let entity_metadata:core.Metadata = {uuid: entityA_uuid, kind: "test", spec_version: 1, created_at: new Date(), delete_at: null};
-        let spec:core.Spec = {a: "A1"};
+        let entity_metadata: core.Metadata = {
+            uuid: entityA_uuid,
+            kind: "test",
+            spec_version: 1,
+            created_at: new Date(),
+            delete_at: null
+        };
+        let spec: core.Spec = {a: "A1"};
         specDb.update_spec(entity_metadata, spec).then(res => {
             done();
         }).catch(err => {
@@ -104,8 +116,14 @@ describe("MongoDb tests", () => {
             done.fail(new Error("specDb is undefined"));
             return;
         }
-        let entity_metadata:core.Metadata = {uuid: entityA_uuid, kind: "test", spec_version: 1, created_at: new Date(), delete_at: null};
-        let spec:core.Spec = {a: "A2"};
+        let entity_metadata: core.Metadata = {
+            uuid: entityA_uuid,
+            kind: "test",
+            spec_version: 1,
+            created_at: new Date(),
+            delete_at: null
+        };
+        let spec: core.Spec = {a: "A2"};
         specDb.update_spec(entity_metadata, spec).then(res => {
             const [metadata, spec, err] = res;
             expect(err).not.toBeNull();
@@ -125,7 +143,7 @@ describe("MongoDb tests", () => {
             done.fail(new Error("specDb is undefined"));
             return;
         }
-        let entity_ref:core.Entity_Reference = {uuid: entityA_uuid, kind: "test"};
+        let entity_ref: core.Entity_Reference = {uuid: entityA_uuid, kind: "test"};
         specDb.get_spec(entity_ref).then(res => {
             const [metadata, spec] = res;
             if (metadata === undefined || spec === undefined) {
@@ -170,7 +188,7 @@ describe("MongoDb tests", () => {
             done.fail(new Error("specDb is undefined"));
             return;
         }
-        let entity_ref:core.Entity_Reference = {uuid: uuid4(), kind: "test"};
+        let entity_ref: core.Entity_Reference = {uuid: uuid4(), kind: "test"};
         specDb.get_spec(entity_ref).catch(err => {
             expect(err).not.toBeNull();
             done();
@@ -209,15 +227,13 @@ describe("MongoDb tests", () => {
             done();
         });
     });
-    let statusDb: Status_DB|undefined;
+    let statusDb: Status_DB | undefined;
     test("Get Status_DB", done => {
-        connection.get_status_db((err, newStatusDb) => {
-            if (err)
-                done.fail(err);
-            else {
-                statusDb = newStatusDb;
-                done();
-            }
+        connection.get_status_db().then(res => {
+            statusDb = res;
+            done();
+        }).catch(err => {
+            done.fail(err);
         });
     });
     test("Insert Status", done => {
@@ -225,11 +241,12 @@ describe("MongoDb tests", () => {
             done.fail(new Error("statusDb is undefined"));
             return;
         }
-        let entity_ref:core.Entity_Reference = {uuid: entityA_uuid, kind: "test"};
-        let status:core.Status = {a: "A"};
-        statusDb.update_status(entity_ref, status, (err) => {
-            expect(err).toBeUndefined();
+        let entity_ref: core.Entity_Reference = {uuid: entityA_uuid, kind: "test"};
+        let status: core.Status = {a: "A"};
+        statusDb.update_status(entity_ref, status).then(res => {
             done();
+        }).catch(err => {
+            done.fail(err);
         });
     });
     test("Update Status", done => {
@@ -237,48 +254,51 @@ describe("MongoDb tests", () => {
             done.fail(new Error("statusDb is undefined"));
             return;
         }
-        let entity_ref:core.Entity_Reference = {uuid: entityA_uuid, kind: "test"};
-        let status:core.Status = {a: "A1"};
-        statusDb.update_status(entity_ref, status, (err) => {
-            expect(err).toBeUndefined();
+        let entity_ref: core.Entity_Reference = {uuid: entityA_uuid, kind: "test"};
+        let status: core.Status = {a: "A1"};
+        statusDb.update_status(entity_ref, status).then(res => {
             done();
+        }).catch(err => {
+            done.fail(err);
         });
     });
     test("Get Status", done => {
+        expect.assertions(2);
         if (statusDb === undefined) {
             done.fail(new Error("statusDb is undefined"));
             return;
         }
-        let entity_ref:core.Entity_Reference = {uuid: entityA_uuid, kind: "test"};
-        statusDb.get_status(entity_ref, (err, entity_metadata, status) => {
-            expect(err).toBeNull();
-            if (entity_metadata === undefined || status === undefined) {
-                done.fail(new Error("no data returned"));
-                return;
+        let entity_ref: core.Entity_Reference = {uuid: entityA_uuid, kind: "test"};
+        statusDb.get_status(entity_ref).then(res => {
+            const [metadata, status] = res;
+            if (metadata === undefined || status === undefined) {
+                done.fail(new Error("no data returned"))
+            } else {
+                expect(metadata.uuid).toEqual(entity_ref.uuid);
+                expect(status.a).toEqual("A1");
+                done();
             }
-            expect(entity_metadata.uuid).toEqual(entity_ref.uuid);
-            expect(status.a).toEqual("A1");
-            done();
         });
     });
     test("Get Status for non existing entity should fail", done => {
+        expect.assertions(1);
         if (statusDb === undefined) {
             done.fail(new Error("statusDb is undefined"));
             return;
         }
-        let entity_ref:core.Entity_Reference = {uuid: uuid4(), kind: "test"};
-        statusDb.get_status(entity_ref, (err) => {
+        let entity_ref: core.Entity_Reference = {uuid: uuid4(), kind: "test"};
+        statusDb.get_status(entity_ref).catch(err => {
             expect(err).not.toBeNull();
             done();
         });
     });
     test("List Statuses", done => {
+        expect.assertions(2);
         if (statusDb === undefined) {
             done.fail(new Error("statusDb is undefined"));
             return;
         }
-        statusDb.list_status({"metadata.kind": "test"}, (err, res) => {
-            expect(err).toBeNull();
+        statusDb.list_status({"metadata.kind": "test"}).then(res => {
             expect(res).not.toBeNull();
             if (res === undefined) {
                 done.fail(new Error("no data returned"));
@@ -289,12 +309,12 @@ describe("MongoDb tests", () => {
         });
     });
     test("List Statuses - check status data", done => {
+        expect.assertions(3);
         if (statusDb === undefined) {
             done.fail(new Error("statusDb is undefined"));
             return;
         }
-        statusDb.list_status({"metadata.kind": "test", "status.a": "A1"}, (err, res) => {
-            expect(err).toBeNull();
+        statusDb.list_status({"metadata.kind": "test", "status.a": "A1"}).then(res => {
             expect(res).not.toBeNull();
             if (res === undefined) {
                 done.fail(new Error("no data returned"));

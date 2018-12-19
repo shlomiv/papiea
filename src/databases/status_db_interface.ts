@@ -4,15 +4,15 @@ import * as papiea from "../papiea";
 
 // [[file:~/work/papiea-js/Papiea-design.org::#h-Interface-548][status-db-interface]]
 
-export interface Status_DB{
+export interface Status_DB {
 
     // Update the status in the status db. As long as the input is
     // correct this always succeeds.
-    update_status(entity_ref:core.Entity_Reference, status:core.Status, cb: (err?: Error) => void):void;
+    update_status(entity_ref: core.Entity_Reference, status: core.Status): Promise<void>;
 
     // Gets the status of a particular entity from the db. Returns
     // both current metadata and status of the entity.
-    get_status(entity_ref:core.Entity_Reference, cb: (err: Error|null, entity_metadata?: core.Metadata, status?: core.Status) => void):void;
+    get_status(entity_ref: core.Entity_Reference): Promise<[core.Metadata?, core.Status?]>;
 
     // List all status that have their fields match the ones given in
     // fields_map. E.g. we could look for all statuses for `vm` kind that
@@ -23,7 +23,7 @@ export interface Status_DB{
     // We could come up with command such as greater-than etc at some
     // later point, or we could use a similar dsl to mongodb search
     // dsl.
-    list_status(fields_map: any, cb: (err: Error|null, res?:[core.Metadata, core.Status][]) => void):void;
+    list_status(fields_map: any): Promise<[core.Metadata?, core.Status?][]>;
 }
 
 // status-db-interface ends here

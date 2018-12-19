@@ -34,17 +34,14 @@ export class MongoConnection {
         this.client.close(true, cb);
     }
 
-    get_spec_db(cb: (error: Error|null, specDb?: Spec_DB_Mongo) => void):void {
+    async get_spec_db(): Promise<Spec_DB_Mongo> {
         if (this.specDb !== undefined)
-            return cb(null, this.specDb);
+            return this.specDb;
         if (this.db === undefined)
-            return cb(new Error("Not connected"));
+            throw new Error("Not connected");
         this.specDb = new Spec_DB_Mongo(this.db);
-        this.specDb.init(err => {
-            if (err)
-                return cb(err);
-            cb(null, this.specDb);
-        });
+        await this.specDb.init();
+        return this.specDb;
     }
 
     async get_provider_db(): Promise<ProviderDbMongo> {

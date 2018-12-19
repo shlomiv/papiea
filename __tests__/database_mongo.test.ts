@@ -14,10 +14,13 @@ declare var process: {
         MONGO_URL: string,
         MONGO_DB: string
     }
-}
+};
 
 describe("MongoDb tests", () => {
     const connection:MongoConnection = new MongoConnection(process.env.MONGO_URL, process.env.MONGO_DB);
+    beforeEach(() => {
+        jest.setTimeout(50000);
+    });
     beforeAll(done => {
         connection.connect((err) => {
             if (err)
@@ -36,13 +39,11 @@ describe("MongoDb tests", () => {
     });
     let specDb:Spec_DB|undefined;
     test("Get Spec_DB", done => {
-        connection.get_spec_db((err, newSpecDb) => {
-            if (err)
-                done.fail(err);
-            else {
-                specDb = newSpecDb;
-                done();
-            }
+        connection.get_spec_db().then(res => {
+            specDb = res;
+            done();
+        }).catch(err => {
+            done.fail(err);
         });
     });
     let providerDb: ProviderDbMongo | undefined;
@@ -56,14 +57,15 @@ describe("MongoDb tests", () => {
     });
     let entityA_uuid = uuid4();
     test("Insert Spec", done => {
-        expect.assertions(1);
         if (specDb === undefined) {
             done.fail(new Error("specDb is undefined"));
             return;
         }
         let entity_metadata:core.Metadata = {uuid: entityA_uuid, kind: "test", spec_version: 0, created_at: new Date(), delete_at: null};
         let spec:core.Spec = {a: "A"};
-        specDb.update_spec(entity_metadata, spec).catch(err => {
+        specDb.update_spec(entity_metadata, spec).then(res => {
+            done();
+        }).catch(err => {
             expect(err).toBeNull();
             done();
         });
@@ -83,14 +85,15 @@ describe("MongoDb tests", () => {
         })
     });
     test("Update Spec", done => {
-        expect.assertions(1);
         if (specDb === undefined) {
             done.fail(new Error("specDb is undefined"));
             return;
         }
         let entity_metadata:core.Metadata = {uuid: entityA_uuid, kind: "test", spec_version: 1, created_at: new Date(), delete_at: null};
         let spec:core.Spec = {a: "A1"};
-        specDb.update_spec(entity_metadata, spec).catch(err => {
+        specDb.update_spec(entity_metadata, spec).then(res => {
+            done();
+        }).catch(err => {
             expect(err).toBeNull();
             done();
         });
@@ -162,6 +165,7 @@ describe("MongoDb tests", () => {
         })
     });
     test("Get Spec for non existing entity should fail", done => {
+        expect.assertions(1);
         if (specDb === undefined) {
             done.fail(new Error("specDb is undefined"));
             return;
@@ -172,15 +176,15 @@ describe("MongoDb tests", () => {
         });
     });
     test("List Specs", done => {
+        expect.assertions(1);
         if (specDb === undefined) {
             done.fail(new Error("specDb is undefined"));
             return;
         }
-        specDb.list_specs({"metadata.kind": "test"}, (err, res) => {
-            expect(err).toBeNull();
+        specDb.list_specs({"metadata.kind": "test"}).then(res => {
             expect(res).not.toBeNull();
             if (res === undefined) {
-                done.fail(new Error("no data returned"));
+                done.fail(new Error("No data returned"));
                 return;
             }
             expect(res.length).toBeGreaterThanOrEqual(1);
@@ -188,15 +192,15 @@ describe("MongoDb tests", () => {
         });
     });
     test("List Specs - check spec data", done => {
+        expect.assertions(2);
         if (specDb === undefined) {
             done.fail(new Error("specDb is undefined"));
             return;
         }
-        specDb.list_specs({"metadata.kind": "test", "spec.a": "A1"}, (err, res) => {
-            expect(err).toBeNull();
+        specDb.list_specs({"metadata.kind": "test"}).then(res => {
             expect(res).not.toBeNull();
             if (res === undefined) {
-                done.fail(new Error("no data returned"));
+                done.fail(new Error("No data returned"));
                 return;
             }
             expect(res.length).toBeGreaterThanOrEqual(1);
@@ -204,7 +208,7 @@ describe("MongoDb tests", () => {
             done();
         });
     });
-    let statusDb:Status_DB|undefined;
+    let statusDb: Status_DB|undefined;
     test("Get Status_DB", done => {
         connection.get_status_db((err, newStatusDb) => {
             if (err)

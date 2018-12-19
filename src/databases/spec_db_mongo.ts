@@ -43,7 +43,7 @@ export class Spec_DB_Mongo implements Spec_DB {
             entity_metadata.spec_version++;
             return [entity_metadata, spec]
         } catch (err) {
-            if (err.code === 1100) {
+            if (err.code === 11000) {
                 const entity_ref: core.Entity_Reference = {uuid: entity_metadata.uuid, kind: entity_metadata.kind};
                 const [metadata, spec] = await this.get_spec(entity_ref);
                 return [metadata, spec, err]

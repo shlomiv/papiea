@@ -173,10 +173,11 @@ describe("MongoDb tests", () => {
         let entity_ref:core.Entity_Reference = {uuid: uuid4(), kind: "test"};
         specDb.get_spec(entity_ref).catch(err => {
             expect(err).not.toBeNull();
+            done();
         });
     });
     test("List Specs", done => {
-        expect.assertions(1);
+        expect.assertions(2);
         if (specDb === undefined) {
             done.fail(new Error("specDb is undefined"));
             return;
@@ -192,7 +193,7 @@ describe("MongoDb tests", () => {
         });
     });
     test("List Specs - check spec data", done => {
-        expect.assertions(2);
+        expect.assertions(3);
         if (specDb === undefined) {
             done.fail(new Error("specDb is undefined"));
             return;

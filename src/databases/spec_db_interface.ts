@@ -11,7 +11,7 @@ export interface Spec_DB {
     // implementation needs to CAS the spec_version to the increment
     // of itself, and return the new metadata with the new
     // spec_version and the new CASed in spec.
-    update_spec(entity_metadata: core.Metadata, spec:core.Spec): Promise<[core.Metadata?, core.Spec?, any?]>;
+    update_spec(entity_metadata: core.Metadata, spec:core.Spec): Promise<[core.Metadata?, core.Spec?, Error?]>;
 
     // Get the spec of a particular entity from the db. Returns both
     // current metadata and the spec of that entity.

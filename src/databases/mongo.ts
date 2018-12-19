@@ -1,7 +1,7 @@
 import {MongoClient, Db} from "mongodb";
 import {Spec_DB_Mongo} from "./spec_db_mongo";
 import {Status_DB_Mongo} from "./status_db_mongo";
-import ProviderDbMongo from "./provider_db_mongo";
+import {Provider_DB_Mongo} from "./provider_db_mongo";
 
 export class MongoConnection {
     url: string;
@@ -9,7 +9,7 @@ export class MongoConnection {
     client: MongoClient;
     db: Db | undefined;
     specDb: Spec_DB_Mongo | undefined;
-    providerDb: ProviderDbMongo | undefined;
+    providerDb: Provider_DB_Mongo | undefined;
     statusDb: Status_DB_Mongo | undefined;
 
     constructor(url: string, dbName: string) {
@@ -45,12 +45,12 @@ export class MongoConnection {
         return this.specDb;
     }
 
-    async get_provider_db(): Promise<ProviderDbMongo> {
+    async get_provider_db(): Promise<Provider_DB_Mongo> {
         if (this.providerDb !== undefined)
             return this.providerDb;
         if (this.db === undefined)
             throw new Error("Not connected");
-        this.providerDb = new ProviderDbMongo(this.db);
+        this.providerDb = new Provider_DB_Mongo(this.db);
         await this.providerDb.init();
         return this.providerDb;
     }

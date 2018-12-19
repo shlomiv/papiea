@@ -21,7 +21,7 @@ export class Spec_DB_Mongo implements Spec_DB {
         }
     }
 
-    async update_spec(entity_metadata: core.Metadata, spec: core.Spec): Promise<[core.Metadata?, core.Spec?, any?]> {
+    async update_spec(entity_metadata: core.Metadata, spec: core.Spec): Promise<[core.Metadata?, core.Spec?, Error?]> {
         try {
             const result = await this.collection.updateOne({
                 "metadata.uuid": entity_metadata.uuid,

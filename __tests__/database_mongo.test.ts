@@ -56,19 +56,21 @@ describe("MongoDb tests", () => {
     });
     let entityA_uuid = uuid4();
     test("Insert Spec", done => {
+        expect.assertions(1);
         if (specDb === undefined) {
             done.fail(new Error("specDb is undefined"));
             return;
         }
         let entity_metadata:core.Metadata = {uuid: entityA_uuid, kind: "test", spec_version: 0, created_at: new Date(), delete_at: null};
         let spec:core.Spec = {a: "A"};
-        specDb.update_spec(entity_metadata, spec, (err, entity_metadata, spec) => {
+        specDb.update_spec(entity_metadata, spec).catch(err => {
             expect(err).toBeNull();
             done();
         });
     });
     let provider_uuid = uuid4();
     test("Insert Provider", done => {
+        expect.assertions(1);
         if (providerDb === undefined) {
             done.fail(new Error("specDb is undefined"));
             return;
@@ -78,53 +80,56 @@ describe("MongoDb tests", () => {
         providerDb.inset_provider(provider.uuid, provider.prefix, provider.version, provider.kinds).then(res => {
             expect(res).toBeTruthy();
             done();
-        }).catch(err => {
-            expect(err).toBeNull();
-            done();
-        });
+        })
     });
     test("Update Spec", done => {
+        expect.assertions(1);
         if (specDb === undefined) {
             done.fail(new Error("specDb is undefined"));
             return;
         }
         let entity_metadata:core.Metadata = {uuid: entityA_uuid, kind: "test", spec_version: 1, created_at: new Date(), delete_at: null};
         let spec:core.Spec = {a: "A1"};
-        specDb.update_spec(entity_metadata, spec, (err, entity_metadata, spec) => {
+        specDb.update_spec(entity_metadata, spec).catch(err => {
             expect(err).toBeNull();
             done();
         });
     });
     test("Update Spec with same version should fail", done => {
+        expect.assertions(2);
         if (specDb === undefined) {
             done.fail(new Error("specDb is undefined"));
             return;
         }
         let entity_metadata:core.Metadata = {uuid: entityA_uuid, kind: "test", spec_version: 1, created_at: new Date(), delete_at: null};
         let spec:core.Spec = {a: "A2"};
-        specDb.update_spec(entity_metadata, spec, (err, entity_metadata, spec) => {
+        specDb.update_spec(entity_metadata, spec).then(res => {
+            const [metadata, spec, err] = res;
             expect(err).not.toBeNull();
-            if (entity_metadata === undefined)
-                return done.fail(new Error("Should return existing entity"));
-            if (spec === undefined)
-                return done.fail(new Error("Should return existing entity"));
-            expect(entity_metadata.spec_version).toEqual(2);
+            if (metadata == undefined) {
+                return done.fail(new Error("Should return existing entity"))
+            }
+            if (spec == undefined) {
+                return done.fail(new Error("Should return existing entity"))
+            }
+            expect(metadata.spec_version).toEqual(2);
             done();
         });
     });
     test("Get Spec", done => {
+        expect.assertions(2);
         if (specDb === undefined) {
             done.fail(new Error("specDb is undefined"));
             return;
         }
         let entity_ref:core.Entity_Reference = {uuid: entityA_uuid, kind: "test"};
-        specDb.get_spec(entity_ref, (err, entity_metadata, spec) => {
-            expect(err).toBeNull();
-            if (entity_metadata === undefined || spec === undefined) {
+        specDb.get_spec(entity_ref).then(res => {
+            const [metadata, spec] = res;
+            if (metadata === undefined || spec === undefined) {
                 done.fail(new Error("no data returned"));
                 return;
             }
-            expect(entity_metadata.uuid).toEqual(entity_ref.uuid);
+            expect(metadata.uuid).toEqual(entity_ref.uuid);
             expect(spec.a).toEqual("A1");
             done();
         });
@@ -162,9 +167,8 @@ describe("MongoDb tests", () => {
             return;
         }
         let entity_ref:core.Entity_Reference = {uuid: uuid4(), kind: "test"};
-        specDb.get_spec(entity_ref, (err, entity_metadata, spec) => {
+        specDb.get_spec(entity_ref).catch(err => {
             expect(err).not.toBeNull();
-            done();
         });
     });
     test("List Specs", done => {

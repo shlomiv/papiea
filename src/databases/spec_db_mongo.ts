@@ -1,78 +1,71 @@
 import * as core from "../core";
+import {Entity} from "../core";
 import {Spec_DB} from "./spec_db_interface";
-import {Db,Collection} from "mongodb";
+import {Collection, Db} from "mongodb";
 
 export class Spec_DB_Mongo implements Spec_DB {
-    collection:Collection;
+    collection: Collection;
+
     constructor(db: Db) {
         this.collection = db.collection("entity");
     }
 
-    init(cb: (error?:Error) => void):void {
-        this.collection.createIndex(
-            { "metadata.uuid": 1 },
-            { name: "entity_uuid", unique: true },
-            (err, result) => {
-                cb(err);
-            }
-        );
+    async init(): Promise<void> {
+        try {
+            await this.collection.createIndex(
+                {"metadata.uuid": 1},
+                {name: "entity_uuid", unique: true},
+            );
+        } catch (err) {
+            throw err
+        }
     }
 
-    update_spec(entity_metadata: core.Metadata, spec:core.Spec, cb: (err: Error|null, entity_metadata?: core.Metadata, spec?: core.Spec) => void):void {
-        this.collection.updateOne({
-            "metadata.uuid": entity_metadata.uuid,
-            "metadata.kind": entity_metadata.kind,
-            "metadata.spec_version": entity_metadata.spec_version
-        }, {
-            $inc: {
-                "metadata.spec_version": 1
-            },
-            $set: {
-                "spec": spec
+    async update_spec(entity_metadata: core.Metadata, spec: core.Spec): Promise<[core.Metadata?, core.Spec?, any?]> {
+        try {
+            const result = await this.collection.updateOne({
+                "metadata.uuid": entity_metadata.uuid,
+                "metadata.kind": entity_metadata.kind,
+                "metadata.spec_version": entity_metadata.spec_version
+            }, {
+                $inc: {
+                    "metadata.spec_version": 1
+                },
+                $set: {
+                    "spec": spec
+                }
+            }, {
+                upsert: true
+            });
+            if (result.result.n !== 1) {
+                throw new Error(`Amount of updated entries doesn't equal to 1: ${result.result.n}`)
             }
-        }, {
-            upsert: true
-        }, (err, result) => {
-            if (err && err.code === 11000) {
-                // E11000 duplicate key error collection: papiea.entity index: entity_uuid dup key
-                // means Entity with conflicting spec_version exists
-                const entity_ref:core.Entity_Reference = {uuid: entity_metadata.uuid, kind: entity_metadata.kind};
-                return this.get_spec(entity_ref, (error, entity_metadata, spec) => {
-                    if (error)
-                        return cb(error);
-                    cb(err, entity_metadata, spec);
-                });
-            }
-            if (err)
-                return cb(err);
-            if (result.result.n !== 1)
-                return cb(new Error("Amount of updated entries doesn't equal to 1: " + result.result.n));
             entity_metadata.spec_version++;
-            cb(null, entity_metadata, spec);
-        });
+            return [entity_metadata, spec]
+        } catch (err) {
+            if (err.code === 1100) {
+                const entity_ref: core.Entity_Reference = {uuid: entity_metadata.uuid, kind: entity_metadata.kind};
+                const [metadata, spec] = await this.get_spec(entity_ref);
+                return [metadata, spec, err]
+            } else {
+                throw err;
+            }
+        }
     }
 
-    get_spec(entity_ref: core.Entity_Reference, cb: (err: Error|null, entity_metadata?: core.Metadata, spec?: core.Spec) => void):void {
-        this.collection.findOne({
+    async get_spec(entity_ref: core.Entity_Reference): Promise<[core.Metadata?, core.Spec?]> {
+        const result: Entity | null = await this.collection.findOne({
             "metadata.uuid": entity_ref.uuid,
             "metadata.kind": entity_ref.kind
-        }, (err, result) => {
-            if (err)
-                return cb(err);
-            if (result === null)
-                return cb(new Error("Not found"));
-            cb(null, result.metadata, result.spec);
         });
+        if (result === null) {
+            throw new Error("Entity not found")
+        }
+        return [result.metadata, result.spec];
     }
 
-    list_specs(fields_map: any, cb: (err: Error|null, res?:[core.Metadata, core.Spec][]) => void):void {
-        this.collection.find(fields_map).toArray((err, result) => {
-            if (err)
-                return cb(err);
-            if (result === null)
-                return cb(null, []);
-            const res:[core.Metadata, core.Spec][] = result.map((x:any):[core.Metadata, core.Spec] => [x.metadata, x.spec]);
-            cb(null, res);
-        });
+    async list_specs(fields_map: any): Promise<[core.Metadata?, core.Spec?][]> {
+        const result = await this.collection.find(fields_map).toArray();
+        return result.map((x: any): [core.Metadata, core.Spec] => [x.metadata, x.spec]);
     }
 }

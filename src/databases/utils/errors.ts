@@ -1,13 +1,13 @@
 import {Metadata, Spec} from "../../core";
 
-export class MongoDuplicateEntityError extends Error {
+export class ConflictingEntityError extends Error {
 
-    metadata: Metadata;
-    spec: Spec;
+    existing_metadata: Metadata;
+    existing_spec: Spec;
 
     constructor(msg: string, metadata: Metadata, spec: Spec) {
         super(msg);
-        this.metadata = metadata;
-        this.spec = spec;
+        this.existing_metadata = metadata;
+        this.existing_spec = spec;
     }
 }

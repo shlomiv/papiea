@@ -2,7 +2,7 @@ import * as core from "../core";
 import {Entity} from "../core";
 import {Spec_DB} from "./spec_db_interface";
 import {Collection, Db} from "mongodb";
-import {MongoDuplicateEntityError} from "./utils/errors";
+import {ConflictingEntityError} from "./utils/errors";
 
 export class Spec_DB_Mongo implements Spec_DB {
     collection: Collection;
@@ -48,7 +48,7 @@ export class Spec_DB_Mongo implements Spec_DB {
                 const entity_ref: core.Entity_Reference = {uuid: entity_metadata.uuid, kind: entity_metadata.kind};
                 const [metadata, spec] = await this.get_spec(entity_ref);
                 if (metadata && spec)
-                    throw new MongoDuplicateEntityError("Spec with this version already exists", metadata, spec);
+                    throw new ConflictingEntityError("Spec with this version already exists", metadata, spec);
                 else
                     throw new Error("Spec with this version already exists but no metadata or spec is found")
             } else {

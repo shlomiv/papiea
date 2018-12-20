@@ -7,7 +7,7 @@ import {Provider_DB} from "../src/databases/provider_db_interface";
 import * as core from "../src/core";
 import {v4 as uuid4} from 'uuid';
 import {Kind, Provider} from "../src/papiea";
-import {MongoDuplicateEntityError} from "../src/databases/utils/errors";
+import {ConflictingEntityError} from "../src/databases/utils/errors";
 
 declare var process: {
     env: {
@@ -102,8 +102,8 @@ describe("MongoDb tests", () => {
         };
         let spec: core.Spec = {a: "A2"};
         specDb.update_spec(entity_metadata, spec).catch(err => {
-            expect(err).toBeInstanceOf(MongoDuplicateEntityError);
-            expect(err.metadata.spec_version).toEqual(2);
+            expect(err).toBeInstanceOf(ConflictingEntityError);
+            expect(err.existing_metadata.spec_version).toEqual(2);
             done();
         });
     });

@@ -1,7 +1,7 @@
 import {Provider_DB} from "./provider_db_interface";
-import {Kind, Provider} from "../papiea";
+import {Provider} from "../papiea";
 import {Db, Collection} from "mongodb"
-import {uuid4, Version} from "../core";
+import {Version} from "../core";
 
 export class Provider_DB_Mongo implements Provider_DB {
     collection: Collection;
@@ -13,8 +13,8 @@ export class Provider_DB_Mongo implements Provider_DB {
     async init(): Promise<void> {
         try {
             await this.collection.createIndex({
-                "uuid": 1
-            }, {name: "provider_uuid", unique: true});
+                "prefix": 1
+            }, {name: "prefix", unique: true});
         } catch (err) {
             throw err;
         }
@@ -22,7 +22,8 @@ export class Provider_DB_Mongo implements Provider_DB {
 
     async register_provider(provider: Provider): Promise<void> {
         const result = await this.collection.updateOne({
-            "uuid": provider.uuid
+            "prefix": provider.prefix,
+            "version": provider.version
         }, {
             $set: provider
         }, {
@@ -32,9 +33,9 @@ export class Provider_DB_Mongo implements Provider_DB {
             throw new Error(`Amount of updated entries doesn't equal to 1: ${result.result.n}`)
         }
     }
-    
+
     async get_provider(provider_prefix: string, version?: Version): Promise<Provider> {
-        var filter:any = {prefix: provider_prefix};
+        const filter: any = {prefix: provider_prefix};
         if (version !== null) {
             filter.version = version;
         }
@@ -50,8 +51,8 @@ export class Provider_DB_Mongo implements Provider_DB {
         return await this.collection.find({}).toArray();
     }
 
-    async delete_provider(provider_uuid: uuid4): Promise<boolean> {
-        const result = await this.collection.deleteOne({"uuid": provider_uuid});
+    async delete_provider(provider_prefix: string, version: Version): Promise<boolean> {
+        const result = await this.collection.deleteOne({"prefix": provider_prefix, version});
         if (result.result.n !== 1) {
             throw new Error("Amount of entities deleted is not 1");
         }

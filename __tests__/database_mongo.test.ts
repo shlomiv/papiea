@@ -7,6 +7,7 @@ import {Provider_DB} from "../src/databases/provider_db_interface";
 import * as core from "../src/core";
 import {v4 as uuid4} from 'uuid';
 import {Kind, Provider} from "../src/papiea";
+import {MongoDuplicateEntityError} from "../src/databases/utils/errors";
 
 declare var process: {
     env: {
@@ -100,16 +101,9 @@ describe("MongoDb tests", () => {
             delete_at: null
         };
         let spec: core.Spec = {a: "A2"};
-        specDb.update_spec(entity_metadata, spec).then(res => {
-            const [metadata, spec, err] = res;
-            expect(err).not.toBeNull();
-            if (metadata == undefined) {
-                return done.fail(new Error("Should return existing entity"))
-            }
-            if (spec == undefined) {
-                return done.fail(new Error("Should return existing entity"))
-            }
-            expect(metadata.spec_version).toEqual(2);
+        specDb.update_spec(entity_metadata, spec).catch(err => {
+            expect(err).toBeInstanceOf(MongoDuplicateEntityError);
+            expect(err.metadata.spec_version).toEqual(2);
             done();
         });
     });
@@ -122,7 +116,7 @@ describe("MongoDb tests", () => {
         let entity_ref: core.Entity_Reference = {uuid: entityA_uuid, kind: "test"};
         specDb.get_spec(entity_ref).then(res => {
             const [metadata, spec] = res;
-            if (metadata === undefined || spec === undefined) {
+            if (metadata === null || metadata === undefined || spec === null || spec === undefined) {
                 done.fail(new Error("no data returned"));
                 return;
             }
@@ -220,7 +214,7 @@ describe("MongoDb tests", () => {
         let entity_ref: core.Entity_Reference = {uuid: entityA_uuid, kind: "test"};
         statusDb.get_status(entity_ref).then(res => {
             const [metadata, status] = res;
-            if (metadata === undefined || status === undefined) {
+            if (metadata === undefined || metadata === null || status === undefined || status === null) {
                 done.fail(new Error("no data returned"))
             } else {
                 expect(metadata.uuid).toEqual(entity_ref.uuid);
@@ -283,20 +277,19 @@ describe("MongoDb tests", () => {
             done.fail(err)
         })
     });
-    let provider_uuid = uuid4();
     test("Register Provider", done => {
         if (providerDb === undefined) {
             done.fail(new Error("specDb is undefined"));
             return;
         }
         const test_kind = {} as Kind;
-        const provider: Provider = {"uuid": provider_uuid, prefix: "test", version: "0.1", kinds: [test_kind]};
+        const provider: Provider = {prefix: "test", version: "0.1", kinds: [test_kind]};
         providerDb.register_provider(provider).then(res => {
             done();
         });
     });
     test("Get provider", done => {
-        expect.assertions(2);
+        expect.assertions(3);
         if (providerDb === undefined) {
             done.fail(new Error("providerDb is undefined"));
             return;
@@ -305,7 +298,8 @@ describe("MongoDb tests", () => {
         let version: string = "0.1";
         providerDb.get_provider(prefix_string, version).then(res => {
             expect(res).not.toBeUndefined();
-            expect(res.uuid).toBe(provider_uuid);
+            expect(res.prefix).toBe(prefix_string);
+            expect(res.version).toBe(version);
             done();
         })
     });
@@ -341,7 +335,9 @@ describe("MongoDb tests", () => {
             done.fail(new Error("providerDb is undefined"));
             return;
         }
-        providerDb.delete_provider(provider_uuid).then(res => {
+        let prefix_string: string = "test";
+        let version: string = "0.1";
+        providerDb.delete_provider(prefix_string, version).then(res => {
             expect(res).toBeTruthy();
             done();
         })

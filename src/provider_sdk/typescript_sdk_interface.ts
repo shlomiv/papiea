@@ -5,7 +5,7 @@ import * as core from "../core";
 // Api for the provider-sdk
 enum Provider_Power {On, Off, Suspended};
 
-interface Provider {
+export interface Provider {
     new_kind(entity_yaml:core.Data_Description):Kind;
     version(version: core.Version):void;
     power(state: Provider_Power): Provider_Power;

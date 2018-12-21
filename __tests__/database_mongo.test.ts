@@ -116,10 +116,6 @@ describe("MongoDb tests", () => {
         let entity_ref: core.Entity_Reference = {uuid: entityA_uuid, kind: "test"};
         specDb.get_spec(entity_ref).then(res => {
             const [metadata, spec] = res;
-            if (metadata === null || metadata === undefined || spec === null || spec === undefined) {
-                done.fail(new Error("no data returned"));
-                return;
-            }
             expect(metadata.uuid).toEqual(entity_ref.uuid);
             expect(spec.a).toEqual("A1");
             done();
@@ -138,17 +134,12 @@ describe("MongoDb tests", () => {
         });
     });
     test("List Specs", done => {
-        expect.assertions(2);
+        expect.assertions(1);
         if (specDb === undefined) {
             done.fail(new Error("specDb is undefined"));
             return;
         }
         specDb.list_specs({"metadata.kind": "test"}).then(res => {
-            expect(res).not.toBeNull();
-            if (res === undefined) {
-                done.fail(new Error("No data returned"));
-                return;
-            }
             expect(res.length).toBeGreaterThanOrEqual(1);
             done();
         });
@@ -161,10 +152,6 @@ describe("MongoDb tests", () => {
         }
         specDb.list_specs({"metadata.kind": "test"}).then(res => {
             expect(res).not.toBeNull();
-            if (res === undefined) {
-                done.fail(new Error("No data returned"));
-                return;
-            }
             expect(res.length).toBeGreaterThanOrEqual(1);
             expect(res[0][1].a).toEqual("A1");
             done();
@@ -214,13 +201,9 @@ describe("MongoDb tests", () => {
         let entity_ref: core.Entity_Reference = {uuid: entityA_uuid, kind: "test"};
         statusDb.get_status(entity_ref).then(res => {
             const [metadata, status] = res;
-            if (metadata === undefined || metadata === null || status === undefined || status === null) {
-                done.fail(new Error("no data returned"))
-            } else {
-                expect(metadata.uuid).toEqual(entity_ref.uuid);
-                expect(status.a).toEqual("A1");
-                done();
-            }
+            expect(metadata.uuid).toEqual(entity_ref.uuid);
+            expect(status.a).toEqual("A1");
+            done();
         });
     });
     test("Get Status for non existing entity should fail", done => {
@@ -236,33 +219,23 @@ describe("MongoDb tests", () => {
         });
     });
     test("List Statuses", done => {
-        expect.assertions(2);
+        expect.assertions(1);
         if (statusDb === undefined) {
             done.fail(new Error("statusDb is undefined"));
             return;
         }
         statusDb.list_status({"metadata.kind": "test"}).then(res => {
-            expect(res).not.toBeNull();
-            if (res === undefined) {
-                done.fail(new Error("no data returned"));
-                return;
-            }
             expect(res.length).toBeGreaterThanOrEqual(1);
             done();
         });
     });
     test("List Statuses - check status data", done => {
-        expect.assertions(3);
+        expect.assertions(2);
         if (statusDb === undefined) {
             done.fail(new Error("statusDb is undefined"));
             return;
         }
         statusDb.list_status({"metadata.kind": "test", "status.a": "A1"}).then(res => {
-            expect(res).not.toBeNull();
-            if (res === undefined) {
-                done.fail(new Error("no data returned"));
-                return;
-            }
             expect(res.length).toBeGreaterThanOrEqual(1);
             expect(res[0][1].a).toEqual("A1");
             done();
@@ -289,7 +262,7 @@ describe("MongoDb tests", () => {
         });
     });
     test("Get provider", done => {
-        expect.assertions(3);
+        expect.assertions(2);
         if (providerDb === undefined) {
             done.fail(new Error("providerDb is undefined"));
             return;
@@ -297,7 +270,6 @@ describe("MongoDb tests", () => {
         let prefix_string: string = "test";
         let version: string = "0.1";
         providerDb.get_provider(prefix_string, version).then(res => {
-            expect(res).not.toBeUndefined();
             expect(res.prefix).toBe(prefix_string);
             expect(res.version).toBe(version);
             done();

@@ -12,7 +12,7 @@ export interface Status_DB {
 
     // Gets the status of a particular entity from the db. Returns
     // both current metadata and status of the entity.
-    get_status(entity_ref: core.Entity_Reference): Promise<[core.Metadata | null, core.Status | null]>;
+    get_status(entity_ref: core.Entity_Reference): Promise<[core.Metadata, core.Status]>;
 
     // List all status that have their fields match the ones given in
     // fields_map. E.g. we could look for all statuses for `vm` kind that
@@ -23,7 +23,7 @@ export interface Status_DB {
     // We could come up with command such as greater-than etc at some
     // later point, or we could use a similar dsl to mongodb search
     // dsl.
-    list_status(fields_map: any): Promise<[core.Metadata | null, core.Status | null][]>;
+    list_status(fields_map: any): Promise<[core.Metadata, core.Status][]>;
 }
 
 // status-db-interface ends here

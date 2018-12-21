@@ -40,7 +40,7 @@ export class Provider_DB_Mongo implements Provider_DB {
             filter.version = version;
         }
         const provider: Provider | null = await this.collection.findOne(filter);
-        if (provider == null) {
+        if (provider === null) {
             throw new Error(`Provider with prefix ${provider_prefix} not found`);
         } else {
             return provider;
@@ -48,7 +48,7 @@ export class Provider_DB_Mongo implements Provider_DB {
     }
 
     async list_providers(): Promise<Provider[]> {
-        return await this.collection.find({}).toArray();
+        return this.collection.find({}).toArray();
     }
 
     async delete_provider(provider_prefix: string, version: Version): Promise<boolean> {

@@ -33,7 +33,7 @@ export class Status_DB_Mongo implements Status_DB {
         }
     }
 
-    async get_status(entity_ref: core.Entity_Reference): Promise<[core.Metadata | null, core.Status | null]> {
+    async get_status(entity_ref: core.Entity_Reference): Promise<[core.Metadata, core.Status]> {
         const result: Entity | null = await this.collection.findOne({
             "metadata.uuid": entity_ref.uuid,
             "metadata.kind": entity_ref.kind
@@ -44,7 +44,7 @@ export class Status_DB_Mongo implements Status_DB {
         return [result.metadata, result.status]
     }
 
-    async list_status(fields_map: any): Promise<[core.Metadata | null, core.Status | null][]> {
+    async list_status(fields_map: any): Promise<[core.Metadata, core.Status][]> {
         const result = await this.collection.find(fields_map).toArray();
         return result.map((x: any): [core.Metadata, core.Spec] => [x.metadata, x.status]);
     }

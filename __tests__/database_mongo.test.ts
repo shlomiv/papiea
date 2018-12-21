@@ -57,7 +57,7 @@ describe("MongoDb tests", () => {
             kind: "test",
             spec_version: 0,
             created_at: new Date(),
-            delete_at: null
+            deleted_at: null
         };
         let spec: core.Spec = {a: "A"};
         specDb.update_spec(entity_metadata, spec).then(res => {
@@ -77,7 +77,7 @@ describe("MongoDb tests", () => {
             kind: "test",
             spec_version: 1,
             created_at: new Date(),
-            delete_at: null
+            deleted_at: null
         };
         let spec: core.Spec = {a: "A1"};
         specDb.update_spec(entity_metadata, spec).then(res => {
@@ -98,7 +98,7 @@ describe("MongoDb tests", () => {
             kind: "test",
             spec_version: 1,
             created_at: new Date(),
-            delete_at: null
+            deleted_at: null
         };
         let spec: core.Spec = {a: "A2"};
         specDb.update_spec(entity_metadata, spec).catch(err => {
@@ -108,17 +108,22 @@ describe("MongoDb tests", () => {
         });
     });
     test("Get Spec", done => {
-        expect.assertions(4);
+        expect.assertions(5);
         if (specDb === undefined) {
             done.fail(new Error("specDb is undefined"));
             return;
         }
         let entity_ref: core.Entity_Reference = {uuid: entityA_uuid, kind: "test"};
         specDb.get_spec(entity_ref).then(res => {
+            expect(res).not.toBeNull();
+            if (res === null) {
+                done.fail("Entity without spec");
+                return;
+            }
             const [metadata, spec] = res;
             expect(metadata.uuid).toEqual(entity_ref.uuid);
             expect(metadata.created_at).not.toBeNull();
-            expect(metadata.delete_at).toBeFalsy();
+            expect(metadata.deleted_at).toBeFalsy();
             expect(spec.a).toEqual("A1");
             done();
         });
@@ -147,14 +152,16 @@ describe("MongoDb tests", () => {
         });
     });
     test("List Specs - check spec data", done => {
-        expect.assertions(3);
+        expect.assertions(4);
         if (specDb === undefined) {
             done.fail(new Error("specDb is undefined"));
             return;
         }
         specDb.list_specs({"metadata.kind": "test"}).then(res => {
             expect(res).not.toBeNull();
+            expect(res[0]).not.toBeNull();
             expect(res.length).toBeGreaterThanOrEqual(1);
+            // @ts-ignore
             expect(res[0][1].a).toEqual("A1");
             done();
         });
@@ -195,13 +202,18 @@ describe("MongoDb tests", () => {
         });
     });
     test("Get Status", done => {
-        expect.assertions(2);
+        expect.assertions(3);
         if (statusDb === undefined) {
             done.fail(new Error("statusDb is undefined"));
             return;
         }
         let entity_ref: core.Entity_Reference = {uuid: entityA_uuid, kind: "test"};
         statusDb.get_status(entity_ref).then(res => {
+            expect(res).not.toBeNull();
+            if (res === null) {
+                done.fail("Entity without status");
+                return;
+            }
             const [metadata, status] = res;
             expect(metadata.uuid).toEqual(entity_ref.uuid);
             expect(status.a).toEqual("A1");
@@ -232,13 +244,15 @@ describe("MongoDb tests", () => {
         });
     });
     test("List Statuses - check status data", done => {
-        expect.assertions(2);
+        expect.assertions(3);
         if (statusDb === undefined) {
             done.fail(new Error("statusDb is undefined"));
             return;
         }
         statusDb.list_status({"metadata.kind": "test", "status.a": "A1"}).then(res => {
             expect(res.length).toBeGreaterThanOrEqual(1);
+            expect(res[0]).not.toBeNull();
+            // @ts-ignore
             expect(res[0][1].a).toEqual("A1");
             done();
         });

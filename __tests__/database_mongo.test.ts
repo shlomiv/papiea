@@ -108,7 +108,7 @@ describe("MongoDb tests", () => {
         });
     });
     test("Get Spec", done => {
-        expect.assertions(2);
+        expect.assertions(4);
         if (specDb === undefined) {
             done.fail(new Error("specDb is undefined"));
             return;
@@ -121,6 +121,8 @@ describe("MongoDb tests", () => {
                 return;
             }
             expect(metadata.uuid).toEqual(entity_ref.uuid);
+            expect(metadata.created_at).not.toBeNull();
+            expect(metadata.delete_at).toBeFalsy();
             expect(spec.a).toEqual("A1");
             done();
         });

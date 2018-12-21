@@ -34,6 +34,9 @@ export class Spec_DB_Mongo implements Spec_DB {
                 },
                 $set: {
                     "spec": spec
+                },
+                $setOnInsert: {
+                    "created_at": new Date()
                 }
             }, {
                 upsert: true

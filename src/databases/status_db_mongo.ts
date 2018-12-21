@@ -24,6 +24,9 @@ export class Status_DB_Mongo implements Status_DB {
         }, {
             $set: {
                 "status": status
+            },
+            $setOnInsert: {
+                "created_at": new Date()
             }
         }, {
             upsert: true

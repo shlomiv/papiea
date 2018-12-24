@@ -9,9 +9,9 @@ jobs:
 
       - checkout
 
-      - run: docker-compose build
-
       - run: docker-compose up -d
+
+      - run: ls -l && pwd
 
       - run:
           name: Waiting for service to be ready

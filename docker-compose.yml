@@ -2,6 +2,7 @@ version: '3'
 services:
         server:
                 build: .
+                image: quantumobile/papiea:1545645693
                 volumes:
                         - ./:/code
                 ports:

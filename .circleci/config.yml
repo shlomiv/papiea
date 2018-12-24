@@ -18,6 +18,7 @@ jobs:
           command: |
             for i in `seq 1 10`;
             do
+              docker-compose logs --tail=5
               nc -z localhost 3000 && echo Success && exit 0
               echo -n .
               sleep 5
@@ -28,6 +29,8 @@ jobs:
           name: Run unit tests
           command: |
             docker-compose run --rm server npm test
+      
+      - run: docker-compose down
 
       # - deploy:
       #     name: Build and push Docker image

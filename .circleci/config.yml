@@ -23,7 +23,7 @@ jobs:
               docker-compose logs --tail=5
               nc -z localhost 3000 && echo Success && exit 0
               echo -n .
-              sleep 5
+              sleep 15
             done
             echo Failed waiting for service && exit 1
 

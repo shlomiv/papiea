@@ -4,5 +4,3 @@ services:
                 build:
                         dockerfile: .circleci/Dockerfile
                         context: .
-                ports:
-                        - "3000:3000"

@@ -1,0 +1,38 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/node:10
+
+    steps:
+      - setup_remote_docker
+
+      - checkout
+
+      - run: docker-compose build
+
+      - run: docker-compose up -d
+
+      - run:
+          name: Waiting for service to be ready
+          command: |
+            for i in `seq 1 10`;
+            do
+              nc -z localhost 3000 && echo Success && exit 0
+              echo -n .
+              sleep 5
+            done
+            echo Failed waiting for service && exit 1
+
+      - run:
+          name: Run unit tests
+          command: |
+            docker-compose run --rm server npm test
+
+      # - deploy:
+      #     name: Build and push Docker image
+      #     environment:
+      #       TAG: XXX
+      #     command: |
+      #       docker login -u $DOCKER_LOGIN -p $DOCKER_PASSWORD
+      #       docker-compose push

@@ -9,9 +9,11 @@ jobs:
 
       - checkout
 
-      - run: docker-compose pull && docker-compose up -d
-
-      - run: ls -l && pwd
+      - run:
+          name: Start service
+          command: |
+            cp .circleci/docker-compose.yml .
+            docker-compose up -d
 
       - run:
           name: Waiting for service to be ready

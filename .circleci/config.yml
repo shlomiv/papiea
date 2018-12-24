@@ -1,0 +1,42 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/node:10
+
+    steps:
+      - setup_remote_docker
+
+      - checkout
+
+      - run:
+          name: Start service
+          command: |
+            cp .circleci/docker-compose.yml .
+            docker-compose up -d
+
+      - run:
+          name: Waiting for service to be ready
+          command: |
+            for i in `seq 1 10`;
+            do
+              docker-compose logs --tail=5 server | grep 'app listening on port' && echo Success && exit 0
+              sleep 15
+              docker-compose logs --tail=5
+            done
+            echo Failed waiting for service && exit 1
+
+      - run:
+          name: Run unit tests
+          command: |
+            docker-compose run --name server_test -e JEST_JUNIT_OUTPUT=reports/junit/results.xml server npm run test-ci
+            docker cp server_test:/code/reports . || echo .
+            docker rm server_test
+      
+      - run: docker-compose down
+
+      - store_test_results:
+          path: reports
+
+      - store_artifacts:
+          path: reports

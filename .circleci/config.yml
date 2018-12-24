@@ -9,7 +9,7 @@ jobs:
 
       - checkout
 
-      - run: docker-compose up -d
+      - run: docker-compose pull && docker-compose up -d
 
       - run: ls -l && pwd
 

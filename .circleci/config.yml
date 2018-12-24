@@ -32,11 +32,3 @@ jobs:
             docker-compose run --rm server npm test
       
       - run: docker-compose down
-
-      # - deploy:
-      #     name: Build and push Docker image
-      #     environment:
-      #       TAG: XXX
-      #     command: |
-      #       docker login -u $DOCKER_LOGIN -p $DOCKER_PASSWORD
-      #       docker-compose push

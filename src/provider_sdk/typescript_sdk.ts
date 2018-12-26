@@ -21,23 +21,27 @@ export class ProviderSdk implements IProviderImpl {
             throw new Error("Wrong kind description specified")
         }
         const name = Object.keys(entity_yaml)[0];
-        if (entity_yaml.hasOwnProperty("x-papiea-entity") && entity_yaml["x-papiea-entity"] === "spec-only") {
-            const spec_only_kind: SpecOnlyEnitityKind = {
-                name,
-                name_plural: undefined,
-                kind_structure: entity_yaml,
-                validator_fn: {} as (entity: Entity) => boolean,
-                intentful_signatures: new Map(),
-                dependency_tree: new Map(),
-                procedures: new Map(),
-                differ: undefined,
-                semantic_validator_fn: undefined
-            };
-            this.kind = spec_only_kind;
-            return spec_only_kind;
+        if (entity_yaml[name].hasOwnProperty("x-papiea-entity")) {
+            if (entity_yaml[name]["x-papiea-entity"] === "spec-only") {
+                const spec_only_kind: SpecOnlyEnitityKind = {
+                    name,
+                    name_plural: undefined,
+                    kind_structure: entity_yaml,
+                    validator_fn: {} as (entity: Entity) => boolean,
+                    intentful_signatures: new Map(),
+                    dependency_tree: new Map(),
+                    procedures: new Map(),
+                    differ: undefined,
+                    semantic_validator_fn: undefined
+                };
+                this.kind = spec_only_kind;
+                return spec_only_kind;
+            } else {
+                //TODO: process non spec-only
+                throw new Error("Unimplemented")
+            }
         } else {
-            //TODO: process non spec-only
-            throw new Error("Unimplemented");
+            throw new Error("Malformed yaml");
         }
     }
 

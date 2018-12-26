@@ -22,7 +22,7 @@ export class Spec_DB_Mongo implements Spec_DB {
         }
     }
 
-    async update_spec(entity_metadata: core.Metadata, spec: core.Spec): Promise<[core.Metadata, core.Spec] | null> {
+    async update_spec(entity_metadata: core.Metadata, spec: core.Spec): Promise<[core.Metadata, core.Spec]> {
         try {
             const result = await this.collection.updateOne({
                 "metadata.uuid": entity_metadata.uuid,
@@ -49,11 +49,7 @@ export class Spec_DB_Mongo implements Spec_DB {
         } catch (err) {
             if (err.code === 11000) {
                 const entity_ref: core.Entity_Reference = {uuid: entity_metadata.uuid, kind: entity_metadata.kind};
-                const res = await this.get_spec(entity_ref);
-                if (res === null) {
-                    return null;
-                }
-                const [metadata, spec] = res;
+                const [metadata, spec] = await this.get_spec(entity_ref);
                 throw new ConflictingEntityError("Spec with this version already exists", metadata, spec);
             } else {
                 throw err;
@@ -61,7 +57,7 @@ export class Spec_DB_Mongo implements Spec_DB {
         }
     }
 
-    async get_spec(entity_ref: core.Entity_Reference): Promise<[core.Metadata, core.Spec] | null> {
+    async get_spec(entity_ref: core.Entity_Reference): Promise<[core.Metadata, core.Spec]> {
         const result: Entity | null = await this.collection.findOne({
             "metadata.uuid": entity_ref.uuid,
             "metadata.kind": entity_ref.kind
@@ -69,19 +65,16 @@ export class Spec_DB_Mongo implements Spec_DB {
         if (result === null) {
             throw new Error("Entity not found")
         }
-        if (result.spec === null) {
-            return null;
-        }
         return [result.metadata, result.spec];
     }
 
-    async list_specs(fields_map: any): Promise<([core.Metadata, core.Spec] | null)[]> {
+    async list_specs(fields_map: any): Promise<([core.Metadata, core.Spec])[]> {
         const result = await this.collection.find(fields_map).toArray();
-        return result.map((x: any): [core.Metadata, core.Spec] | null=> {
+        return result.map((x: any): [core.Metadata, core.Spec] => {
             if (x.spec !== null) {
                 return [x.metadata, x.spec]
             } else {
-                return null;
+                throw new Error("No entities found");
             }
         });
     }

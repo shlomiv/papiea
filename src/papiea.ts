@@ -10,7 +10,7 @@ export interface Kind {
 
     // The name of the kind, and its plural form for proper REST naming
     name: string;
-    name_plural: string;
+    name_plural?: string;
 
     //// Entity structure
     kind_structure: core.Data_Description;
@@ -18,16 +18,21 @@ export interface Kind {
     semantic_validator_fn?: core.Provider_Callback_URL; 
 
     //// Intentful behavior
-    intentful_signatures: core.Map<core.SFS, core.Intentful_Signature>;
+    intentful_signatures: Map<core.SFS, core.Intentful_Signature>;
 
     // Every sfs lists the sfs's it has to execute before
-    dependency_tree: core.Map<core.SFS, core.SFS[]>;
+    dependency_tree: Map<core.SFS, core.SFS[]>;
 
     // The compiled Differ
-    differ: differ.Differ;
+    differ?: differ.Differ;
 
     //// Procedural behavior
-    procedures: core.Map<string, Procedural_Signature>;
+    procedures: Map<string, Procedural_Signature>;
+}
+
+export interface SpecOnlyEnitityKind extends Kind {
+    differ: undefined,
+    semantic_validator_fn: undefined
 }
 // kind-struct ends here
 

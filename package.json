@@ -15,6 +15,7 @@
   "author": "Shlomi Vaknin",
   "license": "ISC",
   "dependencies": {
+    "@types/express": "^4.16.0",
     "@types/node": "^10.12.9",
     "express": "^4.16.4"
   },

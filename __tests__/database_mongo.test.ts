@@ -57,7 +57,7 @@ describe("MongoDb tests", () => {
             kind: "test",
             spec_version: 0,
             created_at: new Date(),
-            deleted_at: null
+            deleted_at: undefined
         };
         let spec: core.Spec = {a: "A"};
         specDb.update_spec(entity_metadata, spec).then(res => {
@@ -77,7 +77,7 @@ describe("MongoDb tests", () => {
             kind: "test",
             spec_version: 1,
             created_at: new Date(),
-            deleted_at: null
+            deleted_at: undefined
         };
         let spec: core.Spec = {a: "A1"};
         specDb.update_spec(entity_metadata, spec).then(res => {
@@ -98,7 +98,7 @@ describe("MongoDb tests", () => {
             kind: "test",
             spec_version: 1,
             created_at: new Date(),
-            deleted_at: null
+            deleted_at: undefined
         };
         let spec: core.Spec = {a: "A2"};
         specDb.update_spec(entity_metadata, spec).catch(err => {

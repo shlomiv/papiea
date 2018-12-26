@@ -37,7 +37,7 @@ export interface Metadata {
 
     // Additional fields
     created_at: Date;
-    deleted_at: Date|null;
+    deleted_at?: Date;
 }
 // metadata-struct ends here
 

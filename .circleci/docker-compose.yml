@@ -4,3 +4,10 @@ services:
                 build:
                         dockerfile: .circleci/Dockerfile
                         context: .
+                environment:
+                        - MONGO_URL=mongodb://mongo:27017
+                        - MONGO_DB=papiea
+                depends_on:
+                        - mongo
+        mongo:
+                image: mongo:4.1

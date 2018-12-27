@@ -14,8 +14,8 @@ export interface Kind {
 
     //// Entity structure
     kind_structure: core.Data_Description;
-    validator_fn: (entity:core.Entity)=>boolean;
-    semantic_validator_fn?: core.Provider_Callback_URL; 
+    validator_fn: (entity: core.Entity) => boolean;
+    semantic_validator_fn?: core.Provider_Callback_URL;
 
     //// Intentful behavior
     intentful_signatures: Map<core.SFS, core.Intentful_Signature>;
@@ -31,9 +31,8 @@ export interface Kind {
 }
 
 export interface SpecOnlyEnitityKind extends Kind {
-    differ: undefined,
-    semantic_validator_fn: undefined
 }
+
 // kind-struct ends here
 
 // [[file:~/work/papiea-js/Papiea-design.org::#h-Interface-598][procedure-signature]]
@@ -50,13 +49,13 @@ export interface Procedural_Signature {
     argument: core.Data_Description;
 
     // The automatically generated validator
-    arg_validator_fn: (arg:any)=>boolean;
+    arg_validator_fn: (arg: any) => boolean;
 
     // The representation of the data to be returned from this procedure
     result: core.Data_Description;
 
     // The automatically generated validator
-    result_validator_fn: (res:any)=>boolean;
+    result_validator_fn: (res: any) => boolean;
 
     // Does the engine pauses all intentful operation invocations for
     // the duration of the procedural call
@@ -75,6 +74,7 @@ export interface Provider {
     version: core.Version;
     kinds: Kind[]
 }
+
 // provider-desc-struct ends here
 
 // [[file:~/work/papiea-js/Papiea-design.org::#h-Interface-680][papiea-interface]]
@@ -87,6 +87,7 @@ export interface Papiea {
     statusDb: status.Status_DB;
     specsDb: spec.Spec_DB;
     providersDb: provider.Provider_DB;
-} 
+}
+
 // papiea-interface ends here
 // /src/papiea.ts:1 ends here

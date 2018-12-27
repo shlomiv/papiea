@@ -24,5 +24,5 @@ export interface Provider_API {
 
     // Binny wants to rename this
     // POST "/provider/{prefix}/{version}/power"
-    power(power_state:Provider_Power): Promise<void>;
+    power(provider_prefix: string, version: core.Version, power_state:Provider_Power): Promise<void>;
 }

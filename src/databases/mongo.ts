@@ -22,17 +22,13 @@ export class MongoConnection {
         this.statusDb = undefined;
     }
 
-    connect(cb: (error?: Error) => void): void {
-        this.client.connect((err, result) => {
-            if (err)
-                return cb(err);
-            this.db = this.client.db(this.dbName);
-            cb();
-        });
+    async connect(): Promise<void> {
+        await this.client.connect();
+        this.db = this.client.db(this.dbName);
     }
 
-    close(cb: (error?: Error) => void) {
-        this.client.close(true, cb);
+    async close(): Promise<void> {
+        await this.client.close(true);
     }
 
     async get_spec_db(): Promise<Spec_DB_Mongo> {

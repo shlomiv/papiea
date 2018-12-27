@@ -11,11 +11,11 @@ export interface Spec_DB {
     // implementation needs to CAS the spec_version to the increment
     // of itself, and return the new metadata with the new
     // spec_version and the new CASed in spec.
-    update_spec(entity_metadata: core.Metadata, spec:core.Spec):[boolean, core.Metadata, core.Spec];
+    update_spec(entity_metadata: core.Metadata, spec:core.Spec): Promise<[core.Metadata, core.Spec]>;
 
     // Get the spec of a particular entity from the db. Returns both
     // current metadata and the spec of that entity.
-    get_spec(entity_ref: core.Entity_Reference):[core.Metadata, core.Spec];
+    get_spec(entity_ref: core.Entity_Reference): Promise<[core.Metadata, core.Spec]>;
 
     // List all specs that have their fields match the ones given in
     // fields_map. E.g. we could look for all specs for `vm` kind that
@@ -26,7 +26,7 @@ export interface Spec_DB {
     // We could come up with command such as greater-than etc at some
     // later point, or we could use a similar dsl to mongodb search
     // dsl.
-    list_specs(fields_map: any): [core.Metadata, core.Spec][];
+    list_specs(fields_map: any): Promise<([core.Metadata, core.Spec])[]>;
 }
 
 // spec-db-interface ends here

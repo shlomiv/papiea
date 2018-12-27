@@ -28,19 +28,49 @@ describe("Provider Sdk tests", () => {
         const sdk = new ProviderSdk();
         const kind = sdk.new_kind(location_yaml);
         expect(kind.name).toBe("Location");
-        expect(sdk.kind).not.toBeNull();
-        // @ts-ignore
-        expect(sdk.kind.name).toBe("Location");
         done();
     });
     test("Provider with no x-papiea-entity should fail", (done) => {
         const sdk = new ProviderSdk();
-        const malformed_yaml = Object.assign({}, location_yaml);
-        malformed_yaml.Location["x-papiea-entity"] = undefined;
+        const malformed_yaml = JSON.parse(JSON.stringify(location_yaml));
+        malformed_yaml.Location["x-papiea-entity"] = "fail";
         try {
-            sdk.new_kind(malformed_yaml)
+            sdk.new_kind(malformed_yaml);
         } catch (err) {
             expect(err).not.toBeNull();
+            done();
+        }
+    });
+    test("Provider without version should fail to register", (done) => {
+        const sdk = new ProviderSdk();
+        try {
+            sdk.new_kind(location_yaml);
+            sdk.prefix("test_provider");
+            sdk.register();
+        } catch (err) {
+            expect(err.message).toBe("Malformed provider description. Missing: version");
+            done();
+        }
+    });
+    test("Provider without kind should fail to register", (done) => {
+        const sdk = new ProviderSdk();
+        try {
+            sdk.prefix("test_provider");
+            sdk.version("0.1");
+            sdk.register();
+        } catch (err) {
+            expect(err.message).toBe("Malformed provider description. Missing: kind");
+            done();
+        }
+    });
+    test("Provider without prefix should fail to register", (done) => {
+        const sdk = new ProviderSdk();
+        try {
+            sdk.new_kind(location_yaml);
+            sdk.version("0.1");
+            sdk.register();
+        } catch (err) {
+            expect(err.message).toBe("Malformed provider description. Missing: prefix");
             done();
         }
     });

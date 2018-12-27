@@ -8,12 +8,18 @@ import {Kind, Procedural_Execution_Strategy, Provider, SpecOnlyEnitityKind} from
 import axios from "axios"
 
 export class ProviderSdk implements IProviderImpl {
-    provider: Provider;
-    kind: Kind | null;
+    private _version: Version | null;
+    private _prefix: string | null;
+    // Does it need to be _kind: Kind[]
+    private _kind: Kind | null;
+    provider: Provider | null;
+
 
     constructor() {
-        this.kind = null;
-        this.provider = {prefix: "", version: "", kinds: []};
+        this._version = null;
+        this._prefix = null;
+        this._kind = null;
+        this.provider = null;
     }
 
     new_kind(entity_yaml: Data_Description): Kind {
@@ -34,7 +40,7 @@ export class ProviderSdk implements IProviderImpl {
                     differ: undefined,
                     semantic_validator_fn: undefined
                 };
-                this.kind = spec_only_kind;
+                this._kind = spec_only_kind;
                 return spec_only_kind;
             } else {
                 //TODO: process non spec-only
@@ -45,23 +51,34 @@ export class ProviderSdk implements IProviderImpl {
         }
     }
 
+    kind(kind: Kind) {
+        this._kind = kind;
+    }
+
     version(version: Version): void {
-        this.provider.version = version;
+        this._version = version;
     }
 
     prefix(prefix: string) {
-        this.provider.prefix = prefix;
+        this._prefix = prefix;
     }
 
     register(): void {
-        if (this.provider.prefix !== "" && this.provider.version !== "" && this.provider.kinds.length !== 0) {
+        if (this._prefix !== null && this._version !== null && this._kind !== null) {
+            this.provider = {kinds: [this._kind], version: this._version, prefix: this._prefix};
             try {
-                axios.post("/provider", this.provider)
+                //TODO: set this in global variable
+                axios.post("localhost:3000/provider/", this.provider)
+                //Do we set all fields to null again?
             } catch (err) {
                 throw err;
             }
+        } else if (this._prefix === null) {
+            ProviderSdk.provider_description_error("prefix")
+        } else if (this._version === null) {
+            ProviderSdk.provider_description_error("version")
         } else {
-            throw new Error("Malformed provider description")
+            ProviderSdk.provider_description_error("kind")
         }
     }
 
@@ -76,5 +93,9 @@ export class ProviderSdk implements IProviderImpl {
 
     power(state: Provider_Power): Provider_Power {
         throw new Error("Unimplemented")
+    }
+
+    static provider_description_error(type: string) {
+        throw new Error(`Malformed provider description. Missing: ${type}`)
     }
 }

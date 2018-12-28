@@ -36,7 +36,7 @@ describe("MongoDb tests", () => {
             done.fail(err);
         });
     });
-    let entityA_uuid = uuid4();
+    const entityA_uuid = uuid4();
     test("Insert Spec", done => {
         if (specDb === undefined) {
             done.fail(new Error("specDb is undefined"));

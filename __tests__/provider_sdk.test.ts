@@ -32,6 +32,15 @@ describe("Provider Sdk tests", () => {
         }
         done();
     });
+    test("Wrong yaml description causes error", (done) => {
+        const sdk = new ProviderSdk();
+        try {
+            sdk.new_kind({});
+        } catch (err) {
+            expect(err).not.toBeNull();
+            done();
+        }
+    });
     test("Provider can create a new kind", (done) => {
         const sdk = new ProviderSdk();
         const kind = sdk.new_kind(location_yaml);
@@ -49,34 +58,34 @@ describe("Provider Sdk tests", () => {
             done();
         }
     });
-    test("Provider without version should fail to register", (done) => {
+    test("Provider without version should fail to register", async (done) => {
         const sdk = new ProviderSdk();
         try {
             sdk.new_kind(location_yaml);
             sdk.prefix("test_provider");
-            sdk.register();
+            await sdk.register();
         } catch (err) {
             expect(err.message).toBe("Malformed provider description. Missing: version");
             done();
         }
     });
-    test("Provider without kind should fail to register", (done) => {
+    test("Provider without kind should fail to register", async (done) => {
         const sdk = new ProviderSdk();
         try {
             sdk.prefix("test_provider");
             sdk.version("0.1");
-            sdk.register();
+            await sdk.register();
         } catch (err) {
             expect(err.message).toBe("Malformed provider description. Missing: kind");
             done();
         }
     });
-    test("Provider without prefix should fail to register", (done) => {
+    test("Provider without prefix should fail to register", async (done) => {
         const sdk = new ProviderSdk();
         try {
             sdk.new_kind(location_yaml);
             sdk.version("0.1");
-            sdk.register();
+            await sdk.register();
         } catch (err) {
             expect(err.message).toBe("Malformed provider description. Missing: prefix");
             done();
@@ -101,6 +110,18 @@ describe("Provider Sdk tests", () => {
         const sdk = new ProviderSdk();
         expect(sdk.add_kind(location_kind)).toBeTruthy();
         expect(sdk.add_kind(location_kind)).toBeFalsy();
+        done();
+    });
+    test("Provider should be created on papiea", async (done) => {
+        const sdk = new ProviderSdk();
+        sdk.new_kind(location_yaml);
+        sdk.version("0.1");
+        sdk.prefix("location_provider");
+        try {
+            await sdk.register();
+        } catch (e) {
+            done.fail(e)
+        }
         done();
     });
 });

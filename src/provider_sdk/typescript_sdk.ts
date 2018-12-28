@@ -8,6 +8,13 @@ import {Kind, Procedural_Execution_Strategy, Provider, SpecOnlyEnitityKind} from
 import axios from "axios"
 import {plural} from "pluralize"
 
+declare var process: {
+    env: {
+        SERVER_PORT: string
+    }
+};
+const serverPort = parseInt(process.env.SERVER_PORT || '3000');
+
 export class ProviderSdk implements IProviderImpl {
     private _version: Version | null;
     private _prefix: string | null;
@@ -78,12 +85,12 @@ export class ProviderSdk implements IProviderImpl {
         this._prefix = prefix;
     }
 
-    register(): void {
+    async register(): Promise<void> {
         if (this._prefix !== null && this._version !== null && this._kind.length !== 0) {
             this.provider = {kinds: [...this._kind], version: this._version, prefix: this._prefix};
             try {
                 //TODO: set this in global variable
-                axios.post("127.0.0.1:3000/provider/", this.provider)
+                await axios.post(`http://127.0.0.1:${serverPort}/provider/`, this.provider)
                 //Do we set all fields to null again?
             } catch (err) {
                 throw err;

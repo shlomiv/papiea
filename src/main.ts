@@ -20,7 +20,8 @@ async function setUpApplication(): Promise<express.Express> {
     const mongoConnection: MongoConnection = new MongoConnection(process.env.MONGO_URL || 'mongodb://mongo:27017', process.env.MONGO_DB || 'papiea');
     await mongoConnection.connect();
     const providerDb = await mongoConnection.get_provider_db();
-    app.use('/provider', createProviderAPIRouter(new Provider_API_Impl(providerDb)));
+    const statusDb = await mongoConnection.get_status_db();
+    app.use('/provider', createProviderAPIRouter(new Provider_API_Impl(providerDb, statusDb)));
     app.use(function (err: any, req: any, res: any, next: any) {
         if (res.headersSent) {
             return next(err);

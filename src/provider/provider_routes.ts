@@ -30,7 +30,6 @@ export default function createProviderAPIRouter(providerApi: Provider_API) {
 
     providerApiRouter.post('/:prefix/:version/power', (req, res, next) => {
         const power: Provider_Power = Provider_Power[req.body.power as keyof typeof Provider_Power];
-        console.log(power);
         providerApi.power(req.params.prefix, req.params.version, power).then(result => {
             res.json("OK");
         }).catch(next);

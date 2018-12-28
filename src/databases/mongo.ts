@@ -28,7 +28,7 @@ export class MongoConnection {
     }
 
     async close(): Promise<void> {
-        await this.client.close(true);
+        return this.client.close(true);
     }
 
     async get_spec_db(): Promise<Spec_DB_Mongo> {

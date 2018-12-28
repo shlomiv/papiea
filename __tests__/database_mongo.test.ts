@@ -308,7 +308,6 @@ describe("MongoDb tests", () => {
         })
     });
     test("Delete provider", done => {
-        expect.assertions(1);
         if (providerDb === undefined) {
             done.fail(new Error("providerDb is undefined"));
             return;
@@ -316,7 +315,6 @@ describe("MongoDb tests", () => {
         let prefix_string: string = "test";
         let version: string = "0.1";
         providerDb.delete_provider(prefix_string, version).then(res => {
-            expect(res).toBeTruthy();
             done();
         })
     })

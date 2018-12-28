@@ -11,15 +11,14 @@ import {plural} from "pluralize"
 export class ProviderSdk implements IProviderImpl {
     private _version: Version | null;
     private _prefix: string | null;
-    // Does it need to be _kind: Kind[]
-    private _kind: Kind | null;
+    private _kind: Kind[];
     provider: Provider | null;
 
 
     constructor() {
         this._version = null;
         this._prefix = null;
-        this._kind = null;
+        this._kind = [];
         this.provider = null;
     }
 
@@ -41,7 +40,7 @@ export class ProviderSdk implements IProviderImpl {
                     differ: undefined,
                     semantic_validator_fn: undefined
                 };
-                this._kind = spec_only_kind;
+                this._kind.push(spec_only_kind);
                 return spec_only_kind;
             } else {
                 //TODO: process non spec-only
@@ -52,8 +51,23 @@ export class ProviderSdk implements IProviderImpl {
         }
     }
 
-    kind(kind: Kind) {
-        this._kind = kind;
+    add_kind(kind: Kind): boolean {
+        if (this._kind.indexOf(kind) === -1) {
+            this._kind.push(kind);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    remove_kind(kind: Kind): boolean {
+        const found_idx = this._kind.indexOf(kind);
+        if (found_idx !== -1) {
+            this._kind.splice(found_idx, 1);
+            return true;
+        } else {
+            return false;
+        }
     }
 
     version(version: Version): void {
@@ -65,8 +79,8 @@ export class ProviderSdk implements IProviderImpl {
     }
 
     register(): void {
-        if (this._prefix !== null && this._version !== null && this._kind !== null) {
-            this.provider = {kinds: [this._kind], version: this._version, prefix: this._prefix};
+        if (this._prefix !== null && this._version !== null && this._kind.length !== 0) {
+            this.provider = {kinds: [...this._kind], version: this._version, prefix: this._prefix};
             try {
                 //TODO: set this in global variable
                 axios.post("127.0.0.1:3000/provider/", this.provider)
@@ -78,7 +92,7 @@ export class ProviderSdk implements IProviderImpl {
             ProviderSdk.provider_description_error("prefix")
         } else if (this._version === null) {
             ProviderSdk.provider_description_error("version")
-        } else {
+        } else if (this._kind.length === 0) {
             ProviderSdk.provider_description_error("kind")
         }
     }

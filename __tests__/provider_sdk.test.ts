@@ -5,6 +5,7 @@ import {resolve} from "path";
 import {ProviderSdk} from "../src/provider_sdk/typescript_sdk";
 // @ts-ignore
 import {plural} from "pluralize"
+import {Kind} from "../src/papiea";
 
 
 describe("Provider Sdk tests", () => {
@@ -80,5 +81,26 @@ describe("Provider Sdk tests", () => {
             expect(err.message).toBe("Malformed provider description. Missing: prefix");
             done();
         }
+    });
+    test("Add multiple kinds shouldn't fail", (done) => {
+        const sdk = new ProviderSdk();
+        const geo_location_yaml = JSON.parse(JSON.stringify(location_yaml));
+        sdk.new_kind(location_yaml);
+        sdk.new_kind(geo_location_yaml);
+        done();
+    });
+    let location_kind: Kind;
+    test("Duplicate delete on kind should return false", (done) => {
+        const sdk = new ProviderSdk();
+        location_kind = sdk.new_kind(location_yaml);
+        expect(sdk.remove_kind(location_kind)).toBeTruthy();
+        expect(sdk.remove_kind(location_kind)).toBeFalsy();
+        done();
+    });
+    test("Duplicate add on kind should return false", (done) => {
+        const sdk = new ProviderSdk();
+        expect(sdk.add_kind(location_kind)).toBeTruthy();
+        expect(sdk.add_kind(location_kind)).toBeFalsy();
+        done();
     });
 });

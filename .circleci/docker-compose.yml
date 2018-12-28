@@ -4,6 +4,8 @@ services:
                 build:
                         dockerfile: .circleci/Dockerfile
                         context: .
+                environment:
+                        - JEST_JUNIT_OUTPUT=reports/junit/results.xml
                 depends_on:
                         - mongo
         mongo:

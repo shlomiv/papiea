@@ -29,9 +29,8 @@ jobs:
       - run:
           name: Run unit tests
           command: |
-            docker-compose run --name server_test -e JEST_JUNIT_OUTPUT=reports/junit/results.xml server npm run test-ci
-            docker cp server_test:/code/reports . || echo .
-            docker rm server_test
+            docker-compose exec server npm run test-ci
+            docker cp project_server_1:/code/reports . || echo .
       
       - run: docker-compose down
 

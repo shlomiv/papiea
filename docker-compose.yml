@@ -2,9 +2,6 @@ version: '3'
 services:
         server:
                 build: .
-                environment:
-                        - MONGO_URL=mongodb://mongo:27017
-                        - MONGO_DB=papiea
                 image: quantumobile/papiea:1545645693
                 volumes:
                         - ./:/code

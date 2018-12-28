@@ -5,8 +5,7 @@ services:
                         dockerfile: .circleci/Dockerfile
                         context: .
                 environment:
-                        - MONGO_URL=mongodb://mongo:27017
-                        - MONGO_DB=papiea
+                        - JEST_JUNIT_OUTPUT=reports/junit/results.xml
                 depends_on:
                         - mongo
         mongo:

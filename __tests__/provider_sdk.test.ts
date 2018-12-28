@@ -3,9 +3,16 @@ import {load} from "js-yaml";
 import {readFileSync} from "fs";
 import {resolve} from "path";
 import {ProviderSdk} from "../src/provider_sdk/typescript_sdk";
+// @ts-ignore
+import {plural} from "pluralize"
 
 
 describe("Provider Sdk tests", () => {
+    test("Pluralize works for 'test' & 'provider' words used", (done) => {
+        expect(plural("test")).toBe("tests");
+        expect(plural("provider")).toBe("providers");
+        done();
+    });
     const location_yaml = load(readFileSync(resolve(__dirname, "./location_kind_test_data.yml"), "utf-8"));
     test("Yaml parses into walkable tree", (done) => {
         expect(location_yaml).not.toBeNull();

@@ -6,6 +6,7 @@ import {
 import {Data_Description, Entity, Version} from "../core";
 import {Kind, Procedural_Execution_Strategy, Provider, SpecOnlyEnitityKind} from "../papiea";
 import axios from "axios"
+import {plural} from "pluralize"
 
 export class ProviderSdk implements IProviderImpl {
     private _version: Version | null;
@@ -31,7 +32,7 @@ export class ProviderSdk implements IProviderImpl {
             if (entity_yaml[name]["x-papiea-entity"] === "spec-only") {
                 const spec_only_kind: SpecOnlyEnitityKind = {
                     name,
-                    name_plural: undefined,
+                    name_plural: plural(name),
                     kind_structure: entity_yaml,
                     validator_fn: {} as (entity: Entity) => boolean,
                     intentful_signatures: new Map(),
@@ -68,7 +69,7 @@ export class ProviderSdk implements IProviderImpl {
             this.provider = {kinds: [this._kind], version: this._version, prefix: this._prefix};
             try {
                 //TODO: set this in global variable
-                axios.post("localhost:3000/provider/", this.provider)
+                axios.post("127.0.0.1:3000/provider/", this.provider)
                 //Do we set all fields to null again?
             } catch (err) {
                 throw err;
@@ -95,7 +96,7 @@ export class ProviderSdk implements IProviderImpl {
         throw new Error("Unimplemented")
     }
 
-    static provider_description_error(type: string) {
-        throw new Error(`Malformed provider description. Missing: ${type}`)
+    static provider_description_error(missing_field: string) {
+        throw new Error(`Malformed provider description. Missing: ${missing_field}`)
     }
 }

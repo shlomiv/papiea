@@ -51,11 +51,14 @@ export class Provider_DB_Mongo implements Provider_DB {
         return this.collection.find({}).toArray();
     }
 
-    async delete_provider(provider_prefix: string, version: Version): Promise<boolean> {
+    async delete_provider(provider_prefix: string, version: Version): Promise<void> {
         const result = await this.collection.deleteOne({"prefix": provider_prefix, version});
         if (result.result.n !== 1) {
             throw new Error("Amount of entities deleted is not 1");
         }
-        return result.result.ok == 1;
+        if (result.result.ok !== 1) {
+            throw new Error("Failed to remove provider");
+        }
+        return;
     }
 }

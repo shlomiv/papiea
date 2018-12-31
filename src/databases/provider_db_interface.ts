@@ -20,7 +20,7 @@ export interface Provider_DB {
     list_providers(): Promise<papiea.Provider[]>
 
     // Removes and de-registers a provider from the intent engine
-    delete_provider(provider_prefix: string, version: Version): Promise<boolean>;
+    delete_provider(provider_prefix: string, version: Version): Promise<void>;
 }
 
 // provider-db-interface ends here

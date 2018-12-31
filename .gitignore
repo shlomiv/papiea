@@ -11,10 +11,11 @@
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 
-# npm & tsc
+# npm & tsc & test
 node_modules
 build
 reports
+coverage
 
 # clj
 papiea-lib-clj/papiea-lib-clj.js

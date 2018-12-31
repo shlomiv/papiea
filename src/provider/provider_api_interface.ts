@@ -4,27 +4,25 @@ import * as papiea from "../papiea";
 
 // This will be provided using REST APIs. 
 
-enum Provider_Power {On, Off, Suspended};
+export enum Provider_Power {On, Off, Suspended};
 
-interface Provider_API {
+export interface Provider_API {
 
-    // TODO: Turn this to REST
-    
     // Registers a provider to the Provider's DB
     // POST "/provider"
-    register_provider(provider:papiea.Kind):boolean
+    register_provider(provider: papiea.Provider): Promise<void>;
 
     // DELETE "/provider/{prefix}/{version}"
-    unregister_provider(provider_prefix: string, version: core.Version):boolean
+    unregister_provider(provider_prefix: string, version: core.Version): Promise<void>;
 
     // Updating status and progress
     // POST "/provider/update_status"
-    update_status(context: any, entity_ref: core.Entity_Reference, status: core.Status):boolean;
+    update_status(context: any, entity_ref: core.Entity_Reference, status: core.Status): Promise<void>;
 
     // POST "/provider/update_progress"
-    update_progress(context: any, message:string, done_percent:number):boolean;
+    update_progress(context: any, message:string, done_percent:number): Promise<void>;
 
     // Binny wants to rename this
     // POST "/provider/{prefix}/{version}/power"
-    power(power_state:Provider_Power):boolean;
+    power(provider_prefix: string, version: core.Version, power_state:Provider_Power): Promise<void>;
 }

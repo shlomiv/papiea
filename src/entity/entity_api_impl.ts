@@ -4,8 +4,9 @@ import {Provider_DB} from "../databases/provider_db_interface";
 import {Kind} from "../papiea";
 import {Entity, Entity_Reference, Metadata, Spec, Status, uuid4} from "../core";
 import uuid = require("uuid");
+import {IEntityAPI} from "./entity_api_interface";
 
-export class EntityAPI {
+export class EntityAPI implements IEntityAPI {
     private status_db: Status_DB;
     private spec_db: Spec_DB;
     private provider_db: Provider_DB;
@@ -53,4 +54,7 @@ export class EntityAPI {
     }
 
     //TODO: delete entity
+    delete_entity_spec(kind: Kind, entity_uuid: uuid4): Promise<boolean> {
+        throw new Error("Not implemented")
+    }
 }

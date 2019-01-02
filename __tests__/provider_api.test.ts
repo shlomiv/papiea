@@ -31,7 +31,7 @@ describe("Provider API tests", () => {
     });
     // TODO(adolgarev): there is no API to list providers
     test("Unregister provider", done => {
-        providerApi.delete(`/${providerPrefix}/${providerVersion}`).then(() => done()).catch(done.fail());
+        providerApi.delete(`/${providerPrefix}/${providerVersion}`).then(() => done()).catch(done.fail);
     });
     test("Unregister non-existend provider", done => {
         providerApi.delete(`/${providerPrefix}/${providerVersion}`).then(() => done.fail()).catch(() => done());

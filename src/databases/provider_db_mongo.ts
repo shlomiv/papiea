@@ -25,11 +25,7 @@ export class Provider_DB_Mongo implements Provider_DB {
             "prefix": provider.prefix,
             "version": provider.version
         }, {
-            $set: {
-                prefix: provider.prefix,
-                version: provider.version,
-                kinds: provider.kinds
-            }
+            $set: provider
         }, {
             upsert: true
         });

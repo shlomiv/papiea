@@ -147,7 +147,7 @@ describe("MongoDb tests", () => {
             done.fail(new Error("specDb is undefined"));
             return;
         }
-        specDb.list_specs({ "metadata.kind": "test" }).then(res => {
+        specDb.list_specs({ "metadata.kind": "test", "status.a": "A1" }).then(res => {
             expect(res).not.toBeNull();
             expect(res[0]).not.toBeNull();
             expect(res.length).toBeGreaterThanOrEqual(1);

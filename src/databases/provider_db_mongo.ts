@@ -25,7 +25,11 @@ export class Provider_DB_Mongo implements Provider_DB {
             "prefix": provider.prefix,
             "version": provider.version
         }, {
-            $set: provider
+            $set: {
+                prefix: provider.prefix,
+                version: provider.version,
+                kinds: provider.kinds
+            }
         }, {
             upsert: true
         });
@@ -53,6 +57,7 @@ export class Provider_DB_Mongo implements Provider_DB {
 
     async delete_provider(provider_prefix: string, version: Version): Promise<void> {
         const result = await this.collection.deleteOne({"prefix": provider_prefix, version});
+        console.log("N: " + result.result.n);
         if (result.result.n !== 1) {
             throw new Error("Amount of entities deleted is not 1");
         }

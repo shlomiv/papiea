@@ -19,7 +19,7 @@ const providerApi = axios.create({
 describe("Provider API tests", () => {
     const providerPrefix = "test_provider";
     const providerVersion = "1";
-    test("Non-existend route", done => {
+    test("Non-existent route", done => {
         providerApi.delete(`/abc`).then(() => done.fail()).catch(() => done());
     });
     test("Register provider", done => {
@@ -31,7 +31,7 @@ describe("Provider API tests", () => {
     });
     // TODO(adolgarev): there is no API to list providers
     test("Unregister provider", done => {
-        providerApi.delete(`/${providerPrefix}/${providerVersion}`).then(() => done()).catch(done.fail);
+        providerApi.delete(`/${providerPrefix}/${providerVersion}`).then(() => done()).catch(done.fail());
     });
     test("Unregister non-existend provider", done => {
         providerApi.delete(`/${providerPrefix}/${providerVersion}`).then(() => done.fail()).catch(() => done());

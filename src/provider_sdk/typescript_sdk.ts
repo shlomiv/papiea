@@ -89,7 +89,6 @@ export class ProviderSdk implements IProviderImpl {
         if (this._prefix !== null && this._version !== null && this._kind.length !== 0) {
             this.provider = {kinds: [...this._kind], version: this._version, prefix: this._prefix};
             try {
-                //TODO: set this in global variable
                 await axios.post(`http://127.0.0.1:${serverPort}/provider/`, this.provider)
                 //Do we set all fields to null again?
             } catch (err) {

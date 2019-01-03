@@ -4,7 +4,7 @@ import * as papiea from "../papiea";
 
 
 export class Compiler implements differ.Kind_Compiler {
-    public compile_kind_explicit(sfss: core.SFS[], dep_tree: core.Map<core.SFS, core.SFS[]>): TheDiffer {
+    public compile_kind_explicit(sfss: core.SFS[], dep_tree: Map<core.SFS, core.SFS[]>): TheDiffer {
         return new TheDiffer();
     }
 
@@ -38,9 +38,9 @@ export class TheDiff implements differ.Diff {
     name?: string;
 
     // The fields identified by this differ, their path and value.
-    diff_fields: core.Map<core.SFS, any>;
+    diff_fields: Map<core.SFS, any>;
 
-    constructor(callback: core.Provider_Callback_URL, diff_fields: core.Map<core.SFS, any>, name?: string) {
+    constructor(callback: core.Provider_Callback_URL, diff_fields: Map<core.SFS, any>, name?: string) {
         this.intentful_fn_uri = callback;
         this.name = name;
         this.diff_fields = diff_fields;

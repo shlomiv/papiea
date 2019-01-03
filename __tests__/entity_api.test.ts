@@ -20,38 +20,24 @@ const entityApi = axios.create({
     headers: {'Content-Type': 'application/json'}
 });
 
-const providerApi = axios.create({
-    baseURL: `http://127.0.0.1:${serverPort}/provider/`,
-    timeout: 1000,
-    headers: {'Content-Type': 'application/json'}
-});
-
 describe("Entity API tests", () => {
     const providerPrefix = "test";
     const providerVersion = "1";
     const location_yaml = load(readFileSync(resolve(__dirname, "./location_kind_test_data.yml"), "utf-8"));
-    // beforeAll(async () => {
-    //     const sdk = new ProviderSdk();
-    //     sdk.new_kind(location_yaml);
-    //     sdk.version(providerVersion);
-    //     sdk.prefix(providerPrefix);
-    //     await sdk.register();
-    // });
-
-    // afterAll(async () => {
-    //     await axios.delete(`http://127.0.0.1:${serverPort}/provider/${providerPrefix}/${providerVersion}`);
-    // });
-
-    test("Create entity", async (done) => {
-        expect.assertions(2);
+    beforeAll(async () => {
         const sdk = new ProviderSdk();
         sdk.new_kind(location_yaml);
         sdk.version(providerVersion);
         sdk.prefix(providerPrefix);
-        const provider: Provider = {prefix: providerPrefix, version: providerVersion, kinds: []};
-        providerApi.post('/', provider).then(() => done()).catch(done.fail);
         await sdk.register();
-        console.log("Hello");
+    });
+
+    afterAll(async () => {
+        await axios.delete(`http://127.0.0.1:${serverPort}/provider/${providerPrefix}/${providerVersion}`);
+    });
+
+    test("Create entity", async (done) => {
+        expect.assertions(2);
         try {
             const {data: {metadata, spec}} = await entityApi.post(`/${providerPrefix}/Location`, {
                 spec: {
@@ -63,7 +49,7 @@ describe("Entity API tests", () => {
             expect(spec).not.toBeUndefined();
             done();
         } catch (e) {
-            done();
+            done.fail(e);
         }
     });
 

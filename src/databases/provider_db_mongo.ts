@@ -11,13 +11,13 @@ export class Provider_DB_Mongo implements Provider_DB {
     }
 
     async init(): Promise<void> {
-        // try {
-        //     await this.collection.createIndex({
-        //         "prefix": 1
-        //     }, {name: "prefix", unique: true});
-        // } catch (err) {
-        //     throw err;
-        // }
+        try {
+            await this.collection.createIndex({
+                "prefix": 1
+            }, {name: "prefix", unique: true});
+        } catch (err) {
+            throw err;
+        }
     }
 
     async register_provider(provider: Provider): Promise<void> {
@@ -36,7 +36,7 @@ export class Provider_DB_Mongo implements Provider_DB {
 
     async get_provider(provider_prefix: string, version?: Version): Promise<Provider> {
         const filter: any = {prefix: provider_prefix};
-        if (version !== null) {
+        if (version !== undefined) {
             filter.version = version;
         }
         const provider: Provider | null = await this.collection.findOne(filter);
@@ -53,7 +53,6 @@ export class Provider_DB_Mongo implements Provider_DB {
 
     async delete_provider(provider_prefix: string, version: Version): Promise<void> {
         const result = await this.collection.deleteOne({"prefix": provider_prefix, version});
-        console.log("N: " + result.result.n);
         if (result.result.n !== 1) {
             throw new Error("Amount of entities deleted is not 1");
         }

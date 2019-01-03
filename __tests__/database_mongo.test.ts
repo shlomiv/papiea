@@ -1,13 +1,13 @@
 import "jest"
 
-import { MongoConnection } from "../src/databases/mongo";
-import { Spec_DB } from "../src/databases/spec_db_interface";
-import { Status_DB } from "../src/databases/status_db_interface";
-import { Provider_DB } from "../src/databases/provider_db_interface";
+import {MongoConnection} from "../src/databases/mongo";
+import {Spec_DB} from "../src/databases/spec_db_interface";
+import {Status_DB} from "../src/databases/status_db_interface";
+import {Provider_DB} from "../src/databases/provider_db_interface";
 import * as core from "../src/core";
-import { v4 as uuid4 } from 'uuid';
-import { Kind, Provider } from "../src/papiea";
-import { ConflictingEntityError } from "../src/databases/utils/errors";
+import {v4 as uuid4} from 'uuid';
+import {Kind, Provider} from "../src/papiea";
+import {ConflictingEntityError} from "../src/databases/utils/errors";
 
 declare var process: {
     env: {
@@ -49,7 +49,7 @@ describe("MongoDb tests", () => {
             created_at: new Date(),
             deleted_at: undefined
         };
-        let spec: core.Spec = { a: "A" };
+        let spec: core.Spec = {a: "A"};
         specDb.update_spec(entity_metadata, spec).then(res => {
             done();
         }).catch(err => {
@@ -69,7 +69,7 @@ describe("MongoDb tests", () => {
             created_at: new Date(),
             deleted_at: undefined
         };
-        let spec: core.Spec = { a: "A1" };
+        let spec: core.Spec = {a: "A1"};
         specDb.update_spec(entity_metadata, spec).then(res => {
             done();
         }).catch(err => {
@@ -90,7 +90,7 @@ describe("MongoDb tests", () => {
             created_at: new Date(),
             deleted_at: undefined
         };
-        let spec: core.Spec = { a: "A2" };
+        let spec: core.Spec = {a: "A2"};
         specDb.update_spec(entity_metadata, spec).catch(err => {
             expect(err).toBeInstanceOf(ConflictingEntityError);
             expect(err.existing_metadata.spec_version).toEqual(2);
@@ -103,7 +103,7 @@ describe("MongoDb tests", () => {
             done.fail(new Error("specDb is undefined"));
             return;
         }
-        let entity_ref: core.Entity_Reference = { uuid: entityA_uuid, kind: "test" };
+        let entity_ref: core.Entity_Reference = {uuid: entityA_uuid, kind: "test"};
         specDb.get_spec(entity_ref).then(res => {
             expect(res).not.toBeNull();
             if (res === null) {
@@ -124,7 +124,7 @@ describe("MongoDb tests", () => {
             done.fail(new Error("specDb is undefined"));
             return;
         }
-        let entity_ref: core.Entity_Reference = { uuid: uuid4(), kind: "test" };
+        let entity_ref: core.Entity_Reference = {uuid: uuid4(), kind: "test"};
         specDb.get_spec(entity_ref).catch(err => {
             expect(err).not.toBeNull();
             done();
@@ -136,7 +136,7 @@ describe("MongoDb tests", () => {
             done.fail(new Error("specDb is undefined"));
             return;
         }
-        specDb.list_specs({ "metadata.kind": "test" }).then(res => {
+        specDb.list_specs({"metadata.kind": "test"}).then(res => {
             expect(res.length).toBeGreaterThanOrEqual(1);
             done();
         });
@@ -147,7 +147,7 @@ describe("MongoDb tests", () => {
             done.fail(new Error("specDb is undefined"));
             return;
         }
-        specDb.list_specs({ "metadata.kind": "test", "spec.a": "A1" }).then(res => {
+        specDb.list_specs({"metadata.kind": "test", "spec.a": "A1"}).then(res => {
             expect(res).not.toBeNull();
             expect(res[0]).not.toBeNull();
             expect(res.length).toBeGreaterThanOrEqual(1);
@@ -170,8 +170,8 @@ describe("MongoDb tests", () => {
             done.fail(new Error("statusDb is undefined"));
             return;
         }
-        let entity_ref: core.Entity_Reference = { uuid: entityA_uuid, kind: "test" };
-        let status: core.Status = { a: "A" };
+        let entity_ref: core.Entity_Reference = {uuid: entityA_uuid, kind: "test"};
+        let status: core.Status = {a: "A"};
         statusDb.update_status(entity_ref, status).then(res => {
             done();
         }).catch(err => {
@@ -183,8 +183,8 @@ describe("MongoDb tests", () => {
             done.fail(new Error("statusDb is undefined"));
             return;
         }
-        let entity_ref: core.Entity_Reference = { uuid: entityA_uuid, kind: "test" };
-        let status: core.Status = { a: "A1" };
+        let entity_ref: core.Entity_Reference = {uuid: entityA_uuid, kind: "test"};
+        let status: core.Status = {a: "A1"};
         statusDb.update_status(entity_ref, status).then(res => {
             done();
         }).catch(err => {
@@ -197,7 +197,7 @@ describe("MongoDb tests", () => {
             done.fail(new Error("statusDb is undefined"));
             return;
         }
-        let entity_ref: core.Entity_Reference = { uuid: entityA_uuid, kind: "test" };
+        let entity_ref: core.Entity_Reference = {uuid: entityA_uuid, kind: "test"};
         statusDb.get_status(entity_ref).then(res => {
             expect(res).not.toBeNull();
             if (res === null) {
@@ -216,7 +216,7 @@ describe("MongoDb tests", () => {
             done.fail(new Error("statusDb is undefined"));
             return;
         }
-        let entity_ref: core.Entity_Reference = { uuid: uuid4(), kind: "test" };
+        let entity_ref: core.Entity_Reference = {uuid: uuid4(), kind: "test"};
         statusDb.get_status(entity_ref).catch(err => {
             expect(err).not.toBeNull();
             done();
@@ -228,7 +228,7 @@ describe("MongoDb tests", () => {
             done.fail(new Error("statusDb is undefined"));
             return;
         }
-        statusDb.list_status({ "metadata.kind": "test" }).then(res => {
+        statusDb.list_status({"metadata.kind": "test"}).then(res => {
             expect(res.length).toBeGreaterThanOrEqual(1);
             done();
         });
@@ -239,7 +239,7 @@ describe("MongoDb tests", () => {
             done.fail(new Error("statusDb is undefined"));
             return;
         }
-        statusDb.list_status({ "metadata.kind": "test", "status.a": "A1" }).then(res => {
+        statusDb.list_status({"metadata.kind": "test", "status.a": "A1"}).then(res => {
             expect(res.length).toBeGreaterThanOrEqual(1);
             expect(res[0]).not.toBeNull();
             // @ts-ignore
@@ -262,7 +262,7 @@ describe("MongoDb tests", () => {
             return;
         }
         const test_kind = {} as Kind;
-        const provider: Provider = { prefix: "test", version: "0.1", kinds: [test_kind] };
+        const provider: Provider = {prefix: "test", version: "0.1", kinds: [test_kind]};
         providerDb.register_provider(provider).then(res => {
             done();
         });
@@ -276,6 +276,20 @@ describe("MongoDb tests", () => {
         let prefix_string: string = "test";
         let version: string = "0.1";
         providerDb.get_provider(prefix_string, version).then(res => {
+            expect(res.prefix).toBe(prefix_string);
+            expect(res.version).toBe(version);
+            done();
+        })
+    });
+    test("Get provider using his prefix", done => {
+        expect.assertions(2);
+        if (providerDb === undefined) {
+            done.fail(new Error("providerDb is undefined"));
+            return;
+        }
+        let prefix_string: string = "test";
+        let version: string = "0.1";
+        providerDb.get_provider(prefix_string).then(res => {
             expect(res.prefix).toBe(prefix_string);
             expect(res.version).toBe(version);
             done();

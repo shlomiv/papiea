@@ -11,13 +11,13 @@ export class Provider_DB_Mongo implements Provider_DB {
     }
 
     async init(): Promise<void> {
-        try {
-            await this.collection.createIndex({
-                "prefix": 1
-            }, {name: "prefix", unique: true});
-        } catch (err) {
-            throw err;
-        }
+        // try {
+        //     await this.collection.createIndex({
+        //         "prefix": 1
+        //     }, {name: "prefix", unique: true});
+        // } catch (err) {
+        //     throw err;
+        // }
     }
 
     async register_provider(provider: Provider): Promise<void> {

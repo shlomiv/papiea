@@ -8,8 +8,6 @@ export function createEntityRoutes(entity_api: EntityAPI): Router {
     const router = express.Router();
 
     const kind_middleware = asyncHandler(async (req, res, next) => {
-        console.log("*****");
-        console.log("Provider prefix: " + req.params.prefix);
         if (req.params.entity_kind === undefined) {
             req.params.entity_kind = await entity_api.get_kind(req.params.prefix, req.params.kind);
             next();
@@ -41,7 +39,6 @@ export function createEntityRoutes(entity_api: EntityAPI): Router {
             res.json({"metadata": metadata, "spec": spec});
         } else {
             // Spec only entity
-            console.log("Hello from here");
             const [metadata, spec] = await entity_api.save_entity(req.params.entity_kind, req.body.spec);
             res.json({"metadata": metadata, "spec": spec});
         }

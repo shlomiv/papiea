@@ -1,11 +1,12 @@
 // [[file:~/work/papiea-js/Papiea-design.org::*Typescript:%20/src/provider_sdk/typescript_sdk_interface][Typescript: /src/provider_sdk/typescript_sdk_interface:1]]
 import * as core from "../core";
+import {Kind} from "../papiea";
 
 // [[file:~/work/papiea-js/Papiea-design.org::#h-Providers-SDK-518][provider_sdk_ts_provider_interface]]
 // Api for the provider-sdk
-enum Provider_Power {On, Off, Suspended};
+export enum Provider_Power {On, Off, Suspended};
 
-interface Provider {
+export interface Provider {
     new_kind(entity_yaml:core.Data_Description):Kind;
     version(version: core.Version):void;
     power(state: Provider_Power): Provider_Power;
@@ -15,7 +16,7 @@ interface Provider {
 // [[file:~/work/papiea-js/Papiea-design.org::#h-Providers-SDK-518][provider_sdk_ts_kind_interface]]
 enum Procedural_Execution_Strategy {Halt_Intentful};
 
-interface Kind {
+interface IKindImpl {
 
     // Adds an intentful handler. Dispatched based on the signautre passed
     on(signature: string, name: string, rbac: any, handler: (ctx:IntentfulCtx, entity:any)=>void):Intentful_Handler;
@@ -38,19 +39,19 @@ interface Kind {
 // provider_sdk_ts_kind_interface ends here
 
 // [[file:~/work/papiea-js/Papiea-design.org::#h-Providers-SDK-518][provider_sdk_ts_intentful_handler_interface]]
-interface Intentful_Handler {
+export interface Intentful_Handler {
     // Establishes a dependency tree between the various handlers
     before(...handlers: Intentful_Handler[]):void;
 }
 // provider_sdk_ts_intentful_handler_interface ends here
 
 // [[file:~/work/papiea-js/Papiea-design.org::#h-Providers-SDK-518][provider_sdk_ts_intentful_ctx_interface]]
-interface IntentfulCtx {
+export interface IntentfulCtx {
     update_status(metadata: core.Metadata, status: core.Status):boolean;
     update_progress(message:string, done_percent:number):boolean;
 }
 
 // For the time being these are equal. Later they may differ
-type ProceduralCtx=IntentfulCtx;
+export type ProceduralCtx=IntentfulCtx;
 // provider_sdk_ts_intentful_ctx_interface ends here
 // Typescript: /src/provider_sdk/typescript_sdk_interface:1 ends here

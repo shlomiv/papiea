@@ -13,17 +13,17 @@ const serverPort = parseInt(process.env.SERVER_PORT || '3000');
 const providerApi = axios.create({
     baseURL: `http://127.0.0.1:${serverPort}/provider/`,
     timeout: 1000,
-    headers: { 'Content-Type': 'application/json' }
+    headers: {'Content-Type': 'application/json'}
 });
 
 describe("Provider API tests", () => {
     const providerPrefix = "test_provider";
-    const providerVersion = "1";
+    const providerVersion = 1;
     test("Non-existent route", done => {
         providerApi.delete(`/abc`).then(() => done.fail()).catch(() => done());
     });
     test("Register provider", done => {
-        const provider: Provider = { prefix: providerPrefix, version: providerVersion, kinds: [] };
+        const provider: Provider = {prefix: providerPrefix, version: providerVersion, kinds: []};
         providerApi.post('/', provider).then(() => done()).catch(done.fail);
     });
     test("Register malformed provider", done => {
@@ -47,7 +47,7 @@ describe("Provider API tests", () => {
                 uuid: entityA_uuid,
                 kind: "test"
             },
-            status: { a: "A" }
+            status: {a: "A"}
         }).then(() => done()).catch(done.fail);
     });
     // TODO(adolgarev): there is no API at the moment to list statuses

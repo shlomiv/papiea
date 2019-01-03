@@ -11,7 +11,7 @@ export type Data_Description = any;
 
 // Lets define a type for a version. For now it may be string, but could be more
 // elaborate later on
-export type Version = string;
+export type Version = number;
 // core-types ends here
 
 // [[file:~/work/papiea-js/Papiea-design.org::#h-Metadata-350][metadata-struct]]

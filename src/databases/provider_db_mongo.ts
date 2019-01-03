@@ -1,7 +1,7 @@
-import {Provider_DB} from "./provider_db_interface";
-import {Provider} from "../papiea";
-import {Db, Collection} from "mongodb"
-import {Version} from "../core";
+import { Provider_DB } from "./provider_db_interface";
+import { Provider } from "../papiea";
+import { Db, Collection } from "mongodb"
+import { Version } from "../core";
 
 export class Provider_DB_Mongo implements Provider_DB {
     collection: Collection;

@@ -1,11 +1,11 @@
 import "jest"
-import {load} from "js-yaml";
-import {readFileSync} from "fs";
-import {resolve} from "path";
-import {ProviderSdk} from "../src/provider_sdk/typescript_sdk";
+import { load } from "js-yaml";
+import { readFileSync } from "fs";
+import { resolve } from "path";
+import { ProviderSdk } from "../src/provider_sdk/typescript_sdk";
 // @ts-ignore
-import {plural} from "pluralize"
-import {Kind} from "../src/papiea";
+import { plural } from "pluralize"
+import { Kind } from "../src/papiea";
 
 
 describe("Provider Sdk tests", () => {
@@ -14,6 +14,7 @@ describe("Provider Sdk tests", () => {
         expect(plural("provider")).toBe("providers");
         done();
     });
+    const provider_version = 0.1;
     const location_yaml = load(readFileSync(resolve(__dirname, "./location_kind_test_data.yml"), "utf-8"));
     test("Yaml parses into walkable tree", (done) => {
         expect(location_yaml).not.toBeNull();
@@ -73,7 +74,7 @@ describe("Provider Sdk tests", () => {
         const sdk = new ProviderSdk();
         try {
             sdk.prefix("test_provider");
-            sdk.version("0.1");
+            sdk.version(provider_version);
             await sdk.register();
         } catch (err) {
             expect(err.message).toBe("Malformed provider description. Missing: kind");
@@ -84,7 +85,7 @@ describe("Provider Sdk tests", () => {
         const sdk = new ProviderSdk();
         try {
             sdk.new_kind(location_yaml);
-            sdk.version("0.1");
+            sdk.version(provider_version);
             await sdk.register();
         } catch (err) {
             expect(err.message).toBe("Malformed provider description. Missing: prefix");
@@ -115,7 +116,7 @@ describe("Provider Sdk tests", () => {
     test("Provider should be created on papiea", async (done) => {
         const sdk = new ProviderSdk();
         sdk.new_kind(location_yaml);
-        sdk.version("0.1");
+        sdk.version(provider_version);
         sdk.prefix("location_provider");
         try {
             await sdk.register();

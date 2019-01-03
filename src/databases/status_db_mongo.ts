@@ -1,7 +1,7 @@
 import * as core from "../core";
-import {Status_DB} from "./status_db_interface";
-import {Db, Collection} from "mongodb";
-import {Entity} from "../core";
+import { Status_DB } from "./status_db_interface";
+import { Db, Collection } from "mongodb";
+import { Entity } from "../core";
 
 export class Status_DB_Mongo implements Status_DB {
     collection: Collection;
@@ -56,5 +56,20 @@ export class Status_DB_Mongo implements Status_DB {
                 throw new Error("No entities found")
             }
         });
+    }
+
+    async delete_status(entity_ref: core.Entity_Reference): Promise<void> {
+        const result = await this.collection.deleteOne({
+            "metadata.uuid": entity_ref.uuid,
+            "metadata.kind": entity_ref.kind
+        });
+        if (result.result.n === undefined || result.result.ok !== 1) {
+            throw new Error("Failed to remove status");
+
+        }
+        if (result.result.n !== 1 && result.result.n !== 0) {
+            throw new Error("Amount of entities deleted is not 1");
+        }
+        return;
     }
 }

@@ -1,13 +1,13 @@
 import "jest"
 
-import {MongoConnection} from "../src/databases/mongo";
-import {Spec_DB} from "../src/databases/spec_db_interface";
-import {Status_DB} from "../src/databases/status_db_interface";
-import {Provider_DB} from "../src/databases/provider_db_interface";
+import { MongoConnection } from "../src/databases/mongo";
+import { Spec_DB } from "../src/databases/spec_db_interface";
+import { Status_DB } from "../src/databases/status_db_interface";
+import { Provider_DB } from "../src/databases/provider_db_interface";
 import * as core from "../src/core";
-import {v4 as uuid4} from 'uuid';
-import {Kind, Provider} from "../src/papiea";
-import {ConflictingEntityError} from "../src/databases/utils/errors";
+import { v4 as uuid4 } from 'uuid';
+import { Kind, Provider } from "../src/papiea";
+import { ConflictingEntityError } from "../src/databases/utils/errors";
 
 declare var process: {
     env: {
@@ -262,7 +262,7 @@ describe("MongoDb tests", () => {
             return;
         }
         const test_kind = {} as Kind;
-        const provider: Provider = {prefix: "test", version: "0.1", kinds: [test_kind]};
+        const provider: Provider = {prefix: "test", version: 0.1, kinds: [test_kind]};
         providerDb.register_provider(provider).then(res => {
             done();
         });
@@ -274,7 +274,7 @@ describe("MongoDb tests", () => {
             return;
         }
         let prefix_string: string = "test";
-        let version: string = "0.1";
+        let version: number = 0.1;
         providerDb.get_provider(prefix_string, version).then(res => {
             expect(res.prefix).toBe(prefix_string);
             expect(res.version).toBe(version);
@@ -288,7 +288,7 @@ describe("MongoDb tests", () => {
             return;
         }
         let prefix_string: string = "test";
-        let version: string = "0.1";
+        let version: number = 0.1;
         providerDb.get_provider(prefix_string).then(res => {
             expect(res.prefix).toBe(prefix_string);
             expect(res.version).toBe(version);
@@ -302,7 +302,7 @@ describe("MongoDb tests", () => {
             return;
         }
         let prefix_string: string = "testFail";
-        let version: string = "0.1";
+        let version: number = 0.1;
         providerDb.get_provider(prefix_string, version).catch(err => {
             expect(err).not.toBeNull();
             done();
@@ -327,7 +327,7 @@ describe("MongoDb tests", () => {
             return;
         }
         let prefix_string: string = "test";
-        let version: string = "0.1";
+        let version: number = 0.1;
         providerDb.delete_provider(prefix_string, version).then(res => {
             done();
         })

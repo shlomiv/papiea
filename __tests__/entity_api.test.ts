@@ -1,11 +1,10 @@
 import "jest"
 import axios from "axios"
-import {v4 as uuid4} from 'uuid';
-import {Kind, Provider} from "../src/papiea";
-import {ProviderSdk} from "../src/provider_sdk/typescript_sdk";
-import {load} from "js-yaml";
-import {readFileSync} from "fs";
-import {resolve} from "path";
+import { ProviderSdk } from "../src/provider_sdk/typescript_sdk";
+import { load } from "js-yaml";
+import { readFileSync } from "fs";
+import { resolve } from "path";
+import { Metadata, Spec } from "../src/core";
 
 declare var process: {
     env: {
@@ -22,8 +21,9 @@ const entityApi = axios.create({
 
 describe("Entity API tests", () => {
     const providerPrefix = "test";
-    const providerVersion = "1";
+    const providerVersion = 1;
     const location_yaml = load(readFileSync(resolve(__dirname, "./location_kind_test_data.yml"), "utf-8"));
+    const kind_name = "Location";
     beforeAll(async () => {
         const sdk = new ProviderSdk();
         sdk.new_kind(location_yaml);
@@ -36,21 +36,77 @@ describe("Entity API tests", () => {
         await axios.delete(`http://127.0.0.1:${serverPort}/provider/${providerPrefix}/${providerVersion}`);
     });
 
+    let entity_metadata: Metadata;
+    let entity_spec: Spec;
     test("Create entity", async (done) => {
         expect.assertions(2);
         try {
-            const {data: {metadata, spec}} = await entityApi.post(`/${providerPrefix}/Location`, {
+            const {data: {metadata, spec}} = await entityApi.post(`/${providerPrefix}/${kind_name}`, {
                 spec: {
-                    x: "10",
-                    y: "11"
+                    x: 10,
+                    y: 11
                 }
             });
             expect(metadata).not.toBeUndefined();
             expect(spec).not.toBeUndefined();
+            entity_metadata = metadata;
+            entity_spec = spec;
             done();
         } catch (e) {
             done.fail(e);
         }
     });
 
+    test("Get entity", async (done) => {
+        expect.assertions(1);
+        try {
+            const res = await entityApi.get(`/${providerPrefix}/${kind_name}/${entity_metadata.uuid}`);
+            expect(res.data.spec).toEqual(entity_spec);
+            done();
+        } catch (e) {
+            done.fail(e);
+        }
+    });
+
+    test("Filter entity", async (done) => {
+        try {
+            const res = await entityApi.post(`${providerPrefix}/${kind_name}/filter`, {
+                filter_fields: {
+                    spec: {
+                        x: 10,
+                        y: 11
+                    }
+                }
+            });
+            expect(res.data.result.length).toBeGreaterThanOrEqual(1);
+            done();
+        } catch (e) {
+            done.fail(e);
+        }
+    });
+
+    test("Update entity spec", async (done) => {
+        expect.assertions(1);
+        try {
+            const res = await entityApi.put(`/${providerPrefix}/${kind_name}/${entity_metadata.uuid}/${entity_metadata.spec_version}`, {
+                spec: {
+                    x: 20,
+                    y: 21
+                }
+            });
+            expect(res.data.spec.x).toEqual(20);
+            done();
+        } catch (e) {
+            done.fail(e);
+        }
+    });
+
+    test("Delete entity", async (done) => {
+        try {
+            await entityApi.delete(`/${providerPrefix}/${kind_name}/${entity_metadata.uuid}`);
+            done();
+        } catch (e) {
+            done.fail(e);
+        }
+    });
 });

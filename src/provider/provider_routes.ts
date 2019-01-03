@@ -11,7 +11,8 @@ export default function createProviderAPIRouter(providerApi: Provider_API) {
     }));
 
     providerApiRouter.delete('/:prefix/:version', asyncHandler(async (req, res) => {
-        await providerApi.unregister_provider(req.params.prefix, req.params.version);
+        const version = Number.parseFloat(req.params.version);
+        await providerApi.unregister_provider(req.params.prefix, version);
         res.json("OK")
     }));
 

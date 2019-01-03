@@ -3,10 +3,10 @@ import {
     Provider as IProviderImpl,
     Provider_Power
 } from "./typescript_sdk_interface";
-import {Data_Description, Entity, Version} from "../core";
-import {Kind, Procedural_Execution_Strategy, Provider, SpecOnlyEntityKind} from "../papiea";
+import { Data_Description, Entity, Version } from "../core";
+import { Kind, Procedural_Execution_Strategy, Provider, SpecOnlyEntityKind } from "../papiea";
 import axios from "axios"
-import {plural} from "pluralize"
+import { plural } from "pluralize"
 
 declare var process: {
     env: {

@@ -1,6 +1,5 @@
 // [[file:~/work/papiea-js/Papiea-design.org::*/src/databases/status_db_interface.ts][/src/databases/status_db_interface.ts:1]]
 import * as core from "../core";
-import * as papiea from "../papiea";
 
 // [[file:~/work/papiea-js/Papiea-design.org::#h-Interface-548][status-db-interface]]
 
@@ -24,6 +23,8 @@ export interface Status_DB {
     // later point, or we could use a similar dsl to mongodb search
     // dsl.
     list_status(fields_map: any): Promise<([core.Metadata, core.Status])[]>;
+
+    delete_status(entity_ref: core.Entity_Reference): Promise<void>
 }
 
 // status-db-interface ends here

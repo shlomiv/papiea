@@ -1,10 +1,10 @@
-import {Status_DB} from "../databases/status_db_interface";
-import {Spec_DB} from "../databases/spec_db_interface";
-import {Provider_DB} from "../databases/provider_db_interface";
-import {Kind} from "../papiea";
-import {Entity, Entity_Reference, Metadata, Spec, Status, uuid4} from "../core";
+import { Status_DB } from "../databases/status_db_interface";
+import { Spec_DB } from "../databases/spec_db_interface";
+import { Provider_DB } from "../databases/provider_db_interface";
+import { Kind } from "../papiea";
+import { Entity, Entity_Reference, Metadata, Spec, uuid4, Version } from "../core";
 import uuid = require("uuid");
-import {IEntityAPI} from "./entity_api_interface";
+import { IEntityAPI } from "./entity_api_interface";
 
 export class EntityAPI implements IEntityAPI {
     private status_db: Status_DB;
@@ -44,17 +44,18 @@ export class EntityAPI implements IEntityAPI {
     }
 
     async filter_entity_spec(kind: Kind, fields: any): Promise<[Metadata, Spec][]> {
-        fields.kind = kind;
+        fields["metadata.kind"] = kind.name;
         return this.spec_db.list_specs(fields);
     }
 
-    async update_entity_spec(kind: Kind, spec_description: any): Promise<[Metadata, Spec]> {
-        const metadata: Metadata = {uuid: uuid(), spec_version: 0.1, created_at: new Date(), kind: kind.name};
+    async update_entity_spec(uuid: uuid4, version: Version, kind: Kind, spec_description: any): Promise<[Metadata, Spec]> {
+        const metadata: Metadata = {uuid: uuid, kind: kind.name, spec_version: version} as Metadata;
         return this.spec_db.update_spec(metadata, spec_description);
     }
 
-    //TODO: delete entity
-    delete_entity_spec(kind: Kind, entity_uuid: uuid4): Promise<boolean> {
-        throw new Error("Not implemented")
+    async delete_entity_spec(kind: Kind, entity_uuid: uuid4): Promise<void> {
+        const entity_ref: Entity_Reference = {kind: kind.name, uuid: entity_uuid};
+        await this.spec_db.delete_spec(entity_ref);
+        await this.status_db.delete_status(entity_ref);
     }
 }

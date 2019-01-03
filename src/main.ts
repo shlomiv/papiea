@@ -2,8 +2,8 @@ import * as express from "express";
 import createProviderAPIRouter from "./provider/provider_routes";
 import { Provider_API_Impl } from "./provider/provider_api_impl";
 import { MongoConnection } from "./databases/mongo";
-import {createEntityRoutes} from "./entity/entity_routes";
-import {EntityAPI} from "./entity/entity_api_impl";
+import { createEntityRoutes } from "./entity/entity_routes";
+import { EntityAPI } from "./entity/entity_api_impl";
 
 declare var process: {
     env: {
@@ -32,7 +32,7 @@ async function setUpApplication(): Promise<express.Express> {
         }
         res.status(500);
         console.error(err);
-        res.json({ error: `${err}` });
+        res.json({error: `${err}`});
     });
     return app;
 }

@@ -1,6 +1,5 @@
 // [[file:~/work/papiea-js/Papiea-design.org::*/src/databases/spec_db_interface.ts][/src/databases/spec_db_interface.ts:1]]
 import * as core from "../core";
-import * as papiea from "../papiea";
 
 // [[file:~/work/papiea-js/Papiea-design.org::#h-Interface-229][spec-db-interface]]
 
@@ -11,7 +10,7 @@ export interface Spec_DB {
     // implementation needs to CAS the spec_version to the increment
     // of itself, and return the new metadata with the new
     // spec_version and the new CASed in spec.
-    update_spec(entity_metadata: core.Metadata, spec:core.Spec): Promise<[core.Metadata, core.Spec]>;
+    update_spec(entity_metadata: core.Metadata, spec: core.Spec): Promise<[core.Metadata, core.Spec]>;
 
     // Get the spec of a particular entity from the db. Returns both
     // current metadata and the spec of that entity.
@@ -27,6 +26,8 @@ export interface Spec_DB {
     // later point, or we could use a similar dsl to mongodb search
     // dsl.
     list_specs(fields_map: any): Promise<([core.Metadata, core.Spec])[]>;
+
+    delete_spec(entity_ref: core.Entity_Reference): Promise<void>
 }
 
 // spec-db-interface ends here

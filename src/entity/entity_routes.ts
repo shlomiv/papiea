@@ -1,7 +1,7 @@
 import * as asyncHandler from 'express-async-handler'
 import * as express from "express";
-import {EntityAPI} from "./entity_api_impl";
-import {Router} from "express";
+import { EntityAPI } from "./entity_api_impl";
+import { Router } from "express";
 
 
 export function createEntityRoutes(entity_api: EntityAPI): Router {
@@ -28,8 +28,9 @@ export function createEntityRoutes(entity_api: EntityAPI): Router {
         res.json({"result": result});
     }));
 
-    router.put("/:prefix/:kind/:uuid", kind_middleware, asyncHandler(async (req, res) => {
-        const [metadata, spec] = await entity_api.update_entity_spec(req.params.entity_kind, req.body.spec);
+    router.put("/:prefix/:kind/:uuid/:version", kind_middleware, asyncHandler(async (req, res) => {
+        const version = Number.parseFloat(req.params.version);
+        const [metadata, spec] = await entity_api.update_entity_spec(req.params.uuid, version, req.params.entity_kind, req.body.spec);
         res.json({"metadata": metadata, "spec": spec});
     }));
 
@@ -42,6 +43,11 @@ export function createEntityRoutes(entity_api: EntityAPI): Router {
             const [metadata, spec] = await entity_api.save_entity(req.params.entity_kind, req.body.spec);
             res.json({"metadata": metadata, "spec": spec});
         }
+    }));
+
+    router.delete("/:prefix/:kind/:uuid", kind_middleware, asyncHandler(async (req, res) => {
+        await entity_api.delete_entity_spec(req.params.entity_kind, req.params.uuid);
+        res.json("OK")
     }));
 
     return router;

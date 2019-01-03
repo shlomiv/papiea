@@ -1,7 +1,7 @@
 // [[file:~/work/papiea-js/Papiea-design.org::*/src/databases/provider_db_interface.ts][/src/databases/provider_db_interface.ts:1]]
 import * as core from "../core";
 import * as papiea from "../papiea";
-import {Version} from "../core";
+import { Version } from "../core";
 
 // [[file:~/work/papiea-js/Papiea-design.org::#h-Interface-104][provider-db-interface]]
 

@@ -1,7 +1,7 @@
 import * as asyncHandler from 'express-async-handler'
 import * as express from "express";
-import { EntityAPI } from "./entity_api_impl";
-import { Router } from "express";
+import {EntityAPI} from "./entity_api_impl";
+import {Router} from "express";
 
 
 export function createEntityRoutes(entity_api: EntityAPI): Router {

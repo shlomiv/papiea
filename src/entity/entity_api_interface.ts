@@ -1,5 +1,5 @@
-import { Kind } from "../papiea";
-import { Metadata, Spec, uuid4, Version } from "../core";
+import {Kind} from "../papiea";
+import {Metadata, Spec, uuid4, Version} from "../core";
 
 export interface IEntityAPI {
     get_kind(prefix: string, kind: string): Promise<Kind>

@@ -1,13 +1,13 @@
 import "jest"
 
-import { MongoConnection } from "../src/databases/mongo";
-import { Spec_DB } from "../src/databases/spec_db_interface";
-import { Status_DB } from "../src/databases/status_db_interface";
-import { Provider_DB } from "../src/databases/provider_db_interface";
+import {MongoConnection} from "../src/databases/mongo";
+import {Spec_DB} from "../src/databases/spec_db_interface";
+import {Status_DB} from "../src/databases/status_db_interface";
+import {Provider_DB} from "../src/databases/provider_db_interface";
 import * as core from "../src/core";
-import { v4 as uuid4 } from 'uuid';
-import { Kind, Provider } from "../src/papiea";
-import { ConflictingEntityError } from "../src/databases/utils/errors";
+import {v4 as uuid4} from 'uuid';
+import {Kind, Provider} from "../src/papiea";
+import {ConflictingEntityError} from "../src/databases/utils/errors";
 
 declare var process: {
     env: {

@@ -1,11 +1,11 @@
 import "jest"
-import { load } from "js-yaml";
-import { readFileSync } from "fs";
-import { resolve } from "path";
-import { ProviderSdk } from "../src/provider_sdk/typescript_sdk";
+import {load} from "js-yaml";
+import {readFileSync} from "fs";
+import {resolve} from "path";
+import {ProviderSdk} from "../src/provider_sdk/typescript_sdk";
 // @ts-ignore
-import { plural } from "pluralize"
-import { Kind } from "../src/papiea";
+import {plural} from "pluralize"
+import {Kind} from "../src/papiea";
 
 
 describe("Provider Sdk tests", () => {

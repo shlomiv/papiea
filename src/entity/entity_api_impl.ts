@@ -1,10 +1,10 @@
-import { Status_DB } from "../databases/status_db_interface";
-import { Spec_DB } from "../databases/spec_db_interface";
-import { Provider_DB } from "../databases/provider_db_interface";
-import { Kind } from "../papiea";
-import { Entity, Entity_Reference, Metadata, Spec, uuid4, Version } from "../core";
+import {Status_DB} from "../databases/status_db_interface";
+import {Spec_DB} from "../databases/spec_db_interface";
+import {Provider_DB} from "../databases/provider_db_interface";
+import {Kind} from "../papiea";
+import {Entity, Entity_Reference, Metadata, Spec, Status, uuid4, Version} from "../core";
 import uuid = require("uuid");
-import { IEntityAPI } from "./entity_api_interface";
+import {IEntityAPI} from "./entity_api_interface";
 
 export class EntityAPI implements IEntityAPI {
     private status_db: Status_DB;

@@ -30,12 +30,14 @@
   },
   "devDependencies": {
     "@types/jest": "^23.3.10",
+    "@types/swagger-parser": "^4.0.2",
     "jest": "^23.6.0",
+    "jest-junit": "^5.2.0",
     "nodemon": "^1.18.8",
+    "swagger-parser": "^6.0.2",
     "ts-jest": "^23.10.5",
     "ts-node": "^7.0.1",
-    "typescript": "^3.2.2",
-    "jest-junit": "^5.2.0"
+    "typescript": "^3.2.2"
   },
   "jest": {
     "transform": {

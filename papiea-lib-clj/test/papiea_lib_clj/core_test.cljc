@@ -1,7 +1,8 @@
 (ns papiea-lib-clj.core-test
-  (:require [cljs.test :refer-macros [deftest testing is]]
+  (:require #?(:clj [clojure.test :refer [deftest testing is]]
+               :cljs [cljs.test :refer-macros [deftest testing is]])
             [instaparse.core :as insta]
-            [papiea-lib-clj.core :as c]))
+            [papiea-lib-clj.sfs :as c]))
 
 (defn unordered= [& xs]
   (and (apply = (map count xs))

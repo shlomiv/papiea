@@ -18,8 +18,8 @@
   (sfs/sfs-compiler ast))
 
 (defn ^:export compile_sfs[sfs-signature]
-  (let [sfs-fn (some-> sfs/sfs-signature
-                       sfs/parse_sfs
+  (let [sfs-fn (some-> sfs-signature
+                       parse_sfs
                        sfs/optimize-ast
                        sfs/sfs-compiler
                        )]

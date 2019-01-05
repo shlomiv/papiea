@@ -9,7 +9,7 @@
   (str a))
 
 (defn ^:export parse_sfs[sfs-signature]
-  (insta/parse sfs/sfs-parser sfs-signature))
+  (sfs/sfs-parser sfs-signature))
 
 (defn ^:export optimize_sfs_ast[ast]
   (sfs/optimize-ast ast))

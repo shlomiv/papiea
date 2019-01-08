@@ -1,7 +1,7 @@
 import "jest"
 import axios from "axios"
 import { v4 as uuid4 } from 'uuid';
-import { Kind, Provider } from "../src/papiea";
+import { Provider } from "../src/papiea";
 
 declare var process: {
     env: {

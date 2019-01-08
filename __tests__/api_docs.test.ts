@@ -89,9 +89,10 @@ describe("API Docs Tests", () => {
             expect(Object.keys(apiDoc.paths)).toContain("/provider/test_provider/Location/{uuid}");
             const kindEntityPath = apiDoc.paths["/provider/test_provider/Location/{uuid}"];
             expect(Object.keys(kindEntityPath)).toContain("get");
-            expect(Object.keys(kindEntityPath)).toContain("put");
-            //expect(Object.keys(kindEntityPath)).toContain("patch");
             expect(Object.keys(kindEntityPath)).toContain("delete");
+            const kindEntityVersionPath = apiDoc.paths["/provider/test_provider/Location/{uuid}/{spec_version}"];
+            expect(Object.keys(kindEntityVersionPath)).toContain("put");
+            //expect(Object.keys(kindEntityVersionPath)).toContain("patch");
             done();
         } catch (err) {
             done.fail(err);

@@ -182,6 +182,15 @@ export default class ApiDocsGenerator {
                         "type": "string",
                         "format": "uuid"
                     }
+                },
+                {
+                    "name": "spec_version",
+                    "in": "path",
+                    "description": "spec_version of the entity",
+                    "required": true,
+                    "schema": {
+                        "type": "integer"
+                    }
                 }
             ],
             "requestBody": {
@@ -191,9 +200,6 @@ export default class ApiDocsGenerator {
                     "application/json": {
                         "schema": {
                             "properties": {
-                                "metadata": {
-                                    "$ref": `#/components/schemas/Metadata`
-                                },
                                 "spec": {
                                     "$ref": `#/components/schemas/${kind.name}`
                                 }
@@ -354,9 +360,11 @@ export default class ApiDocsGenerator {
                 };
                 paths[`/provider/${provider.prefix}/${kind.name}/{uuid}`] = {
                     "get": this.getKindEntity(kind),
-                    "put": this.putKindEntity(kind),
-                    //"patch": this.patchKindEntity(kind),
                     "delete": this.deleteKindEntity(kind)
+                };
+                paths[`/provider/${provider.prefix}/${kind.name}/{uuid}/{spec_version}`] = {
+                    "put": this.putKindEntity(kind),
+                    //"patch": this.patchKindEntity(kind)
                 };
                 Object.assign(schemas, kind.kind_structure);
             });

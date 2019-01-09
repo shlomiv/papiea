@@ -1,4 +1,6 @@
 import * as express from "express";
+import createAPIDocsRouter from "./api_docs/api_docs_routes";
+import ApiDocsGenerator from "./api_docs/api_docs_generator";
 import createProviderAPIRouter from "./provider/provider_routes";
 import { Provider_API_Impl } from "./provider/provider_api_impl";
 import { MongoConnection } from "./databases/mongo";
@@ -26,6 +28,7 @@ async function setUpApplication(): Promise<express.Express> {
     const statusDb = await mongoConnection.get_status_db();
     app.use('/provider', createProviderAPIRouter(new Provider_API_Impl(providerDb, statusDb)));
     app.use('/entity', createEntityRoutes(new EntityAPI(statusDb, specDb, providerDb)));
+    app.use('/api-docs', createAPIDocsRouter('/api-docs', new ApiDocsGenerator(providerDb)));
     app.use(function (err: any, req: any, res: any, next: any) {
         if (res.headersSent) {
             return next(err);

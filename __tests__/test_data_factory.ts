@@ -3,10 +3,15 @@ import { readFileSync } from "fs";
 import { resolve } from "path";
 import { plural } from "pluralize";
 import { Provider, SpecOnlyEntityKind } from "../src/papiea";
-import { Entity } from "../src/core";
+import { Entity, Data_Description } from "../src/core";
+
+export function getLocationDataDescription(): Data_Description {
+    const locationDataDescription = load(readFileSync(resolve(__dirname, "./location_kind_test_data.yml"), "utf-8"));
+    return locationDataDescription;
+}
 
 export function getSpecOnlyEntityKind(): SpecOnlyEntityKind {
-    const locationDataDescription = load(readFileSync(resolve(__dirname, "./location_kind_test_data.yml"), "utf-8"));
+    const locationDataDescription = getLocationDataDescription();
     const name = Object.keys(locationDataDescription)[0];
     const spec_only_kind: SpecOnlyEntityKind = {
         name,

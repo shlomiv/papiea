@@ -1,10 +1,8 @@
 import "jest"
 import axios from "axios"
 import { ProviderSdk } from "../src/provider_sdk/typescript_sdk";
-import { load } from "js-yaml";
-import { readFileSync } from "fs";
-import { resolve } from "path";
 import { Metadata, Spec } from "../src/core";
+import { getLocationDataDescription } from "./test_data_factory";
 
 declare var process: {
     env: {
@@ -22,11 +20,11 @@ const entityApi = axios.create({
 describe("Entity API tests", () => {
     const providerPrefix = "test";
     const providerVersion = "0.1.0";
-    const location_yaml = load(readFileSync(resolve(__dirname, "./location_kind_test_data.yml"), "utf-8"));
+    const locationDataDescription = getLocationDataDescription();
     const kind_name = "Location";
     beforeAll(async () => {
         const sdk = new ProviderSdk();
-        sdk.new_kind(location_yaml);
+        sdk.new_kind(locationDataDescription);
         sdk.version(providerVersion);
         sdk.prefix(providerPrefix);
         await sdk.register();

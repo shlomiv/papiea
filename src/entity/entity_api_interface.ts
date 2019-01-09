@@ -1,5 +1,5 @@
-import {Kind} from "../papiea";
-import {Metadata, Spec, uuid4, Version} from "../core";
+import { Kind } from "../papiea";
+import { Metadata, Spec, uuid4, Version } from "../core";
 
 export interface IEntityAPI {
     get_kind(prefix: string, kind: string): Promise<Kind>
@@ -10,7 +10,7 @@ export interface IEntityAPI {
 
     filter_entity_spec(kind: Kind, fields: any): Promise<[Metadata, Spec][]>
 
-    update_entity_spec(uuid: uuid4, version: Version, kind: Kind, spec_description: any): Promise<[Metadata, Spec]>
+    update_entity_spec(uuid: uuid4, spec_version: number, kind: Kind, spec_description: any): Promise<[Metadata, Spec]>
 
     delete_entity_spec(kind: Kind, entity_uuid: uuid4): Promise<void>
 }

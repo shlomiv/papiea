@@ -1,7 +1,7 @@
 import * as asyncHandler from 'express-async-handler'
 import * as express from "express";
-import {EntityAPI} from "./entity_api_impl";
-import {Router} from "express";
+import { EntityAPI } from "./entity_api_impl";
+import { Router } from "express";
 
 
 export function createEntityRoutes(entity_api: EntityAPI): Router {
@@ -19,29 +19,29 @@ export function createEntityRoutes(entity_api: EntityAPI): Router {
 
     router.get("/:prefix/:kind/:uuid", kind_middleware, asyncHandler(async (req, res) => {
         const [metadata, spec] = await entity_api.get_entity_spec(req.params.entity_kind, req.params.uuid);
-        res.json({"metadata": metadata, "spec": spec});
+        res.json({ "metadata": metadata, "spec": spec });
     }));
 
     // This could be GET /:prefix/:kind with query params as filter
     router.post("/:prefix/:kind/filter", kind_middleware, asyncHandler(async (req, res) => {
         const result = await entity_api.filter_entity_spec(req.params.entity_kind, req.body.filter_fields);
-        res.json({"result": result});
+        res.json({ "result": result });
     }));
 
-    router.put("/:prefix/:kind/:uuid/:version", kind_middleware, asyncHandler(async (req, res) => {
-        const version = Number.parseFloat(req.params.version);
-        const [metadata, spec] = await entity_api.update_entity_spec(req.params.uuid, version, req.params.entity_kind, req.body.spec);
-        res.json({"metadata": metadata, "spec": spec});
+    router.put("/:prefix/:kind/:uuid/:spec_version", kind_middleware, asyncHandler(async (req, res) => {
+        const spec_version = Number.parseFloat(req.params.spec_version);
+        const [metadata, spec] = await entity_api.update_entity_spec(req.params.uuid, spec_version, req.params.entity_kind, req.body.spec);
+        res.json({ "metadata": metadata, "spec": spec });
     }));
 
     router.post("/:prefix/:kind", kind_middleware, asyncHandler(async (req, res) => {
         if (req.params.status) {
             const [metadata, spec] = await entity_api.save_entity(req.params.entity_kind, req.body.spec, req.body.status);
-            res.json({"metadata": metadata, "spec": spec});
+            res.json({ "metadata": metadata, "spec": spec });
         } else {
             // Spec only entity
             const [metadata, spec] = await entity_api.save_entity(req.params.entity_kind, req.body.spec);
-            res.json({"metadata": metadata, "spec": spec});
+            res.json({ "metadata": metadata, "spec": spec });
         }
     }));
 

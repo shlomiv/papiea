@@ -39,7 +39,7 @@ describe("Entity API tests", () => {
     let entity_metadata: Metadata;
     let entity_spec: Spec;
     test("Create entity", async (done) => {
-        expect.assertions(2);
+        expect.assertions(3);
         try {
             const { data: { metadata, spec } } = await entityApi.post(`/${providerPrefix}/${kind_name}`, {
                 spec: {
@@ -48,6 +48,7 @@ describe("Entity API tests", () => {
                 }
             });
             expect(metadata).not.toBeUndefined();
+            expect(metadata.spec_version).toEqual(1);
             expect(spec).not.toBeUndefined();
             entity_metadata = metadata;
             entity_spec = spec;

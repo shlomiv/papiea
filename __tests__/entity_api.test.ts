@@ -16,12 +16,12 @@ const serverPort = parseInt(process.env.SERVER_PORT || '3000');
 const entityApi = axios.create({
     baseURL: `http://127.0.0.1:${serverPort}/entity`,
     timeout: 1000,
-    headers: {'Content-Type': 'application/json'}
+    headers: { 'Content-Type': 'application/json' }
 });
 
 describe("Entity API tests", () => {
     const providerPrefix = "test";
-    const providerVersion = 1;
+    const providerVersion = "0.1.0";
     const location_yaml = load(readFileSync(resolve(__dirname, "./location_kind_test_data.yml"), "utf-8"));
     const kind_name = "Location";
     beforeAll(async () => {
@@ -41,7 +41,7 @@ describe("Entity API tests", () => {
     test("Create entity", async (done) => {
         expect.assertions(2);
         try {
-            const {data: {metadata, spec}} = await entityApi.post(`/${providerPrefix}/${kind_name}`, {
+            const { data: { metadata, spec } } = await entityApi.post(`/${providerPrefix}/${kind_name}`, {
                 spec: {
                     x: 10,
                     y: 11

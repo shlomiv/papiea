@@ -1,11 +1,11 @@
 import "jest"
-import {load} from "js-yaml";
-import {readFileSync} from "fs";
-import {resolve} from "path";
-import {ProviderSdk} from "../src/provider_sdk/typescript_sdk";
+import { load } from "js-yaml";
+import { readFileSync } from "fs";
+import { resolve } from "path";
+import { ProviderSdk } from "../src/provider_sdk/typescript_sdk";
 // @ts-ignore
-import {plural} from "pluralize"
-import {Kind} from "../src/papiea";
+import { plural } from "pluralize"
+import { Kind } from "../src/papiea";
 
 
 describe("Provider Sdk tests", () => {
@@ -14,7 +14,7 @@ describe("Provider Sdk tests", () => {
         expect(plural("provider")).toBe("providers");
         done();
     });
-    const provider_version = 0.1;
+    const provider_version = "0.1.0";
     const location_yaml = load(readFileSync(resolve(__dirname, "./location_kind_test_data.yml"), "utf-8"));
     test("Yaml parses into walkable tree", (done) => {
         expect(location_yaml).not.toBeNull();

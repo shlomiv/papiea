@@ -6,7 +6,7 @@ import { plural } from "pluralize";
 import { validate } from "swagger-parser";
 import axios from "axios"
 import { Version, Entity } from "../src/core";
-import { Provider, SpecOnlyEnitityKind } from "../src/papiea";
+import { Provider, SpecOnlyEntityKind } from "../src/papiea";
 import { Provider_DB } from "../src/databases/provider_db_interface";
 import ApiDocsGenerator from "../src/api_docs/api_docs_generator";
 
@@ -29,7 +29,7 @@ class Provider_DB_Mock implements Provider_DB {
     constructor() {
         const locationDataDescription = load(readFileSync(resolve(__dirname, "./location_kind_test_data.yml"), "utf-8"));
         const name = Object.keys(locationDataDescription)[0];
-        const spec_only_kind: SpecOnlyEnitityKind = {
+        const spec_only_kind: SpecOnlyEntityKind = {
             name,
             name_plural: plural(name),
             kind_structure: locationDataDescription,
@@ -41,7 +41,7 @@ class Provider_DB_Mock implements Provider_DB {
             semantic_validator_fn: undefined
         };
         const providerPrefix = "test_provider";
-        const providerVersion = "1";
+        const providerVersion = "0.1.0";
         const provider: Provider = { prefix: providerPrefix, version: providerVersion, kinds: [spec_only_kind] };
         this.provider = provider;
     }

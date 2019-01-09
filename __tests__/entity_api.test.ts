@@ -107,5 +107,11 @@ describe("Entity API tests", () => {
         } catch (e) {
             done.fail(e);
         }
+        try {
+            await entityApi.get(`/${providerPrefix}/${kind_name}/${entity_metadata.uuid}`);
+            done.fail("Entity has not been removed");
+        } catch (e) {
+            done();
+        }
     });
 });

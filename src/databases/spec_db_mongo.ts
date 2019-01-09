@@ -86,10 +86,9 @@ export class Spec_DB_Mongo implements Spec_DB {
         });
         if (result.result.n === undefined || result.result.ok !== 1) {
             throw new Error("Failed to remove spec");
-
         }
         if (result.result.n !== 1 && result.result.n !== 0) {
-            throw new Error("Amount of entities deleted is not 1");
+            throw new Error("Amount of entities must be 0 or 1");
         }
         return;
     }

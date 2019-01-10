@@ -2,7 +2,7 @@ import { Status_DB } from "../databases/status_db_interface";
 import { Spec_DB } from "../databases/spec_db_interface";
 import { Provider_DB } from "../databases/provider_db_interface";
 import { Kind } from "../papiea";
-import { Entity, Entity_Reference, Metadata, Spec, uuid4 } from "../core";
+import { Entity, Entity_Reference, Metadata, Spec, Status, uuid4 } from "../core";
 import uuid = require("uuid");
 import { IEntityAPI } from "./entity_api_interface";
 
@@ -26,7 +26,7 @@ export class EntityAPI implements IEntityAPI {
         return found_kind;
     }
 
-    async save_entity(kind: Kind, spec_description: any, status_description?: any): Promise<[Metadata, Spec]> {
+    async save_entity(kind: Kind, spec_description: Spec, status_description?: Status): Promise<[Metadata, Spec]> {
         const metadata: Metadata = { uuid: uuid(), spec_version: 0, created_at: new Date(), kind: kind.name };
         const entity: Entity = { metadata, spec: spec_description, status: status_description };
         //TODO: kind.validator_fn(entity)
@@ -48,7 +48,7 @@ export class EntityAPI implements IEntityAPI {
         return this.spec_db.list_specs(fields);
     }
 
-    async update_entity_spec(uuid: uuid4, spec_version: number, kind: Kind, spec_description: any): Promise<[Metadata, Spec]> {
+    async update_entity_spec(uuid: uuid4, spec_version: number, kind: Kind, spec_description: Spec): Promise<[Metadata, Spec]> {
         const metadata: Metadata = { uuid: uuid, kind: kind.name, spec_version: spec_version } as Metadata;
         return this.spec_db.update_spec(metadata, spec_description);
     }

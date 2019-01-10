@@ -3,6 +3,8 @@ import axios from "axios"
 import { ProviderSdk } from "../src/provider_sdk/typescript_sdk";
 import { Metadata, Spec } from "../src/core";
 import { getLocationDataDescription } from "./test_data_factory";
+import { stringify } from "querystring"
+
 
 declare var process: {
     env: {
@@ -14,7 +16,7 @@ const serverPort = parseInt(process.env.SERVER_PORT || '3000');
 const entityApi = axios.create({
     baseURL: `http://127.0.0.1:${serverPort}/entity`,
     timeout: 1000,
-    headers: { 'Content-Type': 'application/json' }
+    headers: {'Content-Type': 'application/json'}
 });
 
 describe("Entity API tests", () => {
@@ -77,6 +79,25 @@ describe("Entity API tests", () => {
                     }
                 }
             });
+            expect(res.data.result.length).toBeGreaterThanOrEqual(1);
+            done();
+        } catch (e) {
+            done.fail(e);
+        }
+    });
+
+    test("Filter entity with query params", async (done) => {
+        const spec = {
+            spec: {
+                x: 10,
+                y: 11
+            }
+        };
+        const spec_query = {
+            q: JSON.stringify(spec)
+        };
+        try {
+            const res = await entityApi.get(`${providerPrefix}/${kind_name}/filter?${stringify(spec_query)}`,);
             expect(res.data.result.length).toBeGreaterThanOrEqual(1);
             done();
         } catch (e) {

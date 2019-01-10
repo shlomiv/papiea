@@ -50,5 +50,6 @@ export class EntityAPI implements EntityApiInterface {
     async delete_entity_spec(kind: Kind, entity_uuid: uuid4): Promise<void> {
         const entity_ref: Entity_Reference = { kind: kind.name, uuid: entity_uuid };
         await this.spec_db.delete_spec(entity_ref);
+        await this.status_db.delete_status(entity_ref);
     }
 }

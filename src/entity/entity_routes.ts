@@ -17,12 +17,17 @@ export function createEntityRoutes(entity_api: EntityAPI): Router {
     });
 
 
+    router.get("/:prefix/:kind/filter", kind_middleware, asyncHandler(async (req, res) => {
+        const query = JSON.parse(req.query.q);
+        const result = await entity_api.filter_entity_spec(req.params.entity_kind, query);
+        res.json({ "result": result });
+    }));
+
     router.get("/:prefix/:kind/:uuid", kind_middleware, asyncHandler(async (req, res) => {
         const [metadata, spec] = await entity_api.get_entity_spec(req.params.entity_kind, req.params.uuid);
         res.json({ "metadata": metadata, "spec": spec });
     }));
 
-    // This could be GET /:prefix/:kind with query params as filter
     router.post("/:prefix/:kind/filter", kind_middleware, asyncHandler(async (req, res) => {
         const result = await entity_api.filter_entity_spec(req.params.entity_kind, req.body.filter_fields);
         res.json({ "result": result });

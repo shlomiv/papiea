@@ -28,15 +28,16 @@ export function createEntityRoutes(entity_api: EntityAPI): Router {
         res.json({ "result": result });
     }));
 
-    router.put("/:prefix/:kind/:uuid/:spec_version", kind_middleware, asyncHandler(async (req, res) => {
-        const spec_version = Number.parseFloat(req.params.spec_version);
-        const [metadata, spec] = await entity_api.update_entity_spec(req.params.uuid, spec_version, req.params.entity_kind, req.body.spec);
+    router.put("/:prefix/:kind/:uuid", kind_middleware, asyncHandler(async (req, res) => {
+        const existing_spec = await entity_api.get_entity_spec(req.params.entity_kind, req.params.uuid);
+        const existing_version = existing_spec[0].spec_version;
+        const [metadata, spec] = await entity_api.update_entity_spec(req.params.uuid, existing_version, req.params.entity_kind, req.body.spec);
         res.json({ "metadata": metadata, "spec": spec });
     }));
 
     router.post("/:prefix/:kind", kind_middleware, asyncHandler(async (req, res) => {
         if (req.params.status) {
-            const [metadata, spec] = await entity_api.save_entity(req.params.entity_kind, req.body.spec, req.body.status);
+            const [metadata, spec] = await entity_api.save_entity(req.params.entity_kind, req.body.spec);
             res.json({ "metadata": metadata, "spec": spec });
         } else {
             // Spec only entity

@@ -59,9 +59,13 @@ export class Status_DB_Mongo implements Status_DB {
     }
 
     async delete_status(entity_ref: core.Entity_Reference): Promise<void> {
-        const result = await this.collection.deleteOne({
+        const result = await this.collection.updateOne({
             "metadata.uuid": entity_ref.uuid,
             "metadata.kind": entity_ref.kind
+        }, {
+            $set: {
+                "deletedAt": new Date()
+            }
         });
         if (result.result.n === undefined || result.result.ok !== 1) {
             throw new Error("Failed to remove status");

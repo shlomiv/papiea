@@ -87,7 +87,7 @@ describe("Entity API tests", () => {
     test("Update entity spec", async (done) => {
         expect.assertions(1);
         try {
-            const res = await entityApi.put(`/${providerPrefix}/${kind_name}/${entity_metadata.uuid}/${entity_metadata.spec_version}`, {
+            const res = await entityApi.put(`/${providerPrefix}/${kind_name}/${entity_metadata.uuid}`, {
                 spec: {
                     x: 20,
                     y: 21

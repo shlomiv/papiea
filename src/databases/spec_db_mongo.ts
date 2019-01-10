@@ -80,15 +80,19 @@ export class Spec_DB_Mongo implements Spec_DB {
     }
 
     async delete_spec(entity_ref: core.Entity_Reference): Promise<void> {
-        const result = await this.collection.deleteOne({
+        const result = await this.collection.updateOne({
             "metadata.uuid": entity_ref.uuid,
             "metadata.kind": entity_ref.kind
+        }, {
+            $set: {
+                "deletedAt": new Date()
+            }
         });
         if (result.result.n === undefined || result.result.ok !== 1) {
             throw new Error("Failed to remove spec");
         }
         if (result.result.n !== 1 && result.result.n !== 0) {
-            throw new Error("Amount of entities must be 0 or 1");
+            throw new Error(`Amount of entities deleted must be 0 or 1, found: ${result.result.n}`);
         }
         return;
     }

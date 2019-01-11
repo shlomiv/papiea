@@ -17,9 +17,10 @@ export function createEntityRoutes(entity_api: EntityAPI): Router {
     });
 
 
-    router.get("/:prefix/:kind/filter", kind_middleware, asyncHandler(async (req, res) => {
-        const query = JSON.parse(req.query.q);
-        const result = await entity_api.filter_entity_spec(req.params.entity_kind, query);
+    router.get("/:prefix/:kind", kind_middleware, asyncHandler(async (req, res) => {
+        const spec_params = JSON.parse(req.query.spec);
+        const spec = { spec: spec_params };
+        const result = await entity_api.filter_entity_spec(req.params.entity_kind, spec);
         res.json({ "result": result });
     }));
 
@@ -34,9 +35,8 @@ export function createEntityRoutes(entity_api: EntityAPI): Router {
     }));
 
     router.put("/:prefix/:kind/:uuid", kind_middleware, asyncHandler(async (req, res) => {
-        const existing_spec = await entity_api.get_entity_spec(req.params.entity_kind, req.params.uuid);
-        const existing_version = existing_spec[0].spec_version;
-        const [metadata, spec] = await entity_api.update_entity_spec(req.params.uuid, existing_version, req.params.entity_kind, req.body.spec);
+        const spec_version = req.body.spec_version;
+        const [metadata, spec] = await entity_api.update_entity_spec(req.params.uuid, spec_version, req.params.entity_kind, req.body.spec);
         res.json({ "metadata": metadata, "spec": spec });
     }));
 

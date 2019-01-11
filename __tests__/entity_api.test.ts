@@ -88,16 +88,14 @@ describe("Entity API tests", () => {
 
     test("Filter entity with query params", async (done) => {
         const spec = {
-            spec: {
-                x: 10,
-                y: 11
-            }
+            x: 10,
+            y: 11
         };
         const spec_query = {
-            q: JSON.stringify(spec)
+            spec: JSON.stringify(spec)
         };
         try {
-            const res = await entityApi.get(`${providerPrefix}/${kind_name}/filter?${stringify(spec_query)}`,);
+            const res = await entityApi.get(`${providerPrefix}/${kind_name}?${stringify(spec_query)}`,);
             expect(res.data.result.length).toBeGreaterThanOrEqual(1);
             done();
         } catch (e) {
@@ -112,7 +110,8 @@ describe("Entity API tests", () => {
                 spec: {
                     x: 20,
                     y: 21
-                }
+                },
+                spec_version: 1
             });
             expect(res.data.spec.x).toEqual(20);
             done();

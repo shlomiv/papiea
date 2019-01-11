@@ -13,4 +13,6 @@ export interface EntityApiInterface {
     update_entity_spec(uuid: uuid4, spec_version: number, kind: Kind, spec_description: any): Promise<[Metadata, Spec]>
 
     delete_entity_spec(kind: Kind, entity_uuid: uuid4): Promise<void>
+
+    call_procedure(kind: Kind, entity_uuid: uuid4, procedure_name: string, input: any): Promise<any>
 }

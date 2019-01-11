@@ -49,13 +49,13 @@ export interface Procedural_Signature {
     argument: core.Data_Description;
 
     // The automatically generated validator
-    arg_validator_fn: (arg: any) => boolean;
+    arg_validator_fn?: (arg: any) => boolean;
 
     // The representation of the data to be returned from this procedure
     result: core.Data_Description;
 
     // The automatically generated validator
-    result_validator_fn: (res: any) => boolean;
+    result_validator_fn?: (res: any) => boolean;
 
     // Does the engine pauses all intentful operation invocations for
     // the duration of the procedural call

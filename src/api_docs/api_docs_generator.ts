@@ -367,9 +367,7 @@ export default class ApiDocsGenerator {
                 };
                 paths[`/provider/${provider.prefix}/${kind.name}/{uuid}`] = {
                     "get": this.getKindEntity(kind),
-                    "delete": this.deleteKindEntity(kind)
-                };
-                paths[`/provider/${provider.prefix}/${kind.name}/{uuid}`] = {
+                    "delete": this.deleteKindEntity(kind),
                     "put": this.putKindEntity(kind),
                     //"patch": this.patchKindEntity(kind)
                 };

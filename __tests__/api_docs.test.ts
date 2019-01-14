@@ -46,7 +46,8 @@ class Provider_DB_Mock implements Provider_DB {
 }
 
 describe("API Docs Tests", () => {
-    const apiDocsGenerator = new ApiDocsGenerator(new Provider_DB_Mock());
+    const providerDbMock = new Provider_DB_Mock();
+    const apiDocsGenerator = new ApiDocsGenerator(providerDbMock);
     test("Validate API Docs agains OpenAPI spec", async (done) => {
         try {
             const apiDoc = await apiDocsGenerator.getApiDocs();
@@ -63,17 +64,18 @@ describe("API Docs Tests", () => {
     });
     test("API Docs should contain paths for CRUD", async (done) => {
         try {
+            const providerPrefix = providerDbMock.provider.prefix;
+            const entityName = providerDbMock.provider.kinds[0].name;
             const apiDoc = await apiDocsGenerator.getApiDocs();
-            expect(Object.keys(apiDoc.paths)).toContain("/provider/test_provider/Location");
-            const kindPath = apiDoc.paths["/provider/test_provider/Location"];
+            expect(Object.keys(apiDoc.paths)).toContain(`/entity/${providerPrefix}/${entityName}`);
+            const kindPath = apiDoc.paths[`/entity/${providerPrefix}/${entityName}`];
             expect(Object.keys(kindPath)).toContain("get");
             expect(Object.keys(kindPath)).toContain("post");
-            expect(Object.keys(apiDoc.paths)).toContain("/provider/test_provider/Location/{uuid}");
-            const kindEntityPath = apiDoc.paths["/provider/test_provider/Location/{uuid}"];
+            expect(Object.keys(apiDoc.paths)).toContain(`/entity/${providerPrefix}/${entityName}/{uuid}`);
+            const kindEntityPath = apiDoc.paths[`/entity/${providerPrefix}/${entityName}/{uuid}`];
             expect(Object.keys(kindEntityPath)).toContain("get");
             expect(Object.keys(kindEntityPath)).toContain("delete");
             expect(Object.keys(kindEntityPath)).toContain("put");
-            //expect(Object.keys(kindEntityVersionPath)).toContain("patch");
             done();
         } catch (err) {
             done.fail(err);

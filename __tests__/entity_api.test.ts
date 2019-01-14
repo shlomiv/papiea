@@ -79,7 +79,7 @@ describe("Entity API tests", () => {
                     }
                 }
             });
-            expect(res.data.result.length).toBeGreaterThanOrEqual(1);
+            expect(res.data.length).toBeGreaterThanOrEqual(1);
             done();
         } catch (e) {
             done.fail(e);
@@ -96,7 +96,7 @@ describe("Entity API tests", () => {
         };
         try {
             const res = await entityApi.get(`${providerPrefix}/${kind_name}?${stringify(spec_query)}`,);
-            expect(res.data.result.length).toBeGreaterThanOrEqual(1);
+            expect(res.data.length).toBeGreaterThanOrEqual(1);
             done();
         } catch (e) {
             done.fail(e);

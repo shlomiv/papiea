@@ -70,10 +70,10 @@ export default class ApiDocsGenerator {
         }
     }
 
-    getKind(kind: papiea.Kind) {
+    getKind(provider: papiea.Provider, kind: papiea.Kind) {
         return {
             "description": `Returns all entities' specs of kind ${kind.name}`,
-            "operationId": `find${kind.name}`,
+            "operationId": `find${provider.prefix}${kind.name}`,
             "parameters": [
                 {
                     "name": "offset",
@@ -109,10 +109,10 @@ export default class ApiDocsGenerator {
         };
     }
 
-    postKind(kind: papiea.Kind) {
+    postKind(provider: papiea.Provider, kind: papiea.Kind) {
         return {
             "description": `Creates a new ${kind.name}`,
-            "operationId": `add${kind.name}`,
+            "operationId": `add${provider.prefix}${kind.name}`,
             "requestBody": {
                 "description": `${kind.name} to add`,
                 "required": true,
@@ -132,10 +132,10 @@ export default class ApiDocsGenerator {
         };
     }
 
-    getKindEntity(kind: papiea.Kind) {
+    getKindEntity(provider: papiea.Provider, kind: papiea.Kind) {
         return {
             "description": `Returns an entity of kind ${kind.name} by uuid`,
-            "operationId": `find${kind.name}ByUuid`,
+            "operationId": `find${provider.prefix}${kind.name}ByUuid`,
             "parameters": [
                 {
                     "name": "uuid",
@@ -152,10 +152,10 @@ export default class ApiDocsGenerator {
         };
     }
 
-    deleteKindEntity(kind: papiea.Kind) {
+    deleteKindEntity(provider: papiea.Provider, kind: papiea.Kind) {
         return {
             "description": `Deletes an entity of kind ${kind.name} by uuid`,
-            "operationId": `delete${kind.name}`,
+            "operationId": `delete${provider.prefix}${kind.name}`,
             "parameters": [
                 {
                     "name": "uuid",
@@ -177,10 +177,10 @@ export default class ApiDocsGenerator {
         };
     }
 
-    putKindEntity(kind: papiea.Kind) {
+    putKindEntity(provider: papiea.Provider, kind: papiea.Kind) {
         return {
             "description": `Replaces an entity of kind ${kind.name} by uuid`,
-            "operationId": `replace${kind.name}`,
+            "operationId": `replace${provider.prefix}${kind.name}`,
             "parameters": [
                 {
                     "name": "uuid",
@@ -219,10 +219,10 @@ export default class ApiDocsGenerator {
         };
     }
 
-    patchKindEntity(kind: papiea.Kind) {
+    patchKindEntity(provider: papiea.Provider, kind: papiea.Kind) {
         return {
             "description": `Updates an entity of kind ${kind.name} by uuid`,
-            "operationId": `update${kind.name}`,
+            "operationId": `update${provider.prefix}${kind.name}`,
             "parameters": [
                 {
                     "name": "uuid",
@@ -247,6 +247,53 @@ export default class ApiDocsGenerator {
                 }
             },
             "responses": this.getResponseSingle(kind)
+        };
+    }
+
+    callProcedure(provider: papiea.Provider, procedure: papiea.Procedural_Signature) {
+        return {
+            "description": `Calls a procedure ${procedure.name}`,
+            "operationId": `call${provider.prefix}${procedure.name}`,
+            "parameters": [
+                {
+                    "name": "uuid",
+                    "in": "path",
+                    "description": "UUID of the entity",
+                    "required": true,
+                    "schema": {
+                        "type": "string",
+                        "format": "uuid"
+                    }
+                },
+            ],
+            "requestBody": {
+                "description": `${procedure.name} input`,
+                "required": true,
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "properties": {
+                                "input": {
+                                    "$ref": `#/components/schemas/${Object.keys(procedure.argument)[0]}`
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "responses": {
+                "200": {
+                    "description": `${procedure.name} response`,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": `#/components/schemas/${Object.keys(procedure.result)[0]}`
+                            }
+                        }
+                    }
+                },
+                "default": this.getDefaultResponse()
+            }
         };
     }
 
@@ -361,16 +408,22 @@ export default class ApiDocsGenerator {
         const providers = await this.providerDb.list_providers();
         providers.forEach(provider => {
             provider.kinds.forEach(kind => {
-                paths[`/provider/${provider.prefix}/${kind.name}`] = {
-                    "get": this.getKind(kind),
-                    "post": this.postKind(kind)
+                paths[`/entity/${provider.prefix}/${kind.name}`] = {
+                    "get": this.getKind(provider, kind),
+                    "post": this.postKind(provider, kind)
                 };
-                paths[`/provider/${provider.prefix}/${kind.name}/{uuid}`] = {
-                    "get": this.getKindEntity(kind),
-                    "delete": this.deleteKindEntity(kind),
-                    "put": this.putKindEntity(kind),
-                    //"patch": this.patchKindEntity(kind)
+                paths[`/entity/${provider.prefix}/${kind.name}/{uuid}`] = {
+                    "get": this.getKindEntity(provider, kind),
+                    "delete": this.deleteKindEntity(provider, kind),
+                    "put": this.putKindEntity(provider, kind)
                 };
+                Object.values(kind.procedures).forEach(procedure => {
+                    paths[`/entity/${provider.prefix}/${kind.name}/{uuid}/procedure/${procedure.name}`] = {
+                        "post": this.callProcedure(provider, procedure)
+                    };
+                    Object.assign(schemas, procedure.argument);
+                    Object.assign(schemas, procedure.result);
+                });
                 Object.assign(schemas, kind.kind_structure);
             });
         });

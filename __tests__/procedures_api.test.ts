@@ -52,7 +52,7 @@ describe("Procedures tests", () => {
                     }).then(() => {
                         res.statusCode = 200;
                         res.setHeader('Content-Type', 'text/plain');
-                        res.end('OK');
+                        res.end(JSON.stringify(post.spec));
                         server.close();
                     }).catch((err) => {
                         console.log(err);

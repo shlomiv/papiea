@@ -53,7 +53,7 @@ export function getProviderWithSpecOnlyEnitityKindWithOperations(procedure_callb
     const proceduralSignature: Procedural_Signature = {
         name: "moveX",
         argument: loadYaml("./procedure_move_input.yml"),
-        result: null,
+        result: loadYaml("./location_kind_test_data.yml"),
         execution_strategy: Procedural_Execution_Strategy.Halt_Intentful,
         procedure_callback: procedure_callback
     };

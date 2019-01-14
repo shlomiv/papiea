@@ -19,9 +19,11 @@ export function createEntityRoutes(entity_api: EntityAPI): Router {
 
 
     router.get("/:prefix/:kind", kind_middleware, asyncHandler(async (req, res) => {
-        const spec_params = JSON.parse(req.query.spec);
-        const spec = { spec: spec_params };
-        const result = await entity_api.filter_entity_spec(req.params.entity_kind, spec);
+        const filter: any = {};
+        if (req.query.spec) {
+            filter.spec = JSON.parse(req.query.spec);
+        }
+        const result = await entity_api.filter_entity_spec(req.params.entity_kind, filter);
         res.json({ "result": result });
     }));
 

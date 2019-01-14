@@ -58,7 +58,7 @@ export function createEntityRoutes(entity_api: EntityAPI): Router {
     }));
 
     router.post("/:prefix/:kind/:uuid/procedure/:procedure_name", kind_middleware, asyncHandler(async (req, res) => {
-        const result: any = await entity_api.call_procedure(req.params.entity_kind, req.params.uuid, req.params.procedure_name, req.body);
+        const result: any = await entity_api.call_procedure(req.params.entity_kind, req.params.uuid, req.params.procedure_name, req.body.input);
         res.json(result);
     }));
 

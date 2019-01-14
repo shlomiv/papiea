@@ -45,7 +45,7 @@ describe("Procedures tests", () => {
                 });
                 req.on('end', function () {
                     const post = JSON.parse(body);
-                    post.spec.x += post.input.input;
+                    post.spec.x += post.input;
                     entityApi.put(`/${provider.prefix}/${kind_name}/${post.metadata.uuid}`, {
                         spec: post.spec,
                         metadata: post.metadata  

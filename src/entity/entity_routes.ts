@@ -1,5 +1,6 @@
 import * as asyncHandler from 'express-async-handler'
 import * as express from "express";
+import { Metadata, Spec } from "../core";
 import { EntityAPI } from "./entity_api_impl";
 import { Router } from "express";
 
@@ -22,8 +23,11 @@ export function createEntityRoutes(entity_api: EntityAPI): Router {
         if (req.query.spec) {
             filter.spec = JSON.parse(req.query.spec);
         }
-        const result = await entity_api.filter_entity_spec(req.params.entity_kind, filter);
-        res.json({ "result": result });
+        let result: any[] = await entity_api.filter_entity_spec(req.params.entity_kind, filter);
+        result = result.map(x => {
+            return { "metadata": x[0], "spec": x[1] }
+        });
+        res.json(result);
     }));
 
     router.get("/:prefix/:kind/:uuid", kind_middleware, asyncHandler(async (req, res) => {
@@ -32,8 +36,15 @@ export function createEntityRoutes(entity_api: EntityAPI): Router {
     }));
 
     router.post("/:prefix/:kind/filter", kind_middleware, asyncHandler(async (req, res) => {
-        const result = await entity_api.filter_entity_spec(req.params.entity_kind, req.body.filter_fields);
-        res.json({ "result": result });
+        const filter: any = {};
+        if (req.body.spec) {
+            filter.spec = req.body.spec;
+        }
+        let result: any[] = await entity_api.filter_entity_spec(req.params.entity_kind, filter);
+        result = result.map(x => {
+            return { "metadata": x[0], "spec": x[1] }
+        });
+        res.json(result);
     }));
 
     router.put("/:prefix/:kind/:uuid", kind_middleware, asyncHandler(async (req, res) => {

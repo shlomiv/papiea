@@ -109,6 +109,29 @@ export default class ApiDocsGenerator {
         };
     }
 
+    postKindFilter(provider: papiea.Provider, kind: papiea.Kind) {
+        return {
+            "description": `Returns all entities' specs of kind ${kind.name}`,
+            "operationId": `find${provider.prefix}${kind.name}Filter`,
+            "requestBody": {
+                "description": `${kind.name} to add`,
+                "required": false,
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "properties": {
+                                "spec": {
+                                    "$ref": `#/components/schemas/${kind.name}`
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "responses": this.getResponseMany(kind)
+        };
+    }
+
     postKind(provider: papiea.Provider, kind: papiea.Kind) {
         return {
             "description": `Creates a new ${kind.name}`,
@@ -411,6 +434,9 @@ export default class ApiDocsGenerator {
                 paths[`/entity/${provider.prefix}/${kind.name}`] = {
                     "get": this.getKind(provider, kind),
                     "post": this.postKind(provider, kind)
+                };
+                paths[`/entity/${provider.prefix}/${kind.name}/filter`] = {
+                    "post": this.postKindFilter(provider, kind)
                 };
                 paths[`/entity/${provider.prefix}/${kind.name}/{uuid}`] = {
                     "get": this.getKindEntity(provider, kind),

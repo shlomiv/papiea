@@ -33,7 +33,7 @@ export function getSpecOnlyEntityKind(): SpecOnlyEntityKind {
         validator_fn: {} as (entity: Entity) => boolean,
         intentful_signatures: new Map(),
         dependency_tree: new Map(),
-        procedures: new Map(),
+        procedures: {},
         differ: undefined,
         semantic_validator_fn: undefined
     };
@@ -57,6 +57,6 @@ export function getProviderWithSpecOnlyEnitityKindWithOperations(procedure_callb
         execution_strategy: Procedural_Execution_Strategy.Halt_Intentful,
         procedure_callback: procedure_callback
     };
-    provider.kinds[0].procedures.set(proceduralSignature.name, proceduralSignature);
+    provider.kinds[0].procedures[proceduralSignature.name] = proceduralSignature;
     return provider;
 }

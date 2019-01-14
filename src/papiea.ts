@@ -27,7 +27,7 @@ export interface Kind {
     differ?: differ.Differ;
 
     //// Procedural behavior
-    procedures: Map<string, Procedural_Signature>;
+    procedures: { [key: string]: Procedural_Signature; };
 }
 
 export interface SpecOnlyEntityKind extends Kind {

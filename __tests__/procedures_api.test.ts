@@ -29,8 +29,6 @@ describe("Procedures tests", () => {
     const provider: Provider = getProviderWithSpecOnlyEnitityKindWithOperations(`http://${hostname}:${port}/`);
 
     beforeAll(async () => {
-        const providerForSerialisation: any = provider;
-        providerForSerialisation.kinds[0].procedures = Array.from(provider.kinds[0].procedures.entries());
         await providerApi.post('/', provider);
     });
 

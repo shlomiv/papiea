@@ -24,7 +24,6 @@ export class EntityAPI implements EntityApiInterface {
         if (found_kind === undefined) {
             throw new Error(`Kind: ${kind} not found on the provider with prefix: ${prefix}`)
         }
-        found_kind.procedures = new Map(found_kind.procedures);
         return found_kind;
     }
 
@@ -57,7 +56,7 @@ export class EntityAPI implements EntityApiInterface {
 
     async call_procedure(kind: Kind, entity_uuid: uuid4, procedure_name: string, input: any): Promise<any> {
         const entity_data: [Metadata, Spec] = await this.get_entity_spec(kind, entity_uuid);
-        const procedure: Procedural_Signature | undefined = kind.procedures.get(procedure_name);
+        const procedure: Procedural_Signature | undefined = kind.procedures[procedure_name];
         if (procedure === undefined) {
             throw new Error(`Procedure ${procedure_name} not found for kind ${kind.name}`);
         }

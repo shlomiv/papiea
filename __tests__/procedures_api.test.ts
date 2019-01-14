@@ -50,12 +50,14 @@ describe("Procedures tests", () => {
                     post.spec.x += post.input.input;
                     entityApi.put(`/${provider.prefix}/${kind_name}/${post.metadata.uuid}`, {
                         spec: post.spec,
-                        spec_version: post.metadata.spec_version
+                        metadata: post.metadata  
                     }).then(() => {
                         res.statusCode = 200;
                         res.setHeader('Content-Type', 'text/plain');
                         res.end('OK');
                         server.close();
+                    }).catch((err) => {
+                        console.log(err);
                     });
                 });
             }

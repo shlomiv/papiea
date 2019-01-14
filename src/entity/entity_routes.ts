@@ -36,8 +36,8 @@ export function createEntityRoutes(entity_api: EntityAPI): Router {
     }));
 
     router.put("/:prefix/:kind/:uuid", kind_middleware, asyncHandler(async (req, res) => {
-        const spec_version = req.body.spec_version;
-        const [metadata, spec] = await entity_api.update_entity_spec(req.params.uuid, spec_version, req.params.entity_kind, req.body.spec);
+        const request_metadata = req.body.metadata;
+        const [metadata, spec] = await entity_api.update_entity_spec(req.params.uuid, request_metadata.spec_version, req.params.entity_kind, req.body.spec);
         res.json({ "metadata": metadata, "spec": spec });
     }));
 

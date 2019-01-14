@@ -111,7 +111,9 @@ describe("Entity API tests", () => {
                     x: 20,
                     y: 21
                 },
-                spec_version: 1
+                metadata: {
+                    spec_version: 1
+                }
             });
             expect(res.data.spec.x).toEqual(20);
             done();

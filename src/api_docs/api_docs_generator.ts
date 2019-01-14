@@ -94,6 +94,15 @@ export default class ApiDocsGenerator {
                         "type": "integer",
                         "format": "int32"
                     }
+                },
+                {
+                    "name": "spec",
+                    "in": "query",
+                    "description": "jsonified spec filter",
+                    "required": false,
+                    "schema": {
+                        "type": "string"
+                    }
                 }
             ],
             "responses": this.getResponseMany(kind)
@@ -183,15 +192,6 @@ export default class ApiDocsGenerator {
                         "format": "uuid"
                     }
                 },
-                {
-                    "name": "spec_version",
-                    "in": "path",
-                    "description": "spec_version of the entity",
-                    "required": true,
-                    "schema": {
-                        "type": "integer"
-                    }
-                }
             ],
             "requestBody": {
                 "description": `${kind.name} to replace with`,
@@ -202,6 +202,13 @@ export default class ApiDocsGenerator {
                             "properties": {
                                 "spec": {
                                     "$ref": `#/components/schemas/${kind.name}`
+                                },
+                                "metadata": {
+                                    "properties": {
+                                        "spec_version": {
+                                            "type": "integer"
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -360,9 +367,7 @@ export default class ApiDocsGenerator {
                 };
                 paths[`/provider/${provider.prefix}/${kind.name}/{uuid}`] = {
                     "get": this.getKindEntity(kind),
-                    "delete": this.deleteKindEntity(kind)
-                };
-                paths[`/provider/${provider.prefix}/${kind.name}/{uuid}/{spec_version}`] = {
+                    "delete": this.deleteKindEntity(kind),
                     "put": this.putKindEntity(kind),
                     //"patch": this.patchKindEntity(kind)
                 };

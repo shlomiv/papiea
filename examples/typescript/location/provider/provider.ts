@@ -1,6 +1,6 @@
-import { ProviderSdk } from "../../src/provider_sdk/typescript_sdk";
-import { Provider } from "../../src/papiea";
-import { Version } from "../../src/core";
+import { ProviderSdk } from "../../../../src/provider_sdk/typescript_sdk";
+import { Version } from "../../../../src/core";
+import { Provider } from "../../../../src/papiea";
 
 
 export async function register_provider(sdk: ProviderSdk, kind_description: any, version: Version, prefix: string): Promise<Provider> {

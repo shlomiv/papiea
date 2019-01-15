@@ -12,19 +12,6 @@ export const location_provider_config = {
     }
 };
 
-export const location_entity_config = {
-    entity: {
-        initial_spec: {
-            x: 10,
-            y: 20
-        },
-        update_spec: {
-            x: 100,
-            y: 200
-        }
-    },
-};
-
 export const papiea_config = {
     core: {
         host: "127.0.0.1",

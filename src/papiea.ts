@@ -30,7 +30,7 @@ export interface Kind {
     procedures: Map<string, Procedural_Signature>;
 }
 
-export interface SpecOnlyEnitityKind extends Kind {
+export interface SpecOnlyEntityKind extends Kind {
 }
 
 // kind-struct ends here

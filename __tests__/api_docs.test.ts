@@ -1,14 +1,12 @@
 import "jest"
-import { load } from "js-yaml";
-import { readFileSync, writeFileSync, unlinkSync } from "fs";
-import { resolve } from "path";
-import { plural } from "pluralize";
+import { writeFileSync, unlinkSync } from "fs";
 import { validate } from "swagger-parser";
 import axios from "axios"
-import { Version, Entity } from "../src/core";
-import { Provider, SpecOnlyEnitityKind } from "../src/papiea";
+import { Version } from "../src/core";
+import { Provider } from "../src/papiea";
 import { Provider_DB } from "../src/databases/provider_db_interface";
 import ApiDocsGenerator from "../src/api_docs/api_docs_generator";
+import { getProviderWithSpecOnlyEnitityKindNoOperations } from "./test_data_factory";
 
 declare var process: {
     env: {
@@ -27,23 +25,7 @@ class Provider_DB_Mock implements Provider_DB {
     provider: Provider;
 
     constructor() {
-        const locationDataDescription = load(readFileSync(resolve(__dirname, "./location_kind_test_data.yml"), "utf-8"));
-        const name = Object.keys(locationDataDescription)[0];
-        const spec_only_kind: SpecOnlyEnitityKind = {
-            name,
-            name_plural: plural(name),
-            kind_structure: locationDataDescription,
-            validator_fn: {} as (entity: Entity) => boolean,
-            intentful_signatures: new Map(),
-            dependency_tree: new Map(),
-            procedures: new Map(),
-            differ: undefined,
-            semantic_validator_fn: undefined
-        };
-        const providerPrefix = "test_provider";
-        const providerVersion = "1";
-        const provider: Provider = { prefix: providerPrefix, version: providerVersion, kinds: [spec_only_kind] };
-        this.provider = provider;
+        this.provider = getProviderWithSpecOnlyEnitityKindNoOperations();
     }
 
     async register_provider(provider: Provider): Promise<void> {
@@ -64,7 +46,8 @@ class Provider_DB_Mock implements Provider_DB {
 }
 
 describe("API Docs Tests", () => {
-    const apiDocsGenerator = new ApiDocsGenerator(new Provider_DB_Mock());
+    const providerDbMock = new Provider_DB_Mock();
+    const apiDocsGenerator = new ApiDocsGenerator(providerDbMock);
     test("Validate API Docs agains OpenAPI spec", async (done) => {
         try {
             const apiDoc = await apiDocsGenerator.getApiDocs();
@@ -81,18 +64,18 @@ describe("API Docs Tests", () => {
     });
     test("API Docs should contain paths for CRUD", async (done) => {
         try {
+            const providerPrefix = providerDbMock.provider.prefix;
+            const entityName = providerDbMock.provider.kinds[0].name;
             const apiDoc = await apiDocsGenerator.getApiDocs();
-            expect(Object.keys(apiDoc.paths)).toContain("/provider/test_provider/Location");
-            const kindPath = apiDoc.paths["/provider/test_provider/Location"];
+            expect(Object.keys(apiDoc.paths)).toContain(`/entity/${providerPrefix}/${entityName}`);
+            const kindPath = apiDoc.paths[`/entity/${providerPrefix}/${entityName}`];
             expect(Object.keys(kindPath)).toContain("get");
             expect(Object.keys(kindPath)).toContain("post");
-            expect(Object.keys(apiDoc.paths)).toContain("/provider/test_provider/Location/{uuid}");
-            const kindEntityPath = apiDoc.paths["/provider/test_provider/Location/{uuid}"];
+            expect(Object.keys(apiDoc.paths)).toContain(`/entity/${providerPrefix}/${entityName}/{uuid}`);
+            const kindEntityPath = apiDoc.paths[`/entity/${providerPrefix}/${entityName}/{uuid}`];
             expect(Object.keys(kindEntityPath)).toContain("get");
             expect(Object.keys(kindEntityPath)).toContain("delete");
-            const kindEntityVersionPath = apiDoc.paths["/provider/test_provider/Location/{uuid}/{spec_version}"];
-            expect(Object.keys(kindEntityVersionPath)).toContain("put");
-            //expect(Object.keys(kindEntityVersionPath)).toContain("patch");
+            expect(Object.keys(kindEntityPath)).toContain("put");
             done();
         } catch (err) {
             done.fail(err);

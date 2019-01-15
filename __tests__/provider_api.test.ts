@@ -18,8 +18,8 @@ const providerApi = axios.create({
 
 describe("Provider API tests", () => {
     const providerPrefix = "test_provider";
-    const providerVersion = "1";
-    test("Non-existend route", done => {
+    const providerVersion = "0.1.0";
+    test("Non-existent route", done => {
         providerApi.delete(`/abc`).then(() => done.fail()).catch(() => done());
     });
     test("Register provider", done => {

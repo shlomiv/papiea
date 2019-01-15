@@ -13,6 +13,13 @@ declare var process: {
 };
 const serverPort = parseInt(process.env.SERVER_PORT || '3000');
 
+const settings = {
+    core: {
+        host: "127.0.0.1",
+        port: serverPort
+    }
+};
+
 const entityApi = axios.create({
     baseURL: `http://127.0.0.1:${serverPort}/entity`,
     timeout: 1000,
@@ -25,7 +32,7 @@ describe("Entity API tests", () => {
     const locationDataDescription = getLocationDataDescription();
     const kind_name = "Location";
     beforeAll(async () => {
-        const sdk = new ProviderSdk();
+        const sdk = ProviderSdk.create_sdk(settings);
         sdk.new_kind(locationDataDescription);
         sdk.version(providerVersion);
         sdk.prefix(providerPrefix);

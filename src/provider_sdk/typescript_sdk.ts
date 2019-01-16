@@ -4,18 +4,10 @@ import { Kind, Procedural_Execution_Strategy, Procedural_Signature, Provider, Sp
 import axios from "axios"
 import { plural } from "pluralize"
 import { Provider_Sdk_Settings } from "./typescript_sdk_settings";
-import * as http from "http";
 import * as express from "express";
 import * as asyncHandler from "express-async-handler";
 import { Express } from "express";
 import { Server } from "http";
-
-declare var process: {
-    env: {
-        SERVER_PORT: string
-    }
-};
-const serverPort = parseInt(process.env.SERVER_PORT || '3000');
 
 export class ProviderSdk implements ProviderImpl {
     private _version: Version | null;
@@ -161,7 +153,7 @@ export class ProviderSdk implements ProviderImpl {
         if (specified_kind_name === null) {
 
             //TODO: Static provider methods logic
-            throw Error("Unimplemented")
+            throw new Error("Unimplemented")
         }
         const kind_idx = this._kind.findIndex(kind => kind.name === specified_kind_name);
         if (kind_idx === -1) {
@@ -172,11 +164,15 @@ export class ProviderSdk implements ProviderImpl {
         const app = express();
         app.use(express.json());
         app.post(callback_url, asyncHandler(async (req, res) => {
-            await handler({} as ProceduralCtx, {
-                metadata: req.body.metadata,
-                spec: req.body.spec,
-                status: req.body.status
-            }, req.body.input);
+            try {
+                await handler({} as ProceduralCtx, {
+                    metadata: req.body.metadata,
+                    spec: req.body.spec,
+                    status: req.body.status
+                }, req.body.input);
+            } catch (e) {
+                throw new Error("Unable to execute handler")
+            }
         }));
         this._server = app;
     }

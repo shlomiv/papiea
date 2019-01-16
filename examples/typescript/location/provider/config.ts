@@ -2,7 +2,7 @@ import { load } from "js-yaml";
 import { readFileSync } from "fs";
 import { resolve } from "path";
 
-const location_json = load(readFileSync(resolve(__dirname + "/resources", "./location_kind_test_data.yml"), "utf-8"));
+const location_json = load(readFileSync(resolve(__dirname + "/resources", "./location.yml"), "utf-8"));
 
 export const location_provider_config = {
     provider: {

@@ -8,6 +8,6 @@
     "strict": true,
     "sourceMap": true
   },
-  "include": ["src"],
+  "include": ["src", "examples"],
   "exclude": ["node_modules", "**/__tests__/*"]
 }

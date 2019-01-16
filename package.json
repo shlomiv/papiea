@@ -10,7 +10,9 @@
     "dev": "./node_modules/nodemon/bin/nodemon.js",
     "test-watch": "jest --watchAll",
     "build-clj": "cd papiea-lib-clj && lein cljsbuild once",
-    "build-clj-auto": "cd papiea-lib-clj && lein cljsbuild auto"
+    "build-clj-auto": "cd papiea-lib-clj && lein cljsbuild auto",
+    "client": "ts-node examples/typescript/location/client/main.ts",
+    "provider": "ts-node examples/typescript/location/client/main.ts"
   },
   "author": "Shlomi Vaknin",
   "license": "ISC",

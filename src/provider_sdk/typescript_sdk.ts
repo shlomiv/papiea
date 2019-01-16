@@ -1,12 +1,9 @@
-import {
-    ProceduralCtx,
-    Provider as IProviderImpl,
-    Provider_Power
-} from "./typescript_sdk_interface";
-import { Data_Description, Entity, Provider_Callback_URL, Version } from "../core";
-import { Kind, Procedural_Execution_Strategy, Procedural_Signature, Provider, SpecOnlyEntityKind } from "../papiea";
+import { ProceduralCtx, Provider as ProviderImpl, Provider_Power } from "./typescript_sdk_interface";
+import { Data_Description, Entity, Version } from "../core";
+import { Kind, Procedural_Execution_Strategy, Provider, SpecOnlyEntityKind } from "../papiea";
 import axios from "axios"
 import { plural } from "pluralize"
+import { Provider_Sdk_Settings } from "./typescript_sdk_settings";
 
 declare var process: {
     env: {
@@ -15,31 +12,47 @@ declare var process: {
 };
 const serverPort = parseInt(process.env.SERVER_PORT || '3000');
 
-export class ProviderSdk implements IProviderImpl {
+export class ProviderSdk implements ProviderImpl {
     private _version: Version | null;
     private _prefix: string | null;
     private _kind: Kind[];
-    provider: Provider | null;
+    _provider: Provider | null;
+    papiea_url: string;
+    papiea_port: number;
 
 
-    constructor() {
+    constructor(papiea_url: string, papiea_port: number) {
         this._version = null;
         this._prefix = null;
         this._kind = [];
-        this.provider = null;
+        this._provider = null;
+        this.papiea_url = papiea_url;
+        this.papiea_port = papiea_port;
     }
 
-    new_kind(entity_yaml: Data_Description): Kind {
-        if (Object.keys(entity_yaml).length === 0) {
+    get provider() {
+        if (this._provider !== null) {
+            return this._provider
+        } else {
+            throw Error("Provider not created")
+        }
+    }
+
+    get entity_url(): string {
+        return `http://${this.papiea_url}:${this.papiea_port}/entity`
+    }
+
+    new_kind(entity_description: Data_Description): Kind {
+        if (Object.keys(entity_description).length === 0) {
             throw new Error("Wrong kind description specified")
         }
-        const name = Object.keys(entity_yaml)[0];
-        if (entity_yaml[name].hasOwnProperty("x-papiea-entity")) {
-            if (entity_yaml[name]["x-papiea-entity"] === "spec-only") {
+        const name = Object.keys(entity_description)[0];
+        if (entity_description[name].hasOwnProperty("x-papiea-entity")) {
+            if (entity_description[name]["x-papiea-entity"] === "spec-only") {
                 const spec_only_kind: SpecOnlyEntityKind = {
                     name,
                     name_plural: plural(name),
-                    kind_structure: entity_yaml,
+                    kind_structure: entity_description,
                     validator_fn: {} as (entity: Entity) => boolean,
                     intentful_signatures: new Map(),
                     dependency_tree: new Map(),
@@ -87,9 +100,9 @@ export class ProviderSdk implements IProviderImpl {
 
     async register(): Promise<void> {
         if (this._prefix !== null && this._version !== null && this._kind.length !== 0) {
-            this.provider = { kinds: [...this._kind], version: this._version, prefix: this._prefix };
+            this._provider = {kinds: [...this._kind], version: this._version, prefix: this._prefix};
             try {
-                await axios.post(`http://127.0.0.1:${ serverPort }/provider/`, this.provider)
+                await axios.post(`http://${this.papiea_url}:${this.papiea_port}/provider/`, this._provider)
                 //Do we set all fields to null again?
             } catch (err) {
                 throw err;
@@ -130,5 +143,9 @@ export class ProviderSdk implements IProviderImpl {
 
     static provider_description_error(missing_field: string) {
         throw new Error(`Malformed provider description. Missing: ${ missing_field }`)
+    }
+
+    static create_sdk(settings: Provider_Sdk_Settings): ProviderSdk {
+        return new ProviderSdk(settings.core.host, settings.core.port)
     }
 }

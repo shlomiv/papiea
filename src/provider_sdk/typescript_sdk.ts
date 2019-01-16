@@ -3,8 +3,8 @@ import {
     Provider as IProviderImpl,
     Provider_Power
 } from "./typescript_sdk_interface";
-import { Data_Description, Entity, Version } from "../core";
-import { Kind, Procedural_Execution_Strategy, Provider, SpecOnlyEntityKind } from "../papiea";
+import { Data_Description, Entity, Provider_Callback_URL, Version } from "../core";
+import { Kind, Procedural_Execution_Strategy, Procedural_Signature, Provider, SpecOnlyEntityKind } from "../papiea";
 import axios from "axios"
 import { plural } from "pluralize"
 
@@ -89,7 +89,7 @@ export class ProviderSdk implements IProviderImpl {
         if (this._prefix !== null && this._version !== null && this._kind.length !== 0) {
             this.provider = { kinds: [...this._kind], version: this._version, prefix: this._prefix };
             try {
-                await axios.post(`http://127.0.0.1:${serverPort}/provider/`, this.provider)
+                await axios.post(`http://127.0.0.1:${ serverPort }/provider/`, this.provider)
                 //Do we set all fields to null again?
             } catch (err) {
                 throw err;
@@ -104,12 +104,24 @@ export class ProviderSdk implements IProviderImpl {
     }
 
     procedure(name: string, rbac: any,
-        strategy: Procedural_Execution_Strategy,
-        input_desc: string,
-        output_desc: string,
-        handler: (ctx: ProceduralCtx, input: any) => any): void {
-        throw new Error("Unimplemented")
+              strategy: Procedural_Execution_Strategy,
+              input_desc: any,
+              output_desc: any,
+              handler: (ctx: ProceduralCtx, input: any) => any,
+              callback_url: Provider_Callback_URL,
+              specified_kind_name?: string): void {
+        const procedural_signature: Procedural_Signature = {
+            name,
+            argument: input_desc,
+            result: output_desc,
+            execution_strategy: strategy,
+            procedure_callback: callback_url
+        };
+        if (specified_kind_name === null) {
 
+            //TODO: Static provider methods logic
+            throw Error("Unimplemented")
+        }
     }
 
     power(state: Provider_Power): Provider_Power {
@@ -117,6 +129,6 @@ export class ProviderSdk implements IProviderImpl {
     }
 
     static provider_description_error(missing_field: string) {
-        throw new Error(`Malformed provider description. Missing: ${missing_field}`)
+        throw new Error(`Malformed provider description. Missing: ${ missing_field }`)
     }
 }

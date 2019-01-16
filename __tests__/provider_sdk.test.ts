@@ -5,7 +5,9 @@ import { resolve } from "path";
 import { ProviderSdk } from "../src/provider_sdk/typescript_sdk";
 // @ts-ignore
 import { plural } from "pluralize"
-import { Kind } from "../src/papiea";
+import { Kind, Procedural_Execution_Strategy, Procedural_Signature } from "../src/papiea";
+import { loadYaml } from "./test_data_factory";
+import axios from "axios"
 
 
 declare var process: {
@@ -15,6 +17,8 @@ declare var process: {
 };
 
 const serverPort = parseInt(process.env.SERVER_PORT || '3000');
+
+const procedure_callback = "http://127.0.0.1:9000";
 
 const settings = {
     core: {
@@ -139,6 +143,33 @@ describe("Provider Sdk tests", () => {
         } catch (e) {
             done.fail(e)
         }
+        done();
+    });
+    test("Provider with procedures should be created on papiea", async (done) => {
+        const sdk = ProviderSdk.create_sdk(settings);
+        sdk.new_kind(location_yaml);
+        sdk.version(provider_version);
+        sdk.prefix("location_provider");
+        const proceduralSignature: Procedural_Signature = {
+            name: "moveX",
+            argument: loadYaml("./procedure_move_input.yml"),
+            result: loadYaml("./location_kind_test_data.yml"),
+            execution_strategy: Procedural_Execution_Strategy.Halt_Intentful,
+            procedure_callback: procedure_callback
+        };
+        sdk.procedure(proceduralSignature.name, {}, proceduralSignature.execution_strategy, proceduralSignature.argument, proceduralSignature.result, procedure_callback, async (ctx, entity, input) => {
+            entity.spec.x += input;
+            axios.post(sdk.entity_url, {
+                spec: entity.spec,
+                metadata: entity.metadata
+            })
+        }, "Location");
+        try {
+            await sdk.register();
+        } catch (e) {
+            done.fail(e)
+        }
+        sdk.server.close();
         done();
     });
 });

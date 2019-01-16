@@ -15,7 +15,7 @@ function randomString(len: number) {
     return randomString;
 }
 
-function loadYaml(relativePath: string): any {
+export function loadYaml(relativePath: string): any {
     return load(readFileSync(resolve(__dirname, relativePath), "utf-8"));
 }
 

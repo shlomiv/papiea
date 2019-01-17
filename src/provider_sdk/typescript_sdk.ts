@@ -8,6 +8,7 @@ import * as express from "express";
 import * as asyncHandler from "express-async-handler";
 import { Express } from "express";
 import { Server } from "http";
+import * as url from "url";
 
 export class ProviderSdk implements ProviderImpl {
     private _version: Version | null;
@@ -162,16 +163,22 @@ export class ProviderSdk implements ProviderImpl {
         const found_kind = this._kind[kind_idx];
         found_kind.procedures[name] = procedural_signature;
         const app = express();
+        const path = url.parse(callback_url).pathname;
+        if (path === undefined) {
+            throw Error(`No path specified to start server: ${callback_url}`)
+        }
+        const request_path = path.toString();
         app.use(express.json());
-        app.post(callback_url, asyncHandler(async (req, res) => {
+        app.post(request_path, asyncHandler(async (req, res) => {
             try {
                 await handler({} as ProceduralCtx, {
                     metadata: req.body.metadata,
                     spec: req.body.spec,
                     status: req.body.status
                 }, req.body.input);
+                res.json("Ok");
             } catch (e) {
-                throw new Error("Unable to execute handler")
+                throw new Error("Unable to execute handler");
             }
         }));
         this._server = app;

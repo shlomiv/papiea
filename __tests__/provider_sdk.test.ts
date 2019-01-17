@@ -172,4 +172,102 @@ describe("Provider Sdk tests", () => {
         sdk.server.close();
         done();
     });
+    test("Provider with procedures with unknown kind should fail", async (done) => {
+        expect.assertions(1);
+        const sdk = ProviderSdk.create_sdk(settings);
+        sdk.new_kind(location_yaml);
+        sdk.version(provider_version);
+        sdk.prefix("location_provider");
+        const proceduralSignature: Procedural_Signature = {
+            name: "moveX",
+            argument: loadYaml("./procedure_move_input.yml"),
+            result: loadYaml("./location_kind_test_data.yml"),
+            execution_strategy: Procedural_Execution_Strategy.Halt_Intentful,
+            procedure_callback: procedure_callback
+        };
+        try {
+            sdk.procedure(proceduralSignature.name, {}, proceduralSignature.execution_strategy, proceduralSignature.argument, proceduralSignature.result, procedure_callback, async (ctx, entity, input) => {
+                entity.spec.x += input;
+                axios.post(sdk.entity_url, {
+                    spec: entity.spec,
+                    metadata: entity.metadata
+                })
+            }, "unknown_kind");
+        } catch (e) {
+            expect(e.message).toBe("Kind not found");
+            done();
+        }
+    });
+    test("Entity should be allowed to be modified using procedures defined using provider SDK", async (done) => {
+        const sdk = ProviderSdk.create_sdk(settings);
+        sdk.new_kind(location_yaml);
+        sdk.version(provider_version);
+        sdk.prefix("location_provider");
+        const proceduralSignature: Procedural_Signature = {
+            name: "moveX",
+            argument: loadYaml("./procedure_move_input.yml"),
+            result: loadYaml("./location_kind_test_data.yml"),
+            execution_strategy: Procedural_Execution_Strategy.Halt_Intentful,
+            procedure_callback: procedure_callback
+        };
+        sdk.procedure(proceduralSignature.name, {}, proceduralSignature.execution_strategy, proceduralSignature.argument, proceduralSignature.result, procedure_callback, async (ctx, entity, input) => {
+            entity.spec.x += input;
+            axios.put(`${ sdk.entity_url }/location_provider/${ entity.metadata.kind }/${ entity.metadata.uuid }`, {
+                spec: entity.spec,
+                metadata: entity.metadata
+            })
+        }, "Location");
+        await sdk.register();
+        const kind_name = sdk.provider.kinds[0].name;
+        const { data: { metadata, spec } } = await axios.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ kind_name }`, {
+            spec: {
+                x: 10,
+                y: 11
+            }
+        });
+        try {
+            const res: any = await axios.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ kind_name }/${ metadata.uuid }/procedure/moveX`, { input: 5 });
+            const updatedEntity: any = await axios.get(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ kind_name }/${ metadata.uuid }`);
+            expect(updatedEntity.data.metadata.spec_version).toEqual(2);
+            expect(updatedEntity.data.spec.x).toEqual(15);
+        } catch (e) {
+            done.fail(e);
+        } finally {
+            sdk.server.close();
+        }
+        done();
+    });
+    test("Malformed handler registered on sdk should fail", async (done) => {
+        const sdk = ProviderSdk.create_sdk(settings);
+        sdk.new_kind(location_yaml);
+        sdk.version(provider_version);
+        sdk.prefix("location_provider");
+        const proceduralSignature: Procedural_Signature = {
+            name: "moveX",
+            argument: loadYaml("./procedure_move_input.yml"),
+            result: loadYaml("./location_kind_test_data.yml"),
+            execution_strategy: Procedural_Execution_Strategy.Halt_Intentful,
+            procedure_callback: procedure_callback
+        };
+        sdk.procedure(proceduralSignature.name, {}, proceduralSignature.execution_strategy, proceduralSignature.argument, proceduralSignature.result, procedure_callback, async (ctx, entity, input) => {
+
+            throw new Error("Malformed provider")
+
+        }, "Location");
+        await sdk.register();
+        const kind_name = sdk.provider.kinds[0].name;
+        const { data: { metadata, spec } } = await axios.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ kind_name }`, {
+            spec: {
+                x: 10,
+                y: 11
+            }
+        });
+        try {
+            const res: any = await axios.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ kind_name }/${ metadata.uuid }/procedure/moveX`, { input: 5 });
+        } catch (e) {
+            done();
+        } finally {
+            sdk.server.close();
+        }
+    });
 });

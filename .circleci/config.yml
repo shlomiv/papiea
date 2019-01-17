@@ -5,8 +5,7 @@ jobs:
       - image: circleci/node:10
 
     steps:
-      - setup_remote_docker:
-          docker_layer_caching: true
+      - setup_remote_docker
 
       - checkout
 

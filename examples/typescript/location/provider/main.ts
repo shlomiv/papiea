@@ -9,8 +9,7 @@ async function main() {
     const sdk = ProviderSdk.create_sdk(papiea_config);
 
     //Register provider with SDK
-    await register_provider(sdk, location_provider_config.provider.kind_description, location_provider_config.provider.version, location_provider_config.provider.prefix);
-
+    await register_provider(sdk, location_provider_config);
 }
 
 main().then().catch(err => {

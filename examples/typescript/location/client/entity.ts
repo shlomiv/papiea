@@ -21,3 +21,7 @@ export async function update_entity(prefix: string, kind_name: string, request_s
 export async function delete_entity(prefix: string, kind_name: string, request_metadata: Metadata, entity_url: string): Promise<void> {
     await axios.delete(`${ entity_url }/${ prefix }/${ kind_name }/${ request_metadata.uuid }`);
 }
+
+export async function invoker_procedure(prefix: string, kind_name: string, procedure_name: string, input: any, request_metadata: Metadata, entity_url: string) {
+    await axios.post(`${ entity_url }/${ prefix }/${ kind_name }/${ request_metadata.uuid }/procedure/${procedure_name}`, { input: input });
+}

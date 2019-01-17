@@ -1,4 +1,4 @@
-import { create_entity, delete_entity, update_entity } from "./entity";
+import { create_entity, delete_entity, invoker_procedure, update_entity } from "./entity";
 import { location_entity_config, provider_config } from "./config";
 
 async function main() {
@@ -7,6 +7,9 @@ async function main() {
 
     //Update entity on provider with kind
     await update_entity(provider_config.prefix, provider_config.kind_name, location_entity_config.entity.update_spec, metadata, provider_config.entity_url);
+
+    //Invoke procedure that moves X by value of input
+    await invoker_procedure(provider_config.prefix, provider_config.kind_name, provider_config.procedure_name, location_entity_config.entity.procedure_input, metadata, provider_config.entity_url);
 
     //Delete entity on provider with kind
     await delete_entity(provider_config.prefix, provider_config.kind_name, metadata, provider_config.entity_url);

@@ -8,7 +8,8 @@ export const papiea_config = {
 export const provider_config = {
     prefix: "location_provider",
     kind_name: "Location",
-    entity_url: `http://${papiea_config.core.host}:${papiea_config.core.port}/entity`
+    entity_url: `http://${papiea_config.core.host}:${papiea_config.core.port}/entity`,
+    procedure_name: "moveX"
 };
 
 export const location_entity_config = {
@@ -20,6 +21,7 @@ export const location_entity_config = {
         update_spec: {
             x: 100,
             y: 200
-        }
+        },
+        procedure_input: 5
     },
 };

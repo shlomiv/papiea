@@ -6,7 +6,13 @@
     "declaration": true,
     "outDir": "./build",
     "strict": true,
-    "sourceMap": true
+    "sourceMap": true,
+    "baseUrl": ".",
+    "paths": {
+      "*": [
+        "./src/@types/*"
+      ]
+    }
   },
   "include": ["src", "examples"],
   "exclude": ["node_modules", "**/__tests__/*"]

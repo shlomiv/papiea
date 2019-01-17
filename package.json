@@ -12,7 +12,7 @@
     "build-clj": "cd papiea-lib-clj && lein cljsbuild once",
     "build-clj-auto": "cd papiea-lib-clj && lein cljsbuild auto",
     "client": "ts-node examples/typescript/location/client/main.ts",
-    "provider": "ts-node examples/typescript/location/client/main.ts"
+    "provider": "ts-node examples/typescript/location/provider/main.ts"
   },
   "author": "Shlomi Vaknin",
   "license": "ISC",

@@ -6,16 +6,19 @@ import { Kind, Procedural_Signature } from "../papiea";
 import { Entity_Reference, Metadata, Spec, uuid4 } from "../core";
 import uuid = require("uuid");
 import { EntityApiInterface } from "./entity_api_interface";
+import { Validator } from "../validator";
 
 export class EntityAPI implements EntityApiInterface {
     private status_db: Status_DB;
     private spec_db: Spec_DB;
     private provider_db: Provider_DB;
+    private validator: Validator;
 
-    constructor(status_db: Status_DB, spec_db: Spec_DB, provider_db: Provider_DB) {
+    constructor(status_db: Status_DB, spec_db: Spec_DB, provider_db: Provider_DB, validator: Validator) {
         this.status_db = status_db;
         this.spec_db = spec_db;
         this.provider_db = provider_db;
+        this.validator = validator;
     }
 
     async get_kind(prefix: string, kind: string): Promise<Kind> {
@@ -60,6 +63,10 @@ export class EntityAPI implements EntityApiInterface {
         if (procedure === undefined) {
             throw new Error(`Procedure ${procedure_name} not found for kind ${kind.name}`);
         }
+        const schemas:any = {};
+        Object.assign(schemas, procedure.argument);
+        Object.assign(schemas, procedure.result);
+        this.validator.validate(input, Object.values(procedure.argument)[0], schemas);
         const providerApi = axios.create({
             baseURL: procedure.procedure_callback,
             timeout: 1000,

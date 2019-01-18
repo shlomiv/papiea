@@ -27,6 +27,7 @@ describe("Procedures tests", () => {
     const hostname = '127.0.0.1';
     const port = 9001;
     const provider: Provider = getProviderWithSpecOnlyEnitityKindWithOperations(`http://${hostname}:${port}/`);
+    const kind_name = provider.kinds[0].name;
 
     beforeAll(async () => {
         await providerApi.post('/', provider);
@@ -48,7 +49,7 @@ describe("Procedures tests", () => {
                     post.spec.x += post.input;
                     entityApi.put(`/${provider.prefix}/${kind_name}/${post.metadata.uuid}`, {
                         spec: post.spec,
-                        metadata: post.metadata  
+                        metadata: post.metadata
                     }).then(() => {
                         res.statusCode = 200;
                         res.setHeader('Content-Type', 'text/plain');
@@ -63,7 +64,6 @@ describe("Procedures tests", () => {
         server.listen(port, hostname, () => {
             console.log(`Server running at http://${hostname}:${port}/`);
         });
-        const kind_name = provider.kinds[0].name;
         const { data: { metadata, spec } } = await entityApi.post(`/${provider.prefix}/${kind_name}`, {
             spec: {
                 x: 10,
@@ -75,5 +75,42 @@ describe("Procedures tests", () => {
         expect(updatedEntity.data.metadata.spec_version).toEqual(2);
         expect(updatedEntity.data.spec.x).toEqual(15);
         done();
+    });
+    test("Procedure input validation", async (done) => {
+        const { data: { metadata, spec } } = await entityApi.post(`/${provider.prefix}/${kind_name}`, {
+            spec: {
+                x: 10,
+                y: 11
+            }
+        });
+        try {
+            await entityApi.post(`/${provider.prefix}/${kind_name}/${metadata.uuid}/procedure/moveX`, { input: "5" });
+        } catch (err) {
+            const res = err.response;
+            expect(res.status).toEqual(400);
+            expect(res.data.errors.length).toEqual(1);
+            done();
+            return;
+        }
+        done.fail();
+    });
+    test("Procedure empty input", async (done) => {
+        const { data: { metadata, spec } } = await entityApi.post(`/${provider.prefix}/${kind_name}`, {
+            spec: {
+                x: 10,
+                y: 11
+            }
+        });
+        try {
+            await entityApi.post(`/${provider.prefix}/${kind_name}/${metadata.uuid}/procedure/moveX`, {});
+        } catch (err) {
+            const res = err.response;
+            expect(res.status).toEqual(400);
+            expect(res.data.errors.length).toEqual(1);
+            expect(res.data.errors[0].includes("undefined")).toBeTruthy();
+            done();
+            return;
+        }
+        done.fail();
     });
 });

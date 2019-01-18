@@ -6,6 +6,7 @@ import { Provider_API_Impl } from "./provider/provider_api_impl";
 import { MongoConnection } from "./databases/mongo";
 import { createEntityRoutes } from "./entity/entity_routes";
 import { EntityAPI } from "./entity/entity_api_impl";
+import { Validator } from "./validator";
 
 declare var process: {
     env: {
@@ -26,12 +27,18 @@ async function setUpApplication(): Promise<express.Express> {
     const providerDb = await mongoConnection.get_provider_db();
     const specDb = await mongoConnection.get_spec_db();
     const statusDb = await mongoConnection.get_status_db();
+    const validator = new Validator();
     app.use('/provider', createProviderAPIRouter(new Provider_API_Impl(providerDb, statusDb)));
-    app.use('/entity', createEntityRoutes(new EntityAPI(statusDb, specDb, providerDb)));
+    app.use('/entity', createEntityRoutes(new EntityAPI(statusDb, specDb, providerDb, validator)));
     app.use('/api-docs', createAPIDocsRouter('/api-docs', new ApiDocsGenerator(providerDb)));
     app.use(function (err: any, req: any, res: any, next: any) {
         if (res.headersSent) {
             return next(err);
+        }
+        if (err.type === "ValidationError") {
+            res.status(400);
+            res.json({ errors: err.errors });
+            return;
         }
         res.status(500);
         console.error(err);

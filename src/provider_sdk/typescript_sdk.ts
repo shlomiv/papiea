@@ -1,5 +1,5 @@
 import { ProceduralCtx_Interface, Provider as ProviderImpl, Provider_Power } from "./typescript_sdk_interface";
-import { Data_Description, Entity, Provider_Callback_URL, Version } from "../core";
+import { Data_Description, Entity, Version } from "../core";
 import { Kind, Procedural_Execution_Strategy, Procedural_Signature, Provider, SpecOnlyEntityKind } from "../papiea";
 import axios from "axios"
 import { plural } from "pluralize"

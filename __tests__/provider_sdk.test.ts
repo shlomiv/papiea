@@ -152,10 +152,11 @@ describe("Provider Sdk tests", () => {
         };
         sdk.procedure(proceduralSignature.name, {}, proceduralSignature.execution_strategy, proceduralSignature.argument, proceduralSignature.result, async (ctx, entity, input) => {
             entity.spec.x += input;
-            axios.post(sdk.entity_url, {
+            const res = await axios.put(ctx.url_for(entity), {
                 spec: entity.spec,
                 metadata: entity.metadata
-            })
+            });
+            return res.data;
         }, "Location");
         try {
             await sdk.register();
@@ -181,10 +182,11 @@ describe("Provider Sdk tests", () => {
         try {
             sdk.procedure(proceduralSignature.name, {}, proceduralSignature.execution_strategy, proceduralSignature.argument, proceduralSignature.result, async (ctx, entity, input) => {
                 entity.spec.x += input;
-                axios.post(sdk.entity_url, {
+                const res = await axios.put(ctx.url_for(entity), {
                     spec: entity.spec,
                     metadata: entity.metadata
-                })
+                });
+                return res.data;
             }, "unknown_kind");
         } catch (e) {
             expect(e.message).toBe("Kind not found");
@@ -205,10 +207,11 @@ describe("Provider Sdk tests", () => {
         };
         sdk.procedure(proceduralSignature.name, {}, proceduralSignature.execution_strategy, proceduralSignature.argument, proceduralSignature.result, async (ctx, entity, input) => {
             entity.spec.x += input;
-            axios.put(`${ sdk.entity_url }/location_provider/${ entity.metadata.kind }/${ entity.metadata.uuid }`, {
+            const res = await axios.put(ctx.url_for(entity), {
                 spec: entity.spec,
                 metadata: entity.metadata
-            })
+            });
+            return res.data;
         }, "Location");
         await sdk.register();
         const kind_name = sdk.provider.kinds[0].name;
@@ -219,7 +222,6 @@ describe("Provider Sdk tests", () => {
             }
         });
         try {
-            console.log("Here");
             const res: any = await axios.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ kind_name }/${ metadata.uuid }/procedure/moveX`, { input: 5 });
             const updatedEntity: any = await axios.get(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ kind_name }/${ metadata.uuid }`);
             expect(updatedEntity.data.metadata.spec_version).toEqual(2);

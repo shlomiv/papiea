@@ -9,7 +9,8 @@ async function main() {
     await update_entity(provider_config.prefix, provider_config.kind_name, location_entity_config.entity.update_spec, metadata, provider_config.entity_url);
 
     //Invoke procedure that moves X by value of input
-    await invoker_procedure(provider_config.prefix, provider_config.kind_name, provider_config.procedure_name, location_entity_config.entity.procedure_input, metadata, provider_config.entity_url);
+    const res = await invoker_procedure(provider_config.prefix, provider_config.kind_name, provider_config.procedure_name, location_entity_config.entity.procedure_input, metadata, provider_config.entity_url);
+    console.log(res);
 
     //Delete entity on provider with kind
     await delete_entity(provider_config.prefix, provider_config.kind_name, metadata, provider_config.entity_url);

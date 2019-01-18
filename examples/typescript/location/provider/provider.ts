@@ -19,12 +19,13 @@ export async function register_provider(sdk: ProviderSdk, cfg: any): Promise<Pro
     };
 
     //Registers a procedures on papiea instance
-    sdk.procedure(proceduralSignature.name, {}, proceduralSignature.execution_strategy, proceduralSignature.argument, proceduralSignature.result, cfg.procedures.moveX.callback, async (ctx, entity, input) => {
+    sdk.procedure(proceduralSignature.name, {}, proceduralSignature.execution_strategy, proceduralSignature.argument, proceduralSignature.result,  async (ctx, entity, input) => {
         entity.spec.x += input;
-        axios.put(`${ sdk.entity_url }/location_provider/${ entity.metadata.kind }/${ entity.metadata.uuid }`, {
+        const res = await axios.put(ctx.url_for(entity), {
             spec: entity.spec,
             metadata: entity.metadata
-        })
+        });
+        return res.data;
     }, "Location");
 
     try {

@@ -1,14 +1,13 @@
-import { ProceduralCtx, Provider as ProviderImpl, Provider_Power } from "./typescript_sdk_interface";
+import { ProceduralCtx_Interface, Provider as ProviderImpl, Provider_Power } from "./typescript_sdk_interface";
 import { Data_Description, Entity, Provider_Callback_URL, Version } from "../core";
 import { Kind, Procedural_Execution_Strategy, Procedural_Signature, Provider, SpecOnlyEntityKind } from "../papiea";
 import axios from "axios"
 import { plural } from "pluralize"
-import { Provider_Sdk_Settings } from "./typescript_sdk_settings";
 import * as express from "express";
 import * as asyncHandler from "express-async-handler";
 import { Express } from "express";
 import { Server } from "http";
-import * as url from "url";
+import { ProceduralCtx } from "./typescript_sdk_context_impl";
 
 export class ProviderSdk implements ProviderImpl {
     private _version: Version | null;
@@ -18,18 +17,20 @@ export class ProviderSdk implements ProviderImpl {
     papiea_url: string;
     papiea_port: number;
     private _port: number;
+    private _host: string;
     private _server: null | Express;
     private _running: null | Server;
 
 
-    constructor(papiea_url: string, papiea_port: number) {
+    constructor(papiea_url: string, papiea_port: number, public_host = "127.0.0.1", public_port = 9000) {
         this._version = null;
         this._prefix = null;
         this._kind = [];
         this._provider = null;
         this.papiea_url = papiea_url;
         this.papiea_port = papiea_port;
-        this._port = 9000;
+        this._port = public_port;
+        this._host = public_host;
         this._server = null;
         this._running = null;
     }
@@ -44,6 +45,14 @@ export class ProviderSdk implements ProviderImpl {
 
     get entity_url(): string {
         return `http://${ this.papiea_url }:${ this.papiea_port }/entity`
+    }
+
+    private get_prefix(): string {
+        if (this._prefix !== null) {
+            return this._prefix
+        } else {
+            throw new Error("Prefix is not set")
+        }
     }
 
     get server(): Server {
@@ -115,7 +124,6 @@ export class ProviderSdk implements ProviderImpl {
             this._provider = { kinds: [...this._kind], version: this._version, prefix: this._prefix };
             try {
                 await axios.post(`http://${ this.papiea_url }:${ this.papiea_port }/provider/`, this._provider);
-                //Do we set all fields to null again?
                 if (this._server !== null) {
                     this._running = this._server.listen(this._port, () => {
                         console.log(`Server running at http://localhost:${ this._port }/`);
@@ -133,17 +141,13 @@ export class ProviderSdk implements ProviderImpl {
         }
     }
 
-    setServerPort(port: number) {
-        this._port = port;
-    }
-
     procedure(name: string, rbac: any,
               strategy: Procedural_Execution_Strategy,
               input_desc: any,
               output_desc: any,
-              callback_url: Provider_Callback_URL,
-              handler: (ctx: ProceduralCtx, entity: Entity, input: any) => Promise<any>,
+              handler: (ctx: ProceduralCtx_Interface, entity: Entity, input: any) => Promise<any>,
               specified_kind_name?: string): void {
+        const callback_url = `http://${this._host}:${this._port}${"/" + name}`;
         const procedural_signature: Procedural_Signature = {
             name,
             argument: input_desc,
@@ -162,26 +166,30 @@ export class ProviderSdk implements ProviderImpl {
         }
         const found_kind = this._kind[kind_idx];
         found_kind.procedures[name] = procedural_signature;
-        const app = express();
-        const path = url.parse(callback_url).pathname;
-        if (path === undefined) {
-            throw Error(`No path specified to start server: ${callback_url}`)
+        let app: Express;
+        if (this._server !== null) {
+            app = this._server;
+        } else {
+            app = express();
+            app.use(express.json());
+            this._server = app;
         }
-        const request_path = path.toString();
-        app.use(express.json());
-        app.post(request_path, asyncHandler(async (req, res) => {
+        if (this._prefix === null) {
+            throw new Error("Provider prefix is not set")
+        }
+        app.post("/" + name, asyncHandler(async (req, res) => {
             try {
-                await handler({} as ProceduralCtx, {
+                const result = await handler(new ProceduralCtx(this.entity_url, this.get_prefix()), {
                     metadata: req.body.metadata,
                     spec: req.body.spec,
                     status: req.body.status
                 }, req.body.input);
-                res.json("Ok");
+                res.json(result);
             } catch (e) {
+                console.error(e);
                 throw new Error("Unable to execute handler");
             }
         }));
-        this._server = app;
     }
 
     power(state: Provider_Power): Provider_Power {
@@ -192,7 +200,7 @@ export class ProviderSdk implements ProviderImpl {
         throw new Error(`Malformed provider description. Missing: ${ missing_field }`)
     }
 
-    static create_sdk(settings: Provider_Sdk_Settings): ProviderSdk {
-        return new ProviderSdk(settings.core.host, settings.core.port)
+    static create_sdk(papiea_host: string, papiea_port: number, public_host?: string, public_port?: number): ProviderSdk {
+        return new ProviderSdk(papiea_host, papiea_port, public_host, public_port)
     }
 }

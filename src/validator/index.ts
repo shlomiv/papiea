@@ -2,7 +2,7 @@ const SwggerModelValidator = require('swagger-model-validator');
 
 export class ValidationError extends Error {
     type: string;
-    errors: any;
+    errors: Array<string>;
 
     constructor(errors: Array<Error>) {
         const messages = errors.map(x => x.message);

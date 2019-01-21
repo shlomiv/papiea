@@ -3,7 +3,7 @@ import { Status_DB } from "../databases/status_db_interface";
 import { Spec_DB } from "../databases/spec_db_interface";
 import { Provider_DB } from "../databases/provider_db_interface";
 import { Kind, Procedural_Signature } from "../papiea";
-import { Entity_Reference, Metadata, Spec, uuid4 } from "../core";
+import { Data_Description, Entity, Entity_Reference, Metadata, Spec, uuid4 } from "../core";
 import uuid = require("uuid");
 import { EntityApiInterface } from "./entity_api_interface";
 import * as url from "url";
@@ -64,21 +64,22 @@ export class EntityAPI implements EntityApiInterface {
         if (procedure === undefined) {
             throw new Error(`Procedure ${ procedure_name } not found for kind ${ kind.name }`);
         }
-        const { data } = await axios.post(procedure.procedure_callback, {
-        const schemas:any = {};
+        const schemas: any = {};
         Object.assign(schemas, procedure.argument);
         Object.assign(schemas, procedure.result);
         this.validator.validate(input, Object.values(procedure.argument)[0], schemas);
-        const providerApi = axios.create({
-            baseURL: procedure.procedure_callback,
-            timeout: 1000,
-            headers: { 'Content-Type': 'application/json' }
-        });
-        const { data } = await providerApi.post('/', {
+        const { data } = await axios.post(procedure.procedure_callback, {
             metadata: entity_data[0],
             spec: entity_data[1],
             input: input
         });
         return data;
+    }
+
+    validate_entity(entity: Entity, kind_structure: Data_Description) {
+        const schemas: any = Object.assign({}, kind_structure);
+        const spec = entity.spec;
+        this.validator.validate(spec, Object.values(kind_structure)[0], schemas);
+        //TODO: Validate status
     }
 }

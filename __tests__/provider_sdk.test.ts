@@ -266,4 +266,31 @@ describe("Provider Sdk tests", () => {
             sdk.server.close();
         }
     });
+
+    test("Registering Provider procedures without prefix already set should fail", async (done) => {
+        expect.assertions(1);
+        const sdk = ProviderSdk.create_sdk(papiea_config.host, papiea_config.port, server_config.host, server_config.port);
+        sdk.new_kind(location_yaml);
+        sdk.version(provider_version);
+        const proceduralSignature: Procedural_Signature = {
+            name: "moveX",
+            argument: loadYaml("./procedure_move_input.yml"),
+            result: loadYaml("./location_kind_test_data.yml"),
+            execution_strategy: Procedural_Execution_Strategy.Halt_Intentful,
+            procedure_callback: procedure_callback
+        };
+        try {
+            sdk.procedure(proceduralSignature.name, {}, proceduralSignature.execution_strategy, proceduralSignature.argument, proceduralSignature.result, async (ctx, entity, input) => {
+                entity.spec.x += input;
+                const res = await axios.put(ctx.url_for(entity), {
+                    spec: entity.spec,
+                    metadata: entity.metadata
+                });
+                return res.data;
+            }, "Location");
+        } catch (e) {
+            expect(e.message).toBe("Provider prefix is not set");
+            done();
+        }
+    });
 });

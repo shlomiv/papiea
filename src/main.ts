@@ -6,7 +6,7 @@ import { Provider_API_Impl } from "./provider/provider_api_impl";
 import { MongoConnection } from "./databases/mongo";
 import { createEntityRoutes } from "./entity/entity_routes";
 import { EntityAPI } from "./entity/entity_api_impl";
-import { Validator } from "./validator";
+import { ValidationError, Validator } from "./validator";
 
 declare var process: {
     env: {
@@ -35,7 +35,7 @@ async function setUpApplication(): Promise<express.Express> {
         if (res.headersSent) {
             return next(err);
         }
-        if (err.type === "ValidationError") {
+        if (err instanceof  ValidationError) {
             res.status(400);
             res.json({ errors: err.errors });
             return;

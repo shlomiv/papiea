@@ -3,7 +3,7 @@ import { readFileSync } from "fs";
 import { resolve } from "path";
 
 const location_json = load(readFileSync(resolve(__dirname + "/resources", "./location.yml"), "utf-8"));
-const input_json = load(readFileSync(resolve(__dirname + "/resources", "./location.yml"), "utf-8"));
+const input_json = load(readFileSync(resolve(__dirname + "/resources", "./moveX.yml"), "utf-8"));
 
 export const papiea_config = {
     host: "127.0.0.1",

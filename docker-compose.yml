@@ -2,7 +2,7 @@ version: '3'
 services:
         server:
                 build: .
-                image: quantumobile/papiea:1545645693
+                image: quantumobile/papiea:1547818823
                 volumes:
                         - ./:/code
                 depends_on:

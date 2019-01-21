@@ -1,6 +1,3 @@
-FROM quantumobile/papiea:1545645693
+FROM quantumobile/papiea:1547818823
 
 COPY . /code
-
-RUN npm install
-RUN npm run build-clj

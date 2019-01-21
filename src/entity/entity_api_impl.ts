@@ -76,10 +76,8 @@ export class EntityAPI implements EntityApiInterface {
         return data;
     }
 
-    validate_entity(entity: Entity, kind_structure: Data_Description) {
+    validate_spec(spec: Spec, kind_structure: Data_Description) {
         const schemas: any = Object.assign({}, kind_structure);
-        const spec = entity.spec;
         this.validator.validate(spec, Object.values(kind_structure)[0], schemas);
-        //TODO: Validate status
     }
 }

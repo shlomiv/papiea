@@ -1,7 +1,7 @@
-import {Provider_DB} from "./provider_db_interface";
-import {Provider} from "../papiea";
-import {Db, Collection} from "mongodb"
-import {Version} from "../core";
+import { Provider_DB } from "./provider_db_interface";
+import { Provider } from "../papiea";
+import { Db, Collection } from "mongodb"
+import { Version } from "../core";
 
 export class Provider_DB_Mongo implements Provider_DB {
     collection: Collection;
@@ -14,7 +14,7 @@ export class Provider_DB_Mongo implements Provider_DB {
         try {
             await this.collection.createIndex({
                 "prefix": 1
-            }, {name: "prefix", unique: true});
+            }, { name: "prefix", unique: true });
         } catch (err) {
             throw err;
         }
@@ -30,18 +30,18 @@ export class Provider_DB_Mongo implements Provider_DB {
             upsert: true
         });
         if (result.result.n !== 1) {
-            throw new Error(`Amount of updated entries doesn't equal to 1: ${result.result.n}`)
+            throw new Error(`Amount of updated entries doesn't equal to 1: ${ result.result.n }`)
         }
     }
 
     async get_provider(provider_prefix: string, version?: Version): Promise<Provider> {
-        const filter: any = {prefix: provider_prefix};
+        const filter: any = { prefix: provider_prefix };
         if (version !== undefined) {
             filter.version = version;
         }
         const provider: Provider | null = await this.collection.findOne(filter);
         if (provider === null) {
-            throw new Error(`Provider with prefix ${provider_prefix} not found`);
+            throw new Error(`Provider with prefix ${ provider_prefix } not found`);
         } else {
             return provider;
         }
@@ -52,7 +52,7 @@ export class Provider_DB_Mongo implements Provider_DB {
     }
 
     async delete_provider(provider_prefix: string, version: Version): Promise<void> {
-        const result = await this.collection.deleteOne({"prefix": provider_prefix, version});
+        const result = await this.collection.deleteOne({ "prefix": provider_prefix, version });
         if (result.result.n !== 1) {
             throw new Error("Amount of entities deleted is not 1");
         }
@@ -60,5 +60,14 @@ export class Provider_DB_Mongo implements Provider_DB {
             throw new Error("Failed to remove provider");
         }
         return;
+    }
+
+    async get_provider_by_kind(kind_name: string): Promise<Provider> {
+        const provider = await this.collection.findOne({ "kinds.name": kind_name });
+        if (provider === null) {
+            throw new Error(`Provider with kind ${ kind_name } not found`);
+        } else {
+            return provider;
+        }
     }
 }

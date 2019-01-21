@@ -19,7 +19,7 @@ export function createEntityRoutes(entity_api: EntityAPI): Router {
 
     const validate_kind_middleware = asyncHandler(async (req, res, next) => {
         const kind: Kind = req.params.entity_kind;
-        entity_api.validate_entity({status: req.body.status, spec: req.body.spec, metadata: req.body.metadata}, kind.kind_structure);
+        entity_api.validate_spec(req.body.spec, kind.kind_structure);
         next();
     });
 

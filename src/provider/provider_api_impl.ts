@@ -10,7 +10,7 @@ import { Validator } from "../validator";
 export class Provider_API_Impl implements Provider_API {
     providerDb: Provider_DB;
     statusDb: Status_DB;
-    private readonly validator: Validator;
+    private validator: Validator;
 
     constructor(providerDb: Provider_DB, statusDb: Status_DB) {
         this.providerDb = providerDb;
@@ -44,7 +44,7 @@ export class Provider_API_Impl implements Provider_API {
         return this.providerDb.get_provider_by_kind(kind_name)
     }
 
-    async validate_status(status: Status, kind_structure: Data_Description) {
+    validate_status(status: Status, kind_structure: Data_Description) {
         const schemas: any = Object.assign({}, kind_structure);
         this.validator.validate(status, Object.values(kind_structure)[0], schemas);
     }

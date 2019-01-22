@@ -6,12 +6,13 @@ import { Kind, Provider } from "../papiea";
 export default function createProviderAPIRouter(providerApi: Provider_API) {
     const providerApiRouter = express.Router();
 
-    const provider_validate_status_middleware =  asyncHandler(async (req, res, next) => {
+    const provider_validate_status_middleware = asyncHandler(async (req, res, next) => {
         const provider: Provider = await providerApi.get_provider_by_kind(req.body.entity_ref.kind);
-        const kind = provider.kinds.find(kind => kind === req.body.entity_ref.kind);
+        const kind = provider.kinds.find(kind => kind.name === req.body.entity_ref.kind);
         if (kind === undefined) {
             throw new Error("Kind not found");
         }
+        // throw new Error("This");
         providerApi.validate_status(req.body.status, kind.kind_structure);
         next();
     });
@@ -26,7 +27,7 @@ export default function createProviderAPIRouter(providerApi: Provider_API) {
         res.json("OK")
     }));
 
-    providerApiRouter.post('/update_status', asyncHandler(async (req, res) => {
+    providerApiRouter.post('/update_status', provider_validate_status_middleware, asyncHandler(async (req, res) => {
         await providerApi.update_status(req.body.context, req.body.entity_ref, req.body.status);
         res.json("OK")
     }));

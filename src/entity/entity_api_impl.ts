@@ -9,13 +9,11 @@ import { EntityApiInterface } from "./entity_api_interface";
 import { Validator } from "../validator";
 
 export class ProcedureInvocationError extends Error {
-    type: string;
-    errors: Array<string>;
+    errors: string[];
 
-    constructor(errors: Array<string>) {
+    constructor(errors: string[]) {
         super(JSON.stringify(errors));
         Object.setPrototypeOf(this, ProcedureInvocationError.prototype);
-        this.type = "ProcedureInvocationError";
         this.errors = errors;
     }
 }

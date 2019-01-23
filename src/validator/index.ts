@@ -1,14 +1,12 @@
 const SwggerModelValidator = require('swagger-model-validator');
 
 export class ValidationError extends Error {
-    type: string;
-    errors: Array<string>;
+    errors: string[];
 
-    constructor(errors: Array<Error>) {
+    constructor(errors: Error[]) {
         const messages = errors.map(x => x.message);
         super(JSON.stringify(messages));
         Object.setPrototypeOf(this, ValidationError.prototype);
-        this.type = "ValidationError";
         this.errors = messages;
     }
 }

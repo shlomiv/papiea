@@ -12,7 +12,6 @@ export default function createProviderAPIRouter(providerApi: Provider_API) {
         if (kind === undefined) {
             throw new Error("Kind not found");
         }
-        // throw new Error("This");
         providerApi.validate_status(req.body.status, kind.kind_structure);
         next();
     });

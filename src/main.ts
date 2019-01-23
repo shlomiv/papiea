@@ -5,7 +5,7 @@ import createProviderAPIRouter from "./provider/provider_routes";
 import { Provider_API_Impl } from "./provider/provider_api_impl";
 import { MongoConnection } from "./databases/mongo";
 import { createEntityRoutes } from "./entity/entity_routes";
-import { EntityAPI } from "./entity/entity_api_impl";
+import { EntityAPI, ProcedureInvocationError } from "./entity/entity_api_impl";
 import { ValidationError, Validator } from "./validator";
 
 declare var process: {
@@ -35,25 +35,26 @@ async function setUpApplication(): Promise<express.Express> {
         if (res.headersSent) {
             return next(err);
         }
-        if (err instanceof  ValidationError) {
-            res.status(400);
-            res.json({ errors: err.errors });
-            return;
+        switch (err.constructor) {
+            case ValidationError:
+                res.status(400);
+                res.json({ errors: err.errors });
+                return;
+            case ProcedureInvocationError:
+                res.status(500);
+                res.json({ errors: err.errors });
+                return;
+            default:
+                res.status(500);
+                console.error(err);
+                res.json({ error: `${ err }` });
         }
-        if (err.type === "ProcedureInvocationError") {
-            res.status(500);
-            res.json({ errors: err.errors });
-            return;
-        }
-        res.status(500);
-        console.error(err);
-        res.json({ error: `${err}` });
     });
     return app;
 }
 
 setUpApplication().then(app => {
     app.listen(serverPort, function () {
-        console.log(`Papiea app listening on port ${serverPort}!`);
+        console.log(`Papiea app listening on port ${ serverPort }!`);
     });
 }).catch(console.error);

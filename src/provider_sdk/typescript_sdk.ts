@@ -74,12 +74,10 @@ export class ProviderSdk implements ProviderImpl {
                     name,
                     name_plural: plural(name),
                     kind_structure: entity_description,
-                    validator_fn: {} as (entity: Entity) => boolean,
                     intentful_signatures: new Map(),
                     dependency_tree: new Map(),
                     procedures: {},
                     differ: undefined,
-                    semantic_validator_fn: undefined
                 };
                 this._kind.push(spec_only_kind);
                 return spec_only_kind;

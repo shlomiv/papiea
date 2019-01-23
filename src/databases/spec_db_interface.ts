@@ -1,6 +1,5 @@
 // [[file:~/work/papiea-js/Papiea-design.org::*/src/databases/spec_db_interface.ts][/src/databases/spec_db_interface.ts:1]]
 import * as core from "../core";
-import * as papiea from "../papiea";
 
 // [[file:~/work/papiea-js/Papiea-design.org::#h-Interface-229][spec-db-interface]]
 

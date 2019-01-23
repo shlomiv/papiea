@@ -1,7 +1,7 @@
 import * as express from "express";
 import { Provider_API, Provider_Power } from "./provider_api_interface";
 import * as asyncHandler from 'express-async-handler'
-import { Kind, Provider } from "../papiea";
+import { Provider } from "../papiea";
 
 export default function createProviderAPIRouter(providerApi: Provider_API) {
     const providerApiRouter = express.Router();

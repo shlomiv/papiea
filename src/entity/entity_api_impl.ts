@@ -3,10 +3,9 @@ import { Status_DB } from "../databases/status_db_interface";
 import { Spec_DB } from "../databases/spec_db_interface";
 import { Provider_DB } from "../databases/provider_db_interface";
 import { Kind, Procedural_Signature } from "../papiea";
-import { Data_Description, Entity, Entity_Reference, Metadata, Spec, uuid4 } from "../core";
+import { Data_Description, Entity_Reference, Metadata, Spec, uuid4 } from "../core";
 import uuid = require("uuid");
 import { EntityApiInterface } from "./entity_api_interface";
-import * as url from "url";
 import { Validator } from "../validator";
 
 export class ProcedureInvocationError extends Error {

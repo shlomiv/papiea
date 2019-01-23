@@ -147,7 +147,7 @@ export class ProviderSdk implements ProviderImpl {
               output_desc: any,
               handler: (ctx: ProceduralCtx_Interface, entity: Entity, input: any) => Promise<any>,
               specified_kind_name?: string): void {
-        const callback_url = `http://${this._host}:${this._port}${"/" + name}`;
+        const callback_url = `http://${ this._host }:${ this._port }${ "/" + name }`;
         const procedural_signature: Procedural_Signature = {
             name,
             argument: input_desc,
@@ -184,9 +184,8 @@ export class ProviderSdk implements ProviderImpl {
                     spec: req.body.spec,
                     status: req.body.status
                 }, req.body.input);
-                res.json(result);
+                res.json(result.spec);
             } catch (e) {
-                console.error(e);
                 throw new Error("Unable to execute handler");
             }
         }));

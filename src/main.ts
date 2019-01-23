@@ -40,6 +40,11 @@ async function setUpApplication(): Promise<express.Express> {
             res.json({ errors: err.errors });
             return;
         }
+        if (err.type === "ProcedureInvocationError") {
+            res.status(500);
+            res.json({ errors: err.errors });
+            return;
+        }
         res.status(500);
         console.error(err);
         res.json({ error: `${err}` });

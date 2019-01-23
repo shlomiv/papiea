@@ -9,6 +9,18 @@ import { EntityApiInterface } from "./entity_api_interface";
 import * as url from "url";
 import { Validator } from "../validator";
 
+export class ProcedureInvocationError extends Error {
+    type: string;
+    errors: Array<string>;
+
+    constructor(errors: Array<string>) {
+        super(JSON.stringify(errors));
+        Object.setPrototypeOf(this, ProcedureInvocationError.prototype);
+        this.type = "ProcedureInvocationError";
+        this.errors = errors;
+    }
+}
+
 export class EntityAPI implements EntityApiInterface {
     private status_db: Status_DB;
     private spec_db: Spec_DB;
@@ -73,6 +85,11 @@ export class EntityAPI implements EntityApiInterface {
             spec: entity_data[1],
             input: input
         });
+        try {
+            this.validator.validate(data, Object.values(procedure.result)[0], schemas);
+        } catch (err) {
+            throw new ProcedureInvocationError(err.errors);
+        }
         return data;
     }
 

@@ -95,6 +95,7 @@ describe("API Docs Tests", () => {
                 "title": "X\/Y Location",
                 "description": "Stores an XY location of something",
                 "x-papiea-entity": "spec-only",
+                "required": ["x", "y"],
                 "properties": {
                     "x": {
                         "type": "number"

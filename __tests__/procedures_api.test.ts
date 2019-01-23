@@ -113,4 +113,39 @@ describe("Procedures tests", () => {
         }
         done.fail();
     });
+    test("Procedure result validation", async (done) => {
+        const server = http.createServer((req, res) => {
+            if (req.method == 'POST') {
+                req.on('data', function (data) {
+                });
+                req.on('end', function () {
+                    res.statusCode = 200;
+                    res.setHeader('Content-Type', 'text/plain');
+                    res.end(JSON.stringify({ "wrong": "result" }));
+                    server.close();
+                });
+            }
+        });
+        server.listen(port, hostname, () => {
+            console.log(`Server running at http://${hostname}:${port}/`);
+        });
+        const { data: { metadata, spec } } = await entityApi.post(`/${provider.prefix}/${kind_name}`, {
+            spec: {
+                x: 10,
+                y: 11
+            }
+        });
+        try {
+            await entityApi.post(`/${provider.prefix}/${kind_name}/${metadata.uuid}/procedure/moveX`, { input: 5 });
+        } catch (err) {
+            const res = err.response;
+            expect(res.status).toEqual(500);
+            expect(res.data.errors.length).toEqual(2);
+            expect(res.data.errors[0]).toEqual("x is a required field");
+            expect(res.data.errors[1]).toEqual("y is a required field");
+            done();
+            return;
+        }
+        done.fail();
+    });
 });

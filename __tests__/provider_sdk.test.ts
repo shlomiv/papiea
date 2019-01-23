@@ -11,12 +11,12 @@ import axios from "axios"
 
 const procedure_callback = "http://127.0.0.1:9000/moveX";
 
-export const papiea_config = {
+const papiea_config = {
     host: "127.0.0.1",
     port: 3000
 };
 
-export const server_config = {
+const server_config = {
     host: "127.0.0.1",
     port: 9000
 };

@@ -3,10 +3,10 @@ import {
     Provider as IProviderImpl,
     Provider_Power
 } from "./typescript_sdk_interface";
-import {Data_Description, Entity, Version} from "../core";
-import {Kind, Procedural_Execution_Strategy, Provider, SpecOnlyEntityKind} from "../papiea";
+import { Data_Description, Entity, Version } from "../core";
+import { Kind, Procedural_Execution_Strategy, Provider, SpecOnlyEntityKind } from "../papiea";
 import axios from "axios"
-import {plural} from "pluralize"
+import { plural } from "pluralize"
 
 declare var process: {
     env: {
@@ -43,7 +43,7 @@ export class ProviderSdk implements IProviderImpl {
                     validator_fn: {} as (entity: Entity) => boolean,
                     intentful_signatures: new Map(),
                     dependency_tree: new Map(),
-                    procedures: new Map(),
+                    procedures: {},
                     differ: undefined,
                     semantic_validator_fn: undefined
                 };
@@ -87,7 +87,7 @@ export class ProviderSdk implements IProviderImpl {
 
     async register(): Promise<void> {
         if (this._prefix !== null && this._version !== null && this._kind.length !== 0) {
-            this.provider = {kinds: [...this._kind], version: this._version, prefix: this._prefix};
+            this.provider = { kinds: [...this._kind], version: this._version, prefix: this._prefix };
             try {
                 await axios.post(`http://127.0.0.1:${serverPort}/provider/`, this.provider)
                 //Do we set all fields to null again?
@@ -104,10 +104,10 @@ export class ProviderSdk implements IProviderImpl {
     }
 
     procedure(name: string, rbac: any,
-              strategy: Procedural_Execution_Strategy,
-              input_desc: string,
-              output_desc: string,
-              handler: (ctx: ProceduralCtx, input: any) => any): void {
+        strategy: Procedural_Execution_Strategy,
+        input_desc: string,
+        output_desc: string,
+        handler: (ctx: ProceduralCtx, input: any) => any): void {
         throw new Error("Unimplemented")
 
     }

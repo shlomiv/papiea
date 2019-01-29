@@ -5,7 +5,8 @@ import createProviderAPIRouter from "./provider/provider_routes";
 import { Provider_API_Impl } from "./provider/provider_api_impl";
 import { MongoConnection } from "./databases/mongo";
 import { createEntityRoutes } from "./entity/entity_routes";
-import { EntityAPI } from "./entity/entity_api_impl";
+import { EntityAPI, ProcedureInvocationError } from "./entity/entity_api_impl";
+import { ValidationError, Validator } from "./validator";
 
 declare var process: {
     env: {
@@ -26,16 +27,28 @@ async function setUpApplication(): Promise<express.Express> {
     const providerDb = await mongoConnection.get_provider_db();
     const specDb = await mongoConnection.get_spec_db();
     const statusDb = await mongoConnection.get_status_db();
+    const validator = new Validator();
     app.use('/provider', createProviderAPIRouter(new Provider_API_Impl(providerDb, statusDb)));
-    app.use('/entity', createEntityRoutes(new EntityAPI(statusDb, specDb, providerDb)));
+    app.use('/entity', createEntityRoutes(new EntityAPI(statusDb, specDb, providerDb, validator)));
     app.use('/api-docs', createAPIDocsRouter('/api-docs', new ApiDocsGenerator(providerDb)));
     app.use(function (err: any, req: any, res: any, next: any) {
         if (res.headersSent) {
             return next(err);
         }
-        res.status(500);
-        console.error(err);
-        res.json({ error: `${err}` });
+        switch (err.constructor) {
+            case ValidationError:
+                res.status(400);
+                res.json({ errors: err.errors });
+                return;
+            case ProcedureInvocationError:
+                res.status(500);
+                res.json({ errors: err.errors });
+                return;
+            default:
+                res.status(500);
+                console.error(err);
+                res.json({ error: `${ err }` });
+        }
     });
     return app;
 }

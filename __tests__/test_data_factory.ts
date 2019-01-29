@@ -2,8 +2,8 @@ import { load } from "js-yaml";
 import { readFileSync } from "fs";
 import { resolve } from "path";
 import { plural } from "pluralize";
-import { Provider, SpecOnlyEntityKind } from "../src/papiea";
-import { Entity, Data_Description } from "../src/core";
+import { Provider, SpecOnlyEntityKind, Procedural_Signature, Procedural_Execution_Strategy } from "../src/papiea";
+import { Entity, Data_Description, Provider_Callback_URL } from "../src/core";
 
 function randomString(len: number) {
     var charSet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -33,7 +33,7 @@ export function getSpecOnlyEntityKind(): SpecOnlyEntityKind {
         validator_fn: {} as (entity: Entity) => boolean,
         intentful_signatures: new Map(),
         dependency_tree: new Map(),
-        procedures: new Map(),
+        procedures: {},
         differ: undefined,
         semantic_validator_fn: undefined
     };
@@ -45,5 +45,18 @@ export function getProviderWithSpecOnlyEnitityKindNoOperations(): Provider {
     const providerPrefix = randomString(12);
     const providerVersion = "0.1.0";
     const provider: Provider = { prefix: providerPrefix, version: providerVersion, kinds: [spec_only_kind] };
+    return provider;
+}
+
+export function getProviderWithSpecOnlyEnitityKindWithOperations(procedure_callback: Provider_Callback_URL): Provider {
+    const provider: Provider = getProviderWithSpecOnlyEnitityKindNoOperations();
+    const proceduralSignature: Procedural_Signature = {
+        name: "moveX",
+        argument: loadYaml("./procedure_move_input.yml"),
+        result: loadYaml("./location_kind_test_data.yml"),
+        execution_strategy: Procedural_Execution_Strategy.Halt_Intentful,
+        procedure_callback: procedure_callback
+    };
+    provider.kinds[0].procedures[proceduralSignature.name] = proceduralSignature;
     return provider;
 }

@@ -1,6 +1,5 @@
 import * as asyncHandler from 'express-async-handler'
 import * as express from "express";
-import { Metadata, Spec } from "../core";
 import { EntityAPI } from "./entity_api_impl";
 import { Router } from "express";
 
@@ -67,6 +66,11 @@ export function createEntityRoutes(entity_api: EntityAPI): Router {
     router.delete("/:prefix/:kind/:uuid", kind_middleware, asyncHandler(async (req, res) => {
         await entity_api.delete_entity_spec(req.params.entity_kind, req.params.uuid);
         res.json("OK")
+    }));
+
+    router.post("/:prefix/:kind/:uuid/procedure/:procedure_name", kind_middleware, asyncHandler(async (req, res) => {
+        const result: any = await entity_api.call_procedure(req.params.entity_kind, req.params.uuid, req.params.procedure_name, req.body.input);
+        res.json(result);
     }));
 
     return router;

@@ -20,6 +20,14 @@ RUN wget -q -O /usr/bin/lein \
     && chmod +x /usr/bin/lein
 RUN lein
 
+# Cache node_modules
+ADD package.json /package.json
+RUN cd / && npm install && rm package.json && rm package-lock.json
+
+# Cache .m2
+ADD papiea-lib-clj/project.clj /project.clj
+RUN cd / && lein deps && lein cljsbuild once && rm project.clj
+
 # Declare the ports we use
 EXPOSE 3000
 

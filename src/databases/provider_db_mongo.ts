@@ -36,7 +36,7 @@ export class Provider_DB_Mongo implements Provider_DB {
 
     async get_provider(provider_prefix: string, version?: Version): Promise<Provider> {
         const filter: any = {prefix: provider_prefix};
-        if (version !== null) {
+        if (version !== undefined) {
             filter.version = version;
         }
         const provider: Provider | null = await this.collection.findOne(filter);

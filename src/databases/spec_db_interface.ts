@@ -27,6 +27,8 @@ export interface Spec_DB {
     // later point, or we could use a similar dsl to mongodb search
     // dsl.
     list_specs(fields_map: any): Promise<([core.Metadata, core.Spec])[]>;
+
+    delete_spec(entity_ref: core.Entity_Reference): Promise<void>
 }
 
 // spec-db-interface ends here

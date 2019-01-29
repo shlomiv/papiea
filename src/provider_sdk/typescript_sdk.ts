@@ -4,7 +4,7 @@ import {
     Provider_Power
 } from "./typescript_sdk_interface";
 import {Data_Description, Entity, Version} from "../core";
-import {Kind, Procedural_Execution_Strategy, Provider, SpecOnlyEnitityKind} from "../papiea";
+import {Kind, Procedural_Execution_Strategy, Provider, SpecOnlyEntityKind} from "../papiea";
 import axios from "axios"
 import {plural} from "pluralize"
 
@@ -36,7 +36,7 @@ export class ProviderSdk implements IProviderImpl {
         const name = Object.keys(entity_yaml)[0];
         if (entity_yaml[name].hasOwnProperty("x-papiea-entity")) {
             if (entity_yaml[name]["x-papiea-entity"] === "spec-only") {
-                const spec_only_kind: SpecOnlyEnitityKind = {
+                const spec_only_kind: SpecOnlyEntityKind = {
                     name,
                     name_plural: plural(name),
                     kind_structure: entity_yaml,
@@ -89,7 +89,6 @@ export class ProviderSdk implements IProviderImpl {
         if (this._prefix !== null && this._version !== null && this._kind.length !== 0) {
             this.provider = {kinds: [...this._kind], version: this._version, prefix: this._prefix};
             try {
-                //TODO: set this in global variable
                 await axios.post(`http://127.0.0.1:${serverPort}/provider/`, this.provider)
                 //Do we set all fields to null again?
             } catch (err) {

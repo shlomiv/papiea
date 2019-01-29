@@ -24,6 +24,8 @@ export interface Status_DB {
     // later point, or we could use a similar dsl to mongodb search
     // dsl.
     list_status(fields_map: any): Promise<([core.Metadata, core.Status])[]>;
+
+    delete_status(entity_ref: core.Entity_Reference): Promise<void>
 }
 
 // status-db-interface ends here

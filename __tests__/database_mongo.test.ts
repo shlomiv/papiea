@@ -262,7 +262,7 @@ describe("MongoDb tests", () => {
             return;
         }
         const test_kind = {} as Kind;
-        const provider: Provider = { prefix: "test", version: "0.1", kinds: [test_kind] };
+        const provider: Provider = { prefix: "test", version: "0.1.0", kinds: [test_kind] };
         providerDb.register_provider(provider).then(res => {
             done();
         });
@@ -274,8 +274,22 @@ describe("MongoDb tests", () => {
             return;
         }
         let prefix_string: string = "test";
-        let version: string = "0.1";
+        let version: string = "0.1.0";
         providerDb.get_provider(prefix_string, version).then(res => {
+            expect(res.prefix).toBe(prefix_string);
+            expect(res.version).toBe(version);
+            done();
+        })
+    });
+    test("Get provider using his prefix", done => {
+        expect.assertions(2);
+        if (providerDb === undefined) {
+            done.fail(new Error("providerDb is undefined"));
+            return;
+        }
+        let prefix_string: string = "test";
+        let version: string = "0.1.0";
+        providerDb.get_provider(prefix_string).then(res => {
             expect(res.prefix).toBe(prefix_string);
             expect(res.version).toBe(version);
             done();
@@ -288,7 +302,7 @@ describe("MongoDb tests", () => {
             return;
         }
         let prefix_string: string = "testFail";
-        let version: string = "0.1";
+        let version: string = "0.1.0";
         providerDb.get_provider(prefix_string, version).catch(err => {
             expect(err).not.toBeNull();
             done();
@@ -313,7 +327,7 @@ describe("MongoDb tests", () => {
             return;
         }
         let prefix_string: string = "test";
-        let version: string = "0.1";
+        let version: string = "0.1.0";
         providerDb.delete_provider(prefix_string, version).then(res => {
             done();
         })

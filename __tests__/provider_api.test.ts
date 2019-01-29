@@ -1,7 +1,7 @@
 import "jest"
 import axios from "axios"
 import { v4 as uuid4 } from 'uuid';
-import { Kind, Provider } from "../src/papiea";
+import { Provider } from "../src/papiea";
 
 declare var process: {
     env: {
@@ -18,8 +18,8 @@ const providerApi = axios.create({
 
 describe("Provider API tests", () => {
     const providerPrefix = "test_provider";
-    const providerVersion = "1";
-    test("Non-existend route", done => {
+    const providerVersion = "0.1.0";
+    test("Non-existent route", done => {
         providerApi.delete(`/abc`).then(() => done.fail()).catch(() => done());
     });
     test("Register provider", done => {

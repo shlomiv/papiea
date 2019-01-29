@@ -1,6 +1,7 @@
 // [[file:~/work/papiea-js/Papiea-design.org::*/src/databases/provider_db_interface.ts][/src/databases/provider_db_interface.ts:1]]
 import * as core from "../core";
 import * as papiea from "../papiea";
+import { Provider } from "../papiea";
 
 // [[file:~/work/papiea-js/Papiea-design.org::#h-Interface-104][provider-db-interface]]
 
@@ -20,6 +21,8 @@ export interface Provider_DB {
 
     // Removes and de-registers a provider from the intent engine
     delete_provider(provider_prefix: string, version: core.Version): Promise<void>;
+
+    get_provider_by_kind(kind_name: string): Promise<Provider>;
 }
 
 // provider-db-interface ends here

@@ -2,6 +2,7 @@ import * as asyncHandler from 'express-async-handler'
 import * as express from "express";
 import { EntityAPI } from "./entity_api_impl";
 import { Router } from "express";
+import { Kind } from "../papiea";
 
 
 export function createEntityRoutes(entity_api: EntityAPI): Router {
@@ -12,8 +13,14 @@ export function createEntityRoutes(entity_api: EntityAPI): Router {
             req.params.entity_kind = await entity_api.get_kind(req.params.prefix, req.params.kind);
             next();
         } else {
-            throw new Error("Entity kind is already existing the request");
+            throw new Error("Entity kind already exists in the request");
         }
+    });
+
+    const validate_kind_middleware = asyncHandler(async (req, res, next) => {
+        const kind: Kind = req.params.entity_kind;
+        entity_api.validate_spec(req.body.spec, kind.kind_structure);
+        next();
     });
 
 
@@ -46,13 +53,13 @@ export function createEntityRoutes(entity_api: EntityAPI): Router {
         res.json(result);
     }));
 
-    router.put("/:prefix/:kind/:uuid", kind_middleware, asyncHandler(async (req, res) => {
+    router.put("/:prefix/:kind/:uuid", kind_middleware, validate_kind_middleware, asyncHandler(async (req, res) => {
         const request_metadata = req.body.metadata;
         const [metadata, spec] = await entity_api.update_entity_spec(req.params.uuid, request_metadata.spec_version, req.params.entity_kind, req.body.spec);
         res.json({ "metadata": metadata, "spec": spec });
     }));
 
-    router.post("/:prefix/:kind", kind_middleware, asyncHandler(async (req, res) => {
+    router.post("/:prefix/:kind", kind_middleware, validate_kind_middleware, asyncHandler(async (req, res) => {
         if (req.params.status) {
             const [metadata, spec] = await entity_api.save_entity(req.params.entity_kind, req.body.spec);
             res.json({ "metadata": metadata, "spec": spec });

@@ -1,7 +1,7 @@
 import "jest"
 import axios from "axios"
-import { v4 as uuid4 } from 'uuid';
 import { Provider } from "../src/papiea";
+import { getProviderWithSpecOnlyEnitityKindNoOperations } from "./test_data_factory";
 
 declare var process: {
     env: {
@@ -11,7 +11,13 @@ declare var process: {
 const serverPort = parseInt(process.env.SERVER_PORT || '3000');
 
 const providerApi = axios.create({
-    baseURL: `http://127.0.0.1:${serverPort}/provider/`,
+    baseURL: `http://127.0.0.1:${ serverPort }/provider/`,
+    timeout: 1000,
+    headers: { 'Content-Type': 'application/json' }
+});
+
+const entityApi = axios.create({
+    baseURL: `http://127.0.0.1:${ serverPort }/entity`,
     timeout: 1000,
     headers: { 'Content-Type': 'application/json' }
 });
@@ -31,24 +37,58 @@ describe("Provider API tests", () => {
     });
     // TODO(adolgarev): there is no API to list providers
     test("Unregister provider", done => {
-        providerApi.delete(`/${providerPrefix}/${providerVersion}`).then(() => done()).catch(done.fail);
+        providerApi.delete(`/${ providerPrefix }/${ providerVersion }`).then(() => done()).catch(done.fail);
     });
     test("Unregister non-existend provider", done => {
-        providerApi.delete(`/${providerPrefix}/${providerVersion}`).then(() => done.fail()).catch(() => done());
+        providerApi.delete(`/${ providerPrefix }/${ providerVersion }`).then(() => done.fail()).catch(() => done());
     });
     test("Unregister never existed provider", done => {
         providerApi.delete(`/123/123`).then(() => done.fail()).catch(() => done());
     });
-    const entityA_uuid = uuid4();
-    test("Update status", done => {
+    test("Update status", async done => {
+        const provider: Provider = getProviderWithSpecOnlyEnitityKindNoOperations();
+        await providerApi.post('/', provider);
+        const kind_name = provider.kinds[0].name;
+        const { data: { metadata, spec } } = await entityApi.post(`/${ provider.prefix }/${ kind_name }`, {
+            spec: {
+                x: 10,
+                y: 11
+            }
+        });
+
         providerApi.post('/update_status', {
             context: "some context",
             entity_ref: {
-                uuid: entityA_uuid,
-                kind: "test"
+                uuid: metadata.uuid,
+                kind: kind_name
             },
-            status: { a: "A" }
+            status: { x: 10, y: 20 }
         }).then(() => done()).catch(done.fail);
+    });
+
+    test("Update status with malformed status should fail validation", async done => {
+        const provider: Provider = getProviderWithSpecOnlyEnitityKindNoOperations();
+        await providerApi.post('/', provider);
+        const kind_name = provider.kinds[0].name;
+        const { data: { metadata, spec } } = await entityApi.post(`/${ provider.prefix }/${ kind_name }`, {
+            spec: {
+                x: 10,
+                y: 11
+            }
+        });
+
+        try {
+            await providerApi.post('/update_status', {
+                context: "some context",
+                entity_ref: {
+                    uuid: metadata.uuid,
+                    kind: kind_name
+                },
+                status: { x: 11, y: "Totally not a number" }
+            });
+        } catch (err) {
+            done();
+        }
     });
     // TODO(adolgarev): there is no API at the moment to list statuses
 });

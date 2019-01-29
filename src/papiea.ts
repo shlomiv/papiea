@@ -14,8 +14,6 @@ export interface Kind {
 
     //// Entity structure
     kind_structure: core.Data_Description;
-    validator_fn: (entity: core.Entity) => boolean;
-    semantic_validator_fn?: core.Provider_Callback_URL;
 
     //// Intentful behavior
     intentful_signatures: Map<core.SFS, core.Intentful_Signature>;

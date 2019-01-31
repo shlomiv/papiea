@@ -13,10 +13,20 @@ declare var process: {
 };
 const serverPort = parseInt(process.env.SERVER_PORT || '3000');
 
+const papiea_config = {
+    host: "127.0.0.1",
+    port: 3000
+};
+
+const server_config = {
+    host: "127.0.0.1",
+    port: 9000
+};
+
 const entityApi = axios.create({
-    baseURL: `http://127.0.0.1:${serverPort}/entity`,
+    baseURL: `http://127.0.0.1:${ serverPort }/entity`,
     timeout: 1000,
-    headers: {'Content-Type': 'application/json'}
+    headers: { 'Content-Type': 'application/json' }
 });
 
 describe("Entity API tests", () => {
@@ -25,7 +35,7 @@ describe("Entity API tests", () => {
     const locationDataDescription = getLocationDataDescription();
     const kind_name = "Location";
     beforeAll(async () => {
-        const sdk = new ProviderSdk();
+        const sdk = ProviderSdk.create_sdk(papiea_config.host, papiea_config.port, server_config.host, server_config.port);
         sdk.new_kind(locationDataDescription);
         sdk.version(providerVersion);
         sdk.prefix(providerPrefix);
@@ -33,7 +43,7 @@ describe("Entity API tests", () => {
     });
 
     afterAll(async () => {
-        await axios.delete(`http://127.0.0.1:${serverPort}/provider/${providerPrefix}/${providerVersion}`);
+        await axios.delete(`http://127.0.0.1:${ serverPort }/provider/${ providerPrefix }/${ providerVersion }`);
     });
 
     let entity_metadata: Metadata;
@@ -41,7 +51,7 @@ describe("Entity API tests", () => {
     test("Create entity", async (done) => {
         expect.assertions(3);
         try {
-            const { data: { metadata, spec } } = await entityApi.post(`/${providerPrefix}/${kind_name}`, {
+            const { data: { metadata, spec } } = await entityApi.post(`/${ providerPrefix }/${ kind_name }`, {
                 spec: {
                     x: 10,
                     y: 11
@@ -58,10 +68,27 @@ describe("Entity API tests", () => {
         }
     });
 
+    test("Create entity with malformed spec should fail", async (done) => {
+        expect.assertions(2);
+        try {
+            await entityApi.post(`/${ providerPrefix }/${ kind_name }`, {
+                spec: {
+                    x: "Totally not a number",
+                    y: 11
+                }
+            });
+        } catch (err) {
+            const res = err.response;
+            expect(res.status).toEqual(400);
+            expect(res.data.errors.length).toEqual(1);
+            done();
+        }
+    });
+
     test("Get entity", async (done) => {
         expect.assertions(1);
         try {
-            const res = await entityApi.get(`/${providerPrefix}/${kind_name}/${entity_metadata.uuid}`);
+            const res = await entityApi.get(`/${ providerPrefix }/${ kind_name }/${ entity_metadata.uuid }`);
             expect(res.data.spec).toEqual(entity_spec);
             done();
         } catch (e) {
@@ -71,7 +98,7 @@ describe("Entity API tests", () => {
 
     test("Filter entity", async (done) => {
         try {
-            const res = await entityApi.post(`${providerPrefix}/${kind_name}/filter`, {
+            const res = await entityApi.post(`${ providerPrefix }/${ kind_name }/filter`, {
                 filter_fields: {
                     spec: {
                         x: 10,
@@ -95,7 +122,7 @@ describe("Entity API tests", () => {
             spec: JSON.stringify(spec)
         };
         try {
-            const res = await entityApi.get(`${providerPrefix}/${kind_name}?${stringify(spec_query)}`,);
+            const res = await entityApi.get(`${ providerPrefix }/${ kind_name }?${ stringify(spec_query) }`,);
             expect(res.data.length).toBeGreaterThanOrEqual(1);
             done();
         } catch (e) {
@@ -106,7 +133,7 @@ describe("Entity API tests", () => {
     test("Update entity spec", async (done) => {
         expect.assertions(1);
         try {
-            const res = await entityApi.put(`/${providerPrefix}/${kind_name}/${entity_metadata.uuid}`, {
+            const res = await entityApi.put(`/${ providerPrefix }/${ kind_name }/${ entity_metadata.uuid }`, {
                 spec: {
                     x: 20,
                     y: 21
@@ -122,15 +149,35 @@ describe("Entity API tests", () => {
         }
     });
 
+    test("Update entity with malformed spec should fail", async (done) => {
+        expect.assertions(2);
+        try {
+            await entityApi.put(`/${ providerPrefix }/${ kind_name }/${ entity_metadata.uuid }`, {
+                spec: {
+                    x: "Totally not a number",
+                    y: 21
+                },
+                metadata: {
+                    spec_version: 1
+                }
+            });
+        } catch (err) {
+            const res = err.response;
+            expect(res.status).toEqual(400);
+            expect(res.data.errors.length).toEqual(1);
+            done();
+        }
+    });
+
     test("Delete entity", async (done) => {
         try {
-            await entityApi.delete(`/${providerPrefix}/${kind_name}/${entity_metadata.uuid}`);
+            await entityApi.delete(`/${ providerPrefix }/${ kind_name }/${ entity_metadata.uuid }`);
             done();
         } catch (e) {
             done.fail(e);
         }
         try {
-            await entityApi.get(`/${providerPrefix}/${kind_name}/${entity_metadata.uuid}`);
+            await entityApi.get(`/${ providerPrefix }/${ kind_name }/${ entity_metadata.uuid }`);
             done.fail("Entity has not been removed");
         } catch (e) {
             done();

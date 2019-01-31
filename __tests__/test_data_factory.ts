@@ -15,7 +15,7 @@ function randomString(len: number) {
     return randomString;
 }
 
-function loadYaml(relativePath: string): any {
+export function loadYaml(relativePath: string): any {
     return load(readFileSync(resolve(__dirname, relativePath), "utf-8"));
 }
 
@@ -30,12 +30,10 @@ export function getSpecOnlyEntityKind(): SpecOnlyEntityKind {
         name,
         name_plural: plural(name),
         kind_structure: locationDataDescription,
-        validator_fn: {} as (entity: Entity) => boolean,
         intentful_signatures: new Map(),
         dependency_tree: new Map(),
         procedures: {},
         differ: undefined,
-        semantic_validator_fn: undefined
     };
     return spec_only_kind;
 }

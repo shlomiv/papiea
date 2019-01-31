@@ -55,6 +55,6 @@ async function setUpApplication(): Promise<express.Express> {
 
 setUpApplication().then(app => {
     app.listen(serverPort, function () {
-        console.log(`Papiea app listening on port ${serverPort}!`);
+        console.log(`Papiea app listening on port ${ serverPort }!`);
     });
 }).catch(console.error);

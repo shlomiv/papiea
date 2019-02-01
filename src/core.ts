@@ -14,6 +14,10 @@ export type Data_Description = any;
 export type Version = string;
 // core-types ends here
 
+export type AdditionalData = {
+    [key: string]: any
+}
+
 // [[file:~/work/papiea-js/Papiea-design.org::#h-Metadata-350][metadata-struct]]
 export interface Metadata {
     // Identity fields
@@ -24,6 +28,7 @@ export interface Metadata {
     // Additional fields
     created_at: Date;
     deleted_at?: Date;
+    additional_data?: AdditionalData;
 }
 // metadata-struct ends here
 

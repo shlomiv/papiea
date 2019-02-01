@@ -169,6 +169,49 @@ describe("Entity API tests", () => {
         }
     });
 
+    test("Create entity without additional fields, additional fields should be empty", async (done) => {
+        expect.assertions(4);
+        try {
+            const { data: { metadata, spec } } = await entityApi.post(`/${ providerPrefix }/${ kind_name }`, {
+                spec: {
+                    x: 10,
+                    y: 11
+                },
+            });
+            expect(metadata).not.toBeUndefined();
+            expect(metadata.spec_version).toEqual(1);
+            expect(spec).not.toBeUndefined();
+            expect(metadata.additional_data).toBeUndefined();
+            await entityApi.delete(`/${ providerPrefix }/${ kind_name }/${ metadata.uuid }`);
+            done();
+        } catch (e) {
+            done.fail(e);
+        }
+    });
+
+    test("Create entity with additional fields", async (done) => {
+        expect.assertions(4);
+        try {
+            const { data: { metadata, spec } } = await entityApi.post(`/${ providerPrefix }/${ kind_name }`, {
+                spec: {
+                    x: 10,
+                    y: 11
+                },
+                additional_data: {
+                    _key: "123"
+                }
+            });
+            expect(metadata).not.toBeUndefined();
+            expect(metadata.spec_version).toEqual(1);
+            expect(spec).not.toBeUndefined();
+            expect(metadata.additional_data._key).toBe("123");
+            await entityApi.delete(`/${ providerPrefix }/${ kind_name }/${ metadata.uuid }`);
+            done();
+        } catch (e) {
+            done.fail(e);
+        }
+    });
+
     test("Delete entity", async (done) => {
         try {
             await entityApi.delete(`/${ providerPrefix }/${ kind_name }/${ entity_metadata.uuid }`);

@@ -3,7 +3,7 @@ import { Status_DB } from "../databases/status_db_interface";
 import { Spec_DB } from "../databases/spec_db_interface";
 import { Provider_DB } from "../databases/provider_db_interface";
 import { Kind, Procedural_Signature } from "../papiea";
-import { Data_Description, Entity_Reference, Metadata, Spec, uuid4 } from "../core";
+import { AdditionalData, Data_Description, Entity_Reference, Metadata, Spec, uuid4 } from "../core";
 import uuid = require("uuid");
 import { EntityApiInterface } from "./entity_api_interface";
 import { Validator } from "../validator";
@@ -40,8 +40,8 @@ export class EntityAPI implements EntityApiInterface {
         return found_kind;
     }
 
-    async save_entity(kind: Kind, spec_description: Spec): Promise<[Metadata, Spec]> {
-        const metadata: Metadata = { uuid: uuid(), spec_version: 0, created_at: new Date(), kind: kind.name };
+    async save_entity(kind: Kind, spec_description: Spec, additional_data?: AdditionalData): Promise<[Metadata, Spec]> {
+        const metadata: Metadata = { uuid: uuid(), spec_version: 0, created_at: new Date(), kind: kind.name, additional_data: additional_data };
         //TODO: kind.validator_fn(entity)
         return this.spec_db.update_spec(metadata, spec_description)
     }

@@ -145,6 +145,9 @@ export default class ApiDocsGenerator {
                             "properties": {
                                 "spec": {
                                     "$ref": `#/components/schemas/${kind.name}`
+                                },
+                                "metadata": {
+                                    "$ref": `#/components/schemas/Metadata`
                                 }
                             }
                         }

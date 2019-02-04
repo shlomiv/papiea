@@ -181,7 +181,7 @@ describe("Entity API tests", () => {
             expect(metadata).not.toBeUndefined();
             expect(metadata.spec_version).toEqual(1);
             expect(spec).not.toBeUndefined();
-            expect(metadata.additional_data).toBeUndefined();
+            expect(metadata._key).toBeUndefined();
             await entityApi.delete(`/${ providerPrefix }/${ kind_name }/${ metadata.uuid }`);
             done();
         } catch (e) {
@@ -197,14 +197,14 @@ describe("Entity API tests", () => {
                     x: 10,
                     y: 11
                 },
-                additional_data: {
+                metadata: {
                     _key: "123"
                 }
             });
             expect(metadata).not.toBeUndefined();
             expect(metadata.spec_version).toEqual(1);
             expect(spec).not.toBeUndefined();
-            expect(metadata.additional_data._key).toBe("123");
+            expect(metadata._key).toBe("123");
             await entityApi.delete(`/${ providerPrefix }/${ kind_name }/${ metadata.uuid }`);
             done();
         } catch (e) {

@@ -23,14 +23,14 @@ export class Spec_DB_Mongo implements Spec_DB {
     }
 
     async update_spec(entity_metadata: core.Metadata, spec: core.Spec): Promise<[core.Metadata, core.Spec]> {
-        const additional_data = entity_metadata.additional_data !== undefined? entity_metadata.additional_data : {};
+        const filter: any = {};
+        for (let key in entity_metadata) {
+            if (key !== "created_at" && key !== "deleted_at") {
+                filter["metadata." + key] = entity_metadata[key];
+            }
+        }
         try {
-            const result = await this.collection.updateOne({
-                "metadata.uuid": entity_metadata.uuid,
-                "metadata.kind": entity_metadata.kind,
-                "metadata.spec_version": entity_metadata.spec_version,
-                "metadata.additional_data": additional_data
-            }, {
+            const result = await this.collection.updateOne(filter, {
                 $inc: {
                     "metadata.spec_version": 1
                 },

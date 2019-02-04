@@ -61,11 +61,11 @@ export function createEntityRoutes(entity_api: EntityAPI): Router {
 
     router.post("/:prefix/:kind", kind_middleware, validate_kind_middleware, asyncHandler(async (req, res) => {
         if (req.params.status) {
-            const [metadata, spec] = await entity_api.save_entity(req.params.entity_kind, req.body.spec, req.body.additional_data);
+            const [metadata, spec] = await entity_api.save_entity(req.params.entity_kind, req.body.spec, req.body.metadata);
             res.json({ "metadata": metadata, "spec": spec });
         } else {
             // Spec only entity
-            const [metadata, spec] = await entity_api.save_entity(req.params.entity_kind, req.body.spec, req.body.additional_data);
+            const [metadata, spec] = await entity_api.save_entity(req.params.entity_kind, req.body.spec, req.body.metadata);
             res.json({ "metadata": metadata, "spec": spec });
         }
     }));

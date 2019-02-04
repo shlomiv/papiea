@@ -40,10 +40,17 @@ export class EntityAPI implements EntityApiInterface {
         return found_kind;
     }
 
-    async save_entity(kind: Kind, spec_description: Spec, additional_data?: AdditionalData): Promise<[Metadata, Spec]> {
-        const metadata: Metadata = { uuid: uuid(), spec_version: 0, created_at: new Date(), kind: kind.name, additional_data: additional_data };
+    async save_entity(kind: Kind, spec_description: Spec, request_metadata: Metadata = {} as Metadata): Promise<[Metadata, Spec]> {
+        if (!request_metadata.uuid) {
+            request_metadata.uuid = uuid();
+        }
+        if (!request_metadata.spec_version) {
+            request_metadata.spec_version = 0;
+        }
+        request_metadata.created_at = new Date();
+        request_metadata.kind = kind.name;
         //TODO: kind.validator_fn(entity)
-        return this.spec_db.update_spec(metadata, spec_description)
+        return this.spec_db.update_spec(request_metadata, spec_description)
     }
 
     async get_entity_spec(kind: Kind, entity_uuid: uuid4): Promise<[Metadata, Spec]> {

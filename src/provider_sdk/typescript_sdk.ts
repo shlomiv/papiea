@@ -5,7 +5,7 @@ import axios from "axios"
 import { plural } from "pluralize"
 import * as express from "express";
 import * as asyncHandler from "express-async-handler";
-import { Express } from "express";
+import { Express, RequestHandler } from "express";
 import { Server } from "http";
 import { ProceduralCtx } from "./typescript_sdk_context_impl";
 
@@ -16,23 +16,18 @@ export class ProviderSdk implements ProviderImpl {
     _provider: Provider | null;
     papiea_url: string;
     papiea_port: number;
-    private _port: number;
-    private _host: string;
-    private _server: null | Express;
-    private _running: null | Server;
+    private server_manager: Provider_Server_Manager;
 
 
-    constructor(papiea_url: string, papiea_port: number, public_host = "127.0.0.1", public_port = 9000) {
+    constructor(papiea_url: string, papiea_port: number, server_manager: Provider_Server_Manager) {
         this._version = null;
         this._prefix = null;
         this._kind = [];
         this._provider = null;
         this.papiea_url = papiea_url;
         this.papiea_port = papiea_port;
-        this._port = public_port;
-        this._host = public_host;
-        this._server = null;
-        this._running = null;
+        this.server_manager = server_manager;
+        this.get_prefix = this.get_prefix.bind(this);
     }
 
     get provider() {
@@ -51,19 +46,15 @@ export class ProviderSdk implements ProviderImpl {
         if (this._prefix !== null) {
             return this._prefix
         } else {
-            throw new Error("Prefix is not set")
+            throw new Error("Provider prefix is not set")
         }
     }
 
     get server(): Server {
-        if (this._running !== null) {
-            return this._running;
-        } else {
-            throw Error("Server is not created")
-        }
+        return this.server_manager.server;
     }
 
-    new_kind(entity_description: Data_Description): Kind {
+    new_kind(entity_description: Data_Description): Kind_Procedure_Builder {
         if (Object.keys(entity_description).length === 0) {
             throw new Error("Wrong kind description specified")
         }
@@ -79,8 +70,9 @@ export class ProviderSdk implements ProviderImpl {
                     procedures: {},
                     differ: undefined,
                 };
+                const kind_procedure_builder = new Kind_Procedure_Builder(spec_only_kind, this.entity_url, this.get_prefix, this.server_manager);
                 this._kind.push(spec_only_kind);
-                return spec_only_kind;
+                return kind_procedure_builder;
             } else {
                 //TODO: process non spec-only
                 throw new Error("Unimplemented")
@@ -90,12 +82,13 @@ export class ProviderSdk implements ProviderImpl {
         }
     }
 
-    add_kind(kind: Kind): boolean {
+    add_kind(kind: Kind): Kind_Procedure_Builder | null {
         if (this._kind.indexOf(kind) === -1) {
             this._kind.push(kind);
-            return true;
+            const kind_procedure_builder = new Kind_Procedure_Builder(kind, this.entity_url, this.get_prefix, this.server_manager);
+            return kind_procedure_builder;
         } else {
-            return false;
+            return null;
         }
     }
 
@@ -122,11 +115,7 @@ export class ProviderSdk implements ProviderImpl {
             this._provider = { kinds: [...this._kind], version: this._version, prefix: this._prefix };
             try {
                 await axios.post(`http://${ this.papiea_url }:${ this.papiea_port }/provider/`, this._provider);
-                if (this._server !== null) {
-                    this._running = this._server.listen(this._port, () => {
-                        console.log(`Server running at http://localhost:${ this._port }/`);
-                    });
-                }
+                this.server_manager.startServer();
             } catch (err) {
                 throw err;
             }
@@ -139,56 +128,6 @@ export class ProviderSdk implements ProviderImpl {
         }
     }
 
-    procedure(name: string, rbac: any,
-              strategy: Procedural_Execution_Strategy,
-              input_desc: any,
-              output_desc: any,
-              handler: (ctx: ProceduralCtx_Interface, entity: Entity, input: any) => Promise<any>,
-              specified_kind_name?: string): void {
-        const callback_url = `http://${ this._host }:${ this._port }${ "/" + name }`;
-        const procedural_signature: Procedural_Signature = {
-            name,
-            argument: input_desc,
-            result: output_desc,
-            execution_strategy: strategy,
-            procedure_callback: callback_url
-        };
-        if (specified_kind_name === null) {
-
-            //TODO: Static provider methods logic
-            throw new Error("Unimplemented")
-        }
-        const kind_idx = this._kind.findIndex(kind => kind.name === specified_kind_name);
-        if (kind_idx === -1) {
-            throw new Error("Kind not found")
-        }
-        const found_kind = this._kind[kind_idx];
-        found_kind.procedures[name] = procedural_signature;
-        let app: Express;
-        if (this._server !== null) {
-            app = this._server;
-        } else {
-            app = express();
-            app.use(express.json());
-            this._server = app;
-        }
-        if (this._prefix === null) {
-            throw new Error("Provider prefix is not set")
-        }
-        app.post("/" + name, asyncHandler(async (req, res) => {
-            try {
-                const result = await handler(new ProceduralCtx(this.entity_url, this.get_prefix()), {
-                    metadata: req.body.metadata,
-                    spec: req.body.spec,
-                    status: req.body.status
-                }, req.body.input);
-                res.json(result.spec);
-            } catch (e) {
-                throw new Error("Unable to execute handler");
-            }
-        }));
-    }
-
     power(state: Provider_Power): Provider_Power {
         throw new Error("Unimplemented")
     }
@@ -198,6 +137,101 @@ export class ProviderSdk implements ProviderImpl {
     }
 
     static create_sdk(papiea_host: string, papiea_port: number, public_host?: string, public_port?: number): ProviderSdk {
-        return new ProviderSdk(papiea_host, papiea_port, public_host, public_port)
+        const server_manager = new Provider_Server_Manager(public_host, public_port);
+        return new ProviderSdk(papiea_host, papiea_port, server_manager)
+    }
+}
+
+class Provider_Server_Manager {
+    private readonly public_host: string;
+    private readonly public_port: number;
+    private app: Express;
+    private raw_http_server: Server | null;
+    private should_run: boolean;
+
+    constructor(public_host: string = "127.0.0.1", public_port: number = 9000) {
+        this.public_host = public_host;
+        this.public_port = public_port;
+        this.app = express();
+        this.init_express();
+        this.raw_http_server = null;
+        this.should_run = false;
+    }
+
+    init_express() {
+        this.app.use(express.json())
+    }
+
+    register_handler(route: string, handler: RequestHandler) {
+        if (!this.should_run) {
+            this.should_run = true;
+        }
+        this.app.post(route, asyncHandler(handler))
+    }
+
+    startServer() {
+        if (this.should_run) {
+            this.raw_http_server = this.app.listen(this.public_port, () => {
+                console.log(`Server running at http://localhost:${ this.public_port }/`);
+            })
+        }
+    }
+
+    get server(): Server {
+        if (this.raw_http_server !== null) {
+            return this.raw_http_server;
+        } else {
+            throw Error("Server is not created")
+        }
+    }
+
+    callback_url(procedure_name: string): string {
+        return `http://${ this.public_host }:${ this.public_port }${ "/" + procedure_name }`
+    }
+}
+
+export class Kind_Procedure_Builder {
+
+    kind: Kind;
+    entity_url: string;
+    get_prefix: () => string;
+    private server_manager: Provider_Server_Manager;
+
+
+    constructor(kind: Kind, entity_url: string, get_prefix: () => string, server_manager: Provider_Server_Manager) {
+        this.server_manager = server_manager;
+        this.kind = kind;
+        this.entity_url = entity_url;
+        this.get_prefix = get_prefix;
+    }
+
+    procedure(name: string, rbac: any,
+              strategy: Procedural_Execution_Strategy,
+              input_desc: any,
+              output_desc: any,
+              handler: (ctx: ProceduralCtx_Interface, entity: Entity, input: any) => Promise<any>): void {
+        const callback_url = this.server_manager.callback_url(name);
+        const procedural_signature: Procedural_Signature = {
+            name,
+            argument: input_desc,
+            result: output_desc,
+            execution_strategy: strategy,
+            procedure_callback: callback_url
+        };
+        this.kind.procedures[name] = procedural_signature;
+        const prefix = this.get_prefix();
+        console.log(prefix);
+        this.server_manager.register_handler("/" + name, async (req, res) => {
+            try {
+                const result = await handler(new ProceduralCtx(this.entity_url, prefix), {
+                    metadata: req.body.metadata,
+                    spec: req.body.spec,
+                    status: req.body.status
+                }, req.body.input);
+                res.json(result.spec);
+            } catch (e) {
+                throw new Error("Unable to execute handler");
+            }
+        });
     }
 }

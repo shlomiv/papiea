@@ -2,9 +2,9 @@ import "jest"
 import { load } from "js-yaml";
 import { readFileSync } from "fs";
 import { resolve } from "path";
-import { ProviderSdk } from "../src/provider_sdk/typescript_sdk";
+import { Kind_Procedure_Builder, ProviderSdk } from "../src/provider_sdk/typescript_sdk";
 import { plural } from "pluralize"
-import { Kind, Procedural_Execution_Strategy, Procedural_Signature } from "../src/papiea";
+import { Procedural_Execution_Strategy, Procedural_Signature } from "../src/papiea";
 import { loadYaml } from "./test_data_factory";
 import axios from "axios"
 
@@ -57,8 +57,8 @@ describe("Provider Sdk tests", () => {
     });
     test("Provider can create a new kind", (done) => {
         const sdk = ProviderSdk.create_sdk(papiea_config.host, papiea_config.port, server_config.host, server_config.port);
-        const kind = sdk.new_kind(location_yaml);
-        expect(kind.name).toBe("Location");
+        const location_manager = sdk.new_kind(location_yaml);
+        expect(location_manager.kind.name).toBe("Location");
         done();
     });
     test("Provider with no x-papiea-entity should fail", (done) => {
@@ -112,18 +112,18 @@ describe("Provider Sdk tests", () => {
         sdk.new_kind(geo_location_yaml);
         done();
     });
-    let location_kind: Kind;
+    let location_kind_manager: Kind_Procedure_Builder;
     test("Duplicate delete on kind should return false", (done) => {
         const sdk = ProviderSdk.create_sdk(papiea_config.host, papiea_config.port, server_config.host, server_config.port);
-        location_kind = sdk.new_kind(location_yaml);
-        expect(sdk.remove_kind(location_kind)).toBeTruthy();
-        expect(sdk.remove_kind(location_kind)).toBeFalsy();
+        location_kind_manager = sdk.new_kind(location_yaml);
+        expect(sdk.remove_kind(location_kind_manager.kind)).toBeTruthy();
+        expect(sdk.remove_kind(location_kind_manager.kind)).toBeFalsy();
         done();
     });
     test("Duplicate add on kind should return false", (done) => {
         const sdk = ProviderSdk.create_sdk(papiea_config.host, papiea_config.port, server_config.host, server_config.port);
-        expect(sdk.add_kind(location_kind)).toBeTruthy();
-        expect(sdk.add_kind(location_kind)).toBeFalsy();
+        expect(sdk.add_kind(location_kind_manager.kind)).not.toBeNull();
+        expect(sdk.add_kind(location_kind_manager.kind)).toBeNull();
         done();
     });
     test("Provider should be created on papiea", async (done) => {
@@ -140,7 +140,7 @@ describe("Provider Sdk tests", () => {
     });
     test("Provider with procedures should be created on papiea", async (done) => {
         const sdk = ProviderSdk.create_sdk(papiea_config.host, papiea_config.port, server_config.host, server_config.port);
-        sdk.new_kind(location_yaml);
+        const location = sdk.new_kind(location_yaml);
         sdk.version(provider_version);
         sdk.prefix("location_provider");
         const proceduralSignature: Procedural_Signature = {
@@ -150,14 +150,14 @@ describe("Provider Sdk tests", () => {
             execution_strategy: Procedural_Execution_Strategy.Halt_Intentful,
             procedure_callback: procedure_callback
         };
-        sdk.procedure(proceduralSignature.name, {}, proceduralSignature.execution_strategy, proceduralSignature.argument, proceduralSignature.result, async (ctx, entity, input) => {
+        location.procedure(proceduralSignature.name, {}, proceduralSignature.execution_strategy, proceduralSignature.argument, proceduralSignature.result, async (ctx, entity, input) => {
             entity.spec.x += input;
             const res = await axios.put(ctx.url_for(entity), {
                 spec: entity.spec,
                 metadata: entity.metadata
             });
             return res.data;
-        }, "Location");
+        });
         try {
             await sdk.register();
         } catch (e) {
@@ -166,36 +166,9 @@ describe("Provider Sdk tests", () => {
         sdk.server.close();
         done();
     });
-    test("Provider with procedures with unknown kind should fail", async (done) => {
-        expect.assertions(1);
-        const sdk = ProviderSdk.create_sdk(papiea_config.host, papiea_config.port, server_config.host, server_config.port);
-        sdk.new_kind(location_yaml);
-        sdk.version(provider_version);
-        sdk.prefix("location_provider");
-        const proceduralSignature: Procedural_Signature = {
-            name: "moveX",
-            argument: loadYaml("./procedure_move_input.yml"),
-            result: loadYaml("./location_kind_test_data.yml"),
-            execution_strategy: Procedural_Execution_Strategy.Halt_Intentful,
-            procedure_callback: procedure_callback
-        };
-        try {
-            sdk.procedure(proceduralSignature.name, {}, proceduralSignature.execution_strategy, proceduralSignature.argument, proceduralSignature.result, async (ctx, entity, input) => {
-                entity.spec.x += input;
-                const res = await axios.put(ctx.url_for(entity), {
-                    spec: entity.spec,
-                    metadata: entity.metadata
-                });
-                return res.data;
-            }, "unknown_kind");
-        } catch (e) {
-            expect(e.message).toBe("Kind not found");
-            done();
-        }
-    });
     test("Entity should be allowed to be modified using procedures defined using provider SDK", async (done) => {
         const sdk = ProviderSdk.create_sdk(papiea_config.host, papiea_config.port, server_config.host, server_config.port);
-        sdk.new_kind(location_yaml);
+        const location = sdk.new_kind(location_yaml);
         sdk.version(provider_version);
         sdk.prefix("location_provider");
         const proceduralSignature: Procedural_Signature = {
@@ -205,14 +178,14 @@ describe("Provider Sdk tests", () => {
             execution_strategy: Procedural_Execution_Strategy.Halt_Intentful,
             procedure_callback: procedure_callback
         };
-        sdk.procedure(proceduralSignature.name, {}, proceduralSignature.execution_strategy, proceduralSignature.argument, proceduralSignature.result, async (ctx, entity, input) => {
+        location.procedure(proceduralSignature.name, {}, proceduralSignature.execution_strategy, proceduralSignature.argument, proceduralSignature.result, async (ctx, entity, input) => {
             entity.spec.x += input;
             const res = await axios.put(ctx.url_for(entity), {
                 spec: entity.spec,
                 metadata: entity.metadata
             });
             return res.data;
-        }, "Location");
+        });
         await sdk.register();
         const kind_name = sdk.provider.kinds[0].name;
         const { data: { metadata, spec } } = await axios.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ kind_name }`, {
@@ -235,7 +208,7 @@ describe("Provider Sdk tests", () => {
     });
     test("Malformed handler registered on sdk should fail", async (done) => {
         const sdk = ProviderSdk.create_sdk(papiea_config.host, papiea_config.port, server_config.host, server_config.port);
-        sdk.new_kind(location_yaml);
+        const location = sdk.new_kind(location_yaml);
         sdk.version(provider_version);
         sdk.prefix("location_provider");
         const proceduralSignature: Procedural_Signature = {
@@ -245,11 +218,11 @@ describe("Provider Sdk tests", () => {
             execution_strategy: Procedural_Execution_Strategy.Halt_Intentful,
             procedure_callback: procedure_callback
         };
-        sdk.procedure(proceduralSignature.name, {}, proceduralSignature.execution_strategy, proceduralSignature.argument, proceduralSignature.result, async (ctx, entity, input) => {
+        location.procedure(proceduralSignature.name, {}, proceduralSignature.execution_strategy, proceduralSignature.argument, proceduralSignature.result, async (ctx, entity, input) => {
 
             throw new Error("Malformed provider")
 
-        }, "Location");
+        });
         await sdk.register();
         const kind_name = sdk.provider.kinds[0].name;
         const { data: { metadata, spec } } = await axios.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ kind_name }`, {
@@ -270,7 +243,7 @@ describe("Provider Sdk tests", () => {
     test("Registering Provider procedures without prefix already set should fail", async (done) => {
         expect.assertions(1);
         const sdk = ProviderSdk.create_sdk(papiea_config.host, papiea_config.port, server_config.host, server_config.port);
-        sdk.new_kind(location_yaml);
+        const location = sdk.new_kind(location_yaml);
         sdk.version(provider_version);
         const proceduralSignature: Procedural_Signature = {
             name: "moveX",
@@ -280,14 +253,14 @@ describe("Provider Sdk tests", () => {
             procedure_callback: procedure_callback
         };
         try {
-            sdk.procedure(proceduralSignature.name, {}, proceduralSignature.execution_strategy, proceduralSignature.argument, proceduralSignature.result, async (ctx, entity, input) => {
+            location.procedure(proceduralSignature.name, {}, proceduralSignature.execution_strategy, proceduralSignature.argument, proceduralSignature.result, async (ctx, entity, input) => {
                 entity.spec.x += input;
                 const res = await axios.put(ctx.url_for(entity), {
                     spec: entity.spec,
                     metadata: entity.metadata
                 });
                 return res.data;
-            }, "Location");
+            });
         } catch (e) {
             expect(e.message).toBe("Provider prefix is not set");
             done();

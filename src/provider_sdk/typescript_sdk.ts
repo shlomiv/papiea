@@ -54,7 +54,7 @@ export class ProviderSdk implements ProviderImpl {
         return this.server_manager.server;
     }
 
-    new_kind(entity_description: Data_Description): Kind_Procedure_Builder {
+    new_kind(entity_description: Data_Description): Kind_Builder {
         if (Object.keys(entity_description).length === 0) {
             throw new Error("Wrong kind description specified")
         }
@@ -70,9 +70,9 @@ export class ProviderSdk implements ProviderImpl {
                     procedures: {},
                     differ: undefined,
                 };
-                const kind_procedure_builder = new Kind_Procedure_Builder(spec_only_kind, this.entity_url, this.get_prefix, this.server_manager);
+                const kind_builder = new Kind_Builder(spec_only_kind, this.entity_url, this.get_prefix, this.server_manager);
                 this._kind.push(spec_only_kind);
-                return kind_procedure_builder;
+                return kind_builder;
             } else {
                 //TODO: process non spec-only
                 throw new Error("Unimplemented")
@@ -82,11 +82,11 @@ export class ProviderSdk implements ProviderImpl {
         }
     }
 
-    add_kind(kind: Kind): Kind_Procedure_Builder | null {
+    add_kind(kind: Kind): Kind_Builder | null {
         if (this._kind.indexOf(kind) === -1) {
             this._kind.push(kind);
-            const kind_procedure_builder = new Kind_Procedure_Builder(kind, this.entity_url, this.get_prefix, this.server_manager);
-            return kind_procedure_builder;
+            const kind_builder = new Kind_Builder(kind, this.entity_url, this.get_prefix, this.server_manager);
+            return kind_builder;
         } else {
             return null;
         }
@@ -190,7 +190,7 @@ class Provider_Server_Manager {
     }
 }
 
-export class Kind_Procedure_Builder {
+export class Kind_Builder {
 
     kind: Kind;
     entity_url: string;

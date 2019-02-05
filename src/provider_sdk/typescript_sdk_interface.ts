@@ -1,14 +1,14 @@
 // [[file:~/work/papiea-js/Papiea-design.org::*Typescript:%20/src/provider_sdk/typescript_sdk_interface][Typescript: /src/provider_sdk/typescript_sdk_interface:1]]
 import * as core from "../core";
 import { Entity } from "../core";
-import { Kind_Procedure_Builder } from "./typescript_sdk";
+import { Kind_Builder } from "./typescript_sdk";
 
 // [[file:~/work/papiea-js/Papiea-design.org::#h-Providers-SDK-518][provider_sdk_ts_provider_interface]]
 // Api for the provider-sdk
 export enum Provider_Power {On, Off, Suspended};
 
 export interface Provider {
-    new_kind(entity_yaml:core.Data_Description):Kind_Procedure_Builder;
+    new_kind(entity_yaml:core.Data_Description):Kind_Builder;
     version(version: core.Version):void;
     power(state: Provider_Power): Provider_Power;
 }

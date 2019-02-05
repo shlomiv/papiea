@@ -3,10 +3,11 @@ import { Status_DB } from "../databases/status_db_interface";
 import { Spec_DB } from "../databases/spec_db_interface";
 import { Provider_DB } from "../databases/provider_db_interface";
 import { Kind, Procedural_Signature } from "../papiea";
-import { AdditionalData, Data_Description, Entity_Reference, Metadata, Spec, uuid4 } from "../core";
+import { Data_Description, Entity_Reference, Metadata, Spec, uuid4 } from "../core";
 import uuid = require("uuid");
 import { EntityApiInterface } from "./entity_api_interface";
 import { Validator } from "../validator";
+import * as uuid_validate from "uuid-validate";
 
 export class ProcedureInvocationError extends Error {
     errors: string[];
@@ -47,9 +48,11 @@ export class EntityAPI implements EntityApiInterface {
         if (!request_metadata.spec_version) {
             request_metadata.spec_version = 0;
         }
+        if (!uuid_validate(request_metadata.uuid)) {
+            throw new Error("uuid is not valid")
+        }
         request_metadata.created_at = new Date();
         request_metadata.kind = kind.name;
-        //TODO: kind.validator_fn(entity)
         return this.spec_db.update_spec(request_metadata, spec_description)
     }
 

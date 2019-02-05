@@ -212,6 +212,24 @@ describe("Entity API tests", () => {
         }
     });
 
+    test("Create entity with non valid uuid should be an error", async (done) => {
+        expect.assertions(1);
+        try {
+            const { data: { metadata, spec } } = await entityApi.post(`/${ providerPrefix }/${ kind_name }`, {
+                spec: {
+                    x: 10,
+                    y: 11
+                },
+                metadata: {
+                    uuid: "123"
+                }
+            });
+        } catch (e) {
+            expect(e.message).toBe("uuid is not valid");
+            done();
+        }
+    });
+
     test("Delete entity", async (done) => {
         try {
             await entityApi.delete(`/${ providerPrefix }/${ kind_name }/${ entity_metadata.uuid }`);

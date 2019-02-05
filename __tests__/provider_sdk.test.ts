@@ -2,7 +2,7 @@ import "jest"
 import { load } from "js-yaml";
 import { readFileSync } from "fs";
 import { resolve } from "path";
-import { Kind_Procedure_Builder, ProviderSdk } from "../src/provider_sdk/typescript_sdk";
+import { Kind_Builder, ProviderSdk } from "../src/provider_sdk/typescript_sdk";
 import { plural } from "pluralize"
 import { Procedural_Execution_Strategy, Procedural_Signature } from "../src/papiea";
 import { loadYaml } from "./test_data_factory";
@@ -112,7 +112,7 @@ describe("Provider Sdk tests", () => {
         sdk.new_kind(geo_location_yaml);
         done();
     });
-    let location_kind_manager: Kind_Procedure_Builder;
+    let location_kind_manager: Kind_Builder;
     test("Duplicate delete on kind should return false", (done) => {
         const sdk = ProviderSdk.create_sdk(papiea_config.host, papiea_config.port, server_config.host, server_config.port);
         location_kind_manager = sdk.new_kind(location_yaml);

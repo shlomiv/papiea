@@ -7,6 +7,7 @@ import { Data_Description, Entity_Reference, Metadata, Spec, uuid4 } from "../co
 import uuid = require("uuid");
 import { EntityApiInterface } from "./entity_api_interface";
 import { Validator } from "../validator";
+import * as uuid_validate from "uuid-validate";
 
 export class ProcedureInvocationError extends Error {
     errors: string[];
@@ -40,10 +41,19 @@ export class EntityAPI implements EntityApiInterface {
         return found_kind;
     }
 
-    async save_entity(kind: Kind, spec_description: Spec): Promise<[Metadata, Spec]> {
-        const metadata: Metadata = { uuid: uuid(), spec_version: 0, created_at: new Date(), kind: kind.name };
-        //TODO: kind.validator_fn(entity)
-        return this.spec_db.update_spec(metadata, spec_description)
+    async save_entity(kind: Kind, spec_description: Spec, request_metadata: Metadata = {} as Metadata): Promise<[Metadata, Spec]> {
+        if (!request_metadata.uuid) {
+            request_metadata.uuid = uuid();
+        }
+        if (!request_metadata.spec_version) {
+            request_metadata.spec_version = 0;
+        }
+        if (!uuid_validate(request_metadata.uuid)) {
+            throw new Error("uuid is not valid")
+        }
+        request_metadata.created_at = new Date();
+        request_metadata.kind = kind.name;
+        return this.spec_db.update_spec(request_metadata, spec_description)
     }
 
     async get_entity_spec(kind: Kind, entity_uuid: uuid4): Promise<[Metadata, Spec]> {

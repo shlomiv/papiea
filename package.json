@@ -31,11 +31,13 @@
     "pluralize": "^7.0.0",
     "query-string": "^6.2.0",
     "swagger-model-validator": "^3.0.6",
-    "uuid": "^3.3.2"
+    "uuid": "^3.3.2",
+    "uuid-validate": "0.0.3"
   },
   "devDependencies": {
     "@types/jest": "^23.3.10",
     "@types/swagger-parser": "^4.0.2",
+    "@types/uuid-validate": "0.0.0",
     "jest": "^23.6.0",
     "jest-junit": "^5.2.0",
     "nodemon": "^1.18.8",

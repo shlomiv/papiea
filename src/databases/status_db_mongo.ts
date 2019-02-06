@@ -12,8 +12,8 @@ export class Status_DB_Mongo implements Status_DB {
 
     async init(): Promise<void> {
         await this.collection.createIndex(
-            {"metadata.uuid": 1},
-            {name: "entity_uuid", unique: true}
+            { "metadata.uuid": 1 },
+            { name: "entity_uuid", unique: true }
         );
     }
 
@@ -22,15 +22,15 @@ export class Status_DB_Mongo implements Status_DB {
             "metadata.uuid": entity_ref.uuid,
             "metadata.kind": entity_ref.kind
         }, {
-            $set: {
-                "status": status
-            },
-            $setOnInsert: {
-                "created_at": new Date()
-            }
-        }, {
-            upsert: true
-        });
+                $set: {
+                    "status": status
+                },
+                $setOnInsert: {
+                    "metadata.created_at": new Date()
+                }
+            }, {
+                upsert: true
+            });
         if (result.result.n !== 1) {
             throw new Error(`Amount of updated entries doesn't equal to 1: ${result.result.n}`)
         }
@@ -63,10 +63,10 @@ export class Status_DB_Mongo implements Status_DB {
             "metadata.uuid": entity_ref.uuid,
             "metadata.kind": entity_ref.kind
         }, {
-            $set: {
-                "deletedAt": new Date()
-            }
-        });
+                $set: {
+                    "metadata.deleted_at": new Date()
+                }
+            });
         if (result.result.n === undefined || result.result.ok !== 1) {
             throw new Error("Failed to remove status");
         }

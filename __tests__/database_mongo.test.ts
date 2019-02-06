@@ -136,7 +136,7 @@ describe("MongoDb tests", () => {
             done.fail(new Error("specDb is undefined"));
             return;
         }
-        specDb.list_specs({ "metadata.kind": "test" }).then(res => {
+        specDb.list_specs({ metadata: { "kind": "test" } }).then(res => {
             expect(res.length).toBeGreaterThanOrEqual(1);
             done();
         });
@@ -147,7 +147,7 @@ describe("MongoDb tests", () => {
             done.fail(new Error("specDb is undefined"));
             return;
         }
-        specDb.list_specs({ "metadata.kind": "test", "spec.a": "A1" }).then(res => {
+        specDb.list_specs({ metadata: { "kind": "test" }, spec: { "a": "A1" } }).then(res => {
             expect(res).not.toBeNull();
             expect(res[0]).not.toBeNull();
             expect(res.length).toBeGreaterThanOrEqual(1);

@@ -98,15 +98,21 @@ describe("Entity API tests", () => {
 
     test("Filter entity", async (done) => {
         try {
-            const res = await entityApi.post(`${ providerPrefix }/${ kind_name }/filter`, {
-                filter_fields: {
-                    spec: {
-                        x: 10,
-                        y: 11
-                    }
+            let res = await entityApi.post(`${ providerPrefix }/${ kind_name }/filter`, {
+                spec: {
+                    x: 10,
+                    y: 11
                 }
             });
             expect(res.data.length).toBeGreaterThanOrEqual(1);
+            res = await entityApi.post(`${ providerPrefix }/${ kind_name }/filter`, {
+                spec: {
+                    x: 10,
+                    y: 11,
+                    z: 111
+                }
+            });
+            expect(res.data.length).toBe(0);
             done();
         } catch (e) {
             done.fail(e);
@@ -231,9 +237,9 @@ describe("Entity API tests", () => {
     test("Delete entity", async (done) => {
         try {
             await entityApi.delete(`/${ providerPrefix }/${ kind_name }/${ entity_metadata.uuid }`);
-            done();
         } catch (e) {
             done.fail(e);
+            return;
         }
         try {
             await entityApi.get(`/${ providerPrefix }/${ kind_name }/${ entity_metadata.uuid }`);

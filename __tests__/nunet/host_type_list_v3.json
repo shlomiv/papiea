@@ -1,0 +1,101 @@
+{
+    "api_version": "1.0",
+    "entities": [
+        {
+            "metadata": {
+                "categories": {},
+                "kind": "host_type",
+                "spec_version": 0,
+                "uuid": "cc123f92-4096-416e-9b62-a205358e0a68",
+                "tenant_uuid": "3fff85e0-8958-493d-8f55-d4467e81383d",
+                "owner": "binny@nutanix.com"
+            },
+            "spec": {
+                "name": "i3.metal",
+                "provider": "AWS",
+                "instance_type": "i3.metal",
+                "cpu_model": "Intel Xeon E5 2686 v4",
+                "memory_capacity_mib": 524288
+            },
+            "status": {
+                "name": "i3.metal",
+                "provider": "AWS",
+                "instance_type": "i3.metal",
+                "cpu_model": "Intel Xeon E5 2686 v4",
+                "memory_capacity_mib": 524288
+            }
+        },
+        {
+            "metadata": {
+                "categories": {},
+                "kind": "host_type",
+                "spec_version": 0,
+                "uuid": "cc133f92-4096-416e-9b62-a205358e0a68",
+                "tenant_uuid": "3fff85e0-8958-493d-8f55-d4467e81383d",
+                "owner": "binny@nutanix.com"
+            },
+            "spec": {
+                "name": "t2.micro",
+                "provider": "AWS",
+                "instance_type": "t2.micro",
+                "cpu_model": "Intel Xeon E5 2686 v4",
+                "memory_capacity_mib": 102400
+            },
+            "status": {
+                "name": "t2.micro",
+                "provider": "AWS",
+                "instance_type": "t2.micro",
+                "cpu_model": "Intel Xeon E5 2686 v4",
+                "memory_capacity_mib": 102400
+            }
+        },
+        {
+            "metadata": {
+                "categories": {},
+                "kind": "host_type",
+                "spec_version": 0,
+                "uuid": "cc143f92-4096-416e-9b62-a205358e0a68",
+                "tenant_uuid": "3fff85e0-8958-493d-8f55-d4467e81383d",
+                "owner": "binny@nutanix.com"
+            },
+            "spec": {
+                "name": "t2.medium",
+                "provider": "AWS",
+                "instance_type": "t2.medium",
+                "cpu_model": "Intel Xeon E5 2686 v4",
+                "memory_capacity_mib": 204800
+            },
+            "status": {
+                "name": "t2.medium",
+                "provider": "AWS",
+                "instance_type": "t2.medium",
+                "cpu_model": "Intel Xeon E5 2686 v4",
+                "memory_capacity_mib": 204800
+            }
+        },
+        {
+            "metadata": {
+                "categories": {},
+                "kind": "host_type",
+                "spec_version": 0,
+                "uuid": "dd143f92-4096-416e-9b62-a205358e0a68",
+                "tenant_uuid": "3fff85e0-8958-493d-8f55-d4467e81383d",
+                "owner": "binny@nutanix.com"
+            },
+            "spec": {
+                "name": "t2.xlarge",
+                "provider": "AWS",
+                "instance_type": "t2.xlarge",
+                "cpu_model": "Intel Xeon E5 2686 v4",
+                "memory_capacity_mib": 204800
+            },
+            "status": {
+                "name": "t2.xlarge",
+                "provider": "AWS",
+                "instance_type": "t2.xlarge",
+                "cpu_model": "Intel Xeon E5 2686 v4",
+                "memory_capacity_mib": 204800
+            }
+        }
+    ]
+}

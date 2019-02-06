@@ -28,7 +28,7 @@ export class Spec_DB_Mongo implements Spec_DB {
             "metadata.kind": entity_metadata.kind,
             "metadata.spec_version": entity_metadata.spec_version
         };
-        const additional_fields: any = { created_at: new Date() };
+        const additional_fields: any = { "metadata.created_at": new Date() };
         for (let key in entity_metadata) {
             if (key !== "created_at" && key !== "deleted_at" && !Object.keys(filter).includes("metadata." + key)) {
                 additional_fields["metadata." + key] = entity_metadata[key];
@@ -44,10 +44,10 @@ export class Spec_DB_Mongo implements Spec_DB {
                 },
                 $setOnInsert: additional_fields
             }, {
-                upsert: true
-            });
+                    upsert: true
+                });
             if (result.result.n !== 1) {
-                throw new Error(`Amount of updated entries doesn't equal to 1: ${ result.result.n }`)
+                throw new Error(`Amount of updated entries doesn't equal to 1: ${result.result.n}`)
             }
             entity_metadata.spec_version++;
             return [entity_metadata, spec]
@@ -65,7 +65,8 @@ export class Spec_DB_Mongo implements Spec_DB {
     async get_spec(entity_ref: core.Entity_Reference): Promise<[core.Metadata, core.Spec]> {
         const result: Entity | null = await this.collection.findOne({
             "metadata.uuid": entity_ref.uuid,
-            "metadata.kind": entity_ref.kind
+            "metadata.kind": entity_ref.kind,
+            "metadata.deleted_at": null
         });
         if (result === null) {
             throw new Error("Entity not found")
@@ -74,7 +75,15 @@ export class Spec_DB_Mongo implements Spec_DB {
     }
 
     async list_specs(fields_map: any): Promise<([core.Metadata, core.Spec])[]> {
-        const result = await this.collection.find(fields_map).toArray();
+        fields_map.metadata.deleted_at = null;
+        const filter: any = {};
+        for (let key in fields_map.metadata) {
+            filter["metadata." + key] = fields_map.metadata[key];
+        }
+        for (let key in fields_map.spec) {
+            filter["spec." + key] = fields_map.spec[key];
+        }
+        const result = await this.collection.find(filter).toArray();
         return result.map((x: any): [core.Metadata, core.Spec] => {
             if (x.spec !== null) {
                 return [x.metadata, x.spec]
@@ -89,15 +98,15 @@ export class Spec_DB_Mongo implements Spec_DB {
             "metadata.uuid": entity_ref.uuid,
             "metadata.kind": entity_ref.kind
         }, {
-            $set: {
-                "deletedAt": new Date()
-            }
-        });
+                $set: {
+                    "metadata.deleted_at": new Date()
+                }
+            });
         if (result.result.n === undefined || result.result.ok !== 1) {
             throw new Error("Failed to remove spec");
         }
         if (result.result.n !== 1 && result.result.n !== 0) {
-            throw new Error(`Amount of entities deleted must be 0 or 1, found: ${ result.result.n }`);
+            throw new Error(`Amount of entities deleted must be 0 or 1, found: ${result.result.n}`);
         }
         return;
     }

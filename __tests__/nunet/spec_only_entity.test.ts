@@ -2,7 +2,6 @@ import "jest"
 import axios from "axios"
 import uuid = require("uuid");
 import { ProviderSdk } from "../../src/provider_sdk/typescript_sdk";
-import { Data_Description } from "../../src/core";
 import { loadYaml, loadJson } from "../test_data_factory";
 
 
@@ -38,20 +37,27 @@ const entityApi = axios.create({
 describe("Entity API tests", () => {
     const providerPrefix = "nunet";
     const providerVersion = "0.1.0";
-    const dataDescription: Data_Description = loadYaml("./nunet/host_type_data.yml");
-    const kindName = "HostType";
     beforeAll(async () => {
-        try {
-            const { data } = await entityApi.get(`/${providerPrefix}/${kindName}`);
-            for (var i = 0; i < data.length; i++) {
-                await entityApi.delete(`/${providerPrefix}/${kindName}/${data[i].metadata.uuid}`);
+        const kindNames = ["Geolocation", "HostType"];
+        for (var j = 0; j < kindNames.length; j++) {
+            const kindName = kindNames[j];
+            try {
+                const { data } = await entityApi.get(`/${providerPrefix}/${kindName}`);
+                for (var i = 0; i < data.length; i++) {
+                    await entityApi.delete(`/${providerPrefix}/${kindName}/${data[i].metadata.uuid}`);
+                }
+            } catch (e) {
             }
+        }
+        
+        try {
             await providerApi.delete(`${providerPrefix}/${providerVersion}`);
         } catch (e) {
         }
 
         const sdk = ProviderSdk.create_sdk(papiea_config.host, papiea_config.port, server_config.host, server_config.port);
-        sdk.new_kind(dataDescription);
+        sdk.new_kind(loadYaml("./nunet/geolocation_data.yml"));
+        sdk.new_kind(loadYaml("./nunet/host_type_data.yml"));
         sdk.version(providerVersion);
         sdk.prefix(providerPrefix);
         await sdk.register();
@@ -60,7 +66,52 @@ describe("Entity API tests", () => {
     afterAll(async () => {
     });
 
-    test("Create entity", async (done) => {
+    test("Create geolocations", async (done) => {
+        const kindName = "Geolocation";
+        const geolocationList = loadJson('./nunet/geolocation_list_v3.json')['entities'];
+        try {
+            for (var i = 0; i < geolocationList.length; i++) {
+                const geolocation = geolocationList[i];
+                geolocation.metadata.uuid = null;
+                await entityApi.post(`/${providerPrefix}/${kindName}`, geolocation);
+            }
+            done();
+        } catch (e) {
+            done.fail(e);
+        }
+    });
+
+    test("Filter geolocations by tenant uuid", async (done) => {
+        const kindName = "Geolocation";
+        const geolocationList = loadJson('./nunet/geolocation_list_v3.json')['entities'];
+        const tenantUuid = geolocationList[0]['metadata']['tenant_uuid'];
+        try {
+            const res = await entityApi.post(`${providerPrefix}/${kindName}/filter`, {
+                metadata: {
+                    tenant_uuid: tenantUuid
+                }
+            });
+            expect(res.data.length).toBeGreaterThanOrEqual(1);
+        } catch (e) {
+            done.fail(e);
+            return;
+        }
+        try {
+            const res = await entityApi.post(`${providerPrefix}/${kindName}/filter`, {
+                metadata: {
+                    tenant_uuid: uuid()
+                }
+            });
+            expect(res.data.length).toBe(0);
+        } catch (e) {
+            done.fail(e);
+            return;
+        }
+        done();
+    });
+
+    test("Create host types", async (done) => {
+        const kindName = "HostType";
         const hostTypeList = loadJson('./nunet/host_type_list_v3.json')['entities'];
         try {
             for (var i = 0; i < hostTypeList.length; i++) {
@@ -74,7 +125,8 @@ describe("Entity API tests", () => {
         }
     });
 
-    test("Filter by tenant uuid", async (done) => {
+    test("Filter host types by tenant uuid", async (done) => {
+        const kindName = "HostType";
         const hostTypeList = loadJson('./nunet/host_type_list_v3.json')['entities'];
         const tenantUuid = hostTypeList[0]['metadata']['tenant_uuid'];
         try {

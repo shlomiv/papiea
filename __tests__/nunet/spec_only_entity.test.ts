@@ -1,7 +1,6 @@
 import "jest"
 import axios from "axios"
 import uuid = require("uuid");
-import { ProviderSdk } from "../../src/provider_sdk/typescript_sdk";
 import { loadYaml, loadJson } from "../test_data_factory";
 
 
@@ -49,18 +48,35 @@ describe("Entity API tests", () => {
             } catch (e) {
             }
         }
-        
+
         try {
             await providerApi.delete(`${providerPrefix}/${providerVersion}`);
         } catch (e) {
         }
 
-        const sdk = ProviderSdk.create_sdk(papiea_config.host, papiea_config.port, server_config.host, server_config.port);
-        sdk.new_kind(loadYaml("./nunet/geolocation_data.yml"));
-        sdk.new_kind(loadYaml("./nunet/host_type_data.yml"));
-        sdk.version(providerVersion);
-        sdk.prefix(providerPrefix);
-        await sdk.register();
+        const provider = {
+            "kinds": [
+                {
+                    "name": "Geolocation",
+                    "name_plural": "Geolocations",
+                    "kind_structure": loadYaml("./nunet/geolocation_data.yml"),
+                    "intentful_signatures": {},
+                    "dependency_tree": {},
+                    "procedures": {}
+                },
+                {
+                    "name": "HostType",
+                    "name_plural": "HostTypes",
+                    "kind_structure": loadYaml("./nunet/host_type_data.yml"),
+                    "intentful_signatures": {},
+                    "dependency_tree": {},
+                    "procedures": {}
+                }
+            ],
+            "version": "0.1.0",
+            "prefix": "nunet"
+        };
+        await providerApi.post('', provider);
     });
 
     afterAll(async () => {

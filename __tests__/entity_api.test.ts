@@ -218,6 +218,41 @@ describe("Entity API tests", () => {
         }
     });
 
+    test("Filter entity by additional fields", async (done) => {
+        try {
+            await entityApi.post(`/${ providerPrefix }/${ kind_name }`, {
+                spec: {
+                    x: 10,
+                    y: 11
+                },
+                metadata: {
+                    _key: "123"
+                }
+            });
+            const res = await entityApi.post(`${providerPrefix}/${kind_name}/filter`, {
+                metadata: {
+                    _key: "123"
+                }
+            });
+            expect(res.data.length).toBeGreaterThanOrEqual(1);
+        } catch (e) {
+            done.fail(e);
+            return;
+        }
+        try {
+            const res = await entityApi.post(`${providerPrefix}/${kind_name}/filter`, {
+                metadata: {
+                    _key: "abc"
+                }
+            });
+            expect(res.data.length).toBe(0);
+        } catch (e) {
+            done.fail(e);
+            return;
+        }
+        done();
+    });
+
     test("Create entity with non valid uuid should be an error", async (done) => {
         try {
             const { data: { metadata, spec } } = await entityApi.post(`/${ providerPrefix }/${ kind_name }`, {

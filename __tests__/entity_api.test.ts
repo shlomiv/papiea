@@ -4,6 +4,7 @@ import { ProviderSdk } from "../src/provider_sdk/typescript_sdk";
 import { Metadata, Spec } from "../src/core";
 import { getLocationDataDescription } from "./test_data_factory";
 import { stringify } from "querystring"
+import uuid = require("uuid");
 
 
 declare var process: {
@@ -266,6 +267,27 @@ describe("Entity API tests", () => {
             });
         } catch (e) {
             done();
+        }
+    });
+
+    test("Create entity and provide uuid", async (done) => {
+        try {
+            const entity_uuid = uuid();
+            const { data: { metadata, spec } } = await entityApi.post(`/${ providerPrefix }/${ kind_name }`, {
+                spec: {
+                    x: 10,
+                    y: 11
+                },
+                metadata: {
+                    uuid: entity_uuid
+                }
+            });
+            expect(metadata.uuid).toEqual(entity_uuid);
+            const res = await entityApi.get(`/${ providerPrefix }/${ kind_name }/${ entity_uuid }`);
+            expect(res.data.metadata.uuid).toEqual(entity_uuid);
+            done();
+        } catch (e) {
+            done.fail(e);
         }
     });
 

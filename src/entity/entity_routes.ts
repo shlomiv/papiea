@@ -28,6 +28,13 @@ export function createEntityRoutes(entity_api: EntityAPI): Router {
         const filter: any = {};
         if (req.query.spec) {
             filter.spec = JSON.parse(req.query.spec);
+        } else {
+            filter.spec = {};
+        }
+        if (req.query.metadata) {
+            filter.metadata = JSON.parse(req.query.metadata);
+        } else {
+            filter.metadata = {};
         }
         let result: any[] = await entity_api.filter_entity_spec(req.params.entity_kind, filter);
         result = result.map(x => {
@@ -45,6 +52,13 @@ export function createEntityRoutes(entity_api: EntityAPI): Router {
         const filter: any = {};
         if (req.body.spec) {
             filter.spec = req.body.spec;
+        } else {
+            filter.spec = {};
+        }
+        if (req.body.metadata) {
+            filter.metadata = req.body.metadata;
+        } else {
+            filter.metadata = {};
         }
         let result: any[] = await entity_api.filter_entity_spec(req.params.entity_kind, filter);
         result = result.map(x => {

@@ -3,7 +3,7 @@ import { readFileSync } from "fs";
 import { resolve } from "path";
 import { plural } from "pluralize";
 import { Provider, SpecOnlyEntityKind, Procedural_Signature, Procedural_Execution_Strategy } from "../src/papiea";
-import { Entity, Data_Description, Provider_Callback_URL } from "../src/core";
+import { Data_Description, Provider_Callback_URL } from "../src/core";
 
 function randomString(len: number) {
     var charSet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -17,6 +17,10 @@ function randomString(len: number) {
 
 export function loadYaml(relativePath: string): any {
     return load(readFileSync(resolve(__dirname, relativePath), "utf-8"));
+}
+
+export function loadJson(relativePath: string): any {
+    return JSON.parse(readFileSync(resolve(__dirname, relativePath), 'utf8'));
 }
 
 export function getLocationDataDescription(): Data_Description {

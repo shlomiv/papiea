@@ -4,6 +4,7 @@ import { ProviderSdk } from "../src/provider_sdk/typescript_sdk";
 import { Metadata, Spec } from "../src/core";
 import { getLocationDataDescription } from "./test_data_factory";
 import { stringify } from "querystring"
+import uuid = require("uuid");
 
 
 declare var process: {
@@ -98,15 +99,21 @@ describe("Entity API tests", () => {
 
     test("Filter entity", async (done) => {
         try {
-            const res = await entityApi.post(`${ providerPrefix }/${ kind_name }/filter`, {
-                filter_fields: {
-                    spec: {
-                        x: 10,
-                        y: 11
-                    }
+            let res = await entityApi.post(`${ providerPrefix }/${ kind_name }/filter`, {
+                spec: {
+                    x: 10,
+                    y: 11
                 }
             });
             expect(res.data.length).toBeGreaterThanOrEqual(1);
+            res = await entityApi.post(`${ providerPrefix }/${ kind_name }/filter`, {
+                spec: {
+                    x: 10,
+                    y: 11,
+                    z: 111
+                }
+            });
+            expect(res.data.length).toBe(0);
             done();
         } catch (e) {
             done.fail(e);
@@ -212,6 +219,41 @@ describe("Entity API tests", () => {
         }
     });
 
+    test("Filter entity by additional fields", async (done) => {
+        try {
+            await entityApi.post(`/${ providerPrefix }/${ kind_name }`, {
+                spec: {
+                    x: 10,
+                    y: 11
+                },
+                metadata: {
+                    _key: "123"
+                }
+            });
+            const res = await entityApi.post(`${providerPrefix}/${kind_name}/filter`, {
+                metadata: {
+                    _key: "123"
+                }
+            });
+            expect(res.data.length).toBeGreaterThanOrEqual(1);
+        } catch (e) {
+            done.fail(e);
+            return;
+        }
+        try {
+            const res = await entityApi.post(`${providerPrefix}/${kind_name}/filter`, {
+                metadata: {
+                    _key: "abc"
+                }
+            });
+            expect(res.data.length).toBe(0);
+        } catch (e) {
+            done.fail(e);
+            return;
+        }
+        done();
+    });
+
     test("Create entity with non valid uuid should be an error", async (done) => {
         try {
             const { data: { metadata, spec } } = await entityApi.post(`/${ providerPrefix }/${ kind_name }`, {
@@ -228,12 +270,33 @@ describe("Entity API tests", () => {
         }
     });
 
-    test("Delete entity", async (done) => {
+    test("Create entity and provide uuid", async (done) => {
         try {
-            await entityApi.delete(`/${ providerPrefix }/${ kind_name }/${ entity_metadata.uuid }`);
+            const entity_uuid = uuid();
+            const { data: { metadata, spec } } = await entityApi.post(`/${ providerPrefix }/${ kind_name }`, {
+                spec: {
+                    x: 10,
+                    y: 11
+                },
+                metadata: {
+                    uuid: entity_uuid
+                }
+            });
+            expect(metadata.uuid).toEqual(entity_uuid);
+            const res = await entityApi.get(`/${ providerPrefix }/${ kind_name }/${ entity_uuid }`);
+            expect(res.data.metadata.uuid).toEqual(entity_uuid);
             done();
         } catch (e) {
             done.fail(e);
+        }
+    });
+
+    test("Delete entity", async (done) => {
+        try {
+            await entityApi.delete(`/${ providerPrefix }/${ kind_name }/${ entity_metadata.uuid }`);
+        } catch (e) {
+            done.fail(e);
+            return;
         }
         try {
             await entityApi.get(`/${ providerPrefix }/${ kind_name }/${ entity_metadata.uuid }`);

@@ -36,7 +36,7 @@ export class EntityAPI implements EntityApiInterface {
         const provider = await this.provider_db.get_provider(prefix);
         const found_kind: Kind | undefined = provider.kinds.find(elem => elem.name === kind);
         if (found_kind === undefined) {
-            throw new Error(`Kind: ${ kind } not found on the provider with prefix: ${ prefix }`)
+            throw new Error(`Kind: ${kind} not found on the provider with prefix: ${prefix}`)
         }
         return found_kind;
     }
@@ -62,7 +62,7 @@ export class EntityAPI implements EntityApiInterface {
     }
 
     async filter_entity_spec(kind: Kind, fields: any): Promise<[Metadata, Spec][]> {
-        fields["metadata.kind"] = kind.name;
+        fields.metadata.kind = kind.name;
         return this.spec_db.list_specs(fields);
     }
 
@@ -81,7 +81,7 @@ export class EntityAPI implements EntityApiInterface {
         const entity_data: [Metadata, Spec] = await this.get_entity_spec(kind, entity_uuid);
         const procedure: Procedural_Signature | undefined = kind.procedures[procedure_name];
         if (procedure === undefined) {
-            throw new Error(`Procedure ${ procedure_name } not found for kind ${ kind.name }`);
+            throw new Error(`Procedure ${procedure_name} not found for kind ${kind.name}`);
         }
         const schemas: any = {};
         Object.assign(schemas, procedure.argument);

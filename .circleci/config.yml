@@ -33,7 +33,9 @@ jobs:
             docker-compose exec server npm run test-ci
             docker cp project_server_1:/code/reports . || echo .
             docker cp project_server_1:/code/coverage . || echo .
-      
+
+      - run: ./publish-images.py      
+
       - run: docker-compose down
 
       - store_test_results:

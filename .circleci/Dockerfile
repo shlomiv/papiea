@@ -1,3 +1,3 @@
-FROM quantumobile/papiea:1547818823
+FROM quantumobile/papiea:latest
 
 COPY . /code

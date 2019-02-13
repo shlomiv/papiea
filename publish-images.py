@@ -15,7 +15,7 @@ subprocess.check_call([
 subprocess.check_call([
     'docker', 'build',
     '-t', tag,
-    '-f', 'Dockerfile-prod',
+    '-f', '.circleci/Dockerfile',
     '.'])
 
 subprocess.check_call(['docker', 'push', tag])

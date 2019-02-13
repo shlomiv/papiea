@@ -41,7 +41,7 @@ async function setUpApplication(): Promise<express.Express> {
                 res.json({ errors: err.errors });
                 return;
             case ProcedureInvocationError:
-                res.status(500);
+                res.status(err.status);
                 res.json({ errors: err.errors });
                 return;
             default:

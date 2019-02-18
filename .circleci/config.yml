@@ -10,6 +10,10 @@ jobs:
       - checkout
 
       - run:
+          name: Login to dockerhub
+          command: ./docker-login.py
+
+      - run:
           name: Start service
           command: |
             cp .circleci/docker-compose.yml .

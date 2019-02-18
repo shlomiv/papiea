@@ -1,3 +1,3 @@
-FROM quantumobile/papiea:1547818823
+FROM nutanix-docker.jfrog.io/papiea:latest
 
 COPY . /code

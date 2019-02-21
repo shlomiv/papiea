@@ -74,6 +74,7 @@ export default class ApiDocsGenerator {
         return {
             "description": `Returns all entities' specs of kind ${kind.name}`,
             "operationId": `find${provider.prefix}${kind.name}`,
+            "tags": [`${provider.prefix}/${kind.name}`],
             "parameters": [
                 {
                     "name": "offset",
@@ -113,6 +114,7 @@ export default class ApiDocsGenerator {
         return {
             "description": `Returns all entities' specs of kind ${kind.name}`,
             "operationId": `find${provider.prefix}${kind.name}Filter`,
+            "tags": [`${provider.prefix}/${kind.name}`],
             "requestBody": {
                 "description": `${kind.name} to add`,
                 "required": false,
@@ -136,6 +138,7 @@ export default class ApiDocsGenerator {
         return {
             "description": `Creates a new ${kind.name}`,
             "operationId": `add${provider.prefix}${kind.name}`,
+            "tags": [`${provider.prefix}/${kind.name}`],
             "requestBody": {
                 "description": `${kind.name} to add`,
                 "required": true,
@@ -162,6 +165,7 @@ export default class ApiDocsGenerator {
         return {
             "description": `Returns an entity of kind ${kind.name} by uuid`,
             "operationId": `find${provider.prefix}${kind.name}ByUuid`,
+            "tags": [`${provider.prefix}/${kind.name}`],
             "parameters": [
                 {
                     "name": "uuid",
@@ -182,6 +186,7 @@ export default class ApiDocsGenerator {
         return {
             "description": `Deletes an entity of kind ${kind.name} by uuid`,
             "operationId": `delete${provider.prefix}${kind.name}`,
+            "tags": [`${provider.prefix}/${kind.name}`],
             "parameters": [
                 {
                     "name": "uuid",
@@ -207,6 +212,7 @@ export default class ApiDocsGenerator {
         return {
             "description": `Replaces an entity of kind ${kind.name} by uuid`,
             "operationId": `replace${provider.prefix}${kind.name}`,
+            "tags": [`${provider.prefix}/${kind.name}`],
             "parameters": [
                 {
                     "name": "uuid",
@@ -249,6 +255,7 @@ export default class ApiDocsGenerator {
         return {
             "description": `Updates an entity of kind ${kind.name} by uuid`,
             "operationId": `update${provider.prefix}${kind.name}`,
+            "tags": [`${provider.prefix}/${kind.name}`],
             "parameters": [
                 {
                     "name": "uuid",
@@ -276,10 +283,11 @@ export default class ApiDocsGenerator {
         };
     }
 
-    callProcedure(provider: papiea.Provider, procedure: papiea.Procedural_Signature) {
+    callProcedure(provider: papiea.Provider, kind: papiea.Kind, procedure: papiea.Procedural_Signature) {
         return {
             "description": `Calls a procedure ${procedure.name}`,
             "operationId": `call${provider.prefix}${procedure.name}`,
+            "tags": [`${provider.prefix}/${kind.name}/${procedure.name}`],
             "parameters": [
                 {
                     "name": "uuid",
@@ -448,7 +456,7 @@ export default class ApiDocsGenerator {
                 };
                 Object.values(kind.procedures).forEach(procedure => {
                     paths[`/entity/${provider.prefix}/${kind.name}/{uuid}/procedure/${procedure.name}`] = {
-                        "post": this.callProcedure(provider, procedure)
+                        "post": this.callProcedure(provider, kind, procedure)
                     };
                     Object.assign(schemas, procedure.argument);
                     Object.assign(schemas, procedure.result);

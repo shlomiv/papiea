@@ -45,7 +45,8 @@ export function createEntityRoutes(entity_api: EntityAPI): Router {
 
     router.get("/:prefix/:kind/:uuid", kind_middleware, asyncHandler(async (req, res) => {
         const [metadata, spec] = await entity_api.get_entity_spec(req.params.entity_kind, req.params.uuid);
-        res.json({ "metadata": metadata, "spec": spec });
+        const [_, status] = await entity_api.get_entity_status(req.params.entity_kind, req.params.uuid);
+        res.json({ "metadata": metadata, "spec": spec, "status": status });
     }));
 
     router.post("/:prefix/:kind/filter", kind_middleware, asyncHandler(async (req, res) => {

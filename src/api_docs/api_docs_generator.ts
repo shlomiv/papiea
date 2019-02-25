@@ -30,12 +30,16 @@ export default class ApiDocsGenerator {
                         "schema": {
                             "type": "array",
                             "items": {
+                                "required": [ "metadata", "spec" ],
                                 "properties": {
                                     "metadata": {
                                         "$ref": `#/components/schemas/Metadata`
                                     },
                                     "spec": {
                                         "$ref": `#/components/schemas/${kind.name}`
+                                    },
+                                    "status": {
+                                        "type": "object"
                                     }
                                 }
                             }
@@ -54,12 +58,16 @@ export default class ApiDocsGenerator {
                 "content": {
                     "application/json": {
                         "schema": {
+                            "required": [ "metadata", "spec" ],
                             "properties": {
                                 "metadata": {
                                     "$ref": `#/components/schemas/Metadata`
                                 },
                                 "spec": {
                                     "$ref": `#/components/schemas/${kind.name}`
+                                },
+                                "status": {
+                                    "type": "object"
                                 }
                             }
                         }

@@ -49,7 +49,7 @@ describe("Entity API tests", () => {
 
     let entity_metadata: Metadata;
     let entity_spec: Spec;
-    test("Create entity", async (done) => {
+    test("Create spec-only entity", async (done) => {
         expect.assertions(3);
         try {
             const { data: { metadata, spec } } = await entityApi.post(`/${ providerPrefix }/${ kind_name }`, {
@@ -86,11 +86,12 @@ describe("Entity API tests", () => {
         }
     });
 
-    test("Get entity", async (done) => {
-        expect.assertions(1);
+    test("Get spec-only entity", async (done) => {
+        expect.assertions(2);
         try {
             const res = await entityApi.get(`/${ providerPrefix }/${ kind_name }/${ entity_metadata.uuid }`);
             expect(res.data.spec).toEqual(entity_spec);
+            expect(res.data.status).toEqual(entity_spec);
             done();
         } catch (e) {
             done.fail(e);
@@ -137,10 +138,10 @@ describe("Entity API tests", () => {
         }
     });
 
-    test("Update entity spec", async (done) => {
-        expect.assertions(1);
+    test("Update spec-only entity spec", async (done) => {
+        expect.assertions(3);
         try {
-            const res = await entityApi.put(`/${ providerPrefix }/${ kind_name }/${ entity_metadata.uuid }`, {
+            let res = await entityApi.put(`/${ providerPrefix }/${ kind_name }/${ entity_metadata.uuid }`, {
                 spec: {
                     x: 20,
                     y: 21
@@ -150,6 +151,9 @@ describe("Entity API tests", () => {
                 }
             });
             expect(res.data.spec.x).toEqual(20);
+            res = await entityApi.get(`/${ providerPrefix }/${ kind_name }/${ entity_metadata.uuid }`);
+            expect(res.data.spec.x).toEqual(20);
+            expect(res.data.status.x).toEqual(20);
             done();
         } catch (e) {
             done.fail(e);

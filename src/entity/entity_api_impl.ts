@@ -3,7 +3,7 @@ import { Status_DB } from "../databases/status_db_interface";
 import { Spec_DB } from "../databases/spec_db_interface";
 import { Provider_DB } from "../databases/provider_db_interface";
 import { Kind, Procedural_Signature } from "../papiea";
-import { Data_Description, Entity_Reference, Metadata, Spec, uuid4 } from "../core";
+import { Data_Description, Entity_Reference, Metadata, Spec, uuid4, Status } from "../core";
 import uuid = require("uuid");
 import { EntityApiInterface } from "./entity_api_interface";
 import { ValidationError, Validator } from "../validator";
@@ -55,12 +55,20 @@ export class EntityAPI implements EntityApiInterface {
         }
         request_metadata.created_at = new Date();
         request_metadata.kind = kind.name;
-        return this.spec_db.update_spec(request_metadata, spec_description)
+        const [metadata, spec] = await this.spec_db.update_spec(request_metadata, spec_description);
+        if (kind.kind_structure[kind.name]['x-papiea-entity'] === 'spec-only')
+            await this.status_db.update_status(request_metadata, spec_description);
+        return [metadata, spec];
     }
 
     async get_entity_spec(kind: Kind, entity_uuid: uuid4): Promise<[Metadata, Spec]> {
         const entity_ref: Entity_Reference = { kind: kind.name, uuid: entity_uuid };
         return this.spec_db.get_spec(entity_ref);
+    }
+
+    async get_entity_status(kind: Kind, entity_uuid: uuid4): Promise<[Metadata, Status]> {
+        const entity_ref: Entity_Reference = { kind: kind.name, uuid: entity_uuid };
+        return this.status_db.get_status(entity_ref);
     }
 
     async filter_entity_spec(kind: Kind, fields: any): Promise<[Metadata, Spec][]> {
@@ -70,7 +78,10 @@ export class EntityAPI implements EntityApiInterface {
 
     async update_entity_spec(uuid: uuid4, spec_version: number, kind: Kind, spec_description: Spec): Promise<[Metadata, Spec]> {
         const metadata: Metadata = { uuid: uuid, kind: kind.name, spec_version: spec_version } as Metadata;
-        return this.spec_db.update_spec(metadata, spec_description);
+        const [_, spec] = await this.spec_db.update_spec(metadata, spec_description);
+        if (kind.kind_structure[kind.name]['x-papiea-entity'] === 'spec-only')
+            await this.status_db.update_status(metadata, spec_description);
+        return [metadata, spec];
     }
 
     async delete_entity_spec(kind: Kind, entity_uuid: uuid4): Promise<void> {

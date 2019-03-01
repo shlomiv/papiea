@@ -7,6 +7,7 @@ import { MongoConnection } from "./databases/mongo";
 import { createEntityRoutes } from "./entity/entity_routes";
 import { EntityAPI, ProcedureInvocationError } from "./entity/entity_api_impl";
 import { ValidationError, Validator } from "./validator";
+import { EntityNotFoundError } from "./databases/utils/errors";
 
 declare var process: {
     env: {
@@ -43,6 +44,10 @@ async function setUpApplication(): Promise<express.Express> {
             case ProcedureInvocationError:
                 res.status(err.status);
                 res.json({ errors: err.errors });
+                return;
+            case EntityNotFoundError:
+                res.status(404);
+                res.json({"error": `Entity with kind: ${err.kind}, uuid: ${err.uuid} not found`});
                 return;
             default:
                 res.status(500);

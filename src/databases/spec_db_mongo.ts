@@ -2,7 +2,7 @@ import * as core from "../core";
 import { Entity } from "../core";
 import { Spec_DB } from "./spec_db_interface";
 import { Collection, Db } from "mongodb";
-import { ConflictingEntityError } from "./utils/errors";
+import { ConflictingEntityError, EntityNotFoundError } from "./utils/errors";
 
 export class Spec_DB_Mongo implements Spec_DB {
     collection: Collection;
@@ -69,7 +69,7 @@ export class Spec_DB_Mongo implements Spec_DB {
             "metadata.deleted_at": null
         });
         if (result === null) {
-            throw new Error("Entity not found")
+            throw new EntityNotFoundError(entity_ref.kind, entity_ref.uuid)
         }
         return [result.metadata, result.spec];
     }

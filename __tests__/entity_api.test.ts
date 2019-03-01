@@ -98,6 +98,17 @@ describe("Entity API tests", () => {
         }
     });
 
+    test("Get non-existent spec-only entity should fail", async (done) => {
+        expect.assertions(2);
+        try {
+            await entityApi.get(`/${ providerPrefix }/${ kind_name }/${ uuid() }`);
+        } catch (e) {
+            expect(e.response.status).toBe(404);
+            expect(e.response.data).not.toBeUndefined();
+            done();
+        }
+    });
+
     test("Filter entity", async (done) => {
         try {
             let res = await entityApi.post(`${ providerPrefix }/${ kind_name }/filter`, {

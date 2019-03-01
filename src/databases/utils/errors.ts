@@ -1,4 +1,5 @@
-import {Metadata, Spec} from "../../core";
+import { Metadata, Spec, uuid4 } from "../../core";
+import { Kind } from "../../papiea";
 
 export class ConflictingEntityError extends Error {
 
@@ -9,5 +10,17 @@ export class ConflictingEntityError extends Error {
         super(msg);
         this.existing_metadata = metadata;
         this.existing_spec = spec;
+    }
+}
+
+export class EntityNotFoundError extends Error {
+
+    uuid: uuid4;
+    kind: string;
+
+    constructor(kind: string, uuid: uuid4) {
+        super();
+        this.kind = kind;
+        this.uuid = uuid;
     }
 }

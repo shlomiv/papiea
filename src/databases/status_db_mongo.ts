@@ -48,7 +48,16 @@ export class Status_DB_Mongo implements Status_DB {
     }
 
     async list_status(fields_map: any): Promise<([core.Metadata, core.Status])[]> {
-        const result = await this.collection.find(fields_map).toArray();
+        fields_map.metadata.deleted_at = null;
+        const filter: any = {};
+        for (let key in fields_map.metadata) {
+            filter["metadata." + key] = fields_map.metadata[key];
+        }
+        // Allow filter statuses by metadata and spec
+        for (let key in fields_map.spec) {
+            filter["spec." + key] = fields_map.spec[key];
+        }
+        const result = await this.collection.find(filter).toArray();
         return result.map((x: any): [core.Metadata, core.Status] => {
             if (x.status !== null) {
                 return [x.metadata, x.status]

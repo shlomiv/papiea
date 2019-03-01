@@ -228,7 +228,7 @@ describe("MongoDb tests", () => {
             done.fail(new Error("statusDb is undefined"));
             return;
         }
-        statusDb.list_status({ "metadata.kind": "test" }).then(res => {
+        statusDb.list_status({ metadata: { "kind": "test" } }).then(res => {
             expect(res.length).toBeGreaterThanOrEqual(1);
             done();
         });
@@ -239,7 +239,7 @@ describe("MongoDb tests", () => {
             done.fail(new Error("statusDb is undefined"));
             return;
         }
-        statusDb.list_status({ "metadata.kind": "test", "status.a": "A1" }).then(res => {
+        statusDb.list_status({ metadata: { "kind": "test" }, status: { a: "A1" } }).then(res => {
             expect(res.length).toBeGreaterThanOrEqual(1);
             expect(res[0]).not.toBeNull();
             // @ts-ignore

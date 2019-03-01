@@ -23,6 +23,19 @@ export function createEntityRoutes(entity_api: EntityAPI): Router {
         next();
     });
 
+    const filterEntities = async function (kind: Kind, filter: any): Promise<any> {
+        const resultSpecs: any[] = await entity_api.filter_entity_spec(kind, filter);
+        const resultStatuses: any[] = await entity_api.filter_entity_status(kind, filter);
+        const uuidToEntity: { [key: string]: any } = {};
+        resultSpecs.forEach(x => {
+            uuidToEntity[x[0].uuid] = { metadata: x[0], spec: x[1] };
+        });
+        resultStatuses.forEach(x => {
+            if (uuidToEntity[x[0].uuid] !== undefined)
+                uuidToEntity[x[0].uuid].status = x[1];
+        });
+        return Object.values(uuidToEntity);
+    }
 
     router.get("/:prefix/:kind", kind_middleware, asyncHandler(async (req, res) => {
         const filter: any = {};
@@ -36,11 +49,7 @@ export function createEntityRoutes(entity_api: EntityAPI): Router {
         } else {
             filter.metadata = {};
         }
-        let result: any[] = await entity_api.filter_entity_spec(req.params.entity_kind, filter);
-        result = result.map(x => {
-            return { "metadata": x[0], "spec": x[1] }
-        });
-        res.json(result);
+        res.json(await filterEntities(req.params.entity_kind, filter));
     }));
 
     router.get("/:prefix/:kind/:uuid", kind_middleware, asyncHandler(async (req, res) => {
@@ -61,11 +70,7 @@ export function createEntityRoutes(entity_api: EntityAPI): Router {
         } else {
             filter.metadata = {};
         }
-        let result: any[] = await entity_api.filter_entity_spec(req.params.entity_kind, filter);
-        result = result.map(x => {
-            return { "metadata": x[0], "spec": x[1] }
-        });
-        res.json(result);
+        res.json(await filterEntities(req.params.entity_kind, filter));
     }));
 
     router.put("/:prefix/:kind/:uuid", kind_middleware, validate_kind_middleware, asyncHandler(async (req, res) => {

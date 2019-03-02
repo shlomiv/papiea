@@ -19,8 +19,15 @@ export function createEntityRoutes(entity_api: EntityAPI): Router {
 
     const validate_kind_middleware = asyncHandler(async (req, res, next) => {
         const kind: Kind = req.params.entity_kind;
-        entity_api.validate_spec(req.body.spec, kind.kind_structure);
-        next();
+        try{
+            entity_api.validate_spec(req.body.spec, kind.kind_structure);
+            next();
+        }
+        catch (e) {
+            console.error("Validate failed:", e)
+            next(e)
+        }
+        
     });
 
     const filterEntities = async function (kind: Kind, filter: any): Promise<any> {

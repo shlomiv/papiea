@@ -1,6 +1,6 @@
 import { ProceduralCtx_Interface } from "./typescript_sdk_interface";
-import * as core from "../core";
-import { Entity } from "../core";
+import * as core from "../../core";
+import { Entity } from "../../core";
 
 export class ProceduralCtx implements ProceduralCtx_Interface {
 

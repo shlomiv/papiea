@@ -2,7 +2,7 @@ import "jest"
 import { load } from "js-yaml";
 import { readFileSync } from "fs";
 import { resolve } from "path";
-import { Kind_Builder, ProviderSdk } from "../src/provider_sdk/typescript_sdk";
+import { Kind_Builder, ProviderSdk } from "../src/provider_sdk/typescript/typescript_sdk";
 import { plural } from "pluralize"
 import { Procedural_Execution_Strategy, Procedural_Signature } from "../src/papiea";
 import { loadYaml } from "./test_data_factory";

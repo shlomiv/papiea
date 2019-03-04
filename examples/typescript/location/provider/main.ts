@@ -1,6 +1,6 @@
 import { register_provider } from "./provider";
 import { location_provider_config, papiea_config, server_config } from "./config";
-import { ProviderSdk } from "../../../../src/provider_sdk/typescript_sdk";
+import { ProviderSdk } from "../../../../src/provider_sdk/typescript/typescript_sdk";
 
 
 async function main() {

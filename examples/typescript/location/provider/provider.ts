@@ -1,4 +1,4 @@
-import { ProviderSdk } from "../../../../src/provider_sdk/typescript_sdk";
+import { ProviderSdk } from "../../../../src/provider_sdk/typescript/typescript_sdk";
 import { Procedural_Execution_Strategy, Procedural_Signature, Provider } from "../../../../src/papiea";
 import axios from "axios";
 

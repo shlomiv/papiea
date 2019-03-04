@@ -1,6 +1,6 @@
 import "jest"
 import axios from "axios"
-import { ProviderSdk } from "../src/provider_sdk/typescript_sdk";
+import { ProviderSdk } from "../src/provider_sdk/typescript/typescript_sdk";
 import { Metadata, Spec } from "../src/core";
 import { getLocationDataDescription } from "./test_data_factory";
 import { stringify } from "querystring"

@@ -150,6 +150,41 @@ describe("Entity API tests", () => {
         }
     });
 
+    test("Filter entity by status", async (done) => {
+        try {
+            let res = await entityApi.post(`${providerPrefix}/${kind_name}/filter`, {
+                status: {
+                    x: 10,
+                    y: 11
+                }
+            });
+            expect(res.data.length).toBeGreaterThanOrEqual(1);
+            res.data.forEach((entity: any) => {
+                expect(entity.status.x).toEqual(10);
+                expect(entity.status.y).toEqual(11);
+            });
+            res = await entityApi.post(`${providerPrefix}/${kind_name}/filter`, {
+                status: {
+                    x: 10
+                }
+            });
+            expect(res.data.length).toBeGreaterThanOrEqual(1);
+            res.data.forEach((entity: any) => {
+                expect(entity.status.x).toEqual(10);
+            });
+            res = await entityApi.post(`${providerPrefix}/${kind_name}/filter`, {
+                status: {
+                    x: 10,
+                    z: 1111
+                }
+            });
+            expect(res.data.length).toBe(0);
+            done();
+        } catch (e) {
+            done.fail(e);
+        }
+    });
+
     test("Filter entity with query params", async (done) => {
         const spec = {
             x: 10,

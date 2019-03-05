@@ -51,6 +51,11 @@ export function createEntityRoutes(entity_api: EntityAPI): Router {
         } else {
             filter.spec = {};
         }
+        if (req.query.status) {
+            filter.status = JSON.parse(req.query.status);
+        } else {
+            filter.status = {};
+        }
         if (req.query.metadata) {
             filter.metadata = JSON.parse(req.query.metadata);
         } else {
@@ -71,6 +76,11 @@ export function createEntityRoutes(entity_api: EntityAPI): Router {
             filter.spec = req.body.spec;
         } else {
             filter.spec = {};
+        }
+        if (req.body.status) {
+            filter.status = req.body.status;
+        } else {
+            filter.status = {};
         }
         if (req.body.metadata) {
             filter.metadata = req.body.metadata;

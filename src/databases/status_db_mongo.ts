@@ -57,6 +57,9 @@ export class Status_DB_Mongo implements Status_DB {
         for (let key in fields_map.spec) {
             filter["spec." + key] = fields_map.spec[key];
         }
+        for (let key in fields_map.status) {
+            filter["status." + key] = fields_map.status[key];
+        }
         const result = await this.collection.find(filter).toArray();
         return result.map((x: any): [core.Metadata, core.Status] => {
             if (x.status !== null) {

@@ -39,6 +39,32 @@ type Entity struct {
 	Status   *Status   `json:"status,omitempty"`
 }
 
+type ProcedureCallback string
+
+type ProceduralSignature struct {
+	Name              string
+	Argument          CoreDescription
+	result            CoreDescription
+	ExecutionStrategy ExecutionStrategy
+	ProcedureCallback
+}
+
+type Kind struct {
+	Name               string
+	NamePlural         *string
+	KindStructure      CoreDescription
+	IntentfulSignature map[string]string
+	DependencyTree     map[string][]string
+	Differ             *interface{}
+	Procedures         map[string]ProceduralSignature
+}
+
+type Provider struct {
+	Prefix  string
+	Version ProviderVersion
+	Kinds   []Kind
+}
+
 type CoreDescription interface {
 }
 

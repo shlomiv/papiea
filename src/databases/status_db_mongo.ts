@@ -2,6 +2,7 @@ import * as core from "../core";
 import { Status_DB } from "./status_db_interface";
 import { Db, Collection } from "mongodb";
 import { Entity } from "../core";
+import { datestringToFilter } from "./utils/date";
 
 export class Status_DB_Mongo implements Status_DB {
     collection: Collection;
@@ -48,19 +49,11 @@ export class Status_DB_Mongo implements Status_DB {
     }
 
     async list_status(fields_map: any): Promise<([core.Metadata, core.Status])[]> {
-        // TODO: Shlomi: Move this to some date helper
-        if (fields_map.metadata.deleted_at == "papiea_one_hour_ago") {
-            fields_map.metadata.deleted_at = {"$gte":new Date(Date.now() - 60 * 60 * 1000)}
-        }
-        else if (fields_map.metadata.deleted_at == "papiea_one_day_ago") {
-            fields_map.metadata.deleted_at = {"$gte":new Date(Date.now() - 24 * 60 * 60 * 1000)}
-        } else if (!fields_map.metadata.deleted_at) {
-            fields_map.metadata.deleted_at = null
-        }
-
-//        fields_map.metadata.deleted_at = null;
         const filter: any = {};
+        filter["metadata.deleted_at"] = datestringToFilter(fields_map.metadata.deleted_at);
         for (let key in fields_map.metadata) {
+            if (key === "deleted_at")
+                continue;
             filter["metadata." + key] = fields_map.metadata[key];
         }
         // Allow filter statuses by metadata and spec

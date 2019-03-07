@@ -48,7 +48,17 @@ export class Status_DB_Mongo implements Status_DB {
     }
 
     async list_status(fields_map: any): Promise<([core.Metadata, core.Status])[]> {
-        fields_map.metadata.deleted_at = null;
+        // TODO: Shlomi: Move this to some date helper
+        if (fields_map.metadata.deleted_at == "papiea_one_hour_ago") {
+            fields_map.metadata.deleted_at = {"$gte":new Date(Date.now() - 60 * 60 * 1000)}
+        }
+        else if (fields_map.metadata.deleted_at == "papiea_one_day_ago") {
+            fields_map.metadata.deleted_at = {"$gte":new Date(Date.now() - 24 * 60 * 60 * 1000)}
+        } else if (!fields_map.metadata.deleted_at) {
+            fields_map.metadata.deleted_at = null
+        }
+
+//        fields_map.metadata.deleted_at = null;
         const filter: any = {};
         for (let key in fields_map.metadata) {
             filter["metadata." + key] = fields_map.metadata[key];

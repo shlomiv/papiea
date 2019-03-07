@@ -31,16 +31,30 @@ export function createEntityRoutes(entity_api: EntityAPI): Router {
     });
 
     const filterEntities = async function (kind: Kind, filter: any): Promise<any> {
+
+        //console.log("DEBUG FilterEntities:::::: filter is", filter)
+        
         const resultSpecs: any[] = await entity_api.filter_entity_spec(kind, filter);
+
+        //console.log("DEBUG FilterEntities:::::: specs found", resultSpecs)
+        
         const resultStatuses: any[] = await entity_api.filter_entity_status(kind, filter);
+        //console.log("DEBUG FilterEntities:::::: status found", resultStatuses)
+        
         const uuidToEntity: { [key: string]: any } = {};
+
         resultSpecs.forEach(x => {
             uuidToEntity[x[0].uuid] = { metadata: x[0], spec: x[1] };
         });
+
         resultStatuses.forEach(x => {
             if (uuidToEntity[x[0].uuid] !== undefined)
                 uuidToEntity[x[0].uuid].status = x[1];
         });
+
+        console.log("DEBUG FilterEntities:::::: UUIDS", uuidToEntity)
+
+        
         return Object.values(uuidToEntity);
     }
 
@@ -69,9 +83,10 @@ export function createEntityRoutes(entity_api: EntityAPI): Router {
         const [_, status] = await entity_api.get_entity_status(req.params.entity_kind, req.params.uuid);
         res.json({ "metadata": metadata, "spec": spec, "status": status });
     }));
-
+//{"status": {"cluster_reference":{"name":{"$regex":".*[i|I][t|T][s|S][a|A][b|B][o|O][y|Y].*"}}}}
     router.post("/:prefix/:kind/filter", kind_middleware, asyncHandler(async (req, res) => {
         const filter: any = {};
+        console.log("DEBUG filterEntities, got req.body:", req.body)
         if (req.body.spec) {
             filter.spec = req.body.spec;
         } else {
@@ -87,6 +102,7 @@ export function createEntityRoutes(entity_api: EntityAPI): Router {
         } else {
             filter.metadata = {};
         }
+
         res.json(await filterEntities(req.params.entity_kind, filter));
     }));
 

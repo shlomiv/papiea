@@ -5,6 +5,7 @@ if [ -d "/node_modules" ] && [ ! -d "node_modules" ]; then
     mv /node_modules node_modules
 fi
 
+export DEBUG=express:* 
 npm install
 npm run build-clj
 npm run dev

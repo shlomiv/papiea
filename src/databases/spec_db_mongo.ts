@@ -75,7 +75,18 @@ export class Spec_DB_Mongo implements Spec_DB {
     }
 
     async list_specs(fields_map: any): Promise<([core.Metadata, core.Spec])[]> {
-        fields_map.metadata.deleted_at = null;
+        // TODO: Shlomi: Move this to some date helper
+        if (fields_map.metadata.deleted_at == "papiea_one_hour_ago") {
+            fields_map.metadata.deleted_at = {"$gte":new Date(Date.now() - 60 * 60 * 1000)}
+        }
+        else if (fields_map.metadata.deleted_at == "papiea_one_day_ago") {
+            fields_map.metadata.deleted_at = {"$gte":new Date(Date.now() - 24 * 60 * 60 * 1000)}
+        } else if (!fields_map.metadata.deleted_at) {
+            fields_map.metadata.deleted_at = null
+        }
+
+        console.log("DEBUG:: Deleted_at?", fields_map)
+        
         const filter: any = {};
         for (let key in fields_map.metadata) {
             filter["metadata." + key] = fields_map.metadata[key];

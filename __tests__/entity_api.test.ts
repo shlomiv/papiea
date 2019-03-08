@@ -210,6 +210,112 @@ describe("Entity API tests", () => {
         }
     });
 
+    test("Filter entity by nested fields", async (done) => {
+        try {
+            await entityApi.post(`/${providerPrefix}/${kind_name}`, {
+                spec: {
+                    x: 10,
+                    y: 11,
+                    v: {
+                        e: 12,
+                        d: 13
+                    }
+                }
+            });
+            let res = await entityApi.post(`${providerPrefix}/${kind_name}/filter`, {
+                spec: {
+                    x: 10,
+                    "v.e": 12
+                }
+            });
+            expect(res.data.length).toBeGreaterThanOrEqual(1);
+            res.data.forEach((entity: any) => {
+                expect(entity.spec.x).toEqual(10);
+                expect(entity.spec.v.e).toEqual(12);
+            });
+            res = await entityApi.post(`${providerPrefix}/${kind_name}/filter`, {
+                spec: {
+                    x: 10,
+                    v: {
+                        e: 12,
+                        d: 13
+                    }
+                }
+            });
+            expect(res.data.length).toBeGreaterThanOrEqual(1);
+            res.data.forEach((entity: any) => {
+                expect(entity.spec.x).toEqual(10);
+                expect(entity.spec.v.e).toEqual(12);
+            });
+            res = await entityApi.post(`${providerPrefix}/${kind_name}/filter`, {
+                spec: {
+                    x: 10,
+                    v: {
+                        e: 12
+                    }
+                }
+            });
+            expect(res.data.length).toBe(0);
+            
+            res = await entityApi.post(`${providerPrefix}/${kind_name}/filter`, {
+                status: {
+                    x: 10,
+                    "v.e": 12
+                }
+            });
+            expect(res.data.length).toBeGreaterThanOrEqual(1);
+            res.data.forEach((entity: any) => {
+                expect(entity.status.x).toEqual(10);
+                expect(entity.status.v.e).toEqual(12);
+            });
+            res = await entityApi.post(`${providerPrefix}/${kind_name}/filter`, {
+                status: {
+                    x: 10,
+                    v: {
+                        e: 12,
+                        d: 13
+                    }
+                }
+            });
+            expect(res.data.length).toBeGreaterThanOrEqual(1);
+            res.data.forEach((entity: any) => {
+                expect(entity.status.x).toEqual(10);
+                expect(entity.status.v.e).toEqual(12);
+            });
+            res = await entityApi.post(`${providerPrefix}/${kind_name}/filter`, {
+                status: {
+                    x: 10,
+                    v: {
+                        e: 12
+                    }
+                }
+            });
+            expect(res.data.length).toBe(0);
+
+            res = await entityApi.post(`${providerPrefix}/${kind_name}/filter`, {
+                spec: {
+                    x: 10,
+                    "v.e": 12
+                },
+                status: {
+                    x: 10,
+                    "v.e": 12
+                }
+            });
+            expect(res.data.length).toBeGreaterThanOrEqual(1);
+            res.data.forEach((entity: any) => {
+                expect(entity.spec.x).toEqual(10);
+                expect(entity.spec.v.e).toEqual(12);
+                expect(entity.status.x).toEqual(10);
+                expect(entity.status.v.e).toEqual(12);
+            });
+
+            done();
+        } catch (e) {
+            done.fail(e);
+        }
+    });
+
     test("Filter entity with query params", async (done) => {
         const spec = {
             x: 10,
@@ -396,6 +502,38 @@ describe("Entity API tests", () => {
             done.fail("Entity has not been removed");
         } catch (e) {
             done();
+        }
+    });
+
+    test("Filter deleted entity", async (done) => {
+        try {
+            const { data: { metadata, spec } } = await entityApi.post(`/${providerPrefix}/${kind_name}`, {
+                spec: {
+                    x: 10,
+                    y: 11
+                }
+            });
+            await entityApi.delete(`/${providerPrefix}/${kind_name}/${metadata.uuid}`);
+            let res = await entityApi.post(`${providerPrefix}/${kind_name}/filter`, {
+                metadata: {
+                    uuid: metadata.uuid
+                }
+            });
+            expect(res.data.length).toBe(0);
+            ["papiea_one_hour_ago", "papiea_one_day_ago"].forEach(async deleted_at => {
+                let res = await entityApi.post(`${providerPrefix}/${kind_name}/filter`, {
+                    metadata: {
+                        uuid: metadata.uuid,
+                        deleted_at: deleted_at
+                    }
+                });
+                expect(res.data.length).toBe(1);
+                expect(res.data[0].spec).toEqual(spec);
+                expect(res.data[0].status).toEqual(spec);
+            })
+            done();
+        } catch (e) {
+            done.fail(e);
         }
     });
 });

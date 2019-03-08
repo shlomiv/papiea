@@ -3,6 +3,7 @@ import { Entity } from "../core";
 import { Spec_DB } from "./spec_db_interface";
 import { Collection, Db } from "mongodb";
 import { ConflictingEntityError, EntityNotFoundError } from "./utils/errors";
+import { datestringToFilter } from "./utils/date";
 
 export class Spec_DB_Mongo implements Spec_DB {
     collection: Collection;
@@ -75,20 +76,11 @@ export class Spec_DB_Mongo implements Spec_DB {
     }
 
     async list_specs(fields_map: any): Promise<([core.Metadata, core.Spec])[]> {
-        // TODO: Shlomi: Move this to some date helper
-        if (fields_map.metadata.deleted_at == "papiea_one_hour_ago") {
-            fields_map.metadata.deleted_at = {"$gte":new Date(Date.now() - 60 * 60 * 1000)}
-        }
-        else if (fields_map.metadata.deleted_at == "papiea_one_day_ago") {
-            fields_map.metadata.deleted_at = {"$gte":new Date(Date.now() - 24 * 60 * 60 * 1000)}
-        } else if (!fields_map.metadata.deleted_at) {
-            fields_map.metadata.deleted_at = null
-        }
-
-        console.log("DEBUG:: Deleted_at?", fields_map)
-        
         const filter: any = {};
+        filter["metadata.deleted_at"] = datestringToFilter(fields_map.metadata.deleted_at);
         for (let key in fields_map.metadata) {
+            if (key === "deleted_at")
+                continue;
             filter["metadata." + key] = fields_map.metadata[key];
         }
         for (let key in fields_map.spec) {

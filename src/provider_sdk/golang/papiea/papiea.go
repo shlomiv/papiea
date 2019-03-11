@@ -34,9 +34,9 @@ type Spec interface {
 }
 
 type Entity struct {
-	Metadata *Metadata `json:"metadata,omitempty"`
-	Spec     *Spec     `json:"spec,omitempty"`
-	Status   *Status   `json:"status,omitempty"`
+	Metadata Metadata `json:"metadata,omitempty"`
+	Spec     *Spec    `json:"spec,omitempty"`
+	Status   *Status  `json:"status,omitempty"`
 }
 
 type ProcedureCallback string

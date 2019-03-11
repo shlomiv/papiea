@@ -220,7 +220,6 @@ export class Kind_Builder {
         };
         this.kind.procedures[name] = procedural_signature;
         const prefix = this.get_prefix();
-        console.log(prefix);
         this.server_manager.register_handler("/" + name, async (req, res) => {
             try {
                 const result = await handler(new ProceduralCtx(this.entity_url, prefix), {

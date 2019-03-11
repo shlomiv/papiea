@@ -44,7 +44,7 @@ type ProcedureCallback string
 type ProceduralSignature struct {
 	Name              string
 	Argument          CoreDescription
-	result            CoreDescription
+	Result            CoreDescription
 	ExecutionStrategy ExecutionStrategy
 	ProcedureCallback
 }

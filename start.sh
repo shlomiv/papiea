@@ -8,4 +8,4 @@ fi
 export DEBUG=express:* 
 npm install
 npm run build-clj
-npm run dev
+npm run start

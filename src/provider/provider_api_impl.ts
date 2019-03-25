@@ -4,7 +4,7 @@ import { Provider_API, Provider_Power } from "./provider_api_interface";
 import { Provider_DB } from "../databases/provider_db_interface";
 import { Status_DB } from "../databases/status_db_interface";
 import { Provider } from "../papiea";
-import { Data_Description, Status } from "../core";
+import { Data_Description, Status, Version } from "../core";
 import { Validator } from "../validator";
 
 export class Provider_API_Impl implements Provider_API {
@@ -38,6 +38,14 @@ export class Provider_API_Impl implements Provider_API {
     async power(provider_prefix: string, version: core.Version, power_state: Provider_Power): Promise<void> {
         // TODO(adolgarev)
         throw new Error("Not implemented");
+    }
+
+    async get_provider(provider_prefix: string, provider_version: Version): Promise<Provider> {
+        return this.providerDb.get_provider(provider_prefix, provider_version)
+    }
+
+    async list_providers_by_prefix(provider_prefix: string): Promise<Provider[]> {
+        return this.providerDb.find_providers(provider_prefix)
     }
 
     async get_provider_by_kind(kind_name: string): Promise<Provider> {

@@ -24,7 +24,7 @@ export function createEntityRoutes(entity_api: EntityAPI): Router {
             next();
         }
         catch (e) {
-            console.error("Validate failed:", e)
+            console.error("Validation failed:", e);
             next(e)
         }
         
@@ -47,7 +47,7 @@ export function createEntityRoutes(entity_api: EntityAPI): Router {
         });
 
         return Object.values(uuidToEntity);
-    }
+    };
 
     router.get("/:prefix/:kind", kind_middleware, asyncHandler(async (req, res) => {
         const filter: any = {};

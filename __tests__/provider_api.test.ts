@@ -49,7 +49,6 @@ describe("Provider API tests", () => {
         const version = "1.0.0";
         const provider: Provider = { prefix: providerPrefix, version: version, kinds: [] };
         providerApi.post('/', provider).then().catch(done.fail);
-        console.log("Made it here");
         try {
             const res = await providerApi.get(`/${ providerPrefix }`);
             expect(res.data.length).toBeGreaterThanOrEqual(2);

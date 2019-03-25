@@ -33,7 +33,6 @@ export default function createProviderAPIRouter(providerApi: Provider_API) {
 
     providerApiRouter.get('/:prefix', asyncHandler(async (req, res) => {
         const provider = await providerApi.list_providers_by_prefix(req.params.prefix);
-        console.log("Providers: " + provider);
         res.json(provider)
     }));
 

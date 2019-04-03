@@ -5,7 +5,7 @@ import { Provider_DB } from "../databases/provider_db_interface";
 import { Kind, Procedural_Signature } from "../papiea";
 import { Data_Description, Entity_Reference, Metadata, Spec, uuid4, Status } from "../core";
 import uuid = require("uuid");
-import { EntityApiInterface } from "./entity_api_interface";
+import { Entity_API } from "./entity_api_interface";
 import { ValidationError, Validator } from "../validator";
 import * as uuid_validate from "uuid-validate";
 
@@ -21,7 +21,7 @@ export class ProcedureInvocationError extends Error {
     }
 }
 
-export class EntityAPI implements EntityApiInterface {
+export class Entity_API_Impl implements Entity_API {
     private status_db: Status_DB;
     private spec_db: Spec_DB;
     private provider_db: Provider_DB;
@@ -44,6 +44,7 @@ export class EntityAPI implements EntityApiInterface {
     }
 
     async save_entity(kind: Kind, spec_description: Spec, request_metadata: Metadata = {} as Metadata): Promise<[Metadata, Spec]> {
+        this.validate_spec(spec_description, kind);
         if (!request_metadata.uuid) {
             request_metadata.uuid = uuid();
         }
@@ -82,6 +83,7 @@ export class EntityAPI implements EntityApiInterface {
     }
 
     async update_entity_spec(uuid: uuid4, spec_version: number, kind: Kind, spec_description: Spec): Promise<[Metadata, Spec]> {
+        this.validate_spec(spec_description, kind);
         const metadata: Metadata = { uuid: uuid, kind: kind.name, spec_version: spec_version } as Metadata;
         const [_, spec] = await this.spec_db.update_spec(metadata, spec_description);
         if (kind.kind_structure[kind.name]['x-papiea-entity'] === 'spec-only')
@@ -122,8 +124,8 @@ export class EntityAPI implements EntityApiInterface {
         }
     }
 
-    validate_spec(spec: Spec, kind_structure: Data_Description) {
-        const schemas: any = Object.assign({}, kind_structure);
-        this.validator.validate(spec, Object.values(kind_structure)[0], schemas);
+    private validate_spec(spec: Spec, kind: Kind) {
+        const schemas: any = Object.assign({}, kind.kind_structure);
+        this.validator.validate(spec, Object.values(kind.kind_structure)[0], schemas);
     }
 }

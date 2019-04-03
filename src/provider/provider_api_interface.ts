@@ -30,6 +30,4 @@ export interface Provider_API {
     power(provider_prefix: string, version: core.Version, power_state: Provider_Power): Promise<void>;
 
     get_provider_by_kind(kind_name: string): Promise<Provider>;
-
-    validate_status(status: Status, kind_structure: Data_Description): void;
 }

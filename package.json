@@ -5,8 +5,8 @@
   "main": "main.js",
   "scripts": {
     "start": "ts-node src/main.ts",
-    "test": "jest --coverage",
-    "test-ci": "jest --coverage --ci --reporters=default --reporters=jest-junit",
+    "test": "jest --runInBand --coverage",
+    "test-ci": "jest --runInBand --coverage --ci --reporters=default --reporters=jest-junit",
     "dev": "./node_modules/nodemon/bin/nodemon.js",
     "test-watch": "jest --watchAll",
     "build-clj": "cd papiea-lib-clj && lein cljsbuild once",

@@ -1,11 +1,11 @@
 import * as asyncHandler from 'express-async-handler'
 import * as express from "express";
-import { EntityAPI } from "./entity_api_impl";
+import { Entity_API } from "./entity_api_interface";
 import { Router } from "express";
 import { Kind } from "../papiea";
 
 
-export function createEntityRoutes(entity_api: EntityAPI): Router {
+export function createEntityRoutes(entity_api: Entity_API): Router {
     const router = express.Router();
 
     const kind_middleware = asyncHandler(async (req, res, next) => {
@@ -15,19 +15,6 @@ export function createEntityRoutes(entity_api: EntityAPI): Router {
         } else {
             throw new Error("Entity kind already exists in the request");
         }
-    });
-
-    const validate_kind_middleware = asyncHandler(async (req, res, next) => {
-        const kind: Kind = req.params.entity_kind;
-        try{
-            entity_api.validate_spec(req.body.spec, kind.kind_structure);
-            next();
-        }
-        catch (e) {
-            console.error("Validation failed:", e);
-            next(e)
-        }
-        
     });
 
     const filterEntities = async function (kind: Kind, filter: any): Promise<any> {
@@ -74,7 +61,7 @@ export function createEntityRoutes(entity_api: EntityAPI): Router {
         const [_, status] = await entity_api.get_entity_status(req.params.entity_kind, req.params.uuid);
         res.json({ "metadata": metadata, "spec": spec, "status": status });
     }));
-//{"status": {"cluster_reference":{"name":{"$regex":".*[i|I][t|T][s|S][a|A][b|B][o|O][y|Y].*"}}}}
+
     router.post("/:prefix/:kind/filter", kind_middleware, asyncHandler(async (req, res) => {
         const filter: any = {};
         if (req.body.spec) {
@@ -96,13 +83,13 @@ export function createEntityRoutes(entity_api: EntityAPI): Router {
         res.json(await filterEntities(req.params.entity_kind, filter));
     }));
 
-    router.put("/:prefix/:kind/:uuid", kind_middleware, validate_kind_middleware, asyncHandler(async (req, res) => {
+    router.put("/:prefix/:kind/:uuid", kind_middleware, asyncHandler(async (req, res) => {
         const request_metadata = req.body.metadata;
         const [metadata, spec] = await entity_api.update_entity_spec(req.params.uuid, request_metadata.spec_version, req.params.entity_kind, req.body.spec);
         res.json({ "metadata": metadata, "spec": spec });
     }));
 
-    router.post("/:prefix/:kind", kind_middleware, validate_kind_middleware, asyncHandler(async (req, res) => {
+    router.post("/:prefix/:kind", kind_middleware, asyncHandler(async (req, res) => {
         if (req.params.status) {
             const [metadata, spec] = await entity_api.save_entity(req.params.entity_kind, req.body.spec, req.body.metadata);
             res.json({ "metadata": metadata, "spec": spec });

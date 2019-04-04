@@ -78,6 +78,7 @@ describe("Entity API tests", () => {
                     y: 11
                 }
             });
+            done.fail();
         } catch (err) {
             const res = err.response;
             expect(res.status).toEqual(400);
@@ -102,6 +103,7 @@ describe("Entity API tests", () => {
         expect.assertions(2);
         try {
             await entityApi.get(`/${ providerPrefix }/${ kind_name }/${ uuid() }`);
+            done.fail();
         } catch (e) {
             expect(e.response.status).toBe(404);
             expect(e.response.data).not.toBeUndefined();
@@ -356,9 +358,16 @@ describe("Entity API tests", () => {
     });
 
     test("Update entity with malformed spec should fail", async (done) => {
-        expect.assertions(2);
+        expect.assertions(3);
         try {
-            await entityApi.put(`/${providerPrefix}/${kind_name}/${entity_metadata.uuid}`, {
+            const { data: { metadata, spec } } = await entityApi.post(`/${providerPrefix}/${kind_name}`, {
+                spec: {
+                    x: 10,
+                    y: 11
+                }
+            });
+            expect(metadata).not.toBeUndefined();
+            await entityApi.put(`/${providerPrefix}/${kind_name}/${metadata.uuid}`, {
                 spec: {
                     x: "Totally not a number",
                     y: 21
@@ -367,6 +376,7 @@ describe("Entity API tests", () => {
                     spec_version: 1
                 }
             });
+            done.fail();
         } catch (err) {
             const res = err.response;
             expect(res.status).toEqual(400);

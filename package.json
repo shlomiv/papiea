@@ -23,6 +23,7 @@
     "@types/node": "^10.12.9",
     "@types/uuid": "^3.4.4",
     "axios": "^0.18.0",
+    "casbin": "^2.0.1",
     "express": "^4.16.4",
     "express-async-handler": "^1.1.4",
     "express-swaggerize-ui": "^1.0.3",

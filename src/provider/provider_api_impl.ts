@@ -7,55 +7,59 @@ import { Provider } from "../papiea";
 import { Status, Version } from "../core";
 import { Data_Description } from "../core";
 import { Validator } from "../validator";
+import { Authorizer } from "../auth/authz";
+import { UserAuthInfo } from "../auth/authn";
 
 export class Provider_API_Impl implements Provider_API {
     providerDb: Provider_DB;
     statusDb: Status_DB;
     private validator: Validator;
+    private authorizer: Authorizer;
 
-    constructor(providerDb: Provider_DB, statusDb: Status_DB) {
+    constructor(providerDb: Provider_DB, statusDb: Status_DB, validator: Validator, authorizer: Authorizer) {
         this.providerDb = providerDb;
         this.statusDb = statusDb;
-        this.validator = new Validator();
+        this.validator = validator;
+        this.authorizer = authorizer;
     }
 
-    async register_provider(provider: papiea.Provider): Promise<void> {
+    async register_provider(user: UserAuthInfo, provider: papiea.Provider): Promise<void> {
         return this.providerDb.register_provider(provider);
     }
 
-    async unregister_provider(provider_prefix: string, version: core.Version): Promise<void> {
+    async unregister_provider(user: UserAuthInfo, provider_prefix: string, version: core.Version): Promise<void> {
         return this.providerDb.delete_provider(provider_prefix, version);
     }
 
-    async update_status(context: any, entity_ref: core.Entity_Reference, status: core.Status): Promise<void> {
-        await this.validate_status(entity_ref, status);
+    async update_status(user: UserAuthInfo, context: any, entity_ref: core.Entity_Reference, status: core.Status): Promise<void> {
+        const provider: Provider = await this.get_provider_by_kind(user, entity_ref.kind);
+        await this.validate_status(provider, entity_ref, status);
         return this.statusDb.update_status(entity_ref, status);
     }
 
-    async update_progress(context: any, message: string, done_percent: number): Promise<void> {
+    async update_progress(user: UserAuthInfo, context: any, message: string, done_percent: number): Promise<void> {
         // TODO(adolgarev)
         throw new Error("Not implemented");
     }
 
-    async power(provider_prefix: string, version: core.Version, power_state: Provider_Power): Promise<void> {
+    async power(user: UserAuthInfo, provider_prefix: string, version: core.Version, power_state: Provider_Power): Promise<void> {
         // TODO(adolgarev)
         throw new Error("Not implemented");
     }
 
-    async get_provider(provider_prefix: string, provider_version: Version): Promise<Provider> {
+    async get_provider(user: UserAuthInfo, provider_prefix: string, provider_version: Version): Promise<Provider> {
         return this.providerDb.get_provider(provider_prefix, provider_version)
     }
 
-    async list_providers_by_prefix(provider_prefix: string): Promise<Provider[]> {
+    async list_providers_by_prefix(user: UserAuthInfo, provider_prefix: string): Promise<Provider[]> {
         return this.providerDb.find_providers(provider_prefix)
     }
 
-    async get_provider_by_kind(kind_name: string): Promise<Provider> {
+    async get_provider_by_kind(user: UserAuthInfo, kind_name: string): Promise<Provider> {
         return this.providerDb.get_provider_by_kind(kind_name)
     }
 
-    async validate_status(entity_ref: core.Entity_Reference, status: Status) {
-        const provider: Provider = await this.get_provider_by_kind(entity_ref.kind);
+    private async validate_status(provider: Provider, entity_ref: core.Entity_Reference, status: Status) {
         const kind = provider.kinds.find(kind => kind.name === entity_ref.kind);
         if (kind === undefined) {
             throw new Error("Kind not found");

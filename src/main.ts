@@ -8,29 +8,51 @@ import { createEntityRoutes } from "./entity/entity_routes";
 import { Entity_API_Impl, ProcedureInvocationError } from "./entity/entity_api_impl";
 import { ValidationError, Validator } from "./validator";
 import { EntityNotFoundError } from "./databases/utils/errors";
+import { simple_authn } from "./auth/authn";
+import { Authorizer, NoAuthAuthorizer, CasbinAuthorizer, CasbinAllowAnonymousAuthorizer } from "./auth/authz";
+import { resolve } from "path";
 
 declare var process: {
     env: {
         SERVER_PORT: string,
         MONGO_URL: string,
-        MONGO_DB: string
+        MONGO_DB: string,
+        AUTHORIZER: string
     },
     title: string;
 };
 process.title = 'papiea';
 const serverPort = parseInt(process.env.SERVER_PORT || '3000');
 
+async function getAuthorizer(): Promise<Authorizer> {
+    const pathToModel: string = resolve(__dirname, './auth/model1.txt');
+    const pathToPolicy: string = resolve(__dirname, './auth/policy1.txt');
+    if (process.env.AUTHORIZER === 'CasbinAuthorizer') {
+        const authorizer = new CasbinAuthorizer(pathToModel, pathToPolicy);
+        await authorizer.init();
+        return authorizer;
+    } else if (process.env.AUTHORIZER === 'CasbinAllowAnonymousAuthorizer') {
+        const authorizer = new CasbinAllowAnonymousAuthorizer(pathToModel, pathToPolicy);
+        await authorizer.init();
+        return authorizer;
+    } else {
+        return new NoAuthAuthorizer();
+    }
+}
+
 async function setUpApplication(): Promise<express.Express> {
     const app = express();
     app.use(express.json());
+    app.use(simple_authn);
+    const authorizer: Authorizer = await getAuthorizer();
     const mongoConnection: MongoConnection = new MongoConnection(process.env.MONGO_URL || 'mongodb://mongo:27017', process.env.MONGO_DB || 'papiea');
     await mongoConnection.connect();
     const providerDb = await mongoConnection.get_provider_db();
     const specDb = await mongoConnection.get_spec_db();
     const statusDb = await mongoConnection.get_status_db();
     const validator = new Validator();
-    app.use('/provider', createProviderAPIRouter(new Provider_API_Impl(providerDb, statusDb)));
-    app.use('/entity', createEntityRoutes(new Entity_API_Impl(statusDb, specDb, providerDb, validator)));
+    app.use('/provider', createProviderAPIRouter(new Provider_API_Impl(providerDb, statusDb, validator, authorizer)));
+    app.use('/entity', createEntityRoutes(new Entity_API_Impl(statusDb, specDb, providerDb, validator, authorizer)));
     app.use('/api-docs', createAPIDocsRouter('/api-docs', new ApiDocsGenerator(providerDb)));
     app.use(function (err: any, req: any, res: any, next: any) {
         if (res.headersSent) {
@@ -47,12 +69,12 @@ async function setUpApplication(): Promise<express.Express> {
                 return;
             case EntityNotFoundError:
                 res.status(404);
-                res.json({"error": `Entity with kind: ${err.kind}, uuid: ${err.uuid} not found`});
+                res.json({ "error": `Entity with kind: ${err.kind}, uuid: ${err.uuid} not found` });
                 return;
             default:
                 res.status(500);
                 console.error(err);
-                res.json({ error: `${ err }` });
+                res.json({ error: `${err}` });
         }
     });
     return app;
@@ -60,6 +82,6 @@ async function setUpApplication(): Promise<express.Express> {
 
 setUpApplication().then(app => {
     app.listen(serverPort, function () {
-        console.log(`Papiea app listening on port ${ serverPort }!`);
+        console.log(`Papiea app listening on port ${serverPort}!`);
     });
 }).catch(console.error);

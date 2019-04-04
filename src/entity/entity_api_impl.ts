@@ -8,6 +8,8 @@ import uuid = require("uuid");
 import { Entity_API } from "./entity_api_interface";
 import { ValidationError, Validator } from "../validator";
 import * as uuid_validate from "uuid-validate";
+import { Authorizer } from "../auth/authz";
+import { UserAuthInfo } from "../auth/authn";
 
 export class ProcedureInvocationError extends Error {
     errors: string[];
@@ -26,15 +28,17 @@ export class Entity_API_Impl implements Entity_API {
     private spec_db: Spec_DB;
     private provider_db: Provider_DB;
     private validator: Validator;
+    private authorizer: Authorizer;
 
-    constructor(status_db: Status_DB, spec_db: Spec_DB, provider_db: Provider_DB, validator: Validator) {
+    constructor(status_db: Status_DB, spec_db: Spec_DB, provider_db: Provider_DB, validator: Validator, authorizer: Authorizer) {
         this.status_db = status_db;
         this.spec_db = spec_db;
         this.provider_db = provider_db;
         this.validator = validator;
+        this.authorizer = authorizer;
     }
 
-    async get_kind(prefix: string, kind: string): Promise<Kind> {
+    async get_kind(user: UserAuthInfo, prefix: string, kind: string): Promise<Kind> {
         const provider = await this.provider_db.get_provider(prefix);
         const found_kind: Kind | undefined = provider.kinds.find(elem => elem.name === kind);
         if (found_kind === undefined) {
@@ -43,7 +47,7 @@ export class Entity_API_Impl implements Entity_API {
         return found_kind;
     }
 
-    async save_entity(kind: Kind, spec_description: Spec, request_metadata: Metadata = {} as Metadata): Promise<[Metadata, Spec]> {
+    async save_entity(user: UserAuthInfo, kind: Kind, spec_description: Spec, request_metadata: Metadata = {} as Metadata): Promise<[Metadata, Spec]> {
         this.validate_spec(spec_description, kind);
         if (!request_metadata.uuid) {
             request_metadata.uuid = uuid();
@@ -62,27 +66,27 @@ export class Entity_API_Impl implements Entity_API {
         return [metadata, spec];
     }
 
-    async get_entity_spec(kind: Kind, entity_uuid: uuid4): Promise<[Metadata, Spec]> {
+    async get_entity_spec(user: UserAuthInfo, kind: Kind, entity_uuid: uuid4): Promise<[Metadata, Spec]> {
         const entity_ref: Entity_Reference = { kind: kind.name, uuid: entity_uuid };
         return this.spec_db.get_spec(entity_ref);
     }
 
-    async get_entity_status(kind: Kind, entity_uuid: uuid4): Promise<[Metadata, Status]> {
+    async get_entity_status(user: UserAuthInfo, kind: Kind, entity_uuid: uuid4): Promise<[Metadata, Status]> {
         const entity_ref: Entity_Reference = { kind: kind.name, uuid: entity_uuid };
         return this.status_db.get_status(entity_ref);
     }
 
-    async filter_entity_spec(kind: Kind, fields: any): Promise<[Metadata, Spec][]> {
+    async filter_entity_spec(user: UserAuthInfo, kind: Kind, fields: any): Promise<[Metadata, Spec][]> {
         fields.metadata.kind = kind.name;
         return this.spec_db.list_specs(fields);
     }
 
-    async filter_entity_status(kind: Kind, fields: any): Promise<[Metadata, Status][]> {
+    async filter_entity_status(user: UserAuthInfo, kind: Kind, fields: any): Promise<[Metadata, Status][]> {
         fields.metadata.kind = kind.name;
         return this.status_db.list_status(fields);
     }
 
-    async update_entity_spec(uuid: uuid4, spec_version: number, kind: Kind, spec_description: Spec): Promise<[Metadata, Spec]> {
+    async update_entity_spec(user: UserAuthInfo, uuid: uuid4, spec_version: number, kind: Kind, spec_description: Spec): Promise<[Metadata, Spec]> {
         this.validate_spec(spec_description, kind);
         const metadata: Metadata = { uuid: uuid, kind: kind.name, spec_version: spec_version } as Metadata;
         const [_, spec] = await this.spec_db.update_spec(metadata, spec_description);
@@ -91,14 +95,14 @@ export class Entity_API_Impl implements Entity_API {
         return [metadata, spec];
     }
 
-    async delete_entity_spec(kind: Kind, entity_uuid: uuid4): Promise<void> {
+    async delete_entity_spec(user: UserAuthInfo, kind: Kind, entity_uuid: uuid4): Promise<void> {
         const entity_ref: Entity_Reference = { kind: kind.name, uuid: entity_uuid };
         await this.spec_db.delete_spec(entity_ref);
         await this.status_db.delete_status(entity_ref);
     }
 
-    async call_procedure(kind: Kind, entity_uuid: uuid4, procedure_name: string, input: any): Promise<any> {
-        const entity_data: [Metadata, Spec] = await this.get_entity_spec(kind, entity_uuid);
+    async call_procedure(user: UserAuthInfo, kind: Kind, entity_uuid: uuid4, procedure_name: string, input: any): Promise<any> {
+        const entity_data: [Metadata, Spec] = await this.get_entity_spec(user, kind, entity_uuid);
         const procedure: Procedural_Signature | undefined = kind.procedures[procedure_name];
         if (procedure === undefined) {
             throw new Error(`Procedure ${procedure_name} not found for kind ${kind.name}`);

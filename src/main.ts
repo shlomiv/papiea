@@ -9,7 +9,7 @@ import { Entity_API_Impl, ProcedureInvocationError } from "./entity/entity_api_i
 import { ValidationError, Validator } from "./validator";
 import { EntityNotFoundError } from "./databases/utils/errors";
 import { simple_authn } from "./auth/authn";
-import { Authorizer, NoAuthAuthorizer, CasbinAuthorizer, CasbinAllowAnonymousAuthorizer } from "./auth/authz";
+import { Authorizer, NoAuthAuthorizer, CasbinAuthorizer, CasbinAllowAnonymousAuthorizer, PermissionDeniedError } from "./auth/authz";
 import { resolve } from "path";
 
 declare var process: {
@@ -69,7 +69,11 @@ async function setUpApplication(): Promise<express.Express> {
                 return;
             case EntityNotFoundError:
                 res.status(404);
-                res.json({ "error": `Entity with kind: ${err.kind}, uuid: ${err.uuid} not found` });
+                res.json({ error: `Entity with kind: ${err.kind}, uuid: ${err.uuid} not found` });
+                return;
+            case PermissionDeniedError:
+                res.status(403);
+                res.json({ error: 'Forbidden' });
                 return;
             default:
                 res.status(500);

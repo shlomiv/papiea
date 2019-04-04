@@ -3,11 +3,12 @@ import * as papiea from "../papiea";
 import { Provider } from "../papiea";
 import { Status } from "../core";
 import { Data_Description } from "../core";
+import { Version } from "../core";
 
 
 // This will be provided using REST APIs. 
 
-export enum Provider_Power {On, Off, Suspended};
+export enum Provider_Power {On, Off, Suspended}
 
 export interface Provider_API {
 
@@ -30,4 +31,10 @@ export interface Provider_API {
     power(provider_prefix: string, version: core.Version, power_state: Provider_Power): Promise<void>;
 
     get_provider_by_kind(kind_name: string): Promise<Provider>;
+
+    get_provider(provider_prefix: string, provider_version: Version): Promise<Provider>;
+
+    list_providers_by_prefix(provider_prefix: string): Promise<Provider[]>;
+
+    validate_status(status: Status, kind_structure: Data_Description): void;
 }

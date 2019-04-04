@@ -4,7 +4,8 @@ import { Provider_API, Provider_Power } from "./provider_api_interface";
 import { Provider_DB } from "../databases/provider_db_interface";
 import { Status_DB } from "../databases/status_db_interface";
 import { Provider } from "../papiea";
-import { Status } from "../core";
+import { Status, Version } from "../core";
+import { Data_Description } from "../core";
 import { Validator } from "../validator";
 
 export class Provider_API_Impl implements Provider_API {
@@ -41,11 +42,19 @@ export class Provider_API_Impl implements Provider_API {
         throw new Error("Not implemented");
     }
 
+    async get_provider(provider_prefix: string, provider_version: Version): Promise<Provider> {
+        return this.providerDb.get_provider(provider_prefix, provider_version)
+    }
+
+    async list_providers_by_prefix(provider_prefix: string): Promise<Provider[]> {
+        return this.providerDb.find_providers(provider_prefix)
+    }
+
     async get_provider_by_kind(kind_name: string): Promise<Provider> {
         return this.providerDb.get_provider_by_kind(kind_name)
     }
 
-    private async validate_status(entity_ref: core.Entity_Reference, status: Status) {
+    async validate_status(entity_ref: core.Entity_Reference, status: Status) {
         const provider: Provider = await this.get_provider_by_kind(entity_ref.kind);
         const kind = provider.kinds.find(kind => kind.name === entity_ref.kind);
         if (kind === undefined) {

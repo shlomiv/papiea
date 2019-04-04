@@ -11,9 +11,19 @@ export default function createProviderAPIRouter(providerApi: Provider_API) {
         res.json(result);
     }));
 
+    providerApiRouter.get('/:prefix/:version', asyncHandler(async (req, res) => {
+        const provider = await providerApi.get_provider(req.params.prefix, req.params.version);
+        res.json(provider)
+    }));
+
     providerApiRouter.delete('/:prefix/:version', asyncHandler(async (req, res) => {
         await providerApi.unregister_provider(req.params.prefix, req.params.version);
         res.json("OK")
+    }));
+
+    providerApiRouter.get('/:prefix', asyncHandler(async (req, res) => {
+        const provider = await providerApi.list_providers_by_prefix(req.params.prefix);
+        res.json(provider)
     }));
 
     providerApiRouter.post('/update_status', asyncHandler(async (req, res) => {

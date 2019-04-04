@@ -34,7 +34,7 @@ export function createEntityRoutes(entity_api: Entity_API): Router {
         });
 
         return Object.values(uuidToEntity);
-    }
+    };
 
     router.get("/:prefix/:kind", kind_middleware, asyncHandler(async (req, res) => {
         const filter: any = {};

@@ -23,6 +23,8 @@ export interface Provider_DB {
     delete_provider(provider_prefix: string, version: core.Version): Promise<void>;
 
     get_provider_by_kind(kind_name: string): Promise<Provider>;
+
+    find_providers(provider_prefix: string): Promise<Provider[]>;
 }
 
 // provider-db-interface ends here

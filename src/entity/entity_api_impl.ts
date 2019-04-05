@@ -8,7 +8,7 @@ import uuid = require("uuid");
 import { Entity_API } from "./entity_api_interface";
 import { ValidationError, Validator } from "../validator";
 import * as uuid_validate from "uuid-validate";
-import { Authorizer } from "../auth/authz";
+import { Authorizer, ReadAction } from "../auth/authz";
 import { UserAuthInfo } from "../auth/authn";
 
 export class ProcedureInvocationError extends Error {
@@ -69,7 +69,9 @@ export class Entity_API_Impl implements Entity_API {
 
     async get_entity_spec(user: UserAuthInfo, kind_name: string, entity_uuid: uuid4): Promise<[Metadata, Spec]> {
         const entity_ref: Entity_Reference = { kind: kind_name, uuid: entity_uuid };
-        return this.spec_db.get_spec(entity_ref);
+        const [metadata, spec] = await this.spec_db.get_spec(entity_ref);
+        this.authorizer.checkPermission(user, { "metadata": metadata, "spec": spec }, ReadAction);
+        return [metadata, spec];
     }
 
     async get_entity_status(user: UserAuthInfo, kind_name: string, entity_uuid: uuid4): Promise<[Metadata, Status]> {

@@ -5,8 +5,8 @@ import { resolve } from "path";
 
 
 describe("Casbin authorizer tests", () => {
-    const pathToModel: string = resolve(__dirname, '../src/auth/model1.txt');
-    const pathToPolicy: string = resolve(__dirname, '../src/auth/policy1.txt');
+    const pathToModel: string = resolve(__dirname, "../src/auth/model1.txt");
+    const pathToPolicy: string = resolve(__dirname, "../src/auth/policy1.txt");
     const authorizer = new CasbinAuthorizer(pathToModel, pathToPolicy);
 
     beforeAll(async () => {
@@ -40,7 +40,7 @@ describe("Casbin authorizer tests", () => {
 
     test("Alice fails to write an imaged host of another user without rights", async (done) => {
         actionShouldFail(
-            { 'owner': 'alice', 'tenant': '1' },
+            { "owner": "alice", "tenant": "1" },
             { "metadata": { "owner": "1alice1", "kind": "imaged_host" } },
             CreateAction,
             done
@@ -49,7 +49,7 @@ describe("Casbin authorizer tests", () => {
 
     test("Alice fails to delete her own imaged_host, which is explicitly denied", async (done) => {
         actionShouldFail(
-            { 'owner': 'alice', 'tenant': '1' },
+            { "owner": "alice", "tenant": "1" },
             { "metadata": { "owner": "alice", "kind": "imaged_host" } },
             DeleteAction,
             done
@@ -58,7 +58,7 @@ describe("Casbin authorizer tests", () => {
 
     test("Alice succeeds reading her own imaged host which is explicitly allowed", async (done) => {
         actionShouldSucceed(
-            { 'owner': 'alice', 'tenant': '1' },
+            { "owner": "alice", "tenant": "1" },
             { "metadata": { "owner": "alice", "kind": "imaged_host" } },
             ReadAction,
             done
@@ -67,7 +67,7 @@ describe("Casbin authorizer tests", () => {
 
     test("Bob succeeds reading alice's geolocation, which is allowed to read by everyone using the default 'reader_group'", async (done) => {
         actionShouldSucceed(
-            { 'owner': 'bob', 'tenant': '1' },
+            { "owner": "bob", "tenant": "1" },
             { "metadata": { "owner": "alice", "kind": "geolocation" } },
             ReadAction,
             done
@@ -76,7 +76,7 @@ describe("Casbin authorizer tests", () => {
 
     test("Bob fails to delete a geolocation since no rule allows for it", async (done) => {
         actionShouldFail(
-            { 'owner': 'bob', 'tenant': '1' },
+            { "owner": "bob", "tenant": "1" },
             { "metadata": { "owner": "alice", "kind": "geolocation" } },
             DeleteAction,
             done
@@ -85,7 +85,7 @@ describe("Casbin authorizer tests", () => {
 
     test("Alice succeeds reading a host_type owned by her since it was explicitly allowed", async (done) => {
         actionShouldSucceed(
-            { 'owner': 'alice', 'tenant': '1' },
+            { "owner": "alice", "tenant": "1" },
             { "metadata": { "owner": "alice", "kind": "host_type" } },
             ReadAction,
             done
@@ -94,7 +94,7 @@ describe("Casbin authorizer tests", () => {
 
     test("Bill succeeds reading alice's host_type since the reader_group allows it for everyone", async (done) => {
         actionShouldSucceed(
-            { 'owner': 'bill', 'tenant': '1' },
+            { "owner": "bill", "tenant": "1" },
             { "metadata": { "owner": "alice", "kind": "host_type" } },
             ReadAction,
             done
@@ -103,7 +103,7 @@ describe("Casbin authorizer tests", () => {
 
     test("Bill fails deleting alice's host_type, since no rule allows it", async (done) => {
         actionShouldFail(
-            { 'owner': 'bill', 'tenant': '1' },
+            { "owner": "bill", "tenant": "1" },
             { "metadata": { "owner": "alice", "kind": "host_type" } },
             DeleteAction,
             done
@@ -112,7 +112,7 @@ describe("Casbin authorizer tests", () => {
 
     test("Bill fails deleting alice's imaged_type, since the standard_group only allows deleting to owners", async (done) => {
         actionShouldFail(
-            { 'owner': 'bill', 'tenant': '1' },
+            { "owner": "bill", "tenant": "1" },
             { "metadata": { "owner": "alice", "kind": "imaged_host" } },
             DeleteAction,
             done
@@ -121,7 +121,7 @@ describe("Casbin authorizer tests", () => {
 
     test("Bill succeeds deleting his own imaged_type, since the standard_group only allows deleting to owners", async (done) => {
         actionShouldSucceed(
-            { 'owner': 'bill', 'tenant': '1' },
+            { "owner": "bill", "tenant": "1" },
             { "metadata": { "owner": "bill", "kind": "imaged_host" } },
             DeleteAction,
             done
@@ -130,7 +130,7 @@ describe("Casbin authorizer tests", () => {
 
     test("Anonymous user is denied reading alice's host_type, by a rule denying anything of anyone's entity", async (done) => {
         actionShouldFail(
-            { 'owner': 'anonymous' },
+            { "owner": "anonymous" },
             { "metadata": { "owner": "alice", "kind": "host_type" } },
             ReadAction,
             done
@@ -139,7 +139,7 @@ describe("Casbin authorizer tests", () => {
 
     test("Admin can delete alice's imaged_host since admin belongs to the admin's group", async (done) => {
         actionShouldSucceed(
-            { 'owner': 'admin' },
+            { "owner": "admin" },
             { "metadata": { "owner": "alice", "kind": "imaged_host" } },
             DeleteAction,
             done
@@ -148,8 +148,8 @@ describe("Casbin authorizer tests", () => {
 
     test("Rick can delete alice's imaged_host since he is in her tenant and is a part of tenant_group", async (done) => {
         actionShouldSucceed(
-            { 'owner': 'rick', 'tenant': '1' },
-            { "metadata": { "owner": "alice", 'tenant_uuid': '1', "kind": "imaged_host" } },
+            { "owner": "rick", "tenant": "1" },
+            { "metadata": { "owner": "alice", "tenant_uuid": "1", "kind": "imaged_host" } },
             DeleteAction,
             done
         );
@@ -157,8 +157,8 @@ describe("Casbin authorizer tests", () => {
 
     test("Rick fails to delete alice's imaged_cluster since he is in her tenant and is a part of tenant_group but the rule denies deleteing", async (done) => {
         actionShouldFail(
-            { 'owner': 'rick', 'tenant': '1' },
-            { "metadata": { "owner": "alice", 'tenant_uuid': '1', "kind": "imaged_cluster" } },
+            { "owner": "rick", "tenant": "1" },
+            { "metadata": { "owner": "alice", "tenant_uuid": "1", "kind": "imaged_cluster" } },
             DeleteAction,
             done
         );

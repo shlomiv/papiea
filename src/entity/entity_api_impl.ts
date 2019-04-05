@@ -3,12 +3,12 @@ import { Status_DB } from "../databases/status_db_interface";
 import { Spec_DB } from "../databases/spec_db_interface";
 import { Provider_DB } from "../databases/provider_db_interface";
 import { Kind, Procedural_Signature } from "../papiea";
-import { Data_Description, Entity_Reference, Metadata, Spec, uuid4, Status } from "../core";
+import {  Entity_Reference, Metadata, Spec, uuid4, Status } from "../core";
 import uuid = require("uuid");
 import { Entity_API } from "./entity_api_interface";
 import { ValidationError, Validator } from "../validator";
 import * as uuid_validate from "uuid-validate";
-import { Authorizer, ReadAction } from "../auth/authz";
+import { Authorizer, ReadAction, CreateAction, DeleteAction, UpdateAction, CallProcedureByNameAction } from "../auth/authz";
 import { UserAuthInfo } from "../auth/authn";
 
 export class ProcedureInvocationError extends Error {
@@ -61,6 +61,7 @@ export class Entity_API_Impl implements Entity_API {
         }
         request_metadata.created_at = new Date();
         request_metadata.kind = kind.name;
+        this.authorizer.checkPermission(user, { "metadata": request_metadata }, CreateAction);
         const [metadata, spec] = await this.spec_db.update_spec(request_metadata, spec_description);
         if (kind.kind_structure[kind.name]['x-papiea-entity'] === 'spec-only')
             await this.status_db.update_status(request_metadata, spec_description);
@@ -70,29 +71,50 @@ export class Entity_API_Impl implements Entity_API {
     async get_entity_spec(user: UserAuthInfo, kind_name: string, entity_uuid: uuid4): Promise<[Metadata, Spec]> {
         const entity_ref: Entity_Reference = { kind: kind_name, uuid: entity_uuid };
         const [metadata, spec] = await this.spec_db.get_spec(entity_ref);
-        this.authorizer.checkPermission(user, { "metadata": metadata, "spec": spec }, ReadAction);
+        this.authorizer.checkPermission(user, { "metadata": metadata }, ReadAction);
         return [metadata, spec];
     }
 
     async get_entity_status(user: UserAuthInfo, kind_name: string, entity_uuid: uuid4): Promise<[Metadata, Status]> {
         const entity_ref: Entity_Reference = { kind: kind_name, uuid: entity_uuid };
-        return this.status_db.get_status(entity_ref);
+        const [metadata, status] = await this.status_db.get_status(entity_ref);
+        this.authorizer.checkPermission(user, { "metadata": metadata }, ReadAction);
+        return [metadata, status];
     }
 
     async filter_entity_spec(user: UserAuthInfo, kind_name: string, fields: any): Promise<[Metadata, Spec][]> {
         fields.metadata.kind = kind_name;
-        return this.spec_db.list_specs(fields);
+        const res = await this.spec_db.list_specs(fields);
+        const filteredRes = res.filter(x => {
+            try {
+                this.authorizer.checkPermission(user, { "metadata": x[0] }, ReadAction);
+                return true;
+            } catch (e) {
+                return false;
+            }
+        });
+        return filteredRes;
     }
 
     async filter_entity_status(user: UserAuthInfo, kind_name: string, fields: any): Promise<[Metadata, Status][]> {
         fields.metadata.kind = kind_name;
-        return this.status_db.list_status(fields);
+        const res = await this.status_db.list_status(fields);
+        const filteredRes = res.filter(x => {
+            try {
+                this.authorizer.checkPermission(user, { "metadata": x[0] }, ReadAction);
+                return true;
+            } catch (e) {
+                return false;
+            }
+        });
+        return filteredRes;
     }
 
     async update_entity_spec(user: UserAuthInfo, uuid: uuid4, spec_version: number, kind_name: string, spec_description: Spec): Promise<[Metadata, Spec]> {
         const kind: Kind = await this.get_kind(kind_name);
         this.validate_spec(spec_description, kind);
         const metadata: Metadata = { uuid: uuid, kind: kind.name, spec_version: spec_version } as Metadata;
+        this.authorizer.checkPermission(user, { "metadata": metadata }, UpdateAction);
         const [_, spec] = await this.spec_db.update_spec(metadata, spec_description);
         if (kind.kind_structure[kind.name]['x-papiea-entity'] === 'spec-only')
             await this.status_db.update_status(metadata, spec_description);
@@ -101,6 +123,8 @@ export class Entity_API_Impl implements Entity_API {
 
     async delete_entity_spec(user: UserAuthInfo, kind_name: string, entity_uuid: uuid4): Promise<void> {
         const entity_ref: Entity_Reference = { kind: kind_name, uuid: entity_uuid };
+        const [metadata, _] = await this.spec_db.get_spec(entity_ref);
+        this.authorizer.checkPermission(user, { "metadata": metadata }, DeleteAction);
         await this.spec_db.delete_spec(entity_ref);
         await this.status_db.delete_status(entity_ref);
     }
@@ -108,6 +132,7 @@ export class Entity_API_Impl implements Entity_API {
     async call_procedure(user: UserAuthInfo, kind_name: string, entity_uuid: uuid4, procedure_name: string, input: any): Promise<any> {
         const kind: Kind = await this.get_kind(kind_name);
         const entity_data: [Metadata, Spec] = await this.get_entity_spec(user, kind_name, entity_uuid);
+        this.authorizer.checkPermission(user, { "metadata": entity_data[0] }, CallProcedureByNameAction(procedure_name));
         const procedure: Procedural_Signature | undefined = kind.procedures[procedure_name];
         if (procedure === undefined) {
             throw new Error(`Procedure ${procedure_name} not found for kind ${kind.name}`);

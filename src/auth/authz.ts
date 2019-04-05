@@ -8,12 +8,35 @@ export class PermissionDeniedError extends Error {
     }
 }
 
+export class Action {
+    private action: string;
+
+    constructor(action: string) {
+        this.action = action;
+    }
+
+    getAction(): string {
+        return this.action;
+    }
+}
+
+const ReadAction = new Action('read'),
+    UpdateAction = new Action('write'),
+    CreateAction = new Action('create'),
+    DeleteAction = new Action('delete');
+
+export { ReadAction, UpdateAction, CreateAction, DeleteAction };
+
+export function CallProcedureByNameAction(procedureName: string) {
+    return new Action('call' + procedureName);
+}
+
 export interface Authorizer {
-    checkPermission(user: UserAuthInfo, object: any, action: any): void
+    checkPermission(user: UserAuthInfo, object: any, action: Action): void
 }
 
 export class NoAuthAuthorizer implements Authorizer {
-    checkPermission(user: UserAuthInfo, object: any, action: any): void {
+    checkPermission(user: UserAuthInfo, object: any, action: Action): void {
     }
 }
 
@@ -32,15 +55,15 @@ export class CasbinAuthorizer implements Authorizer {
         this.enforcer = await casbin.newEnforcer(this.pathToModel, this.pathToPolicy);
     }
 
-    checkPermission(user: UserAuthInfo, object: any, action: any): void {
-        if (!this.enforcer.enforce(user, object, action)) {
+    checkPermission(user: UserAuthInfo, object: any, action: Action): void {
+        if (!this.enforcer.enforce(user, object, action.getAction())) {
             throw new PermissionDeniedError();
         }
     }
 }
 
 export class CasbinAllowAnonymousAuthorizer extends CasbinAuthorizer {
-    checkPermission(user: UserAuthInfo, object: any, action: any): void {
+    checkPermission(user: UserAuthInfo, object: any, action: Action): void {
         if (user.owner === 'anonymous') {
             return;
         }

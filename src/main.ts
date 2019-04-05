@@ -8,8 +8,8 @@ import { createEntityRoutes } from "./entity/entity_routes";
 import { Entity_API_Impl, ProcedureInvocationError } from "./entity/entity_api_impl";
 import { ValidationError, Validator } from "./validator";
 import { EntityNotFoundError } from "./databases/utils/errors";
-import { simple_authn } from "./auth/authn";
-import { Authorizer, NoAuthAuthorizer, CasbinAuthorizer, CasbinAllowAnonymousAuthorizer, PermissionDeniedError } from "./auth/authz";
+import { test_authn } from "./auth/authn";
+import { Authorizer, NoAuthAuthorizer, CasbinAuthorizer, TestAuthorizer, PermissionDeniedError } from "./auth/authz";
 import { resolve } from "path";
 
 declare var process: {
@@ -31,9 +31,10 @@ async function getAuthorizer(): Promise<Authorizer> {
         const authorizer = new CasbinAuthorizer(pathToModel, pathToPolicy);
         await authorizer.init();
         return authorizer;
-    } else if (process.env.AUTHORIZER === 'CasbinAllowAnonymousAuthorizer') {
-        const authorizer = new CasbinAllowAnonymousAuthorizer(pathToModel, pathToPolicy);
-        await authorizer.init();
+    } else if (process.env.AUTHORIZER === 'CasbinTestAuthorizer') {
+        const authorizerToBeTested = new CasbinAuthorizer(pathToModel, pathToPolicy);
+        await authorizerToBeTested.init();
+        const authorizer = new TestAuthorizer(authorizerToBeTested);
         return authorizer;
     } else {
         return new NoAuthAuthorizer();
@@ -43,7 +44,7 @@ async function getAuthorizer(): Promise<Authorizer> {
 async function setUpApplication(): Promise<express.Express> {
     const app = express();
     app.use(express.json());
-    app.use(simple_authn);
+    app.use(test_authn);
     const authorizer: Authorizer = await getAuthorizer();
     const mongoConnection: MongoConnection = new MongoConnection(process.env.MONGO_URL || 'mongodb://mongo:27017', process.env.MONGO_DB || 'papiea');
     await mongoConnection.connect();

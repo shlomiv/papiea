@@ -62,11 +62,19 @@ export class CasbinAuthorizer implements Authorizer {
     }
 }
 
-export class CasbinAllowAnonymousAuthorizer extends CasbinAuthorizer {
+// For tests, check perms only if user info is present,
+// otherwise allows autotests to call endpoints without auth
+export class TestAuthorizer implements Authorizer {
+    private authorizerToBeTested: Authorizer;
+
+    constructor(authorizerToBeTested: Authorizer) {
+        this.authorizerToBeTested = authorizerToBeTested;
+    }
+
     checkPermission(user: UserAuthInfo, object: any, action: Action): void {
-        if (user.owner === 'anonymous') {
+        if (user.doNotCheck) {
             return;
         }
-        super.checkPermission(user, object, action);
+        this.authorizerToBeTested.checkPermission(user, object, action);
     }
 }

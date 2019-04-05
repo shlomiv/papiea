@@ -6,7 +6,9 @@ export interface UserAuthInfoRequest extends Request {
 
 export interface UserAuthInfo {
     owner: string,
-    tenant?: string
+    tenant?: string,
+    // For tests
+    doNotCheck?: boolean
 }
 
 export interface UserAuthRequestHandler {
@@ -21,12 +23,13 @@ export function asyncHandler(fn: UserAuthRequestHandler): any {
     };
 }
 
-// Just for autotests
-export function simple_authn(req: Request, res: Response, next: NextFunction) {
+// For tests
+export function test_authn(req: Request, res: Response, next: NextFunction) {
     let requestWrapper: UserAuthInfoRequest = <UserAuthInfoRequest>req;
     requestWrapper.user = {
         owner: req.header('Owner') || 'anonymous',
-        tenant: req.header('Tenant')
+        tenant: req.header('Tenant'),
+        doNotCheck: req.header('Owner') === undefined
     }
     next();
 }

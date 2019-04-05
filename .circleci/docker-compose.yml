@@ -6,7 +6,7 @@ services:
                         context: .
                 environment:
                         - JEST_JUNIT_OUTPUT=reports/junit/results.xml
-                        - AUTHORIZER=CasbinAllowAnonymousAuthorizer
+                        - AUTHORIZER=CasbinTestAuthorizer
                 depends_on:
                         - mongo
         mongo:

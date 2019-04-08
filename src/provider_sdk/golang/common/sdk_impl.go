@@ -1,7 +1,6 @@
 package common
 
 import (
-	"../papiea"
 	"fmt"
 	"github.com/jinzhu/inflection"
 	"github.com/pkg/errors"
@@ -11,16 +10,16 @@ import (
 )
 
 type ProviderSdk struct {
-	Version       *papiea.ProviderVersion
+	Version       *ProviderVersion
 	Prefix        *string
-	Kinds         []papiea.Kind
-	Provider      *papiea.Provider
+	Kinds         []Kind
+	Provider      *Provider
 	PapieaUrl     string
 	PapieaPort    int
 	ServerManager ServerManager
 }
 
-func makeSdk(hostParams map[string]string) (*ProviderSdk, error) {
+func MakeSdk(hostParams map[string]string) (*ProviderSdk, error) {
 	papieaHost, present := hostParams["papiea_host"]
 	if present == false {
 		return nil, errors.New("Papiea host is not specified")
@@ -50,11 +49,11 @@ func makeSdk(hostParams map[string]string) (*ProviderSdk, error) {
 	publicPort, portPresent := hostParams["public_port"]
 	if hostPresent == true && portPresent == true {
 		serverManager.publicHost = publicHost
-		if port, err := strconv.Atoi(publicPort); err != nil {
-			serverManager.publicPort = port
-		} else {
+		port, e := strconv.Atoi(publicPort)
+		if e != nil {
 			return nil, errors.New("Couldn't interpret public port as number")
 		}
+		serverManager.publicPort = port
 	}
 	sdk.ServerManager = serverManager
 	return &sdk, nil
@@ -64,7 +63,7 @@ func (sdk *ProviderSdk) NewKind(entityDesc map[interface{}]interface{}) (*KindBu
 	if len(entityDesc) == 0 {
 		return nil, errors.New("Malformed entity description")
 	}
-	keys := make([]interface{}, 1)
+	keys := make([]interface{}, 0)
 	for k := range entityDesc {
 		keys = append(keys, k)
 	}
@@ -77,10 +76,10 @@ func (sdk *ProviderSdk) NewKind(entityDesc map[interface{}]interface{}) (*KindBu
 			var (
 				intentfulSignatures map[string]string
 				dependencyTree      map[string][]string
-				procedures          map[string]papiea.ProceduralSignature
+				procedures          map[string]ProceduralSignature
 			)
 			plural := inflection.Plural(firstElement.(string))
-			specOnlyKind := papiea.Kind{
+			specOnlyKind := Kind{
 				Name:               firstElement.(string),
 				NamePlural:         &plural,
 				KindStructure:      entityDesc,
@@ -103,7 +102,7 @@ func (sdk *ProviderSdk) prefix(prefix string) {
 	sdk.Prefix = &prefix
 }
 
-func (sdk *ProviderSdk) version(version papiea.ProviderVersion) {
+func (sdk *ProviderSdk) version(version ProviderVersion) {
 	sdk.Version = &version
 }
 
@@ -111,7 +110,7 @@ func (sdk ProviderSdk) entityUrl() string {
 	return fmt.Sprintf("http://%s:%d/entity", sdk.PapieaUrl, sdk.PapieaPort)
 }
 
-func (sdk *ProviderSdk) addKind(kind papiea.Kind) *KindBuilder {
+func (sdk *ProviderSdk) addKind(kind Kind) *KindBuilder {
 	for _, item := range sdk.Kinds {
 		if item.Name == kind.Name {
 			return nil
@@ -121,7 +120,7 @@ func (sdk *ProviderSdk) addKind(kind papiea.Kind) *KindBuilder {
 	return &KindBuilder{kind, sdk.entityUrl(), sdk.Prefix, sdk.ServerManager}
 }
 
-func (sdk *ProviderSdk) removeKind(kind papiea.Kind) bool {
+func (sdk *ProviderSdk) removeKind(kind Kind) bool {
 	for i, item := range sdk.Kinds {
 		if item.Name == kind.Name {
 			sdk.Kinds = append(sdk.Kinds[:i], sdk.Kinds[i:]...)
@@ -133,7 +132,7 @@ func (sdk *ProviderSdk) removeKind(kind papiea.Kind) bool {
 
 func (sdk *ProviderSdk) register() error {
 	if len(sdk.Kinds) > 0 && sdk.Prefix != nil && sdk.Version != nil {
-		sdk.Provider = &papiea.Provider{
+		sdk.Provider = &Provider{
 			Kinds:   sdk.Kinds,
 			Version: *sdk.Version,
 			Prefix:  *sdk.Prefix,
@@ -167,7 +166,7 @@ type IntentfulContext struct {
 	Prefix  string
 }
 
-func (ctx *IntentfulContext) updateStatus(metadata papiea.Metadata, status papiea.Status) bool {
+func (ctx *IntentfulContext) updateStatus(metadata Metadata, status Status) bool {
 	return false
 }
 
@@ -175,7 +174,7 @@ func (ctx *IntentfulContext) updateProgress(message string, donePercent int) boo
 	return false
 }
 
-func (ctx IntentfulContext) urlFor(entity *papiea.Entity) string {
+func (ctx IntentfulContext) urlFor(entity *Entity) string {
 	return fmt.Sprintf("%s/%s/%s/%s", ctx.BaseUrl, ctx.Prefix, entity.Metadata.Kind, entity.Metadata.UUID)
 }
 

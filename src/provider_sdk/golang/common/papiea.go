@@ -1,4 +1,4 @@
-package papiea
+package common
 
 type ProviderVersion = string
 

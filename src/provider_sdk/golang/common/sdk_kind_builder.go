@@ -1,26 +1,25 @@
 package common
 
 import (
-	"../papiea"
 	"encoding/json"
 	"github.com/pkg/errors"
 	"github.com/qiangxue/fasthttp-routing"
 )
 
 type KindBuilder struct {
-	papiea.Kind
+	Kind
 	EntityUrl string
 	Prefix    *string
 	ServerManager
 }
 
 func (builder *KindBuilder) Procedure(name string, rbac interface{},
-	executionStrategy papiea.ExecutionStrategy,
+	executionStrategy ExecutionStrategy,
 	inputDesc interface{},
 	outputDesc interface{},
-	handler func(ctx ProceduralContext, entity *papiea.Entity, input interface{}) (papiea.Entity, error)) {
+	handler func(ctx ProceduralContext, entity *Entity, input interface{}) (Entity, error)) {
 	callbackUrl := builder.ServerManager.fromProcedureName(name)
-	procedureSignature := papiea.ProceduralSignature{
+	procedureSignature := ProceduralSignature{
 		Name:              name,
 		Argument:          inputDesc,
 		Result:            outputDesc,
@@ -31,7 +30,7 @@ func (builder *KindBuilder) Procedure(name string, rbac interface{},
 	builder.ServerManager.registerHandler("/"+name, func(c *routing.Context) (err error) {
 		requestData := struct {
 			Input  *interface{} `json:"input,omitempty"`
-			entity papiea.Entity
+			entity Entity
 		}{}
 		err = json.Unmarshal(c.Request.Body(), &requestData)
 		if err != nil {

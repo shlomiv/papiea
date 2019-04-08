@@ -1,18 +1,14 @@
 package common
 
-import (
-	"../papiea"
-)
-
-type Provider interface {
-	NewKind(description papiea.CoreDescription) KindBuilder
-	Version(version papiea.ProviderVersion)
-	Power(power papiea.ProviderPower) papiea.ProviderPower
+type SdkProvider interface {
+	NewKind(description CoreDescription) KindBuilder
+	Version(version ProviderVersion)
+	Power(power ProviderPower) ProviderPower
 }
 
 type Context interface {
-	updateStatus(metadata papiea.Metadata, status papiea.Status) bool
+	updateStatus(metadata Metadata, status Status) bool
 	updateProgress(message string, donePercent int) bool
 
-	urlFor(entity *papiea.Entity) string
+	urlFor(entity *Entity) string
 }

@@ -1,9 +1,8 @@
 package common
 
 import (
-	"../papiea"
 	"fmt"
-	"github.com/qiangxue/fasthttp-routing"
+	routing "github.com/qiangxue/fasthttp-routing"
 	"github.com/valyala/fasthttp"
 	"log"
 )
@@ -41,6 +40,6 @@ func (manager *ServerManager) startServer() (err error) {
 	return err
 }
 
-func (manager *ServerManager) fromProcedureName(procedureName string) papiea.ProcedureCallback {
-	return papiea.ProcedureCallback(fmt.Sprintf("http://%s:%d/%s", manager.publicHost, manager.publicPort, procedureName))
+func (manager *ServerManager) fromProcedureName(procedureName string) ProcedureCallback {
+	return ProcedureCallback(fmt.Sprintf("http://%s:%d/%s", manager.publicHost, manager.publicPort, procedureName))
 }

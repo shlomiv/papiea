@@ -1,24 +1,19 @@
 import * as express from "express";
 import { Provider_API, Provider_Power } from "./provider_api_interface";
 import * as asyncHandler from 'express-async-handler'
-import { Provider } from "../papiea";
+
 
 export default function createProviderAPIRouter(providerApi: Provider_API) {
     const providerApiRouter = express.Router();
 
-    const provider_validate_status_middleware = asyncHandler(async (req, res, next) => {
-        const provider: Provider = await providerApi.get_provider_by_kind(req.body.entity_ref.kind);
-        const kind = provider.kinds.find(kind => kind.name === req.body.entity_ref.kind);
-        if (kind === undefined) {
-            throw new Error("Kind not found");
-        }
-        providerApi.validate_status(req.body.status, kind.kind_structure);
-        next();
-    });
-
     providerApiRouter.post('/', asyncHandler(async (req, res) => {
         const result = await providerApi.register_provider(req.body);
         res.json(result);
+    }));
+
+    providerApiRouter.get('/:prefix/:version', asyncHandler(async (req, res) => {
+        const provider = await providerApi.get_provider(req.params.prefix, req.params.version);
+        res.json(provider)
     }));
 
     providerApiRouter.delete('/:prefix/:version', asyncHandler(async (req, res) => {
@@ -26,7 +21,12 @@ export default function createProviderAPIRouter(providerApi: Provider_API) {
         res.json("OK")
     }));
 
-    providerApiRouter.post('/update_status', provider_validate_status_middleware, asyncHandler(async (req, res) => {
+    providerApiRouter.get('/:prefix', asyncHandler(async (req, res) => {
+        const provider = await providerApi.list_providers_by_prefix(req.params.prefix);
+        res.json(provider)
+    }));
+
+    providerApiRouter.post('/update_status', asyncHandler(async (req, res) => {
         await providerApi.update_status(req.body.context, req.body.entity_ref, req.body.status);
         res.json("OK")
     }));

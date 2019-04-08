@@ -8,4 +8,4 @@ RUN cd /code \
     && npm install \
     && npm run build-clj
 
-CMD npm run dev
+CMD npm run start

@@ -2,6 +2,7 @@ import { Provider_DB } from "./provider_db_interface";
 import { Provider } from "../papiea";
 import { Db, Collection } from "mongodb"
 import { Version } from "../core";
+import * as core from "../core";
 
 export class Provider_DB_Mongo implements Provider_DB {
     collection: Collection;
@@ -13,8 +14,9 @@ export class Provider_DB_Mongo implements Provider_DB {
     async init(): Promise<void> {
         try {
             await this.collection.createIndex({
-                "prefix": 1
-            }, { name: "prefix", unique: true });
+                "prefix": 1,
+                "version": 1
+            }, { unique: true });
         } catch (err) {
             throw err;
         }
@@ -69,5 +71,9 @@ export class Provider_DB_Mongo implements Provider_DB {
         } else {
             return provider;
         }
+    }
+
+    async find_providers(provider_prefix: string): Promise<Provider[]> {
+        return this.collection.find({ "prefix": provider_prefix }).toArray();
     }
 }

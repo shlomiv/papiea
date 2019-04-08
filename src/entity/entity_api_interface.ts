@@ -1,7 +1,7 @@
 import { Kind } from "../papiea";
 import { Metadata, Spec, Status, uuid4 } from "../core";
 
-export interface EntityApiInterface {
+export interface Entity_API {
     get_kind(prefix: string, kind: string): Promise<Kind>
 
     save_entity(kind: Kind, spec_description: Spec, status_description?: Status): Promise<[Metadata, Spec]>

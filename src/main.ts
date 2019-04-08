@@ -5,7 +5,7 @@ import createProviderAPIRouter from "./provider/provider_routes";
 import { Provider_API_Impl } from "./provider/provider_api_impl";
 import { MongoConnection } from "./databases/mongo";
 import { createEntityRoutes } from "./entity/entity_routes";
-import { EntityAPI, ProcedureInvocationError } from "./entity/entity_api_impl";
+import { Entity_API_Impl, ProcedureInvocationError } from "./entity/entity_api_impl";
 import { ValidationError, Validator } from "./validator";
 import { EntityNotFoundError } from "./databases/utils/errors";
 
@@ -30,7 +30,7 @@ async function setUpApplication(): Promise<express.Express> {
     const statusDb = await mongoConnection.get_status_db();
     const validator = new Validator();
     app.use('/provider', createProviderAPIRouter(new Provider_API_Impl(providerDb, statusDb)));
-    app.use('/entity', createEntityRoutes(new EntityAPI(statusDb, specDb, providerDb, validator)));
+    app.use('/entity', createEntityRoutes(new Entity_API_Impl(statusDb, specDb, providerDb, validator)));
     app.use('/api-docs', createAPIDocsRouter('/api-docs', new ApiDocsGenerator(providerDb)));
     app.use(function (err: any, req: any, res: any, next: any) {
         if (res.headersSent) {

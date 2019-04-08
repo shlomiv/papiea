@@ -2,6 +2,7 @@ import * as core from "../core";
 import { Status_DB } from "./status_db_interface";
 import { Db, Collection } from "mongodb";
 import { Entity } from "../core";
+import { datestringToFilter } from "./utils/date";
 
 export class Status_DB_Mongo implements Status_DB {
     collection: Collection;
@@ -48,14 +49,19 @@ export class Status_DB_Mongo implements Status_DB {
     }
 
     async list_status(fields_map: any): Promise<([core.Metadata, core.Status])[]> {
-        fields_map.metadata.deleted_at = null;
         const filter: any = {};
+        filter["metadata.deleted_at"] = datestringToFilter(fields_map.metadata.deleted_at);
         for (let key in fields_map.metadata) {
+            if (key === "deleted_at")
+                continue;
             filter["metadata." + key] = fields_map.metadata[key];
         }
         // Allow filter statuses by metadata and spec
         for (let key in fields_map.spec) {
             filter["spec." + key] = fields_map.spec[key];
+        }
+        for (let key in fields_map.status) {
+            filter["status." + key] = fields_map.status[key];
         }
         const result = await this.collection.find(filter).toArray();
         return result.map((x: any): [core.Metadata, core.Status] => {

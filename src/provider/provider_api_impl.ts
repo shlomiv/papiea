@@ -50,6 +50,11 @@ export class Provider_API_Impl implements Provider_API {
         return this.providerDb.find_providers(provider_prefix)
     }
 
+    async get_latest_provider(provider_prefix: string): Promise<Provider> {
+        const provider = await this.list_providers_by_prefix(provider_prefix);
+        return provider[0]
+    }
+
     async get_provider_by_kind(kind_name: string): Promise<Provider> {
         return this.providerDb.get_provider_by_kind(kind_name)
     }

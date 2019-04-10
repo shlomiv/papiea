@@ -37,4 +37,6 @@ export interface Provider_API {
     list_providers_by_prefix(provider_prefix: string): Promise<Provider[]>;
 
     validate_status(status: Status, kind_structure: Data_Description): void;
+
+    get_latest_provider(provider_prefix: string): Promise<Provider>;
 }

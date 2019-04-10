@@ -2,12 +2,13 @@ import axios, { AxiosError } from "axios"
 import { Status_DB } from "../databases/status_db_interface";
 import { Spec_DB } from "../databases/spec_db_interface";
 import { Provider_DB } from "../databases/provider_db_interface";
-import { Kind, Procedural_Signature } from "../papiea";
+import { Kind, Procedural_Signature, Provider } from "../papiea";
 import { Data_Description, Entity_Reference, Metadata, Spec, uuid4, Status } from "../core";
 import uuid = require("uuid");
 import { Entity_API } from "./entity_api_interface";
 import { ValidationError, Validator } from "../validator";
 import * as uuid_validate from "uuid-validate";
+import { Provider_API } from "../provider/provider_api_interface";
 
 export class ProcedureInvocationError extends Error {
     errors: string[];
@@ -24,18 +25,18 @@ export class ProcedureInvocationError extends Error {
 export class Entity_API_Impl implements Entity_API {
     private status_db: Status_DB;
     private spec_db: Spec_DB;
-    private provider_db: Provider_DB;
+    private provider_api: Provider_API;
     private validator: Validator;
 
-    constructor(status_db: Status_DB, spec_db: Spec_DB, provider_db: Provider_DB, validator: Validator) {
+    constructor(status_db: Status_DB, spec_db: Spec_DB, provider_api: Provider_API, validator: Validator) {
         this.status_db = status_db;
         this.spec_db = spec_db;
-        this.provider_db = provider_db;
+        this.provider_api = provider_api;
         this.validator = validator;
     }
 
     async get_kind(prefix: string, kind: string): Promise<Kind> {
-        const provider = await this.provider_db.get_provider(prefix);
+        const provider = await this.provider_api.get_latest_provider(prefix);
         const found_kind: Kind | undefined = provider.kinds.find(elem => elem.name === kind);
         if (found_kind === undefined) {
             throw new Error(`Kind: ${kind} not found on the provider with prefix: ${prefix}`)
@@ -111,6 +112,34 @@ export class Entity_API_Impl implements Entity_API {
             const { data } = await axios.post(procedure.procedure_callback, {
                 metadata: entity_data[0],
                 spec: entity_data[1],
+                input: input
+            });
+            this.validator.validate(data, Object.values(procedure.result)[0], schemas);
+            return data;
+        } catch (err) {
+            if (err instanceof ValidationError) {
+                throw new ProcedureInvocationError(err.errors, 500);
+            } else {
+                throw new ProcedureInvocationError([err.response.data], err.response.status)
+            }
+        }
+    }
+
+    async call_provider_procedure(prefix: string, procedure_name: string, input: any): Promise<any> {
+        const provider = await this.provider_api.get_latest_provider(prefix);
+        if (provider.procedures === undefined) {
+            throw new Error(`Procedure ${procedure_name} not found for provider ${prefix}`);
+        }
+        const procedure: Procedural_Signature | undefined = provider.procedures[procedure_name];
+        if (procedure === undefined) {
+            throw new Error(`Procedure ${procedure_name} not found for provider ${prefix}`);
+        }
+        const schemas: any = {};
+        Object.assign(schemas, procedure.argument);
+        Object.assign(schemas, procedure.result);
+        this.validator.validate(input, Object.values(procedure.argument)[0], schemas);
+        try {
+            const { data } = await axios.post(procedure.procedure_callback, {
                 input: input
             });
             this.validator.validate(data, Object.values(procedure.result)[0], schemas);

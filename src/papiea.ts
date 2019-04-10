@@ -64,7 +64,8 @@ export interface Provider {
     // A unique identifier where all kinds will be under this prefix
     prefix: string;
     version: core.Version;
-    kinds: Kind[]
+    kinds: Kind[];
+    procedures?: { [key: string]: Procedural_Signature; };
 }
 
 // provider-desc-struct ends here

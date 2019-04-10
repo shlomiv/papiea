@@ -2,7 +2,7 @@ import "jest"
 import * as http from "http"
 import axios from "axios"
 import { Provider } from "../src/papiea"
-import { getProviderWithSpecOnlyEnitityKindWithOperations } from "./test_data_factory"
+import { getProviderWithSpecOnlyEnitityKindWithOperations, ProviderFactory, ProviderTypes } from "./test_data_factory"
 
 declare var process: {
     env: {
@@ -26,7 +26,7 @@ const providerApi = axios.create({
 describe("Procedures tests", () => {
     const hostname = '127.0.0.1';
     const port = 9001;
-    const provider: Provider = getProviderWithSpecOnlyEnitityKindWithOperations(`http://${hostname}:${port}/`);
+    const provider: Provider = ProviderFactory.get_provider(ProviderTypes.PROVIDER_LEVEL_KIND_LEVEL_PROCEDURES, `http://${hostname}:${port}/`);
     const kind_name = provider.kinds[0].name;
 
     beforeAll(async () => {
@@ -147,5 +147,70 @@ describe("Procedures tests", () => {
             return;
         }
         done.fail();
+    });
+
+    test("Call provider level procedure", async (done) => {
+        const server = http.createServer((req, res) => {
+            if (req.method == 'POST') {
+                let body = '';
+                req.on('data', function (data) {
+                    body += data;
+                });
+                req.on('end', function () {
+                    const post = JSON.parse(body);
+                    const sum = post.input.a + post.input.b;
+                    res.statusCode = 200;
+                    res.setHeader('Content-Type', 'text/plain');
+                    res.end(JSON.stringify(sum));
+                    server.close();
+                });
+            }
+        });
+        server.listen(port, hostname, () => {
+            console.log(`Server running at http://${ hostname }:${ port }/`);
+        });
+        try {
+            const res: any = await entityApi.post(`/${ provider.prefix }/procedure/computeSum`, {
+                input: {
+                    "a": 5,
+                    "b": 5
+                }
+            });
+            expect(res.data).toBe(10);
+            done();
+        } catch(e) {
+            console.log(e.response.data);
+            done.fail()
+        }
+
+    });
+
+    test("Call provider level procedure with non-valid params fails validation", async (done) => {
+        const server = http.createServer((req, res) => {
+            if (req.method == 'POST') {
+                let body = '';
+                req.on('data', function (data) {
+                    body += data;
+                });
+                req.on('end', function () {
+                    const post = JSON.parse(body);
+                    const sum = post.input.a + post.input.b;
+                    res.statusCode = 200;
+                    res.setHeader('Content-Type', 'text/plain');
+                    res.end(JSON.stringify(sum));
+                    server.close();
+                });
+            }
+        });
+        server.listen(port, hostname, () => {
+            console.log(`Server running at http://${ hostname }:${ port }/`);
+        });
+        try {
+            const res: any = await entityApi.post(`/${ provider.prefix }/procedure/computeSum`, { input: {"a": 10, "b": "Totally not a number"} });
+        } catch (e) {
+            expect(e.response.status).toBe(400);
+            server.close();
+            done();
+        }
     });
 });

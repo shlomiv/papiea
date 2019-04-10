@@ -1,4 +1,4 @@
-import { Kind } from "../papiea";
+import { Kind, Provider } from "../papiea";
 import { Metadata, Spec, Status, uuid4 } from "../core";
 
 export interface Entity_API {
@@ -19,4 +19,6 @@ export interface Entity_API {
     delete_entity_spec(kind: Kind, entity_uuid: uuid4): Promise<void>
 
     call_procedure(kind: Kind, entity_uuid: uuid4, procedure_name: string, input: any): Promise<any>
+
+    call_provider_procedure(prefix: string, procedure_name: string, input: any): Promise<any>
 }

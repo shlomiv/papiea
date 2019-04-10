@@ -110,5 +110,10 @@ export function createEntityRoutes(entity_api: Entity_API): Router {
         res.json(result);
     }));
 
+    router.post("/:prefix/procedure/:procedure_name", asyncHandler(async (req, res) => {
+        const result: any = await entity_api.call_provider_procedure(req.params.prefix, req.params.procedure_name, req.body.input);
+        res.json(result);
+    }));
+
     return router;
 }

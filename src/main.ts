@@ -39,7 +39,6 @@ async function setUpApplication(): Promise<express.Express> {
         switch (err.constructor) {
             case ValidationError:
                 res.status(400);
-                console.log(err.errors);
                 res.json({ errors: err.errors });
                 return;
             case ProcedureInvocationError:

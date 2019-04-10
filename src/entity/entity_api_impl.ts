@@ -124,6 +124,30 @@ export class Entity_API_Impl implements Entity_API {
         }
     }
 
+    async call_kind_procedure(kind: Kind, procedure_name: string, input: any): Promise<any> {
+        const procedure: Procedural_Signature | undefined = kind.procedures[procedure_name];
+        if (procedure === undefined) {
+            throw new Error(`Procedure ${procedure_name} not found for kind ${kind.name}`);
+        }
+        const schemas: any = {};
+        Object.assign(schemas, procedure.argument);
+        Object.assign(schemas, procedure.result);
+        this.validator.validate(input, Object.values(procedure.argument)[0], schemas);
+        try {
+            const { data } = await axios.post(procedure.procedure_callback, {
+                input: input
+            });
+            this.validator.validate(data, Object.values(procedure.result)[0], schemas);
+            return data;
+        } catch (err) {
+            if (err instanceof ValidationError) {
+                throw new ProcedureInvocationError(err.errors, 500);
+            } else {
+                throw new ProcedureInvocationError([err.response.data], err.response.status)
+            }
+        }
+    }
+
     private validate_spec(spec: Spec, kind: Kind) {
         const schemas: any = Object.assign({}, kind.kind_structure);
         this.validator.validate(spec, Object.values(kind.kind_structure)[0], schemas);

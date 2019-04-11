@@ -4,6 +4,7 @@ import { MongoConnection } from "../src/databases/mongo";
 import { Spec_DB } from "../src/databases/spec_db_interface";
 import { Status_DB } from "../src/databases/status_db_interface";
 import { Provider_DB } from "../src/databases/provider_db_interface";
+import { Policy_DB } from "../src/databases/policy_db_interface";
 import * as core from "../src/core";
 import { v4 as uuid4 } from 'uuid';
 import { Kind, Provider } from "../src/papiea";
@@ -27,309 +28,225 @@ describe("MongoDb tests", () => {
     afterAll(done => {
         connection.close().then(done).catch(done.fail);
     });
-    let specDb: Spec_DB | undefined;
-    test("Get Spec_DB", done => {
-        connection.get_spec_db().then(res => {
-            specDb = res;
-            done();
-        }).catch(err => {
-            done.fail(err);
-        });
-    });
     const entityA_uuid = uuid4();
-    test("Insert Spec", done => {
-        if (specDb === undefined) {
-            done.fail(new Error("specDb is undefined"));
-            return;
-        }
-        let entity_metadata: core.Metadata = {
+    test("Insert Spec", async (done) => {
+        const specDb: Spec_DB = await connection.get_spec_db();
+        const entity_metadata: core.Metadata = {
             uuid: entityA_uuid,
             kind: "test",
             spec_version: 0,
             created_at: new Date(),
             deleted_at: undefined
         };
-        let spec: core.Spec = { a: "A" };
-        specDb.update_spec(entity_metadata, spec).then(res => {
-            done();
-        }).catch(err => {
-            expect(err).toBeNull();
-            done();
-        });
+        const spec: core.Spec = { a: "A" };
+        await specDb.update_spec(entity_metadata, spec);
+        done();
     });
-    test("Update Spec", done => {
-        if (specDb === undefined) {
-            done.fail(new Error("specDb is undefined"));
-            return;
-        }
-        let entity_metadata: core.Metadata = {
+    test("Update Spec", async (done) => {
+        const specDb: Spec_DB = await connection.get_spec_db();
+        const entity_metadata: core.Metadata = {
             uuid: entityA_uuid,
             kind: "test",
             spec_version: 1,
             created_at: new Date(),
             deleted_at: undefined
         };
-        let spec: core.Spec = { a: "A1" };
-        specDb.update_spec(entity_metadata, spec).then(res => {
-            done();
-        }).catch(err => {
-            expect(err).toBeNull();
-            done();
-        });
+        const spec: core.Spec = { a: "A1" };
+        await specDb.update_spec(entity_metadata, spec);
+        done();
     });
-    test("Update Spec with same version should fail", done => {
+    test("Update Spec with same version should fail", async (done) => {
         expect.assertions(2);
-        if (specDb === undefined) {
-            done.fail(new Error("specDb is undefined"));
-            return;
-        }
-        let entity_metadata: core.Metadata = {
+        const specDb: Spec_DB = await connection.get_spec_db();
+        const entity_metadata: core.Metadata = {
             uuid: entityA_uuid,
             kind: "test",
             spec_version: 1,
             created_at: new Date(),
             deleted_at: undefined
         };
-        let spec: core.Spec = { a: "A2" };
-        specDb.update_spec(entity_metadata, spec).catch(err => {
+        const spec: core.Spec = { a: "A2" };
+        try {
+            await specDb.update_spec(entity_metadata, spec);
+            done.fail();
+        } catch (err) {
             expect(err).toBeInstanceOf(ConflictingEntityError);
             expect(err.existing_metadata.spec_version).toEqual(2);
             done();
-        });
+        }
     });
-    test("Get Spec", done => {
+    test("Get Spec", async (done) => {
         expect.assertions(5);
-        if (specDb === undefined) {
-            done.fail(new Error("specDb is undefined"));
+        const specDb: Spec_DB = await connection.get_spec_db();
+        const entity_ref: core.Entity_Reference = { uuid: entityA_uuid, kind: "test" };
+        const res = await specDb.get_spec(entity_ref);
+        expect(res).not.toBeNull();
+        if (res === null) {
+            done.fail("Entity without spec");
             return;
         }
-        let entity_ref: core.Entity_Reference = { uuid: entityA_uuid, kind: "test" };
-        specDb.get_spec(entity_ref).then(res => {
-            expect(res).not.toBeNull();
-            if (res === null) {
-                done.fail("Entity without spec");
-                return;
-            }
-            const [metadata, spec] = res;
-            expect(metadata.uuid).toEqual(entity_ref.uuid);
-            expect(metadata.created_at).not.toBeNull();
-            expect(metadata.deleted_at).toBeFalsy();
-            expect(spec.a).toEqual("A1");
-            done();
-        });
+        const [metadata, spec] = res;
+        expect(metadata.uuid).toEqual(entity_ref.uuid);
+        expect(metadata.created_at).not.toBeNull();
+        expect(metadata.deleted_at).toBeFalsy();
+        expect(spec.a).toEqual("A1");
+        done();
     });
-    test("Get Spec for non existing entity should fail", done => {
+    test("Get Spec for non existing entity should fail", async (done) => {
         expect.assertions(1);
-        if (specDb === undefined) {
-            done.fail(new Error("specDb is undefined"));
-            return;
-        }
-        let entity_ref: core.Entity_Reference = { uuid: uuid4(), kind: "test" };
-        specDb.get_spec(entity_ref).catch(err => {
+        const specDb: Spec_DB = await connection.get_spec_db();
+        const entity_ref: core.Entity_Reference = { uuid: uuid4(), kind: "test" };
+        try {
+            await specDb.get_spec(entity_ref);
+            done.fail();
+        } catch (err) {
             expect(err).not.toBeNull();
             done();
-        });
-    });
-    test("List Specs", done => {
-        expect.assertions(1);
-        if (specDb === undefined) {
-            done.fail(new Error("specDb is undefined"));
-            return;
         }
-        specDb.list_specs({ metadata: { "kind": "test" } }).then(res => {
-            expect(res.length).toBeGreaterThanOrEqual(1);
-            done();
-        });
     });
-    test("List Specs - check spec data", done => {
+    test("List Specs", async (done) => {
+        expect.assertions(1);
+        const specDb: Spec_DB = await connection.get_spec_db();
+        const res = await specDb.list_specs({ metadata: { "kind": "test" } });
+        expect(res.length).toBeGreaterThanOrEqual(1);
+        done();
+    });
+    test("List Specs - check spec data", async (done) => {
         expect.assertions(4);
-        if (specDb === undefined) {
-            done.fail(new Error("specDb is undefined"));
-            return;
-        }
-        specDb.list_specs({ metadata: { "kind": "test" }, spec: { "a": "A1" } }).then(res => {
-            expect(res).not.toBeNull();
-            expect(res[0]).not.toBeNull();
-            expect(res.length).toBeGreaterThanOrEqual(1);
-            // @ts-ignore
-            expect(res[0][1].a).toEqual("A1");
-            done();
-        });
+        const specDb: Spec_DB = await connection.get_spec_db();
+        const res = await specDb.list_specs({ metadata: { "kind": "test" }, spec: { "a": "A1" } });
+        expect(res).not.toBeNull();
+        expect(res[0]).not.toBeNull();
+        expect(res.length).toBeGreaterThanOrEqual(1);
+        // @ts-ignore
+        expect(res[0][1].a).toEqual("A1");
+        done();
     });
-    let statusDb: Status_DB | undefined;
-    test("Get Status_DB", done => {
-        connection.get_status_db().then(res => {
-            statusDb = res;
-            done();
-        }).catch(err => {
-            done.fail(err);
-        });
+    test("Insert Status", async (done) => {
+        const statusDb: Status_DB = await connection.get_status_db();
+        const entity_ref: core.Entity_Reference = { uuid: entityA_uuid, kind: "test" };
+        const status: core.Status = { a: "A" };
+        await statusDb.update_status(entity_ref, status);
+        done();
     });
-    test("Insert Status", done => {
-        if (statusDb === undefined) {
-            done.fail(new Error("statusDb is undefined"));
-            return;
-        }
-        let entity_ref: core.Entity_Reference = { uuid: entityA_uuid, kind: "test" };
-        let status: core.Status = { a: "A" };
-        statusDb.update_status(entity_ref, status).then(res => {
-            done();
-        }).catch(err => {
-            done.fail(err);
-        });
+    test("Update Status", async (done) => {
+        const statusDb: Status_DB = await connection.get_status_db();
+        const entity_ref: core.Entity_Reference = { uuid: entityA_uuid, kind: "test" };
+        const status: core.Status = { a: "A1" };
+        await statusDb.update_status(entity_ref, status);
+        done();
     });
-    test("Update Status", done => {
-        if (statusDb === undefined) {
-            done.fail(new Error("statusDb is undefined"));
-            return;
-        }
-        let entity_ref: core.Entity_Reference = { uuid: entityA_uuid, kind: "test" };
-        let status: core.Status = { a: "A1" };
-        statusDb.update_status(entity_ref, status).then(res => {
-            done();
-        }).catch(err => {
-            done.fail(err);
-        });
-    });
-    test("Get Status", done => {
+    test("Get Status", async (done) => {
         expect.assertions(3);
-        if (statusDb === undefined) {
-            done.fail(new Error("statusDb is undefined"));
+        const statusDb: Status_DB = await connection.get_status_db();
+        const entity_ref: core.Entity_Reference = { uuid: entityA_uuid, kind: "test" };
+        const res = await statusDb.get_status(entity_ref);
+        expect(res).not.toBeNull();
+        if (res === null) {
+            done.fail("Entity without status");
             return;
         }
-        let entity_ref: core.Entity_Reference = { uuid: entityA_uuid, kind: "test" };
-        statusDb.get_status(entity_ref).then(res => {
-            expect(res).not.toBeNull();
-            if (res === null) {
-                done.fail("Entity without status");
-                return;
-            }
-            const [metadata, status] = res;
-            expect(metadata.uuid).toEqual(entity_ref.uuid);
-            expect(status.a).toEqual("A1");
-            done();
-        });
+        const [metadata, status] = res;
+        expect(metadata.uuid).toEqual(entity_ref.uuid);
+        expect(status.a).toEqual("A1");
+        done();
     });
-    test("Get Status for non existing entity should fail", done => {
+    test("Get Status for non existing entity should fail", async (done) => {
         expect.assertions(1);
-        if (statusDb === undefined) {
-            done.fail(new Error("statusDb is undefined"));
-            return;
-        }
-        let entity_ref: core.Entity_Reference = { uuid: uuid4(), kind: "test" };
-        statusDb.get_status(entity_ref).catch(err => {
+        const statusDb: Status_DB = await connection.get_status_db();
+        const entity_ref: core.Entity_Reference = { uuid: uuid4(), kind: "test" };
+        try {
+            await statusDb.get_status(entity_ref);
+            done.fail();
+        } catch (err) {
             expect(err).not.toBeNull();
             done();
-        });
+        }
     });
-    test("List Statuses", done => {
+    test("List Statuses", async (done) => {
         expect.assertions(1);
-        if (statusDb === undefined) {
-            done.fail(new Error("statusDb is undefined"));
-            return;
-        }
-        statusDb.list_status({ metadata: { "kind": "test" } }).then(res => {
-            expect(res.length).toBeGreaterThanOrEqual(1);
-            done();
-        });
+        const statusDb: Status_DB = await connection.get_status_db();
+        const res = await statusDb.list_status({ metadata: { "kind": "test" } });
+        expect(res.length).toBeGreaterThanOrEqual(1);
+        done();
     });
-    test("List Statuses - check status data", done => {
+    test("List Statuses - check status data", async (done) => {
         expect.assertions(3);
-        if (statusDb === undefined) {
-            done.fail(new Error("statusDb is undefined"));
-            return;
-        }
-        statusDb.list_status({ metadata: { "kind": "test" }, status: { a: "A1" } }).then(res => {
-            expect(res.length).toBeGreaterThanOrEqual(1);
-            expect(res[0]).not.toBeNull();
-            // @ts-ignore
-            expect(res[0][1].a).toEqual("A1");
-            done();
-        });
+        const statusDb: Status_DB = await connection.get_status_db();
+        const res = await statusDb.list_status({ metadata: { "kind": "test" }, status: { a: "A1" } });
+        expect(res.length).toBeGreaterThanOrEqual(1);
+        expect(res[0]).not.toBeNull();
+        // @ts-ignore
+        expect(res[0][1].a).toEqual("A1");
+        done();
     });
-    let providerDb: Provider_DB | undefined;
-    test("Get Provider Db", done => {
-        connection.get_provider_db().then(res => {
-            providerDb = res;
-            done();
-        }).catch(err => {
-            done.fail(err)
-        })
-    });
-    test("Register Provider", done => {
-        if (providerDb === undefined) {
-            done.fail(new Error("specDb is undefined"));
-            return;
-        }
+    test("Register Provider", async (done) => {
+        const providerDb: Provider_DB = await connection.get_provider_db();
         const test_kind = {} as Kind;
         const provider: Provider = { prefix: "test", version: "0.1.0", kinds: [test_kind] };
-        providerDb.register_provider(provider).then(res => {
-            done();
-        });
+        await providerDb.register_provider(provider);
+        done();
     });
-    test("Get provider", done => {
+    test("Get provider", async (done) => {
         expect.assertions(2);
-        if (providerDb === undefined) {
-            done.fail(new Error("providerDb is undefined"));
-            return;
-        }
-        let prefix_string: string = "test";
-        let version: string = "0.1.0";
-        providerDb.get_provider(prefix_string, version).then(res => {
-            expect(res.prefix).toBe(prefix_string);
-            expect(res.version).toBe(version);
-            done();
-        })
+        const providerDb: Provider_DB = await connection.get_provider_db();
+        const prefix_string: string = "test";
+        const version: string = "0.1.0";
+        const res = await providerDb.get_provider(prefix_string, version);
+        expect(res.prefix).toBe(prefix_string);
+        expect(res.version).toBe(version);
+        done();
     });
-    test("Get provider using his prefix", done => {
+    test("Get provider using his prefix", async (done) => {
         expect.assertions(2);
-        if (providerDb === undefined) {
-            done.fail(new Error("providerDb is undefined"));
-            return;
-        }
-        let prefix_string: string = "test";
-        let version: string = "0.1.0";
-        providerDb.get_provider(prefix_string).then(res => {
-            expect(res.prefix).toBe(prefix_string);
-            expect(res.version).toBe(version);
-            done();
-        })
+        const providerDb: Provider_DB = await connection.get_provider_db();
+        const prefix_string: string = "test";
+        const version: string = "0.1.0";
+        const res = await providerDb.get_provider(prefix_string);
+        expect(res.prefix).toBe(prefix_string);
+        expect(res.version).toBe(version);
+        done();
     });
-    test("Get non-existing provider fail", done => {
+    test("Get non-existing provider fail", async (done) => {
         expect.assertions(1);
-        if (providerDb === undefined) {
-            done.fail(new Error("providerDb is undefined"));
-            return;
-        }
-        let prefix_string: string = "testFail";
-        let version: string = "0.1.0";
-        providerDb.get_provider(prefix_string, version).catch(err => {
+        const providerDb: Provider_DB = await connection.get_provider_db();
+        const prefix_string: string = "testFail";
+        const version: string = "0.1.0";
+        try {
+            await providerDb.get_provider(prefix_string, version);
+            done.fail();
+        } catch (err) {
             expect(err).not.toBeNull();
             done();
-        })
+        }
     });
-    test("List Providers", done => {
+    test("List Providers", async (done) => {
         expect.assertions(3);
-        if (providerDb === undefined) {
-            done.fail(new Error("providerDb is undefined"));
-            return;
-        }
-        providerDb.list_providers().then(res => {
-            expect(res).not.toBeNull();
-            expect(res).not.toBeUndefined();
-            expect(res.length).toBeGreaterThanOrEqual(1);
-            done();
-        })
+        const providerDb: Provider_DB = await connection.get_provider_db();
+        const res = await providerDb.list_providers();
+        expect(res).not.toBeNull();
+        expect(res).not.toBeUndefined();
+        expect(res.length).toBeGreaterThanOrEqual(1);
+        done();
     });
-    test("Delete provider", done => {
-        if (providerDb === undefined) {
-            done.fail(new Error("providerDb is undefined"));
-            return;
-        }
-        let prefix_string: string = "test";
-        let version: string = "0.1.0";
-        providerDb.delete_provider(prefix_string, version).then(res => {
-            done();
-        })
-    })
+    test("Delete provider", async (done) => {
+        const providerDb: Provider_DB = await connection.get_provider_db();
+        const prefix_string: string = "test";
+        const version: string = "0.1.0";
+        await providerDb.delete_provider(prefix_string, version);
+        done();
+    });
+    test("Save and Load Policy", async (done) => {
+        const policyDb: Policy_DB = await connection.get_policy_db();
+        await policyDb.save_policy("test_provider", "p, anonymous, anyone, *, *, deny");
+        const policy = await policyDb.load_policy("test_provider");
+        expect(policy).toEqual("p, anonymous, anyone, *, *, deny");
+        done();
+    });
+    test("Load empty Policy", async (done) => {
+        const policyDb: Policy_DB = await connection.get_policy_db();
+        const policy = await policyDb.load_policy("test_provider1");
+        expect(policy).toEqual("");
+        done();
+    });
 });

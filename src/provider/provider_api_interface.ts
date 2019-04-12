@@ -30,7 +30,7 @@ export interface Provider_API {
     // POST "/provider/{prefix}/{version}/power"
     power(provider_prefix: string, version: core.Version, power_state: Provider_Power): Promise<void>;
 
-    get_provider_by_kind(kind_name: string): Promise<Provider>;
+    get_latest_provider_by_kind(kind_name: string): Promise<Provider>;
 
     get_provider(provider_prefix: string, provider_version: Version): Promise<Provider>;
 

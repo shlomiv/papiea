@@ -67,12 +67,12 @@ export class Provider_DB_Mongo implements Provider_DB {
         return;
     }
 
-    async get_provider_by_kind(kind_name: string): Promise<Provider> {
-        const provider = await this.collection.findOne({ "kinds.name": kind_name });
-        if (provider === null) {
+    async get_latest_provider_by_kind(kind_name: string): Promise<Provider> {
+        const providers = await this.collection.find({ "kinds.name": kind_name }).sort({ _id : -1 }).toArray()
+        if (providers.length === 0) {
             throw new Error(`Provider with kind ${ kind_name } not found`);
         } else {
-            return provider;
+            return providers[0];
         }
     }
 
@@ -80,7 +80,12 @@ export class Provider_DB_Mongo implements Provider_DB {
         return this.collection.find({ "prefix": provider_prefix }).toArray();
     }
 
-    async find_providers_sorted(provider_prefix: string, order_by: string): Promise<Provider[]> {
-        return this.collection.find({ "prefix": provider_prefix }).sort({ [order_by]: -1 }).toArray();
+    async get_latest_provider(provider_prefix: string): Promise<Provider> {
+        const providers = await this.collection.find({ "prefix": provider_prefix }).sort({ _id : -1 }).toArray();
+        if (providers.length === 0) {
+            throw new Error(`Provider with prefix ${ provider_prefix } not found`);
+        } else {
+            return providers[0];
+        }
     }
 }

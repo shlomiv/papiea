@@ -26,7 +26,7 @@ const providerApi = axios.create({
 describe("Procedures tests", () => {
     const hostname = '127.0.0.1';
     const port = 9001;
-    const provider: Provider = ProviderFactory.get_provider(ProviderTypes.PROVIDER_LEVEL_KIND_LEVEL_PROCEDURES, `http://${hostname}:${port}/`);
+    const provider: Provider = ProviderFactory.getProvider(ProviderTypes.PROVIDER_LEVEL_KIND_LEVEL_PROCEDURES, `http://${hostname}:${port}/`);
     const kind_name = provider.kinds[0].name;
 
     beforeAll(async () => {

@@ -112,7 +112,7 @@ export class ProviderSdk implements ProviderImpl {
 
     async register(): Promise<void> {
         if (this._prefix !== null && this._version !== null && this._kind.length !== 0) {
-            this._provider = { kinds: [...this._kind], version: this._version, prefix: this._prefix };
+            this._provider = { kinds: [...this._kind], version: this._version, prefix: this._prefix, procedures: {} };
             try {
                 await axios.post(`http://${ this.papiea_url }:${ this.papiea_port }/provider/`, this._provider);
                 this.server_manager.startServer();

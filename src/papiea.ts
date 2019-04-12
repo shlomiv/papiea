@@ -65,7 +65,8 @@ export interface Provider {
     prefix: string;
     version: core.Version;
     kinds: Kind[];
-    procedures?: { [key: string]: Procedural_Signature; };
+    procedures: { [key: string]: Procedural_Signature; };
+    created_at?: Date;
 }
 
 // provider-desc-struct ends here

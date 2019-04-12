@@ -2,7 +2,6 @@ import { Provider_DB } from "./provider_db_interface";
 import { Provider } from "../papiea";
 import { Db, Collection } from "mongodb"
 import { Version } from "../core";
-import * as core from "../core";
 
 export class Provider_DB_Mongo implements Provider_DB {
     collection: Collection;
@@ -24,19 +23,23 @@ export class Provider_DB_Mongo implements Provider_DB {
 
     async register_provider(provider: Provider): Promise<void> {
         const result = await this.collection.updateOne({
-            "prefix": provider.prefix,
-            "version": provider.version
-        }, {
-            $set: provider
-        }, {
-            upsert: true
-        });
+                "prefix": provider.prefix,
+                "version": provider.version
+            }, {
+                $set: provider,
+                $setOnInsert: {
+                    "created_at": new Date()
+                }
+            },
+            {
+                upsert: true
+            });
         if (result.result.n !== 1) {
             throw new Error(`Amount of updated entries doesn't equal to 1: ${ result.result.n }`)
         }
     }
 
-    async get_provider(provider_prefix: string, version?: Version): Promise<Provider> {
+    async get_provider(provider_prefix: string, version: Version): Promise<Provider> {
         const filter: any = { prefix: provider_prefix };
         if (version !== undefined) {
             filter.version = version;
@@ -75,5 +78,9 @@ export class Provider_DB_Mongo implements Provider_DB {
 
     async find_providers(provider_prefix: string): Promise<Provider[]> {
         return this.collection.find({ "prefix": provider_prefix }).toArray();
+    }
+
+    async find_providers_sorted(provider_prefix: string, order_by: string): Promise<Provider[]> {
+        return this.collection.find({ "prefix": provider_prefix }).sort({ [order_by]: -1 }).toArray();
     }
 }

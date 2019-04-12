@@ -51,6 +51,10 @@ class Provider_DB_Mock implements Provider_DB {
     async find_providers(provider_prefix: string): Promise<Provider[]> {
         throw new Error("Not implemented")
     }
+
+    async find_providers_sorted(provider_prefix: string, order_by: string): Promise<Provider[]> {
+        throw new Error("Not implemented")
+    }
 }
 
 describe("API Docs Tests", () => {

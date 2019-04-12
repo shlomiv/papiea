@@ -31,7 +31,7 @@ describe("Provider API tests", () => {
     });
 
     test("Register provider", done => {
-        const provider: Provider = { prefix: providerPrefix, version: providerVersion, kinds: [] };
+        const provider: Provider = { prefix: providerPrefix, version: providerVersion, kinds: [], procedures: {} };
         providerApi.post('/', provider).then(() => done()).catch(done.fail);
     });
 
@@ -50,7 +50,7 @@ describe("Provider API tests", () => {
 
     test("Get multiple providers", async done => {
         const version = "1.0.0";
-        const provider: Provider = { prefix: providerPrefix, version: version, kinds: [] };
+        const provider: Provider = { prefix: providerPrefix, version: version, kinds: [], procedures: {} };
         providerApi.post('/', provider).then().catch(done.fail);
         try {
             const res = await providerApi.get(`/${ providerPrefix }`);

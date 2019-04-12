@@ -14,7 +14,7 @@ export interface Provider_DB {
     //upgrade_provider(from_provider: uuid4, to: providerDescription): Task;
 
     // get a provider
-    get_provider(provider_prefix: string, version?: core.Version): Promise<papiea.Provider>
+    get_provider(provider_prefix: string, version: core.Version): Promise<papiea.Provider>
 
     // List all registered providers
     list_providers(): Promise<papiea.Provider[]>
@@ -25,6 +25,8 @@ export interface Provider_DB {
     get_provider_by_kind(kind_name: string): Promise<Provider>;
 
     find_providers(provider_prefix: string): Promise<Provider[]>;
+
+    find_providers_sorted(provider_prefix: string, order_by: string): Promise<Provider[]>
 }
 
 // provider-db-interface ends here

@@ -29,9 +29,9 @@ async function setUpApplication(): Promise<express.Express> {
     const specDb = await mongoConnection.get_spec_db();
     const statusDb = await mongoConnection.get_status_db();
     const validator = new Validator();
-    const provider_api = new Provider_API_Impl(providerDb, statusDb);
-    app.use('/provider', createProviderAPIRouter(provider_api));
-    app.use('/entity', createEntityRoutes(new Entity_API_Impl(statusDb, specDb, provider_api, validator)));
+    const providerApi = new Provider_API_Impl(providerDb, statusDb);
+    app.use('/provider', createProviderAPIRouter(providerApi));
+    app.use('/entity', createEntityRoutes(new Entity_API_Impl(statusDb, specDb, providerApi, validator)));
     app.use('/api-docs', createAPIDocsRouter('/api-docs', new ApiDocsGenerator(providerDb)));
     app.use(function (err: any, req: any, res: any, next: any) {
         if (res.headersSent) {

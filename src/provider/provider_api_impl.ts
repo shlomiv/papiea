@@ -51,7 +51,7 @@ export class Provider_API_Impl implements Provider_API {
     }
 
     async get_latest_provider(provider_prefix: string): Promise<Provider> {
-        const provider = await this.list_providers_by_prefix(provider_prefix);
+        const provider = await this.providerDb.find_providers_sorted(provider_prefix, "created_at");
         return provider[0]
     }
 

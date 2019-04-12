@@ -1,4 +1,4 @@
-import { Kind, Provider } from "../papiea";
+import { Kind } from "../papiea";
 import { Metadata, Spec, Status, uuid4 } from "../core";
 
 export interface Entity_API {

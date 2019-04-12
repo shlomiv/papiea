@@ -38,5 +38,5 @@ export interface Provider_API {
 
     validate_status(status: Status, kind_structure: Data_Description): void;
 
-    get_latest_provider(provider_prefix: string): Promise<Provider>;
+    get_latest_provider(provider_prefix: string): Promise<Provider>
 }

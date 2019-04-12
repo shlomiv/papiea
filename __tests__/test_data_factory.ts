@@ -50,7 +50,7 @@ export enum ProviderTypes {
 }
 
 export class ProviderFactory {
-    public static get_provider(provider_type: ProviderTypes, procedure_callback: Provider_Callback_URL) {
+    public static getProvider(provider_type: ProviderTypes, procedure_callback: Provider_Callback_URL) {
         let provider = {} as Provider;
         switch (provider_type) {
             case ProviderTypes.ENITIES_ONLY:
@@ -72,7 +72,7 @@ export function getProviderWithSpecOnlyEnitityKindNoOperations(): Provider {
     const spec_only_kind = getSpecOnlyEntityKind();
     const providerPrefix = randomString(12);
     const providerVersion = "0.1.0";
-    return { prefix: providerPrefix, version: providerVersion, kinds: [spec_only_kind] };
+    return { prefix: providerPrefix, version: providerVersion, kinds: [spec_only_kind], procedures: {} };
 }
 
 export function getProviderWithSpecOnlyEnitityKindWithOperations(provider: Provider, procedure_callback: Provider_Callback_URL): Provider {

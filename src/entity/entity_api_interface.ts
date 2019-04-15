@@ -19,4 +19,6 @@ export interface Entity_API {
     delete_entity_spec(kind: Kind, entity_uuid: uuid4): Promise<void>
 
     call_procedure(kind: Kind, entity_uuid: uuid4, procedure_name: string, input: any): Promise<any>
+
+    call_kind_procedure(kind: Kind, procedure_name: string, input: any): Promise<any>
 }

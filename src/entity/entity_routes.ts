@@ -110,5 +110,10 @@ export function createEntityRoutes(entity_api: Entity_API): Router {
         res.json(result);
     }));
 
+    router.post("/:prefix/:kind/procedure/:procedure_name", kind_middleware, asyncHandler(async (req, res) => {
+        const result: any = await entity_api.call_kind_procedure(req.params.entity_kind, req.params.procedure_name, req.body.input);
+        res.json(result);
+    }));
+
     return router;
 }

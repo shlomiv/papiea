@@ -18,4 +18,8 @@ export interface Entity_API {
     delete_entity_spec(user: UserAuthInfo, kind_name: string, entity_uuid: uuid4): Promise<void>
 
     call_procedure(user: UserAuthInfo, kind_name: string, entity_uuid: uuid4, procedure_name: string, input: any): Promise<any>
+
+    call_kind_procedure(user: UserAuthInfo, kind_name: string, procedure_name: string, input: any): Promise<any>
+
+    call_provider_procedure(user: UserAuthInfo, prefix: string, procedure_name: string, input: any): Promise<any>
 }

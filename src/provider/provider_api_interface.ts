@@ -31,9 +31,11 @@ export interface Provider_API {
     // POST "/provider/{prefix}/{version}/power"
     power(user: UserAuthInfo, provider_prefix: string, version: core.Version, power_state: Provider_Power): Promise<void>;
 
-    get_provider_by_kind(user: UserAuthInfo, kind_name: string): Promise<Provider>;
+    get_latest_provider_by_kind(user: UserAuthInfo, kind_name: string): Promise<Provider>;
 
     get_provider(user: UserAuthInfo, provider_prefix: string, provider_version: Version): Promise<Provider>;
 
     list_providers_by_prefix(user: UserAuthInfo, provider_prefix: string): Promise<Provider[]>;
+
+    get_latest_provider(user: UserAuthInfo, provider_prefix: string): Promise<Provider>
 }

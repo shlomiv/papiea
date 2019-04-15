@@ -32,7 +32,7 @@ export class Provider_API_Impl implements Provider_API {
     }
 
     async update_status(user: UserAuthInfo, context: any, entity_ref: core.Entity_Reference, status: core.Status): Promise<void> {
-        const provider: Provider = await this.get_provider_by_kind(user, entity_ref.kind);
+        const provider: Provider = await this.get_latest_provider_by_kind(user, entity_ref.kind);
         await this.validate_status(provider, entity_ref, status);
         return this.statusDb.update_status(entity_ref, status);
     }
@@ -48,15 +48,19 @@ export class Provider_API_Impl implements Provider_API {
     }
 
     async get_provider(user: UserAuthInfo, provider_prefix: string, provider_version: Version): Promise<Provider> {
-        return this.providerDb.get_provider(provider_prefix, provider_version)
+        return this.providerDb.get_provider(provider_prefix, provider_version);
     }
 
     async list_providers_by_prefix(user: UserAuthInfo, provider_prefix: string): Promise<Provider[]> {
-        return this.providerDb.find_providers(provider_prefix)
+        return this.providerDb.find_providers(provider_prefix);
     }
 
-    async get_provider_by_kind(user: UserAuthInfo, kind_name: string): Promise<Provider> {
-        return this.providerDb.get_provider_by_kind(kind_name)
+    async get_latest_provider(user: UserAuthInfo, provider_prefix: string): Promise<Provider> {
+        return this.providerDb.get_latest_provider(provider_prefix);
+    }
+
+    async get_latest_provider_by_kind(user: UserAuthInfo, kind_name: string): Promise<Provider> {
+        return this.providerDb.get_latest_provider_by_kind(kind_name);
     }
 
     private async validate_status(provider: Provider, entity_ref: core.Entity_Reference, status: Status) {

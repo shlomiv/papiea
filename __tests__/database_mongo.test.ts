@@ -183,7 +183,7 @@ describe("MongoDb tests", () => {
     test("Register Provider", async (done) => {
         const providerDb: Provider_DB = await connection.get_provider_db();
         const test_kind = {} as Kind;
-        const provider: Provider = { prefix: "test", version: "0.1.0", kinds: [test_kind] };
+        const provider: Provider = { prefix: "test", version: "0.1.0", kinds: [test_kind], procedures: {} };
         await providerDb.register_provider(provider);
         done();
     });
@@ -202,7 +202,7 @@ describe("MongoDb tests", () => {
         const providerDb: Provider_DB = await connection.get_provider_db();
         const prefix_string: string = "test";
         const version: string = "0.1.0";
-        const res = await providerDb.get_provider(prefix_string);
+        const res = await providerDb.get_provider(prefix_string, version);
         expect(res.prefix).toBe(prefix_string);
         expect(res.version).toBe(version);
         done();

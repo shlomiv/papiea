@@ -1,7 +1,6 @@
-import axios, { AxiosError } from "axios"
+import axios from "axios"
 import { Status_DB } from "../databases/status_db_interface";
 import { Spec_DB } from "../databases/spec_db_interface";
-import { Provider_DB } from "../databases/provider_db_interface";
 import { Kind, Procedural_Signature } from "../papiea";
 import { Entity_Reference, Metadata, Spec, uuid4, Status } from "../core";
 import uuid = require("uuid");
@@ -10,6 +9,7 @@ import { ValidationError, Validator } from "../validator";
 import * as uuid_validate from "uuid-validate";
 import { Authorizer, ReadAction, CreateAction, DeleteAction, UpdateAction, CallProcedureByNameAction } from "../auth/authz";
 import { UserAuthInfo } from "../auth/authn";
+import { Provider_API } from "../provider/provider_api_interface";
 
 export class ProcedureInvocationError extends Error {
     errors: string[];
@@ -26,20 +26,20 @@ export class ProcedureInvocationError extends Error {
 export class Entity_API_Impl implements Entity_API {
     private status_db: Status_DB;
     private spec_db: Spec_DB;
-    private provider_db: Provider_DB;
+    private provider_api: Provider_API;
     private validator: Validator;
     private authorizer: Authorizer;
 
-    constructor(status_db: Status_DB, spec_db: Spec_DB, provider_db: Provider_DB, validator: Validator, authorizer: Authorizer) {
+    constructor(status_db: Status_DB, spec_db: Spec_DB, provider_api: Provider_API, validator: Validator, authorizer: Authorizer) {
         this.status_db = status_db;
         this.spec_db = spec_db;
-        this.provider_db = provider_db;
+        this.provider_api = provider_api;
         this.validator = validator;
         this.authorizer = authorizer;
     }
 
-    private async get_kind(kind_name: string): Promise<Kind> {
-        const provider = await this.provider_db.get_provider_by_kind(kind_name);
+    private async get_kind(user: UserAuthInfo, kind_name: string): Promise<Kind> {
+        const provider = await this.provider_api.get_latest_provider_by_kind(user, kind_name);
         const found_kind: Kind | undefined = provider.kinds.find(elem => elem.name === kind_name);
         if (found_kind === undefined) {
             throw new Error(`Kind: ${kind_name} not found`);
@@ -48,7 +48,7 @@ export class Entity_API_Impl implements Entity_API {
     }
 
     async save_entity(user: UserAuthInfo, kind_name: string, spec_description: Spec, request_metadata: Metadata = {} as Metadata): Promise<[Metadata, Spec]> {
-        const kind: Kind = await this.get_kind(kind_name);
+        const kind: Kind = await this.get_kind(user, kind_name);
         this.validate_spec(spec_description, kind);
         if (!request_metadata.uuid) {
             request_metadata.uuid = uuid();
@@ -111,7 +111,7 @@ export class Entity_API_Impl implements Entity_API {
     }
 
     async update_entity_spec(user: UserAuthInfo, uuid: uuid4, spec_version: number, kind_name: string, spec_description: Spec): Promise<[Metadata, Spec]> {
-        const kind: Kind = await this.get_kind(kind_name);
+        const kind: Kind = await this.get_kind(user, kind_name);
         this.validate_spec(spec_description, kind);
         const metadata: Metadata = { uuid: uuid, kind: kind.name, spec_version: spec_version } as Metadata;
         this.authorizer.checkPermission(user, { "metadata": metadata }, UpdateAction);
@@ -130,7 +130,7 @@ export class Entity_API_Impl implements Entity_API {
     }
 
     async call_procedure(user: UserAuthInfo, kind_name: string, entity_uuid: uuid4, procedure_name: string, input: any): Promise<any> {
-        const kind: Kind = await this.get_kind(kind_name);
+        const kind: Kind = await this.get_kind(user, kind_name);
         const entity_data: [Metadata, Spec] = await this.get_entity_spec(user, kind_name, entity_uuid);
         this.authorizer.checkPermission(user, { "metadata": entity_data[0] }, CallProcedureByNameAction(procedure_name));
         const procedure: Procedural_Signature | undefined = kind.procedures[procedure_name];
@@ -156,6 +156,61 @@ export class Entity_API_Impl implements Entity_API {
                 throw new ProcedureInvocationError([err.response.data], err.response.status)
             } else {
                 throw err;
+            }
+        }
+    }
+
+    async call_provider_procedure(user: UserAuthInfo, prefix: string, procedure_name: string, input: any): Promise<any> {
+        const provider = await this.provider_api.get_latest_provider(user, prefix);
+        this.authorizer.checkPermission(user, { provider: provider }, CallProcedureByNameAction(procedure_name));
+        if (provider.procedures === undefined) {
+            throw new Error(`Procedure ${procedure_name} not found for provider ${prefix}`);
+        }
+        const procedure: Procedural_Signature | undefined = provider.procedures[procedure_name];
+        if (procedure === undefined) {
+            throw new Error(`Procedure ${procedure_name} not found for provider ${prefix}`);
+        }
+        const schemas: any = {};
+        Object.assign(schemas, procedure.argument);
+        Object.assign(schemas, procedure.result);
+        this.validator.validate(input, Object.values(procedure.argument)[0], schemas);
+        try {
+            const { data } = await axios.post(procedure.procedure_callback, {
+                input: input
+            });
+            this.validator.validate(data, Object.values(procedure.result)[0], schemas);
+            return data;
+        } catch (err) {
+            if (err instanceof ValidationError) {
+                throw new ProcedureInvocationError(err.errors, 500);
+            } else {
+                throw new ProcedureInvocationError([err.response.data], err.response.status)
+            }
+        }
+    }
+
+    async call_kind_procedure(user: UserAuthInfo, kind_name: string, procedure_name: string, input: any): Promise<any> {
+        const kind: Kind = await this.get_kind(user, kind_name);
+        this.authorizer.checkPermission(user, { kind: kind }, CallProcedureByNameAction(procedure_name));
+        const procedure: Procedural_Signature | undefined = kind.procedures[procedure_name];
+        if (procedure === undefined) {
+            throw new Error(`Procedure ${procedure_name} not found for kind ${kind.name}`);
+        }
+        const schemas: any = {};
+        Object.assign(schemas, procedure.argument);
+        Object.assign(schemas, procedure.result);
+        this.validator.validate(input, Object.values(procedure.argument)[0], schemas);
+        try {
+            const { data } = await axios.post(procedure.procedure_callback, {
+                input: input
+            });
+            this.validator.validate(data, Object.values(procedure.result)[0], schemas);
+            return data;
+        } catch (err) {
+            if (err instanceof ValidationError) {
+                throw new ProcedureInvocationError(err.errors, 500);
+            } else {
+                throw new ProcedureInvocationError([err.response.data], err.response.status)
             }
         }
     }

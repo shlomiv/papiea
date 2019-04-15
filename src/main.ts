@@ -31,7 +31,7 @@ async function setUpApplication(): Promise<express.Express> {
     const validator = new Validator();
     const providerApi = new Provider_API_Impl(providerDb, statusDb);
     app.use('/provider', createProviderAPIRouter(providerApi));
-    app.use('/entity', createEntityRoutes(new Entity_API_Impl(statusDb, specDb, providerApi, validator)));
+    app.use('/services', createEntityRoutes(new Entity_API_Impl(statusDb, specDb, providerApi, validator)));
     app.use('/api-docs', createAPIDocsRouter('/api-docs', new ApiDocsGenerator(providerDb)));
     app.use(function (err: any, req: any, res: any, next: any) {
         if (res.headersSent) {

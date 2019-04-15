@@ -189,15 +189,15 @@ describe("Provider Sdk tests", () => {
         });
         await sdk.register();
         const kind_name = sdk.provider.kinds[0].name;
-        const { data: { metadata, spec } } = await axios.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ kind_name }`, {
+        const { data: { metadata, spec } } = await axios.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }`, {
             spec: {
                 x: 10,
                 y: 11
             }
         });
         try {
-            const res: any = await axios.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ kind_name }/${ metadata.uuid }/procedure/moveX`, { input: 5 });
-            const updatedEntity: any = await axios.get(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ kind_name }/${ metadata.uuid }`);
+            const res: any = await axios.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }/procedure/moveX`, { input: 5 });
+            const updatedEntity: any = await axios.get(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`);
             expect(updatedEntity.data.metadata.spec_version).toEqual(2);
             expect(updatedEntity.data.spec.x).toEqual(15);
         } catch (e) {
@@ -210,6 +210,7 @@ describe("Provider Sdk tests", () => {
     test("Malformed handler registered on sdk should fail", async (done) => {
         const sdk = ProviderSdk.create_sdk(papiea_config.host, papiea_config.port, server_config.host, server_config.port);
         const location = sdk.new_kind(location_yaml);
+        console.log("V " + provider_version);
         sdk.version(provider_version);
         sdk.prefix("location_provider");
         const proceduralSignature: Procedural_Signature = {
@@ -225,15 +226,16 @@ describe("Provider Sdk tests", () => {
 
         });
         await sdk.register();
+        console.dir(sdk.provider);
         const kind_name = sdk.provider.kinds[0].name;
-        const { data: { metadata, spec } } = await axios.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ kind_name }`, {
+        const { data: { metadata, spec } } = await axios.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }`, {
             spec: {
                 x: 10,
                 y: 11
             }
         });
         try {
-            const res: any = await axios.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ kind_name }/${ metadata.uuid }/procedure/moveX`, { input: 5 });
+            const res: any = await axios.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }/procedure/moveX`, { input: 5 });
         } catch (e) {
             done();
         } finally {

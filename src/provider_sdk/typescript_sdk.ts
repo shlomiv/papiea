@@ -28,6 +28,7 @@ export class ProviderSdk implements ProviderImpl {
         this.papiea_port = papiea_port;
         this.server_manager = server_manager;
         this.get_prefix = this.get_prefix.bind(this);
+        this.get_version = this.get_version.bind(this);
     }
 
     get provider() {
@@ -39,7 +40,7 @@ export class ProviderSdk implements ProviderImpl {
     }
 
     get entity_url(): string {
-        return `http://${ this.papiea_url }:${ this.papiea_port }/entity`
+        return `http://${ this.papiea_url }:${ this.papiea_port }/services`
     }
 
     private get_prefix(): string {
@@ -47,6 +48,15 @@ export class ProviderSdk implements ProviderImpl {
             return this._prefix
         } else {
             throw new Error("Provider prefix is not set")
+        }
+    }
+
+    private get_version(): string {
+        console.log("Internal: " + this._version);
+        if (this._version !== null) {
+            return this._version
+        } else {
+            throw new Error("Provider version is not set")
         }
     }
 
@@ -70,7 +80,7 @@ export class ProviderSdk implements ProviderImpl {
                     procedures: {},
                     differ: undefined,
                 };
-                const kind_builder = new Kind_Builder(spec_only_kind, this.entity_url, this.get_prefix, this.server_manager);
+                const kind_builder = new Kind_Builder(spec_only_kind, this.entity_url, this.get_prefix, this.get_version, this.server_manager);
                 this._kind.push(spec_only_kind);
                 return kind_builder;
             } else {
@@ -85,7 +95,7 @@ export class ProviderSdk implements ProviderImpl {
     add_kind(kind: Kind): Kind_Builder | null {
         if (this._kind.indexOf(kind) === -1) {
             this._kind.push(kind);
-            const kind_builder = new Kind_Builder(kind, this.entity_url, this.get_prefix, this.server_manager);
+            const kind_builder = new Kind_Builder(kind, this.entity_url, this.get_prefix, this.get_version, this.server_manager);
             return kind_builder;
         } else {
             return null;
@@ -195,14 +205,16 @@ export class Kind_Builder {
     kind: Kind;
     entity_url: string;
     get_prefix: () => string;
+    get_version: () => string;
     private server_manager: Provider_Server_Manager;
 
 
-    constructor(kind: Kind, entity_url: string, get_prefix: () => string, server_manager: Provider_Server_Manager) {
+    constructor(kind: Kind, entity_url: string, get_prefix: () => string, get_version: () => string, server_manager: Provider_Server_Manager) {
         this.server_manager = server_manager;
         this.kind = kind;
         this.entity_url = entity_url;
         this.get_prefix = get_prefix;
+        this.get_version = get_version;
     }
 
     procedure(name: string, rbac: any,
@@ -220,10 +232,12 @@ export class Kind_Builder {
         };
         this.kind.procedures[name] = procedural_signature;
         const prefix = this.get_prefix();
-        console.log(prefix);
+        console.log("Prefix: " + prefix);
+        const version = this.get_version();
+        console.log("Version: " + version);
         this.server_manager.register_handler("/" + name, async (req, res) => {
             try {
-                const result = await handler(new ProceduralCtx(this.entity_url, prefix), {
+                const result = await handler(new ProceduralCtx(this.entity_url, prefix, version), {
                     metadata: req.body.metadata,
                     spec: req.body.spec,
                     status: req.body.status

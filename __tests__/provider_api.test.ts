@@ -17,7 +17,7 @@ const providerApi = axios.create({
 });
 
 const entityApi = axios.create({
-    baseURL: `http://127.0.0.1:${ serverPort }/entity`,
+    baseURL: `http://127.0.0.1:${ serverPort }/services`,
     timeout: 1000,
     headers: { 'Content-Type': 'application/json' }
 });
@@ -81,7 +81,7 @@ describe("Provider API tests", () => {
             const provider: Provider = getProviderWithSpecOnlyEnitityKindNoOperations();
             await providerApi.post('/', provider);
             const kind_name = provider.kinds[0].name;
-            const { data: { metadata, spec } } = await entityApi.post(`/${ provider.prefix }/${ kind_name }`, {
+            const { data: { metadata, spec } } = await entityApi.post(`/${ provider.prefix }/${provider.version}/${ kind_name }`, {
                 spec: {
                     x: 10,
                     y: 11
@@ -98,7 +98,7 @@ describe("Provider API tests", () => {
                 status: newStatus
             });
 
-            const res = await entityApi.get(`/${ provider.prefix }/${ kind_name }/${ metadata.uuid }`);
+            const res = await entityApi.get(`/${ provider.prefix }/${provider.version}/${ kind_name }/${ metadata.uuid }`);
             expect(res.data.status).toEqual(newStatus);
             done();
         } catch (e) {
@@ -110,7 +110,7 @@ describe("Provider API tests", () => {
         const provider: Provider = getProviderWithSpecOnlyEnitityKindNoOperations();
         await providerApi.post('/', provider);
         const kind_name = provider.kinds[0].name;
-        const { data: { metadata, spec } } = await entityApi.post(`/${ provider.prefix }/${ kind_name }`, {
+        const { data: { metadata, spec } } = await entityApi.post(`/${ provider.prefix }/${provider.version}/${ kind_name }`, {
             spec: {
                 x: 10,
                 y: 11

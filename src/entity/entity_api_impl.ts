@@ -35,8 +35,8 @@ export class Entity_API_Impl implements Entity_API {
         this.validator = validator;
     }
 
-    async get_kind(prefix: string, kind: string): Promise<Kind> {
-        const provider = await this.provider_api.get_latest_provider(prefix);
+    async get_kind(prefix: string, kind: string, version: string): Promise<Kind> {
+        const provider = await this.provider_api.get_provider(prefix, version);
         const found_kind: Kind | undefined = provider.kinds.find(elem => elem.name === kind);
         if (found_kind === undefined) {
             throw new Error(`Kind: ${kind} not found on the provider with prefix: ${prefix}`)

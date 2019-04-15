@@ -151,7 +151,7 @@ describe("Provider Sdk tests", () => {
             execution_strategy: Procedural_Execution_Strategy.Halt_Intentful,
             procedure_callback: procedure_callback
         };
-        location.procedure(proceduralSignature.name, {}, proceduralSignature.execution_strategy, proceduralSignature.argument, proceduralSignature.result, async (ctx, entity, input) => {
+        location.entity_procedure(proceduralSignature.name, {}, proceduralSignature.execution_strategy, proceduralSignature.argument, proceduralSignature.result, async (ctx, entity, input) => {
             entity.spec.x += input;
             const res = await axios.put(ctx.url_for(entity), {
                 spec: entity.spec,
@@ -179,7 +179,7 @@ describe("Provider Sdk tests", () => {
             execution_strategy: Procedural_Execution_Strategy.Halt_Intentful,
             procedure_callback: procedure_callback
         };
-        location.procedure(proceduralSignature.name, {}, proceduralSignature.execution_strategy, proceduralSignature.argument, proceduralSignature.result, async (ctx, entity, input) => {
+        location.entity_procedure(proceduralSignature.name, {}, proceduralSignature.execution_strategy, proceduralSignature.argument, proceduralSignature.result, async (ctx, entity, input) => {
             entity.spec.x += input;
             const res = await axios.put(ctx.url_for(entity), {
                 spec: entity.spec,
@@ -219,7 +219,7 @@ describe("Provider Sdk tests", () => {
             execution_strategy: Procedural_Execution_Strategy.Halt_Intentful,
             procedure_callback: procedure_callback
         };
-        location.procedure(proceduralSignature.name, {}, proceduralSignature.execution_strategy, proceduralSignature.argument, proceduralSignature.result, async (ctx, entity, input) => {
+        location.entity_procedure(proceduralSignature.name, {}, proceduralSignature.execution_strategy, proceduralSignature.argument, proceduralSignature.result, async (ctx, entity, input) => {
 
             throw new Error("Malformed provider")
 
@@ -254,7 +254,7 @@ describe("Provider Sdk tests", () => {
             procedure_callback: procedure_callback
         };
         try {
-            location.procedure(proceduralSignature.name, {}, proceduralSignature.execution_strategy, proceduralSignature.argument, proceduralSignature.result, async (ctx, entity, input) => {
+            location.entity_procedure(proceduralSignature.name, {}, proceduralSignature.execution_strategy, proceduralSignature.argument, proceduralSignature.result, async (ctx, entity, input) => {
                 entity.spec.x += input;
                 const res = await axios.put(ctx.url_for(entity), {
                     spec: entity.spec,
@@ -267,4 +267,133 @@ describe("Provider Sdk tests", () => {
             done();
         }
     });
+
+    test("Provider with kind level procedures should be created on papiea", async (done) => {
+        const sdk = ProviderSdk.create_sdk(papiea_config.host, papiea_config.port, server_config.host, server_config.port);
+        const location = sdk.new_kind(location_yaml);
+        sdk.version(provider_version);
+        sdk.prefix("location_provider");
+        const proceduralSignature: Procedural_Signature = {
+            name: "moveX",
+            argument: loadYaml("./procedure_move_input.yml"),
+            result: loadYaml("./location_kind_test_data.yml"),
+            execution_strategy: Procedural_Execution_Strategy.Halt_Intentful,
+            procedure_callback: procedure_callback
+        };
+        location.entity_procedure(proceduralSignature.name, {}, proceduralSignature.execution_strategy, proceduralSignature.argument, proceduralSignature.result, async (ctx, entity, input) => {
+            entity.spec.x += input;
+            const res = await axios.put(ctx.url_for(entity), {
+                spec: entity.spec,
+                metadata: entity.metadata
+            });
+            return res.data;
+        });
+
+        const geolocationComputeProceduralSignature: Procedural_Signature = {
+            name: "computeGeolocation",
+            argument: loadYaml("./procedure_geolocation_compute_input.yml"),
+            result: loadYaml("./procedure_geolocation_compute_input.yml"),
+            execution_strategy: Procedural_Execution_Strategy.Halt_Intentful,
+            procedure_callback: procedure_callback
+        };
+
+        location.kind_procedure(
+            geolocationComputeProceduralSignature.name,
+            {}, geolocationComputeProceduralSignature.execution_strategy,
+            geolocationComputeProceduralSignature.argument,
+            geolocationComputeProceduralSignature.result, async (ctx, input) => {
+                let cluster_location = "us.west.";
+                cluster_location += input;
+                return cluster_location
+            }
+        );
+
+        try {
+            await sdk.register();
+        } catch (e) {
+            done.fail(e)
+        }
+        sdk.server.close();
+        done();
+    });
+
+    test("Provider with kind level procedures should be executed", async (done) => {
+        const sdk = ProviderSdk.create_sdk(papiea_config.host, papiea_config.port, server_config.host, server_config.port);
+        const location = sdk.new_kind(location_yaml);
+        sdk.version(provider_version);
+        sdk.prefix("location_provider");
+        const proceduralSignature: Procedural_Signature = {
+            name: "moveX",
+            argument: loadYaml("./procedure_move_input.yml"),
+            result: loadYaml("./location_kind_test_data.yml"),
+            execution_strategy: Procedural_Execution_Strategy.Halt_Intentful,
+            procedure_callback: procedure_callback
+        };
+        location.entity_procedure(proceduralSignature.name, {}, proceduralSignature.execution_strategy, proceduralSignature.argument, proceduralSignature.result, async (ctx, entity, input) => {
+            entity.spec.x += input;
+            const res = await axios.put(ctx.url_for(entity), {
+                spec: entity.spec,
+                metadata: entity.metadata
+            });
+            return res.data;
+        });
+
+        const geolocationComputeProceduralSignature: Procedural_Signature = {
+            name: "computeGeolocation",
+            argument: loadYaml("./procedure_geolocation_compute_input.yml"),
+            result: loadYaml("./procedure_geolocation_compute_input.yml"),
+            execution_strategy: Procedural_Execution_Strategy.Halt_Intentful,
+            procedure_callback: procedure_callback
+        };
+
+        location.kind_procedure(
+            geolocationComputeProceduralSignature.name,
+            {}, geolocationComputeProceduralSignature.execution_strategy,
+            geolocationComputeProceduralSignature.argument,
+            geolocationComputeProceduralSignature.result, async (ctx, input) => {
+                let cluster_location = "us.west.";
+                cluster_location += input;
+                return cluster_location
+            }
+        );
+        await sdk.register();
+        const kind_name = sdk.provider.kinds[0].name;
+        try {
+            const res: any = await axios.post( `${ sdk.entity_url }/${ sdk.provider.prefix }/${ kind_name }/procedure/computeGeolocation`, { input: "2" });
+            expect(res.data).toBe("us.west.2");
+        } catch (e) {
+            done.fail(e)
+        }
+        sdk.server.close();
+        done();
+    });
+
+    // test("Provider with provider level procedures should be created on papiea", async (done) => {
+    //     const sdk = ProviderSdk.create_sdk(papiea_config.host, papiea_config.port, server_config.host, server_config.port);
+    //     const location = sdk.new_kind(location_yaml);
+    //     sdk.version(provider_version);
+    //     sdk.prefix("location_provider");
+    //     const proceduralSignature: Procedural_Signature = {
+    //         name: "moveX",
+    //         argument: loadYaml("./procedure_move_input.yml"),
+    //         result: loadYaml("./location_kind_test_data.yml"),
+    //         execution_strategy: Procedural_Execution_Strategy.Halt_Intentful,
+    //         procedure_callback: procedure_callback
+    //     };
+    //     location.entity_procedure(proceduralSignature.name, {}, proceduralSignature.execution_strategy, proceduralSignature.argument, proceduralSignature.result, async (ctx, entity, input) => {
+    //         entity.spec.x += input;
+    //         const res = await axios.put(ctx.url_for(entity), {
+    //             spec: entity.spec,
+    //             metadata: entity.metadata
+    //         });
+    //         return res.data;
+    //     });
+    //     try {
+    //         await sdk.register();
+    //     } catch (e) {
+    //         done.fail(e)
+    //     }
+    //     sdk.server.close();
+    //     done();
+    // });
 });

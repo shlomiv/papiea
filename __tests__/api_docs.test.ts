@@ -44,11 +44,15 @@ class Provider_DB_Mock implements Provider_DB {
 
     }
 
-    async get_provider_by_kind(kind_name: string): Promise<Provider> {
+    async get_latest_provider_by_kind(kind_name: string): Promise<Provider> {
         throw new Error("Not implemented")
     }
 
     async find_providers(provider_prefix: string): Promise<Provider[]> {
+        throw new Error("Not implemented")
+    }
+
+    async get_latest_provider(provider_prefix: string): Promise<Provider> {
         throw new Error("Not implemented")
     }
 }

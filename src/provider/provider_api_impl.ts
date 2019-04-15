@@ -50,12 +50,16 @@ export class Provider_API_Impl implements Provider_API {
         return this.providerDb.find_providers(provider_prefix)
     }
 
-    async get_provider_by_kind(kind_name: string): Promise<Provider> {
-        return this.providerDb.get_provider_by_kind(kind_name)
+    async get_latest_provider(provider_prefix: string): Promise<Provider> {
+        return this.providerDb.get_latest_provider(provider_prefix);
+    }
+
+    async get_latest_provider_by_kind(kind_name: string): Promise<Provider> {
+        return this.providerDb.get_latest_provider_by_kind(kind_name);
     }
 
     async validate_status(entity_ref: core.Entity_Reference, status: Status) {
-        const provider: Provider = await this.get_provider_by_kind(entity_ref.kind);
+        const provider: Provider = await this.get_latest_provider_by_kind(entity_ref.kind);
         const kind = provider.kinds.find(kind => kind.name === entity_ref.kind);
         if (kind === undefined) {
             throw new Error("Kind not found");

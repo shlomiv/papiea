@@ -127,6 +127,7 @@ describe("Provider Sdk tests", () => {
         done();
     });
     test("Provider should be created on papiea", async (done) => {
+        jest.setTimeout(10000);
         const sdk = ProviderSdk.create_sdk(papiea_config.host, papiea_config.port, server_config.host, server_config.port);
         sdk.new_kind(location_yaml);
         sdk.version(provider_version);

@@ -262,7 +262,7 @@ describe("MongoDb tests", () => {
             return;
         }
         const test_kind = {} as Kind;
-        const provider: Provider = { prefix: "test", version: "0.1.0", kinds: [test_kind] };
+        const provider: Provider = { prefix: "test", version: "0.1.0", kinds: [test_kind], procedures: {} };
         providerDb.register_provider(provider).then(res => {
             done();
         });
@@ -289,7 +289,7 @@ describe("MongoDb tests", () => {
         }
         let prefix_string: string = "test";
         let version: string = "0.1.0";
-        providerDb.get_provider(prefix_string).then(res => {
+        providerDb.get_provider(prefix_string, version).then(res => {
             expect(res.prefix).toBe(prefix_string);
             expect(res.version).toBe(version);
             done();

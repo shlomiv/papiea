@@ -46,21 +46,29 @@ export function getProviderWithSpecOnlyEnitityKindNoOperations(): Provider {
     const spec_only_kind = getSpecOnlyEntityKind();
     const providerPrefix = randomString(12);
     const providerVersion = "0.1.0";
-    const provider: Provider = { prefix: providerPrefix, version: providerVersion, kinds: [spec_only_kind] };
+    const provider: Provider = { prefix: providerPrefix, version: providerVersion, kinds: [spec_only_kind], procedures: {} };
     return provider;
 }
 
 export function getProviderWithSpecOnlyEnitityKindWithOperations(procedure_callback: Provider_Callback_URL): Provider {
     const provider: Provider = getProviderWithSpecOnlyEnitityKindNoOperations();
-    const proceduralSignature: Procedural_Signature = {
+    const proceduralSignatureForKind: Procedural_Signature = {
         name: "moveX",
         argument: loadYaml("./procedure_move_input.yml"),
         result: loadYaml("./location_kind_test_data.yml"),
         execution_strategy: Procedural_Execution_Strategy.Halt_Intentful,
         procedure_callback: procedure_callback
     };
-    provider.kinds[0].procedures[proceduralSignature.name] = proceduralSignature;
-        const geolocationComputeProceduralSignature: Procedural_Signature = {
+    provider.kinds[0].procedures[proceduralSignatureForKind.name] = proceduralSignatureForKind;
+    const proceduralSignatureForProvider: Procedural_Signature = {
+        name: "computeSum",
+        argument: loadYaml("./procedure_sum_input.yml"),
+        result: loadYaml("./procedure_sum_output.yml"),
+        execution_strategy: Procedural_Execution_Strategy.Halt_Intentful,
+        procedure_callback: procedure_callback
+    };
+    provider.procedures[proceduralSignatureForProvider.name] = proceduralSignatureForProvider;
+    const geolocationComputeProceduralSignature: Procedural_Signature = {
         name: "computeGeolocation",
         argument: loadYaml("./procedure_geolocation_compute_input.yml"),
         result: loadYaml("./procedure_geolocation_compute_input.yml"),

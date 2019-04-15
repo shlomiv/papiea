@@ -40,7 +40,7 @@ describe("Procedures tests", () => {
     test("Call procedure", async (done) => {
         const server = http.createServer((req, res) => {
             if (req.method == 'POST') {
-                var body = '';
+                let body = '';
                 req.on('data', function (data) {
                     body += data;
                 });
@@ -208,6 +208,62 @@ describe("Procedures tests", () => {
         try {
             const res: any = await entityApi.post(`/${ provider.prefix }/procedure/computeSum`, { input: {"a": 10, "b": "Totally not a number"} });
         } catch (e) {
+            expect(e.response.status).toBe(400);
+            server.close();
+            done();
+        }
+    });
+
+    test("Call kind level procedure", async (done) => {
+        const server = http.createServer((req, res) => {
+            if (req.method == 'POST') {
+                let body = '';
+                req.on('data', function (data) {
+                    body += data;
+                });
+                req.on('end', function () {
+                    const post = JSON.parse(body);
+                    let initial_cluster_location = "us.west.";
+                    initial_cluster_location += post.input;
+                    res.statusCode = 200;
+                    res.setHeader('Content-Type', 'text/plain');
+                    res.end(JSON.stringify(initial_cluster_location));
+                    server.close();
+                });
+            }
+        });
+        server.listen(port, hostname, () => {
+            console.log(`Server running at http://${hostname}:${port}/`);
+        });
+        const res: any = await entityApi.post(`/${provider.prefix}/${kind_name}/procedure/computeGeolocation`, { input: "2" });
+        expect(res.data).toBe("us.west.2");
+        done();
+    });
+
+    test("Call kind level procedure with non-valid params fails validation", async (done) => {
+        const server = http.createServer((req, res) => {
+            if (req.method == 'POST') {
+                let body = '';
+                req.on('data', function (data) {
+                    body += data;
+                });
+                req.on('end', function () {
+                    const post = JSON.parse(body);
+                    let initial_cluster_location = "us.west.";
+                    initial_cluster_location += post.input;
+                    res.statusCode = 200;
+                    res.setHeader('Content-Type', 'text/plain');
+                    res.end(JSON.stringify(initial_cluster_location));
+                    server.close();
+                });
+            }
+        });
+        server.listen(port, hostname, () => {
+            console.log(`Server running at http://${hostname}:${port}/`);
+        });
+        try {
+            const res: any = await entityApi.post(`/${provider.prefix}/${kind_name}/procedure/computeGeolocation`, { input: ["String expected got array"] });
+        } catch(e) {
             expect(e.response.status).toBe(400);
             server.close();
             done();

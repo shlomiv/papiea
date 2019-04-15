@@ -61,7 +61,7 @@ export class Entity_API_Impl implements Entity_API {
         }
         request_metadata.created_at = new Date();
         request_metadata.kind = kind.name;
-        this.authorizer.checkPermission(user, { "metadata": request_metadata }, CreateAction);
+        await this.authorizer.checkPermission(user, { "metadata": request_metadata }, CreateAction);
         const [metadata, spec] = await this.spec_db.update_spec(request_metadata, spec_description);
         if (kind.kind_structure[kind.name]['x-papiea-entity'] === 'spec-only')
             await this.status_db.update_status(request_metadata, spec_description);
@@ -71,42 +71,28 @@ export class Entity_API_Impl implements Entity_API {
     async get_entity_spec(user: UserAuthInfo, kind_name: string, entity_uuid: uuid4): Promise<[Metadata, Spec]> {
         const entity_ref: Entity_Reference = { kind: kind_name, uuid: entity_uuid };
         const [metadata, spec] = await this.spec_db.get_spec(entity_ref);
-        this.authorizer.checkPermission(user, { "metadata": metadata }, ReadAction);
+        await this.authorizer.checkPermission(user, { "metadata": metadata }, ReadAction);
         return [metadata, spec];
     }
 
     async get_entity_status(user: UserAuthInfo, kind_name: string, entity_uuid: uuid4): Promise<[Metadata, Status]> {
         const entity_ref: Entity_Reference = { kind: kind_name, uuid: entity_uuid };
         const [metadata, status] = await this.status_db.get_status(entity_ref);
-        this.authorizer.checkPermission(user, { "metadata": metadata }, ReadAction);
+        await this.authorizer.checkPermission(user, { "metadata": metadata }, ReadAction);
         return [metadata, status];
     }
 
     async filter_entity_spec(user: UserAuthInfo, kind_name: string, fields: any): Promise<[Metadata, Spec][]> {
         fields.metadata.kind = kind_name;
         const res = await this.spec_db.list_specs(fields);
-        const filteredRes = res.filter(x => {
-            try {
-                this.authorizer.checkPermission(user, { "metadata": x[0] }, ReadAction);
-                return true;
-            } catch (e) {
-                return false;
-            }
-        });
+        const filteredRes = await this.authorizer.filter(user, res, x => { return { "metadata": x[0] } }, ReadAction);
         return filteredRes;
     }
 
     async filter_entity_status(user: UserAuthInfo, kind_name: string, fields: any): Promise<[Metadata, Status][]> {
         fields.metadata.kind = kind_name;
         const res = await this.status_db.list_status(fields);
-        const filteredRes = res.filter(x => {
-            try {
-                this.authorizer.checkPermission(user, { "metadata": x[0] }, ReadAction);
-                return true;
-            } catch (e) {
-                return false;
-            }
-        });
+        const filteredRes = await this.authorizer.filter(user, res, x => { return { "metadata": x[0] } }, ReadAction);
         return filteredRes;
     }
 
@@ -114,7 +100,7 @@ export class Entity_API_Impl implements Entity_API {
         const kind: Kind = await this.get_kind(user, kind_name);
         this.validate_spec(spec_description, kind);
         const metadata: Metadata = { uuid: uuid, kind: kind.name, spec_version: spec_version } as Metadata;
-        this.authorizer.checkPermission(user, { "metadata": metadata }, UpdateAction);
+        await this.authorizer.checkPermission(user, { "metadata": metadata }, UpdateAction);
         const [_, spec] = await this.spec_db.update_spec(metadata, spec_description);
         if (kind.kind_structure[kind.name]['x-papiea-entity'] === 'spec-only')
             await this.status_db.update_status(metadata, spec_description);
@@ -124,7 +110,7 @@ export class Entity_API_Impl implements Entity_API {
     async delete_entity_spec(user: UserAuthInfo, kind_name: string, entity_uuid: uuid4): Promise<void> {
         const entity_ref: Entity_Reference = { kind: kind_name, uuid: entity_uuid };
         const [metadata, _] = await this.spec_db.get_spec(entity_ref);
-        this.authorizer.checkPermission(user, { "metadata": metadata }, DeleteAction);
+        await this.authorizer.checkPermission(user, { "metadata": metadata }, DeleteAction);
         await this.spec_db.delete_spec(entity_ref);
         await this.status_db.delete_status(entity_ref);
     }
@@ -132,7 +118,7 @@ export class Entity_API_Impl implements Entity_API {
     async call_procedure(user: UserAuthInfo, kind_name: string, entity_uuid: uuid4, procedure_name: string, input: any): Promise<any> {
         const kind: Kind = await this.get_kind(user, kind_name);
         const entity_data: [Metadata, Spec] = await this.get_entity_spec(user, kind_name, entity_uuid);
-        this.authorizer.checkPermission(user, { "metadata": entity_data[0] }, CallProcedureByNameAction(procedure_name));
+        await this.authorizer.checkPermission(user, { "metadata": entity_data[0] }, CallProcedureByNameAction(procedure_name));
         const procedure: Procedural_Signature | undefined = kind.procedures[procedure_name];
         if (procedure === undefined) {
             throw new Error(`Procedure ${procedure_name} not found for kind ${kind.name}`);
@@ -162,7 +148,7 @@ export class Entity_API_Impl implements Entity_API {
 
     async call_provider_procedure(user: UserAuthInfo, prefix: string, procedure_name: string, input: any): Promise<any> {
         const provider = await this.provider_api.get_latest_provider(user, prefix);
-        this.authorizer.checkPermission(user, { provider: provider }, CallProcedureByNameAction(procedure_name));
+        await this.authorizer.checkPermission(user, { provider: provider }, CallProcedureByNameAction(procedure_name));
         if (provider.procedures === undefined) {
             throw new Error(`Procedure ${procedure_name} not found for provider ${prefix}`);
         }
@@ -191,7 +177,7 @@ export class Entity_API_Impl implements Entity_API {
 
     async call_kind_procedure(user: UserAuthInfo, kind_name: string, procedure_name: string, input: any): Promise<any> {
         const kind: Kind = await this.get_kind(user, kind_name);
-        this.authorizer.checkPermission(user, { kind: kind }, CallProcedureByNameAction(procedure_name));
+        await this.authorizer.checkPermission(user, { kind: kind }, CallProcedureByNameAction(procedure_name));
         const procedure: Procedural_Signature | undefined = kind.procedures[procedure_name];
         if (procedure === undefined) {
             throw new Error(`Procedure ${procedure_name} not found for kind ${kind.name}`);

@@ -3,13 +3,14 @@ import createAPIDocsRouter from "./api_docs/api_docs_routes";
 import ApiDocsGenerator from "./api_docs/api_docs_generator";
 import createProviderAPIRouter from "./provider/provider_routes";
 import { Provider_API_Impl } from "./provider/provider_api_impl";
+import { Provider_API } from "./provider/provider_api_interface";
 import { MongoConnection } from "./databases/mongo";
 import { createEntityRoutes } from "./entity/entity_routes";
 import { Entity_API_Impl, ProcedureInvocationError } from "./entity/entity_api_impl";
 import { ValidationError, Validator } from "./validator";
 import { EntityNotFoundError } from "./databases/utils/errors";
 import { test_authn } from "./auth/authn";
-import { Authorizer, NoAuthAuthorizer, CasbinAuthorizer, TestAuthorizer, PermissionDeniedError } from "./auth/authz";
+import { Authorizer, NoAuthAuthorizer, PerProviderCasbinAuthorizer, TestAuthorizer, PermissionDeniedError } from "./auth/authz";
 import { resolve } from "path";
 
 declare var process: {
@@ -24,16 +25,12 @@ declare var process: {
 process.title = 'papiea';
 const serverPort = parseInt(process.env.SERVER_PORT || '3000');
 
-async function getAuthorizer(): Promise<Authorizer> {
-    const pathToModel: string = resolve(__dirname, './auth/default_provider_model.txt');
-    const pathToPolicy: string = resolve(__dirname, './auth/provider_policy_example.txt');
+async function getEntityApiAuthorizer(providerApi: Provider_API): Promise<Authorizer> {
+    const pathToDefaultModel: string = resolve(__dirname, './auth/default_provider_model.txt');
     if (process.env.AUTHORIZER === 'CasbinAuthorizer') {
-        const authorizer = new CasbinAuthorizer(pathToModel, pathToPolicy);
-        await authorizer.init();
-        return authorizer;
+        return new PerProviderCasbinAuthorizer(providerApi, pathToDefaultModel);
     } else if (process.env.AUTHORIZER === 'CasbinTestAuthorizer') {
-        const authorizerToBeTested = new CasbinAuthorizer(pathToModel, pathToPolicy);
-        await authorizerToBeTested.init();
+        const authorizerToBeTested = new PerProviderCasbinAuthorizer(providerApi, pathToDefaultModel);
         const authorizer = new TestAuthorizer(authorizerToBeTested);
         return authorizer;
     } else {
@@ -45,7 +42,6 @@ async function setUpApplication(): Promise<express.Express> {
     const app = express();
     app.use(express.json());
     app.use(test_authn);
-    const authorizer: Authorizer = await getAuthorizer();
     const mongoConnection: MongoConnection = new MongoConnection(process.env.MONGO_URL || 'mongodb://mongo:27017', process.env.MONGO_DB || 'papiea');
     await mongoConnection.connect();
     const providerDb = await mongoConnection.get_provider_db();
@@ -53,8 +49,9 @@ async function setUpApplication(): Promise<express.Express> {
     const statusDb = await mongoConnection.get_status_db();
     const validator = new Validator();
     const providerApi = new Provider_API_Impl(providerDb, statusDb, validator, new NoAuthAuthorizer());
+    const entityApiAuthorizer: Authorizer = await getEntityApiAuthorizer(providerApi);
     app.use('/provider', createProviderAPIRouter(providerApi));
-    app.use('/entity', createEntityRoutes(new Entity_API_Impl(statusDb, specDb, providerApi, validator, authorizer)));
+    app.use('/entity', createEntityRoutes(new Entity_API_Impl(statusDb, specDb, providerApi, validator, entityApiAuthorizer)));
     app.use('/api-docs', createAPIDocsRouter('/api-docs', new ApiDocsGenerator(providerDb)));
     app.use(function (err: any, req: any, res: any, next: any) {
         if (res.headersSent) {

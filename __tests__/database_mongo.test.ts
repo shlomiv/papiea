@@ -4,7 +4,6 @@ import { MongoConnection } from "../src/databases/mongo";
 import { Spec_DB } from "../src/databases/spec_db_interface";
 import { Status_DB } from "../src/databases/status_db_interface";
 import { Provider_DB } from "../src/databases/provider_db_interface";
-import { Policy_DB } from "../src/databases/policy_db_interface";
 import * as core from "../src/core";
 import { v4 as uuid4 } from 'uuid';
 import { Kind, Provider } from "../src/papiea";
@@ -234,19 +233,6 @@ describe("MongoDb tests", () => {
         const prefix_string: string = "test";
         const version: string = "0.1.0";
         await providerDb.delete_provider(prefix_string, version);
-        done();
-    });
-    test("Save and Load Policy", async (done) => {
-        const policyDb: Policy_DB = await connection.get_policy_db();
-        await policyDb.save_policy("test_provider", "p, anonymous, anyone, *, *, deny");
-        const policy = await policyDb.load_policy("test_provider");
-        expect(policy).toEqual("p, anonymous, anyone, *, *, deny");
-        done();
-    });
-    test("Load empty Policy", async (done) => {
-        const policyDb: Policy_DB = await connection.get_policy_db();
-        const policy = await policyDb.load_policy("test_provider1");
-        expect(policy).toEqual("");
         done();
     });
 });

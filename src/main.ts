@@ -25,8 +25,8 @@ process.title = 'papiea';
 const serverPort = parseInt(process.env.SERVER_PORT || '3000');
 
 async function getAuthorizer(): Promise<Authorizer> {
-    const pathToModel: string = resolve(__dirname, './auth/model1.txt');
-    const pathToPolicy: string = resolve(__dirname, './auth/policy1.txt');
+    const pathToModel: string = resolve(__dirname, './auth/default_provider_model.txt');
+    const pathToPolicy: string = resolve(__dirname, './auth/provider_policy_example.txt');
     if (process.env.AUTHORIZER === 'CasbinAuthorizer') {
         const authorizer = new CasbinAuthorizer(pathToModel, pathToPolicy);
         await authorizer.init();
@@ -52,7 +52,7 @@ async function setUpApplication(): Promise<express.Express> {
     const specDb = await mongoConnection.get_spec_db();
     const statusDb = await mongoConnection.get_status_db();
     const validator = new Validator();
-    const providerApi = new Provider_API_Impl(providerDb, statusDb, validator, authorizer);
+    const providerApi = new Provider_API_Impl(providerDb, statusDb, validator, new NoAuthAuthorizer());
     app.use('/provider', createProviderAPIRouter(providerApi));
     app.use('/entity', createEntityRoutes(new Entity_API_Impl(statusDb, specDb, providerApi, validator, authorizer)));
     app.use('/api-docs', createAPIDocsRouter('/api-docs', new ApiDocsGenerator(providerDb)));

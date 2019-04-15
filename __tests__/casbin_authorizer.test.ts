@@ -5,8 +5,8 @@ import { resolve } from "path";
 
 
 describe("Casbin authorizer tests", () => {
-    const pathToModel: string = resolve(__dirname, "../src/auth/model1.txt");
-    const pathToPolicy: string = resolve(__dirname, "../src/auth/policy1.txt");
+    const pathToModel: string = resolve(__dirname, "../src/auth/default_provider_model.txt");
+    const pathToPolicy: string = resolve(__dirname, "../src/auth/provider_policy_example.txt");
     const authorizer = new CasbinAuthorizer(pathToModel, pathToPolicy);
 
     beforeAll(async () => {

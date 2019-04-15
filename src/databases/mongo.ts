@@ -2,7 +2,6 @@ import { MongoClient, Db } from "mongodb";
 import { Spec_DB_Mongo } from "./spec_db_mongo";
 import { Status_DB_Mongo } from "./status_db_mongo";
 import { Provider_DB_Mongo } from "./provider_db_mongo";
-import { Policy_DB_Mongo } from "./policy_db_mongo";
 
 export class MongoConnection {
     url: string;
@@ -12,7 +11,6 @@ export class MongoConnection {
     specDb: Spec_DB_Mongo | undefined;
     providerDb: Provider_DB_Mongo | undefined;
     statusDb: Status_DB_Mongo | undefined;
-    policyDb: Policy_DB_Mongo | undefined;
 
     constructor(url: string, dbName: string) {
         this.url = url;
@@ -22,7 +20,6 @@ export class MongoConnection {
         this.specDb = undefined;
         this.providerDb = undefined;
         this.statusDb = undefined;
-        this.policyDb = undefined;
     }
 
     async connect(): Promise<void> {
@@ -62,15 +59,5 @@ export class MongoConnection {
         this.statusDb = new Status_DB_Mongo(this.db);
         await this.statusDb.init();
         return this.statusDb;
-    }
-
-    async get_policy_db(): Promise<Policy_DB_Mongo> {
-        if (this.policyDb !== undefined)
-            return this.policyDb;
-        if (this.db === undefined)
-            throw new Error("Not connected");
-        this.policyDb = new Policy_DB_Mongo(this.db);
-        await this.policyDb.init();
-        return this.policyDb;
     }
 }

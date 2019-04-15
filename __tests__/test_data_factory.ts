@@ -68,5 +68,13 @@ export function getProviderWithSpecOnlyEnitityKindWithOperations(procedure_callb
         procedure_callback: procedure_callback
     };
     provider.procedures[proceduralSignatureForProvider.name] = proceduralSignatureForProvider;
+    const geolocationComputeProceduralSignature: Procedural_Signature = {
+        name: "computeGeolocation",
+        argument: loadYaml("./procedure_geolocation_compute_input.yml"),
+        result: loadYaml("./procedure_geolocation_compute_input.yml"),
+        execution_strategy: Procedural_Execution_Strategy.Halt_Intentful,
+        procedure_callback: procedure_callback
+    };
+    provider.kinds[0].procedures[geolocationComputeProceduralSignature.name] = geolocationComputeProceduralSignature;
     return provider;
 }

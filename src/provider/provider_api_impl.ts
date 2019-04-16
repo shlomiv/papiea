@@ -5,7 +5,6 @@ import { Provider_DB } from "../databases/provider_db_interface";
 import { Status_DB } from "../databases/status_db_interface";
 import { Provider } from "../papiea";
 import { Status, Version } from "../core";
-import { Data_Description } from "../core";
 import { Validator } from "../validator";
 import { Authorizer } from "../auth/authz";
 import { UserAuthInfo } from "../auth/authn";

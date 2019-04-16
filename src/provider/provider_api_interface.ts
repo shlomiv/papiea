@@ -1,8 +1,6 @@
 import * as core from "../core";
 import * as papiea from "../papiea";
 import { Provider } from "../papiea";
-import { Status } from "../core";
-import { Data_Description } from "../core";
 import { Version } from "../core";
 import { UserAuthInfo } from "../auth/authn";
 

@@ -1,4 +1,3 @@
-import { Kind } from "../papiea";
 import { Metadata, Spec, Status, uuid4 } from "../core";
 import { UserAuthInfo } from "../auth/authn";
 

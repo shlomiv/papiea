@@ -96,8 +96,9 @@ describe("API Docs Tests", () => {
     test("API Docs should contain Location scheme", async (done) => {
         try {
             const apiDoc = await apiDocsGenerator.getApiDocs();
-            expect(Object.keys(apiDoc.components.schemas)).toContain("Location");
-            const entitySchema = apiDoc.components.schemas["Location"];
+            const entityName = providerDbMock.provider.kinds[0].name;
+            expect(Object.keys(apiDoc.components.schemas)).toContain(entityName);
+            const entitySchema = apiDoc.components.schemas[entityName];
             expect(entitySchema).toEqual({
                 "type": "object",
                 "title": "X\/Y Location",

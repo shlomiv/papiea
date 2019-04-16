@@ -1,7 +1,7 @@
-import {MongoClient, Db} from "mongodb";
-import {Spec_DB_Mongo} from "./spec_db_mongo";
-import {Status_DB_Mongo} from "./status_db_mongo";
-import {Provider_DB_Mongo} from "./provider_db_mongo";
+import { MongoClient, Db } from "mongodb";
+import { Spec_DB_Mongo } from "./spec_db_mongo";
+import { Status_DB_Mongo } from "./status_db_mongo";
+import { Provider_DB_Mongo } from "./provider_db_mongo";
 
 export class MongoConnection {
     url: string;
@@ -15,7 +15,7 @@ export class MongoConnection {
     constructor(url: string, dbName: string) {
         this.url = url;
         this.dbName = dbName;
-        this.client = new MongoClient(this.url, {useNewUrlParser: true});
+        this.client = new MongoClient(this.url, { useNewUrlParser: true });
         this.db = undefined;
         this.specDb = undefined;
         this.providerDb = undefined;

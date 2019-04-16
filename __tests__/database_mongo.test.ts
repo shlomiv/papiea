@@ -183,7 +183,7 @@ describe("MongoDb tests", () => {
         const providerDb: Provider_DB = await connection.get_provider_db();
         const test_kind = {} as Kind;
         const provider: Provider = { prefix: "test", version: "0.1.0", kinds: [test_kind], procedures: {} };
-        await providerDb.register_provider(provider);
+        await providerDb.save_provider(provider);
         done();
     });
     test("Get provider", async (done) => {

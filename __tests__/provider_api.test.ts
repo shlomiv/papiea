@@ -11,13 +11,13 @@ declare var process: {
 const serverPort = parseInt(process.env.SERVER_PORT || '3000');
 
 const providerApi = axios.create({
-    baseURL: `http://127.0.0.1:${ serverPort }/provider/`,
+    baseURL: `http://127.0.0.1:${serverPort}/provider/`,
     timeout: 1000,
     headers: { 'Content-Type': 'application/json' }
 });
 
 const entityApi = axios.create({
-    baseURL: `http://127.0.0.1:${ serverPort }/entity`,
+    baseURL: `http://127.0.0.1:${serverPort}/entity`,
     timeout: 1000,
     headers: { 'Content-Type': 'application/json' }
 });
@@ -40,7 +40,7 @@ describe("Provider API tests", () => {
     });
     test("Get provider", async done => {
         try {
-            const res = await providerApi.get(`/${ providerPrefix }/${ providerVersion }`);
+            const res = await providerApi.get(`/${providerPrefix}/${providerVersion}`);
             expect(res.data.kinds).not.toBeUndefined();
             done();
         } catch (e) {
@@ -53,9 +53,9 @@ describe("Provider API tests", () => {
         const provider: Provider = { prefix: providerPrefix, version: version, kinds: [], procedures: {} };
         providerApi.post('/', provider).then().catch(done.fail);
         try {
-            const res = await providerApi.get(`/${ providerPrefix }`);
+            const res = await providerApi.get(`/${providerPrefix}`);
             expect(res.data.length).toBeGreaterThanOrEqual(2);
-            providerApi.delete(`/${ providerPrefix }/${ version }`).then(() => done()).catch(done.fail);
+            providerApi.delete(`/${providerPrefix}/${version}`).then(() => done()).catch(done.fail);
             done();
         } catch (e) {
             done.fail(e)
@@ -65,11 +65,11 @@ describe("Provider API tests", () => {
     // TODO(adolgarev): there is no API to list providers
 
     test("Unregister provider", done => {
-        providerApi.delete(`/${ providerPrefix }/${ providerVersion }`).then(() => done()).catch(done.fail);
+        providerApi.delete(`/${providerPrefix}/${providerVersion}`).then(() => done()).catch(done.fail);
     });
 
     test("Unregister non-existend provider", done => {
-        providerApi.delete(`/${ providerPrefix }/${ providerVersion }`).then(() => done.fail()).catch(() => done());
+        providerApi.delete(`/${providerPrefix}/${providerVersion}`).then(() => done.fail()).catch(() => done());
     });
 
     test("Unregister never existed provider", done => {
@@ -81,7 +81,7 @@ describe("Provider API tests", () => {
             const provider: Provider = getProviderWithSpecOnlyEnitityKindNoOperations();
             await providerApi.post('/', provider);
             const kind_name = provider.kinds[0].name;
-            const { data: { metadata, spec } } = await entityApi.post(`/${ provider.prefix }/${ kind_name }`, {
+            const { data: { metadata, spec } } = await entityApi.post(`/${provider.prefix}/${kind_name}`, {
                 spec: {
                     x: 10,
                     y: 11
@@ -98,7 +98,7 @@ describe("Provider API tests", () => {
                 status: newStatus
             });
 
-            const res = await entityApi.get(`/${ provider.prefix }/${ kind_name }/${ metadata.uuid }`);
+            const res = await entityApi.get(`/${provider.prefix}/${kind_name}/${metadata.uuid}`);
             expect(res.data.status).toEqual(newStatus);
             done();
         } catch (e) {
@@ -110,7 +110,7 @@ describe("Provider API tests", () => {
         const provider: Provider = getProviderWithSpecOnlyEnitityKindNoOperations();
         await providerApi.post('/', provider);
         const kind_name = provider.kinds[0].name;
-        const { data: { metadata, spec } } = await entityApi.post(`/${ provider.prefix }/${ kind_name }`, {
+        const { data: { metadata, spec } } = await entityApi.post(`/${provider.prefix}/${kind_name}`, {
             spec: {
                 x: 10,
                 y: 11
@@ -129,6 +129,24 @@ describe("Provider API tests", () => {
             done.fail();
         } catch (err) {
             done();
+        }
+    });
+
+    test("Update policy", async done => {
+        try {
+            const provider: Provider = getProviderWithSpecOnlyEnitityKindNoOperations();
+            await providerApi.post('/', provider);
+
+            const originalPolicy = "g, admin, admin_group";
+            await providerApi.post(`/${provider.prefix}/${provider.version}/policy`, {
+                policy: originalPolicy
+            });
+            const { data: { policy } } = await providerApi.get(`/${provider.prefix}/${provider.version}`);
+            expect(policy).toEqual(originalPolicy);
+
+            done();
+        } catch (e) {
+            done.fail(e);
         }
     });
 });

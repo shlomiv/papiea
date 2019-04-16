@@ -7,8 +7,8 @@ import { Provider } from "../papiea";
 
 export interface Provider_DB {
 
-    // Register a new provider with the intent engine
-    register_provider(provider: papiea.Provider): Promise<void>;
+    // Register a new provider with the intent engine or update existing one
+    save_provider(provider: papiea.Provider): Promise<void>;
 
     //Upgrade a provider - This should be in the admin?
     //upgrade_provider(from_provider: uuid4, to: providerDescription): Task;

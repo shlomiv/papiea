@@ -28,7 +28,7 @@ class Provider_DB_Mock implements Provider_DB {
         this.provider = getProviderWithSpecOnlyEnitityKindNoOperations();
     }
 
-    async register_provider(provider: Provider): Promise<void> {
+    async save_provider(provider: Provider): Promise<void> {
 
     }
 

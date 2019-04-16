@@ -7,7 +7,11 @@ import { UserAuthInfo } from "../auth/authn";
 
 // This will be provided using REST APIs. 
 
-export enum Provider_Power {On, Off, Suspended}
+export enum Provider_Power { On, Off, Suspended }
+
+export interface Provider_Policy_Change_Listener {
+    onPolicyChanged(provider: Provider): Promise<void>;
+}
 
 export interface Provider_API {
 
@@ -36,4 +40,8 @@ export interface Provider_API {
     list_providers_by_prefix(user: UserAuthInfo, provider_prefix: string): Promise<Provider[]>;
 
     get_latest_provider(user: UserAuthInfo, provider_prefix: string): Promise<Provider>
+
+    update_policy(user: UserAuthInfo, provider_prefix: string, provider_version: Version, policy: string): Promise<void>;
+
+    add_provider_policy_change_listener(listener: Provider_Policy_Change_Listener): void;
 }

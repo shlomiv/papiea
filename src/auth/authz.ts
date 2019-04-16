@@ -1,5 +1,5 @@
 import { UserAuthInfo } from "./authn";
-import { Provider_API } from "../provider/provider_api_interface";
+import { Provider_API, Provider_Policy_Change_Listener } from "../provider/provider_api_interface";
 import { Provider } from "../papiea";
 
 export class PermissionDeniedError extends Error {
@@ -86,7 +86,7 @@ export interface ProviderAuthorizerFactory {
     createAuthorizer(provider: Provider): Promise<Authorizer>;
 }
 
-export class PerProviderAuthorizer extends Authorizer {
+export class PerProviderAuthorizer extends Authorizer implements Provider_Policy_Change_Listener {
     private providerApi: Provider_API;
     private providerToAuthorizer: { [key: string]: Authorizer; };
     private kindToProviderPrefix: { [key: string]: string; };
@@ -95,6 +95,7 @@ export class PerProviderAuthorizer extends Authorizer {
     constructor(providerApi: Provider_API, providerAuthorizerFactory: ProviderAuthorizerFactory) {
         super();
         this.providerApi = providerApi;
+        providerApi.add_provider_policy_change_listener(this);
         this.providerToAuthorizer = {};
         this.kindToProviderPrefix = {};
         this.providerAuthorizerFactory = providerAuthorizerFactory;
@@ -130,5 +131,9 @@ export class PerProviderAuthorizer extends Authorizer {
     async checkPermission(user: UserAuthInfo, object: any, action: Action): Promise<void> {
         const authorizer: Authorizer = await this.getAuthorizerByObject(user, object);
         return authorizer.checkPermission(user, object, action);
+    }
+
+    async onPolicyChanged(provider: Provider): Promise<void> {
+        delete this.providerToAuthorizer[provider.prefix];
     }
 }

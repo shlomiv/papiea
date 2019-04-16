@@ -1,6 +1,6 @@
 import * as core from "../core";
 import * as papiea from "../papiea";
-import { Provider_API, Provider_Power } from "./provider_api_interface";
+import { Provider_API, Provider_Power, Provider_Policy_Change_Listener } from "./provider_api_interface";
 import { Provider_DB } from "../databases/provider_db_interface";
 import { Status_DB } from "../databases/status_db_interface";
 import { Provider } from "../papiea";
@@ -14,16 +14,18 @@ export class Provider_API_Impl implements Provider_API {
     statusDb: Status_DB;
     private validator: Validator;
     private authorizer: Authorizer;
+    private providerPolicyChangeListeners: Provider_Policy_Change_Listener[];
 
     constructor(providerDb: Provider_DB, statusDb: Status_DB, validator: Validator, authorizer: Authorizer) {
         this.providerDb = providerDb;
         this.statusDb = statusDb;
         this.validator = validator;
         this.authorizer = authorizer;
+        this.providerPolicyChangeListeners = [];
     }
 
     async register_provider(user: UserAuthInfo, provider: papiea.Provider): Promise<void> {
-        return this.providerDb.register_provider(provider);
+        return this.providerDb.save_provider(provider);
     }
 
     async unregister_provider(user: UserAuthInfo, provider_prefix: string, version: core.Version): Promise<void> {
@@ -69,5 +71,18 @@ export class Provider_API_Impl implements Provider_API {
         }
         const schemas: any = Object.assign({}, kind.kind_structure);
         this.validator.validate(status, Object.values(kind.kind_structure)[0], schemas);
+    }
+
+    async update_policy(user: UserAuthInfo, provider_prefix: string, provider_version: string, policy: string): Promise<void> {
+        const provider: Provider = await this.get_provider(user, provider_prefix, provider_version);
+        provider.policy = policy;
+        await this.providerDb.save_provider(provider);
+        for (let i = 0; i < this.providerPolicyChangeListeners.length; i++) {
+            await this.providerPolicyChangeListeners[i].onPolicyChanged(provider);
+        }
+    }
+
+    add_provider_policy_change_listener(listener: Provider_Policy_Change_Listener): void {
+        this.providerPolicyChangeListeners.push(listener);
     }
 }

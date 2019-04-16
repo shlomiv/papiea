@@ -10,7 +10,7 @@ import { Entity_API_Impl, ProcedureInvocationError } from "./entity/entity_api_i
 import { ValidationError, Validator } from "./validator";
 import { EntityNotFoundError } from "./databases/utils/errors";
 import { test_authn } from "./auth/authn";
-import { Authorizer, NoAuthAuthorizer, PerProviderCasbinAuthorizer, TestAuthorizer, PermissionDeniedError } from "./auth/authz";
+import { Authorizer, NoAuthAuthorizer, PerProviderAuthorizer, ProviderCasbinAuthorizerFactory, TestAuthorizer, PermissionDeniedError } from "./auth/authz";
 import { resolve } from "path";
 
 declare var process: {
@@ -28,9 +28,9 @@ const serverPort = parseInt(process.env.SERVER_PORT || '3000');
 async function getEntityApiAuthorizer(providerApi: Provider_API): Promise<Authorizer> {
     const pathToDefaultModel: string = resolve(__dirname, './auth/default_provider_model.txt');
     if (process.env.AUTHORIZER === 'CasbinAuthorizer') {
-        return new PerProviderCasbinAuthorizer(providerApi, pathToDefaultModel);
+        return new PerProviderAuthorizer(providerApi, new ProviderCasbinAuthorizerFactory(pathToDefaultModel));
     } else if (process.env.AUTHORIZER === 'CasbinTestAuthorizer') {
-        const authorizerToBeTested = new PerProviderCasbinAuthorizer(providerApi, pathToDefaultModel);
+        const authorizerToBeTested = new PerProviderAuthorizer(providerApi, new ProviderCasbinAuthorizerFactory(pathToDefaultModel));
         const authorizer = new TestAuthorizer(authorizerToBeTested);
         return authorizer;
     } else {

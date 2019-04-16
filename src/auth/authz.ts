@@ -1,7 +1,7 @@
 import { UserAuthInfo } from "./authn";
 import { Provider_API } from "../provider/provider_api_interface";
 import { Provider } from "../papiea";
-const casbin = require("casbin");
+import { newEnforcer } from "casbin/lib/casbin";
 import { Adapter } from "casbin/lib/persist/adapter";
 import { Model } from "casbin/lib/model";
 import { Helper } from "casbin/lib/persist/helper";
@@ -80,7 +80,7 @@ export class CasbinAuthorizer extends Authorizer {
     }
 
     async init() {
-        this.enforcer = await casbin.newEnforcer(this.pathToModel, this.pathToPolicyOrAdaptor);
+        this.enforcer = await newEnforcer(this.pathToModel, this.pathToPolicyOrAdaptor);
     }
 
     async checkPermission(user: UserAuthInfo, object: any, action: Action): Promise<void> {
@@ -150,18 +150,39 @@ class CasbinMemoryAdapter implements Adapter {
     }
 }
 
-export class PerProviderCasbinAuthorizer extends Authorizer {
+export interface ProviderAuthorizerFactory {
+    createAuthorizer(provider: Provider): Promise<Authorizer>;
+}
+
+export class ProviderCasbinAuthorizerFactory implements ProviderAuthorizerFactory {
+    private pathToDefaultModel: string;
+
+    constructor(pathToDefaultModel: string) {
+        this.pathToDefaultModel = pathToDefaultModel;
+    }
+
+    async createAuthorizer(provider: Provider): Promise<Authorizer> {
+        if (!provider || !provider.policy) {
+            throw new PermissionDeniedError();
+        }
+        const authorizer = new CasbinAuthorizer(this.pathToDefaultModel, new CasbinMemoryAdapter(provider.policy));
+        await authorizer.init();
+        return authorizer;
+    }
+}
+
+export class PerProviderAuthorizer extends Authorizer {
     private providerApi: Provider_API;
     private providerToAuthorizer: { [key: string]: Authorizer; };
     private kindToProviderPrefix: { [key: string]: string; };
-    private pathToDefaultModel: string;
+    private providerAuthorizerFactory: ProviderAuthorizerFactory;
 
-    constructor(providerApi: Provider_API, pathToDefaultModel: string) {
+    constructor(providerApi: Provider_API, providerAuthorizerFactory: ProviderAuthorizerFactory) {
         super();
         this.providerApi = providerApi;
         this.providerToAuthorizer = {};
         this.kindToProviderPrefix = {};
-        this.pathToDefaultModel = pathToDefaultModel;
+        this.providerAuthorizerFactory = providerAuthorizerFactory;
     }
 
     private async getProviderPrefixByKindName(user: UserAuthInfo, kind_name: string): Promise<string> {
@@ -186,12 +207,7 @@ export class PerProviderCasbinAuthorizer extends Authorizer {
         }
 
         const provider: Provider = await this.providerApi.get_latest_provider(user, providerPrefix);
-        if (!provider || !provider.policy) {
-            throw new PermissionDeniedError();
-        }
-
-        const authorizer = new CasbinAuthorizer(this.pathToDefaultModel, new CasbinMemoryAdapter(provider.policy));
-        await authorizer.init();
+        const authorizer = await this.providerAuthorizerFactory.createAuthorizer(provider);
         this.providerToAuthorizer[providerPrefix] = authorizer;
         return authorizer;
     }

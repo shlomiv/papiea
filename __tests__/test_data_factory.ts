@@ -24,7 +24,10 @@ export function loadJson(relativePath: string): any {
 }
 
 export function getLocationDataDescription(): Data_Description {
-    return loadYaml("./location_kind_test_data.yml");
+    let locationDataDescription = loadYaml("./location_kind_test_data.yml");
+    let randomizedLocationDataDescription: any = {};
+    randomizedLocationDataDescription["Location" + randomString(5)] = locationDataDescription["Location"];
+    return randomizedLocationDataDescription;
 }
 
 export function getSpecOnlyEntityKind(): SpecOnlyEntityKind {

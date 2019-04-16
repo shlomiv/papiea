@@ -1,8 +1,6 @@
 import * as core from "../core";
 import * as papiea from "../papiea";
 import { Provider } from "../papiea";
-import { Status } from "../core";
-import { Data_Description } from "../core";
 import { Version } from "../core";
 
 
@@ -35,8 +33,6 @@ export interface Provider_API {
     get_provider(provider_prefix: string, provider_version: Version): Promise<Provider>;
 
     list_providers_by_prefix(provider_prefix: string): Promise<Provider[]>;
-
-    validate_status(status: Status, kind_structure: Data_Description): void;
 
     get_latest_provider(provider_prefix: string): Promise<Provider>
 }

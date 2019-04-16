@@ -38,7 +38,7 @@ jobs:
             docker cp project_server_1:/code/reports . || echo .
             docker cp project_server_1:/code/coverage . || echo .
 
-      - run: ./publish-images.py      
+      - run: ./publish-images.py
 
       - run: docker-compose down
 

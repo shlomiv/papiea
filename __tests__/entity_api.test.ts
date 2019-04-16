@@ -34,7 +34,7 @@ describe("Entity API tests", () => {
     const providerPrefix = "test";
     const providerVersion = "0.1.0";
     const locationDataDescription = getLocationDataDescription();
-    const kind_name = "Location";
+    const kind_name = Object.keys(locationDataDescription)[0];
     beforeAll(async () => {
         const sdk = ProviderSdk.create_sdk(papiea_config.host, papiea_config.port, server_config.host, server_config.port);
         sdk.new_kind(locationDataDescription);

@@ -5,7 +5,6 @@ import { Provider_DB } from "../databases/provider_db_interface";
 import { Status_DB } from "../databases/status_db_interface";
 import { Provider } from "../papiea";
 import { Status, Version } from "../core";
-import { Data_Description } from "../core";
 import { Validator } from "../validator";
 
 export class Provider_API_Impl implements Provider_API {
@@ -13,10 +12,10 @@ export class Provider_API_Impl implements Provider_API {
     statusDb: Status_DB;
     private validator: Validator;
 
-    constructor(providerDb: Provider_DB, statusDb: Status_DB) {
+    constructor(providerDb: Provider_DB, statusDb: Status_DB, validator: Validator) {
         this.providerDb = providerDb;
         this.statusDb = statusDb;
-        this.validator = new Validator();
+        this.validator = validator;
     }
 
     async register_provider(provider: papiea.Provider): Promise<void> {
@@ -28,7 +27,8 @@ export class Provider_API_Impl implements Provider_API {
     }
 
     async update_status(context: any, entity_ref: core.Entity_Reference, status: core.Status): Promise<void> {
-        await this.validate_status(entity_ref, status);
+        const provider: Provider = await this.get_latest_provider_by_kind(entity_ref.kind);
+        await this.validate_status(provider, entity_ref, status);
         return this.statusDb.update_status(entity_ref, status);
     }
 
@@ -43,11 +43,11 @@ export class Provider_API_Impl implements Provider_API {
     }
 
     async get_provider(provider_prefix: string, provider_version: Version): Promise<Provider> {
-        return this.providerDb.get_provider(provider_prefix, provider_version)
+        return this.providerDb.get_provider(provider_prefix, provider_version);
     }
 
     async list_providers_by_prefix(provider_prefix: string): Promise<Provider[]> {
-        return this.providerDb.find_providers(provider_prefix)
+        return this.providerDb.find_providers(provider_prefix);
     }
 
     async get_latest_provider(provider_prefix: string): Promise<Provider> {
@@ -58,8 +58,7 @@ export class Provider_API_Impl implements Provider_API {
         return this.providerDb.get_latest_provider_by_kind(kind_name);
     }
 
-    async validate_status(entity_ref: core.Entity_Reference, status: Status) {
-        const provider: Provider = await this.get_latest_provider_by_kind(entity_ref.kind);
+    private async validate_status(provider: Provider, entity_ref: core.Entity_Reference, status: Status) {
         const kind = provider.kinds.find(kind => kind.name === entity_ref.kind);
         if (kind === undefined) {
             throw new Error("Kind not found");

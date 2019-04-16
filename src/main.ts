@@ -10,7 +10,8 @@ import { Entity_API_Impl, ProcedureInvocationError } from "./entity/entity_api_i
 import { ValidationError, Validator } from "./validator";
 import { EntityNotFoundError } from "./databases/utils/errors";
 import { test_authn } from "./auth/authn";
-import { Authorizer, NoAuthAuthorizer, PerProviderAuthorizer, ProviderCasbinAuthorizerFactory, TestAuthorizer, PermissionDeniedError } from "./auth/authz";
+import { Authorizer, NoAuthAuthorizer, PerProviderAuthorizer, TestAuthorizer, PermissionDeniedError } from "./auth/authz";
+import { ProviderCasbinAuthorizerFactory } from "./auth/casbin";
 import { resolve } from "path";
 
 declare var process: {

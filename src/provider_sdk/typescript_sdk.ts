@@ -218,8 +218,12 @@ class Provider_Server_Manager {
         }
     }
 
-    callback_url(procedure_name: string): string {
-        return `http://${ this.public_host }:${ this.public_port }${ "/" + procedure_name }`
+    callback_url(procedure_name: string, kind?: string): string {
+        if (kind !== undefined) {
+            return `http://${ this.public_host }:${ this.public_port }${ "/" + kind + "/" + procedure_name }`
+        } else {
+            return `http://${ this.public_host }:${ this.public_port }${ "/" + procedure_name }`
+        }
     }
 }
 
@@ -243,7 +247,7 @@ export class Kind_Builder {
                      input_desc: any,
                      output_desc: any,
                      handler: (ctx: ProceduralCtx_Interface, entity: Entity, input: any) => Promise<any>): void {
-        const callback_url = this.server_manager.callback_url(name);
+        const callback_url = this.server_manager.callback_url(name, this.kind.name);
         const procedural_signature: Procedural_Signature = {
             name,
             argument: input_desc,
@@ -254,7 +258,7 @@ export class Kind_Builder {
         this.kind.procedures[name] = procedural_signature;
         const prefix = this.get_prefix();
         console.log(prefix);
-        this.server_manager.register_handler("/" + name, async (req, res) => {
+        this.server_manager.register_handler(`/${this.kind.name}/${name}`, async (req, res) => {
             try {
                 const result = await handler(new ProceduralCtx(this.entity_url, prefix), {
                     metadata: req.body.metadata,
@@ -273,7 +277,7 @@ export class Kind_Builder {
                    input_desc: any,
                    output_desc: any,
                    handler: (ctx: ProceduralCtx_Interface, input: any) => Promise<any>): void {
-        const callback_url = this.server_manager.callback_url(name);
+        const callback_url = this.server_manager.callback_url(name, this.kind.name);
         const procedural_signature: Procedural_Signature = {
             name,
             argument: input_desc,
@@ -284,7 +288,7 @@ export class Kind_Builder {
         this.kind.procedures[name] = procedural_signature;
         const prefix = this.get_prefix();
         console.log(prefix);
-        this.server_manager.register_handler("/" + name, async (req, res) => {
+        this.server_manager.register_handler(`/${this.kind.name}/${name}`, async (req, res) => {
             try {
                 const result = await handler(new ProceduralCtx(this.entity_url, prefix), req.body.input);
                 res.json(result);

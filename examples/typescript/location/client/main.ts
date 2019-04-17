@@ -8,7 +8,7 @@ async function main() {
     //Update entity on provider with kind
     await update_entity(provider_config.prefix, provider_config.kind_name, location_entity_config.entity.update_spec, metadata, provider_config.entity_url);
 
-    //Invoke procedure that moves X by value of input
+    //Invoke entity_procedure that moves X by value of input
     const res = await invoker_procedure(provider_config.prefix, provider_config.kind_name, provider_config.procedure_name, location_entity_config.entity.procedure_input, metadata, provider_config.entity_url);
     console.log(res);
 

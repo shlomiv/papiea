@@ -9,10 +9,6 @@ import { UserAuthInfo } from "../auth/authn";
 
 export enum Provider_Power { On, Off, Suspended }
 
-export interface Provider_Policy_Change_Listener {
-    onPolicyChanged(provider: Provider): Promise<void>;
-}
-
 export interface Provider_API {
 
     // Registers a provider to the Provider's DB
@@ -43,5 +39,5 @@ export interface Provider_API {
 
     update_policy(user: UserAuthInfo, provider_prefix: string, provider_version: Version, policy: string): Promise<void>;
 
-    add_provider_policy_change_listener(listener: Provider_Policy_Change_Listener): void;
+    on_provider_policy_change(callbackfn: (provider: Provider) => void): void;
 }

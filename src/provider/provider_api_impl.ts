@@ -1,6 +1,6 @@
 import * as core from "../core";
 import * as papiea from "../papiea";
-import { Provider_API, Provider_Power, Provider_Policy_Change_Listener } from "./provider_api_interface";
+import { Provider_API, Provider_Power } from "./provider_api_interface";
 import { Provider_DB } from "../databases/provider_db_interface";
 import { Status_DB } from "../databases/status_db_interface";
 import { Provider } from "../papiea";
@@ -8,20 +8,21 @@ import { Status, Version } from "../core";
 import { Validator } from "../validator";
 import { Authorizer } from "../auth/authz";
 import { UserAuthInfo } from "../auth/authn";
+import { EventEmitter } from "events";
 
 export class Provider_API_Impl implements Provider_API {
     providerDb: Provider_DB;
     statusDb: Status_DB;
     private validator: Validator;
     private authorizer: Authorizer;
-    private providerPolicyChangeListeners: Provider_Policy_Change_Listener[];
+    private eventEmitter: EventEmitter;
 
     constructor(providerDb: Provider_DB, statusDb: Status_DB, validator: Validator, authorizer: Authorizer) {
         this.providerDb = providerDb;
         this.statusDb = statusDb;
         this.validator = validator;
         this.authorizer = authorizer;
-        this.providerPolicyChangeListeners = [];
+        this.eventEmitter = new EventEmitter();
     }
 
     async register_provider(user: UserAuthInfo, provider: papiea.Provider): Promise<void> {
@@ -77,12 +78,10 @@ export class Provider_API_Impl implements Provider_API {
         const provider: Provider = await this.get_provider(user, provider_prefix, provider_version);
         provider.policy = policy;
         await this.providerDb.save_provider(provider);
-        for (let i = 0; i < this.providerPolicyChangeListeners.length; i++) {
-            await this.providerPolicyChangeListeners[i].onPolicyChanged(provider);
-        }
+        this.eventEmitter.emit('providerPolicyChange', provider);
     }
 
-    add_provider_policy_change_listener(listener: Provider_Policy_Change_Listener): void {
-        this.providerPolicyChangeListeners.push(listener);
+    on_provider_policy_change(callbackfn: (provider: Provider) => void): void {
+        this.eventEmitter.on('providerPolicyChange', callbackfn);
     }
 }

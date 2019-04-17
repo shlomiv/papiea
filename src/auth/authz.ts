@@ -78,7 +78,7 @@ export class TestAuthorizer extends Authorizer {
         if (user.doNotCheck) {
             return;
         }
-        this.authorizerToBeTested.checkPermission(user, object, action);
+        await this.authorizerToBeTested.checkPermission(user, object, action);
     }
 }
 

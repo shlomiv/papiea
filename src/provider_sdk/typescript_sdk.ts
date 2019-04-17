@@ -52,7 +52,6 @@ export class ProviderSdk implements ProviderImpl {
     }
 
     private get_version(): string {
-        console.log("Internal: " + this._version);
         if (this._version !== null) {
             return this._version
         } else {
@@ -232,9 +231,7 @@ export class Kind_Builder {
         };
         this.kind.procedures[name] = procedural_signature;
         const prefix = this.get_prefix();
-        console.log("Prefix: " + prefix);
         const version = this.get_version();
-        console.log("Version: " + version);
         this.server_manager.register_handler("/" + name, async (req, res) => {
             try {
                 const result = await handler(new ProceduralCtx(this.entity_url, prefix, version), {

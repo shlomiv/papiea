@@ -210,7 +210,6 @@ describe("Provider Sdk tests", () => {
     test("Malformed handler registered on sdk should fail", async (done) => {
         const sdk = ProviderSdk.create_sdk(papiea_config.host, papiea_config.port, server_config.host, server_config.port);
         const location = sdk.new_kind(location_yaml);
-        console.log("V " + provider_version);
         sdk.version(provider_version);
         sdk.prefix("location_provider");
         const proceduralSignature: Procedural_Signature = {
@@ -226,7 +225,6 @@ describe("Provider Sdk tests", () => {
 
         });
         await sdk.register();
-        console.dir(sdk.provider);
         const kind_name = sdk.provider.kinds[0].name;
         const { data: { metadata, spec } } = await axios.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }`, {
             spec: {

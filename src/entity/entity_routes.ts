@@ -47,8 +47,8 @@ export function createEntityRoutes(entity_api: Entity_API): Router {
     }));
 
     router.get("/:prefix/:version/:kind/:uuid", asyncHandler(async (req, res) => {
-        const [metadata, spec] = await entity_api.get_entity_spec(req.params.entity_kind, req.params.uuid);
-        const [_, status] = await entity_api.get_entity_status(req.params.entity_kind, req.params.uuid);
+        const [metadata, spec] = await entity_api.get_entity_spec(req.params.kind, req.params.uuid);
+        const [_, status] = await entity_api.get_entity_status(req.params.kind, req.params.uuid);
         res.json({ "metadata": metadata, "spec": spec, "status": status });
     }));
 
@@ -75,38 +75,38 @@ export function createEntityRoutes(entity_api: Entity_API): Router {
 
     router.put("/:prefix/:version/:kind/:uuid", asyncHandler(async (req, res) => {
         const request_metadata = req.body.metadata;
-        const [metadata, spec] = await entity_api.update_entity_spec(req.params.uuid, request_metadata.spec_version, req.params.kind, req.body.spec);
+        const [metadata, spec] = await entity_api.update_entity_spec(req.params.uuid, req.params.prefix, request_metadata.spec_version, req.params.kind, req.params.version, req.body.spec);
         res.json({ "metadata": metadata, "spec": spec });
     }));
 
     router.post("/:prefix/:version/:kind", asyncHandler(async (req, res) => {
         if (req.params.status) {
-            const [metadata, spec] = await entity_api.save_entity(req.params.kind, req.body.spec, req.body.metadata);
+            const [metadata, spec] = await entity_api.save_entity(req.params.prefix, req.params.kind, req.params.version, req.body.spec, req.body.metadata);
             res.json({ "metadata": metadata, "spec": spec });
         } else {
             // Spec only entity
-            const [metadata, spec] = await entity_api.save_entity(req.params.kind, req.body.spec, req.body.metadata);
+            const [metadata, spec] = await entity_api.save_entity(req.params.prefix, req.params.kind, req.params.version, req.body.spec, req.body.metadata);
             res.json({ "metadata": metadata, "spec": spec });
         }
     }));
 
-    router.delete("/:prefix/:version/:kind/:uuid", kind_middleware, asyncHandler(async (req, res) => {
-        await entity_api.delete_entity_spec(req.params.entity_kind, req.params.uuid);
+    router.delete("/:prefix/:version/:kind/:uuid", asyncHandler(async (req, res) => {
+        await entity_api.delete_entity_spec(req.params.kind, req.params.uuid);
         res.json("OK")
     }));
 
-    router.post("/:prefix/:version/:kind/:uuid/procedure/:procedure_name", kind_middleware, asyncHandler(async (req, res) => {
-        const result: any = await entity_api.call_procedure(req.params.entity_kind, req.params.uuid, req.params.procedure_name, req.body.input);
+    router.post("/:prefix/:version/:kind/:uuid/procedure/:procedure_name", asyncHandler(async (req, res) => {
+        const result: any = await entity_api.call_procedure(req.params.prefix, req.params.kind, req.params.version, req.params.uuid, req.params.procedure_name, req.body.input);
+        res.json(result);
+    }));
+
+    router.post("/:prefix/:version/:kind/procedure/:procedure_name", asyncHandler(async (req, res) => {
+        const result: any = await entity_api.call_kind_procedure(req.params.prefix, req.params.kind, req.params.version, req.params.procedure_name, req.body.input);
         res.json(result);
     }));
 
     router.post("/:prefix/:version/procedure/:procedure_name", asyncHandler(async (req, res) => {
-        const result: any = await entity_api.call_provider_procedure(req.params.prefix, req.params.procedure_name, req.body.input);
-        res.json(result);
-    }));
-
-    router.post("/:prefix/:version/:kind/procedure/:procedure_name", kind_middleware, asyncHandler(async (req, res) => {
-        const result: any = await entity_api.call_kind_procedure(req.params.entity_kind, req.params.procedure_name, req.body.input);
+        const result: any = await entity_api.call_provider_procedure(req.params.prefix, req.params.version, req.params.procedure_name, req.body.input);
         res.json(result);
     }));
 

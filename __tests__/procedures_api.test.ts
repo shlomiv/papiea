@@ -37,7 +37,7 @@ describe("Procedures tests", () => {
         await providerApi.delete(`/${provider.prefix}/${provider.version}`);
     });
 
-    test("Call procedure", async (done) => {
+    test("Call entity_procedure", async (done) => {
         const server = http.createServer((req, res) => {
             if (req.method == 'POST') {
                 let body = '';

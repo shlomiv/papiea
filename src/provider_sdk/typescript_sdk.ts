@@ -13,6 +13,7 @@ export class ProviderSdk implements ProviderImpl {
     private _version: Version | null;
     private _prefix: string | null;
     private _kind: Kind[];
+    private _procedures: { [key: string]: Procedural_Signature };
     _provider: Provider | null;
     papiea_url: string;
     papiea_port: number;
@@ -27,8 +28,8 @@ export class ProviderSdk implements ProviderImpl {
         this.papiea_url = papiea_url;
         this.papiea_port = papiea_port;
         this.server_manager = server_manager;
+        this._procedures = {};
         this.get_prefix = this.get_prefix.bind(this);
-        this.get_version = this.get_version.bind(this);
     }
 
     get provider() {
@@ -119,9 +120,40 @@ export class ProviderSdk implements ProviderImpl {
         this._prefix = prefix;
     }
 
+    provider_procedure(name: string, rbac: any,
+                       strategy: Procedural_Execution_Strategy,
+                       input_desc: any,
+                       output_desc: any,
+                       handler: (ctx: ProceduralCtx_Interface, input: any) => Promise<any>): void {
+        const callback_url = this.server_manager.callback_url(name);
+        const procedural_signature: Procedural_Signature = {
+            name,
+            argument: input_desc,
+            result: output_desc,
+            execution_strategy: strategy,
+            procedure_callback: callback_url
+        };
+        this._procedures[name] = procedural_signature;
+        const prefix = this.get_prefix();
+        this.server_manager.register_handler("/" + name, async (req, res) => {
+            try {
+                const result = await handler(new ProceduralCtx(this.entity_url, prefix), req.body.input);
+                res.json(result);
+            } catch (e) {
+                throw new Error("Unable to execute handler");
+            }
+        });
+    }
+
+
     async register(): Promise<void> {
         if (this._prefix !== null && this._version !== null && this._kind.length !== 0) {
-            this._provider = { kinds: [...this._kind], version: this._version, prefix: this._prefix, procedures: {} };
+            this._provider = {
+                kinds: [...this._kind],
+                version: this._version!,
+                prefix: this._prefix!,
+                procedures: this._procedures
+            };
             try {
                 await axios.post(`http://${ this.papiea_url }:${ this.papiea_port }/provider/`, this._provider);
                 this.server_manager.startServer();
@@ -141,7 +173,7 @@ export class ProviderSdk implements ProviderImpl {
         throw new Error("Unimplemented")
     }
 
-    static provider_description_error(missing_field: string) {
+    private static provider_description_error(missing_field: string) {
         throw new Error(`Malformed provider description. Missing: ${ missing_field }`)
     }
 
@@ -194,8 +226,12 @@ class Provider_Server_Manager {
         }
     }
 
-    callback_url(procedure_name: string): string {
-        return `http://${ this.public_host }:${ this.public_port }${ "/" + procedure_name }`
+    callback_url(procedure_name: string, kind?: string): string {
+        if (kind !== undefined) {
+            return `http://${ this.public_host }:${ this.public_port }${ "/" + kind + "/" + procedure_name }`
+        } else {
+            return `http://${ this.public_host }:${ this.public_port }${ "/" + procedure_name }`
+        }
     }
 }
 
@@ -216,12 +252,12 @@ export class Kind_Builder {
         this.get_version = get_version;
     }
 
-    procedure(name: string, rbac: any,
-              strategy: Procedural_Execution_Strategy,
-              input_desc: any,
-              output_desc: any,
-              handler: (ctx: ProceduralCtx_Interface, entity: Entity, input: any) => Promise<any>): void {
-        const callback_url = this.server_manager.callback_url(name);
+    entity_procedure(name: string, rbac: any,
+                     strategy: Procedural_Execution_Strategy,
+                     input_desc: any,
+                     output_desc: any,
+                     handler: (ctx: ProceduralCtx_Interface, entity: Entity, input: any) => Promise<any>): void {
+        const callback_url = this.server_manager.callback_url(name, this.kind.name);
         const procedural_signature: Procedural_Signature = {
             name,
             argument: input_desc,
@@ -240,6 +276,32 @@ export class Kind_Builder {
                     status: req.body.status
                 }, req.body.input);
                 res.json(result.spec);
+            } catch (e) {
+                throw new Error("Unable to execute handler");
+            }
+        });
+    }
+
+    kind_procedure(name: string, rbac: any,
+                   strategy: Procedural_Execution_Strategy,
+                   input_desc: any,
+                   output_desc: any,
+                   handler: (ctx: ProceduralCtx_Interface, input: any) => Promise<any>): void {
+        const callback_url = this.server_manager.callback_url(name, this.kind.name);
+        const procedural_signature: Procedural_Signature = {
+            name,
+            argument: input_desc,
+            result: output_desc,
+            execution_strategy: strategy,
+            procedure_callback: callback_url
+        };
+        this.kind.procedures[name] = procedural_signature;
+        const prefix = this.get_prefix();
+        console.log(prefix);
+        this.server_manager.register_handler(`/${this.kind.name}/${name}`, async (req, res) => {
+            try {
+                const result = await handler(new ProceduralCtx(this.entity_url, prefix), req.body.input);
+                res.json(result);
             } catch (e) {
                 throw new Error("Unable to execute handler");
             }

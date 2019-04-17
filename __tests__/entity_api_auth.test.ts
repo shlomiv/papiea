@@ -41,8 +41,10 @@ describe("Entity API tests", () => {
     beforeEach(async () => {
         const { data: { metadata, spec } } = await entityApi.post(`/${provider.prefix}/${kind_name}`, {
             metadata: {
-                owner: "alice",
-                tenant: "1"
+                extension: {
+                    owner: "alice",
+                    tenant_uuid: "1"
+                }
             },
             spec: {
                 x: 10,

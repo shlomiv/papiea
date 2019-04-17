@@ -33,20 +33,20 @@ export interface SpecOnlyEntityKind extends Kind {
 
 // kind-struct ends here
 
-// [[file:~/work/papiea-js/Papiea-design.org::#h-Interface-598][procedure-signature]]
+// [[file:~/work/papiea-js/Papiea-design.org::#h-Interface-598][entity_procedure-signature]]
 // We may want to support different execution strategies. For now we
 // can only halt intentful execution for the duration of the
 // procedural call
 export enum Procedural_Execution_Strategy {Halt_Intentful};
 
 export interface Procedural_Signature {
-    // The name of the procedure to be exported by the engine.
+    // The name of the entity_procedure to be exported by the engine.
     name: string;
 
-    // The representation of the data to be passed to this procedure
+    // The representation of the data to be passed to this entity_procedure
     argument: core.Data_Description;
 
-    // The representation of the data to be returned from this procedure
+    // The representation of the data to be returned from this entity_procedure
     result: core.Data_Description;
 
     // Does the engine pauses all intentful operation invocations for
@@ -57,7 +57,7 @@ export interface Procedural_Signature {
     procedure_callback: core.Provider_Callback_URL;
 }
 
-// procedure-signature ends here
+// entity_procedure-signature ends here
 
 // [[file:~/work/papiea-js/Papiea-design.org::#h-Provider-description-189][provider-desc-struct]]
 export interface Provider {

@@ -34,5 +34,7 @@ export interface Provider_API {
 
     list_providers_by_prefix(provider_prefix: string): Promise<Provider[]>;
 
-    get_latest_provider(provider_prefix: string): Promise<Provider>
+    get_latest_provider(provider_prefix: string): Promise<Provider>;
+
+    partial_update_status(context: any, entity_ref: core.Entity_Reference, status: core.Status): Promise<void>
 }

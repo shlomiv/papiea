@@ -3,6 +3,7 @@ import { Status_DB } from "./status_db_interface";
 import { Db, Collection } from "mongodb";
 import { Entity } from "../core";
 import { datestringToFilter } from "./utils/date";
+import {encode} from "mongo-dot-notation-tool"
 
 export class Status_DB_Mongo implements Status_DB {
     collection: Collection;
@@ -31,6 +32,20 @@ export class Status_DB_Mongo implements Status_DB {
                 }
             }, {
                 upsert: true
+            });
+        if (result.result.n !== 1) {
+            throw new Error(`Amount of updated entries doesn't equal to 1: ${result.result.n}`)
+        }
+    }
+
+    async partial_update_status(entity_ref: core.Entity_Reference, status: core.Status): Promise<void> {
+        const partial_status_query = encode({"status": status});
+        console.dir(partial_status_query);
+        const result = await this.collection.updateOne({
+            "metadata.uuid": entity_ref.uuid,
+            "metadata.kind": entity_ref.kind
+        }, {
+                $set: partial_status_query
             });
         if (result.result.n !== 1) {
             throw new Error(`Amount of updated entries doesn't equal to 1: ${result.result.n}`)

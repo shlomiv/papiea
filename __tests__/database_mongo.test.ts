@@ -150,6 +150,29 @@ describe("MongoDb tests", () => {
         expect(status.a).toEqual("A1");
         done();
     });
+    test("Partially update Status", async (done) => {
+        const statusDb: Status_DB = await connection.get_status_db();
+        const entity_ref: core.Entity_Reference = { uuid: entityA_uuid, kind: "test" };
+        const status: core.Status = { b: "A3" };
+        await statusDb.partial_update_status(entity_ref, status);
+        done();
+    });
+    test("Get partially updated Status", async (done) => {
+        expect.assertions(4);
+        const statusDb: Status_DB = await connection.get_status_db();
+        const entity_ref: core.Entity_Reference = { uuid: entityA_uuid, kind: "test" };
+        const res = await statusDb.get_status(entity_ref);
+        expect(res).not.toBeNull();
+        if (res === null) {
+            done.fail("Entity without status");
+            return;
+        }
+        const [metadata, status] = res;
+        expect(metadata.uuid).toEqual(entity_ref.uuid);
+        expect(status.a).toEqual("A1");
+        expect(status.b).toEqual("A3");
+        done();
+    });
     test("Get Status for non existing entity should fail", async (done) => {
         expect.assertions(1);
         const statusDb: Status_DB = await connection.get_status_db();

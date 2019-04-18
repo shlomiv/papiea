@@ -31,6 +31,11 @@ export default function createProviderAPIRouter(providerApi: Provider_API) {
         res.json("OK")
     }));
 
+    providerApiRouter.patch('/update_status', asyncHandler(async (req, res) => {
+        await providerApi.partial_update_status(req.body.context, req.body.entity_ref, req.body.status);
+        res.json("OK")
+    }));
+
     providerApiRouter.post('/update_progress', asyncHandler(async (req, res) => {
         await providerApi.update_progress(req.body.context, req.body.message, req.body.done_percent);
         res.json("OK");

@@ -25,6 +25,8 @@ export interface Status_DB {
     list_status(fields_map: any): Promise<([core.Metadata, core.Status])[]>;
 
     delete_status(entity_ref: core.Entity_Reference): Promise<void>
+
+    partial_update_status(entity_ref: core.Entity_Reference, status: core.Status): Promise<void>
 }
 
 // status-db-interface ends here

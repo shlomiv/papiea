@@ -17,9 +17,8 @@ export interface Provider_API {
     // DELETE "/provider/{prefix}/{version}"
     unregister_provider(provider_prefix: string, version: core.Version): Promise<void>;
 
-    // Updating status and progress
-    // POST "/provider/update_status"
-    update_status(context: any, entity_ref: core.Entity_Reference, status: core.Status): Promise<void>;
+    // Replace status with a specified one
+    replace_status(context: any, entity_ref: core.Entity_Reference, status: core.Status): Promise<void>;
 
     // POST "/provider/update_progress"
     update_progress(context: any, message: string, done_percent: number): Promise<void>;
@@ -34,5 +33,9 @@ export interface Provider_API {
 
     list_providers_by_prefix(provider_prefix: string): Promise<Provider[]>;
 
-    get_latest_provider(provider_prefix: string): Promise<Provider>
+    get_latest_provider(provider_prefix: string): Promise<Provider>;
+
+    // Updating status
+    // POST "/provider/update_status"
+    update_status(context: any, entity_ref: core.Entity_Reference, status: core.Status): Promise<void>
 }

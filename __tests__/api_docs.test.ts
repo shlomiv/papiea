@@ -122,4 +122,4 @@ describe("API Docs Tests", () => {
     test("API Docs should be accessible by the url", done => {
         api.get("/api-docs/api-docs.json").then(() => done()).catch(done.fail);
     });
-})
+});

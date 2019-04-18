@@ -26,15 +26,13 @@ export class Provider_API_Impl implements Provider_API {
         return this.providerDb.delete_provider(provider_prefix, version);
     }
 
-    async update_status(context: any, entity_ref: core.Entity_Reference, status: core.Status): Promise<void> {
+    async replace_status(context: any, entity_ref: core.Entity_Reference, status: core.Status): Promise<void> {
         const provider: Provider = await this.get_latest_provider_by_kind(entity_ref.kind);
         await this.validate_status(provider, entity_ref, status);
         return this.statusDb.update_status(entity_ref, status);
     }
 
-    async partial_update_status(context: any, entity_ref: core.Entity_Reference, status: core.Status): Promise<void> {
-        const provider: Provider = await this.get_latest_provider_by_kind(entity_ref.kind);
-        // await this.validate_status(provider, entity_ref, status);
+    async update_status(context: any, entity_ref: core.Entity_Reference, status: core.Status): Promise<void> {
         return this.statusDb.partial_update_status(entity_ref, status);
     }
 

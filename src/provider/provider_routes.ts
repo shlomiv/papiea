@@ -27,12 +27,12 @@ export default function createProviderAPIRouter(providerApi: Provider_API) {
     }));
 
     providerApiRouter.post('/update_status', asyncHandler(async (req, res) => {
-        await providerApi.update_status(req.body.context, req.body.entity_ref, req.body.status);
+        await providerApi.replace_status(req.body.context, req.body.entity_ref, req.body.status);
         res.json("OK")
     }));
 
     providerApiRouter.patch('/update_status', asyncHandler(async (req, res) => {
-        await providerApi.partial_update_status(req.body.context, req.body.entity_ref, req.body.status);
+        await providerApi.update_status(req.body.context, req.body.entity_ref, req.body.status);
         res.json("OK")
     }));
 

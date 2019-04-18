@@ -12,12 +12,12 @@ import { ProceduralCtx } from "./typescript_sdk_context_impl";
 export class ProviderSdk implements ProviderImpl {
     private _version: Version | null;
     private _prefix: string | null;
-    private _kind: Kind[];
-    private _procedures: { [key: string]: Procedural_Signature };
+    private readonly _kind: Kind[];
+    private readonly _procedures: { [key: string]: Procedural_Signature };
     _provider: Provider | null;
     papiea_url: string;
     papiea_port: number;
-    private server_manager: Provider_Server_Manager;
+    private readonly server_manager: Provider_Server_Manager;
 
 
     constructor(papiea_url: string, papiea_port: number, server_manager: Provider_Server_Manager) {
@@ -30,6 +30,7 @@ export class ProviderSdk implements ProviderImpl {
         this.server_manager = server_manager;
         this._procedures = {};
         this.get_prefix = this.get_prefix.bind(this);
+        this.get_version = this.get_version.bind(this);
     }
 
     get provider() {
@@ -135,9 +136,10 @@ export class ProviderSdk implements ProviderImpl {
         };
         this._procedures[name] = procedural_signature;
         const prefix = this.get_prefix();
+        const version = this.get_version();
         this.server_manager.register_handler("/" + name, async (req, res) => {
             try {
-                const result = await handler(new ProceduralCtx(this.entity_url, prefix), req.body.input);
+                const result = await handler(new ProceduralCtx(this.entity_url, prefix, version), req.body.input);
                 res.json(result);
             } catch (e) {
                 throw new Error("Unable to execute handler");
@@ -268,7 +270,7 @@ export class Kind_Builder {
         this.kind.procedures[name] = procedural_signature;
         const prefix = this.get_prefix();
         const version = this.get_version();
-        this.server_manager.register_handler("/" + name, async (req, res) => {
+        this.server_manager.register_handler(`/${this.kind.name}/${name}`, async (req, res) => {
             try {
                 const result = await handler(new ProceduralCtx(this.entity_url, prefix, version), {
                     metadata: req.body.metadata,
@@ -297,10 +299,10 @@ export class Kind_Builder {
         };
         this.kind.procedures[name] = procedural_signature;
         const prefix = this.get_prefix();
-        console.log(prefix);
+        const version = this.get_version();
         this.server_manager.register_handler(`/${this.kind.name}/${name}`, async (req, res) => {
             try {
-                const result = await handler(new ProceduralCtx(this.entity_url, prefix), req.body.input);
+                const result = await handler(new ProceduralCtx(this.entity_url, prefix, version), req.body.input);
                 res.json(result);
             } catch (e) {
                 throw new Error("Unable to execute handler");

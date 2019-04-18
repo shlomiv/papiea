@@ -155,7 +155,6 @@ describe("Provider API tests", () => {
             });
 
             const res = await entityApi.get(`/${ provider.prefix }/${ kind_name }/${ metadata.uuid }`);
-            console.log(res.data.status);
             expect(res.data.status.x).toEqual(10);
             expect(res.data.status.y).toEqual(20);
             expect(res.data.status.z).toEqual(111);

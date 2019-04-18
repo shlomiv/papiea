@@ -224,6 +224,7 @@ describe("Entity API tests", () => {
                     }
                 }
             });
+            console.log("Here");
             let res = await entityApi.post(`${providerPrefix}/${kind_name}/filter`, {
                 spec: {
                     x: 10,
@@ -280,6 +281,7 @@ describe("Entity API tests", () => {
                 }
             });
             expect(res.data.length).toBeGreaterThanOrEqual(1);
+            console.log("There");
             res.data.forEach((entity: any) => {
                 expect(entity.status.x).toEqual(10);
                 expect(entity.status.v.e).toEqual(12);

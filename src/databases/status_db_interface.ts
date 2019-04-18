@@ -7,7 +7,7 @@ export interface Status_DB {
 
     // Update the status in the status db. As long as the input is
     // correct this always succeeds.
-    update_status(entity_ref: core.Entity_Reference, status: core.Status): Promise<void>;
+    replace_status(entity_ref: core.Entity_Reference, status: core.Status): Promise<void>;
 
     // Gets the status of a particular entity from the db. Returns
     // both current metadata and status of the entity.
@@ -26,7 +26,7 @@ export interface Status_DB {
 
     delete_status(entity_ref: core.Entity_Reference): Promise<void>
 
-    partial_update_status(entity_ref: core.Entity_Reference, status: core.Status): Promise<void>
+    update_status(entity_ref: core.Entity_Reference, status: core.Status): Promise<void>
 }
 
 // status-db-interface ends here

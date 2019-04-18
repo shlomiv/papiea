@@ -29,11 +29,11 @@ export class Provider_API_Impl implements Provider_API {
     async replace_status(context: any, entity_ref: core.Entity_Reference, status: core.Status): Promise<void> {
         const provider: Provider = await this.get_latest_provider_by_kind(entity_ref.kind);
         await this.validate_status(provider, entity_ref, status);
-        return this.statusDb.update_status(entity_ref, status);
+        return this.statusDb.replace_status(entity_ref, status);
     }
 
     async update_status(context: any, entity_ref: core.Entity_Reference, status: core.Status): Promise<void> {
-        return this.statusDb.partial_update_status(entity_ref, status);
+        return this.statusDb.update_status(entity_ref, status);
     }
 
     async update_progress(context: any, message: string, done_percent: number): Promise<void> {

@@ -19,7 +19,7 @@ export class Status_DB_Mongo implements Status_DB {
         );
     }
 
-    async update_status(entity_ref: core.Entity_Reference, status: core.Status): Promise<void> {
+    async replace_status(entity_ref: core.Entity_Reference, status: core.Status): Promise<void> {
         const result = await this.collection.updateOne({
             "metadata.uuid": entity_ref.uuid,
             "metadata.kind": entity_ref.kind
@@ -38,9 +38,8 @@ export class Status_DB_Mongo implements Status_DB {
         }
     }
 
-    async partial_update_status(entity_ref: core.Entity_Reference, status: core.Status): Promise<void> {
+    async update_status(entity_ref: core.Entity_Reference, status: core.Status): Promise<void> {
         const partial_status_query = encode({"status": status});
-        console.dir(partial_status_query);
         const result = await this.collection.updateOne({
             "metadata.uuid": entity_ref.uuid,
             "metadata.kind": entity_ref.kind

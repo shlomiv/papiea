@@ -5,7 +5,7 @@ import createProviderAPIRouter from "./provider/provider_routes";
 import { Provider_API_Impl } from "./provider/provider_api_impl";
 import { Provider_API } from "./provider/provider_api_interface";
 import { MongoConnection } from "./databases/mongo";
-import { createEntityRoutes } from "./entity/entity_routes";
+import { createEntityAPIRouter } from "./entity/entity_routes";
 import { Entity_API_Impl, ProcedureInvocationError } from "./entity/entity_api_impl";
 import { ValidationError, Validator } from "./validator";
 import { EntityNotFoundError } from "./databases/utils/errors";
@@ -52,7 +52,7 @@ async function setUpApplication(): Promise<express.Express> {
     const providerApi = new Provider_API_Impl(providerDb, statusDb, validator, new NoAuthAuthorizer());
     const entityApiAuthorizer: Authorizer = await getEntityApiAuthorizer(providerApi);
     app.use('/provider', createProviderAPIRouter(providerApi));
-    app.use('/entity', createEntityRoutes(new Entity_API_Impl(statusDb, specDb, providerApi, validator, entityApiAuthorizer)));
+    app.use('/entity', createEntityAPIRouter(new Entity_API_Impl(statusDb, specDb, providerApi, validator, entityApiAuthorizer)));
     app.use('/api-docs', createAPIDocsRouter('/api-docs', new ApiDocsGenerator(providerDb)));
     app.use(function (err: any, req: any, res: any, next: any) {
         if (res.headersSent) {

@@ -4,7 +4,7 @@ import { Router } from "express";
 import { UserAuthInfo, asyncHandler } from '../auth/authn';
 
 
-export function createEntityRoutes(entity_api: Entity_API): Router {
+export function createEntityAPIRouter(entity_api: Entity_API): Router {
     const router = express.Router();
 
     const filterEntities = async function (user: UserAuthInfo, kind_name: string, filter: any): Promise<any> {

@@ -37,7 +37,7 @@ export interface Provider_API {
 
     get_latest_provider(user: UserAuthInfo, provider_prefix: string): Promise<Provider>
 
-    update_policy(user: UserAuthInfo, provider_prefix: string, provider_version: Version, policy: string): Promise<void>;
+    update_auth(user: UserAuthInfo, provider_prefix: string, provider_version: Version, policy: string): Promise<void>;
 
-    on_provider_policy_change(callbackfn: (provider: Provider) => void): void;
+    on_auth_change(callbackfn: (provider: Provider) => void): void;
 }

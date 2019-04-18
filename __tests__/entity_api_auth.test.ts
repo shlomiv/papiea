@@ -73,7 +73,7 @@ describe("Entity API tests", () => {
 
     test("Get entity should succeed after policy set", async done => {
         try {
-            await providerApi.post(`/${provider.prefix}/${provider.version}/policy`, {
+            await providerApi.post(`/${provider.prefix}/${provider.version}/auth`, {
                 policy: `p, alice, owner, ${kind_name}, *, allow`
             });
             const { data: { metadata, spec } } = await entityApi.get(`/${provider.prefix}/${kind_name}/${entity_metadata.uuid}`,

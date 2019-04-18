@@ -42,8 +42,8 @@ export default function createProviderAPIRouter(providerApi: Provider_API) {
         res.json("OK")
     }));
 
-    providerApiRouter.post('/:prefix/:version/policy', asyncHandler(async (req, res) => {
-        await providerApi.update_policy(req.user, req.params.prefix, req.params.version, req.body.policy);
+    providerApiRouter.post('/:prefix/:version/auth', asyncHandler(async (req, res) => {
+        await providerApi.update_auth(req.user, req.params.prefix, req.params.version, req.body);
         res.json("OK");
     }));
 

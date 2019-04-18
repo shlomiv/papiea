@@ -138,7 +138,7 @@ describe("Provider API tests", () => {
             await providerApi.post('/', provider);
 
             const originalPolicy = "g, admin, admin_group";
-            await providerApi.post(`/${provider.prefix}/${provider.version}/policy`, {
+            await providerApi.post(`/${provider.prefix}/${provider.version}/auth`, {
                 policy: originalPolicy
             });
             const { data: { policy } } = await providerApi.get(`/${provider.prefix}/${provider.version}`);

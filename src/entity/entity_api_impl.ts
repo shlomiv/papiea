@@ -59,7 +59,7 @@ export class Entity_API_Impl implements Entity_API {
         request_metadata.kind = kind.name;
         const [metadata, spec] = await this.spec_db.update_spec(request_metadata, spec_description);
         if (kind.kind_structure[kind.name]['x-papiea-entity'] === 'spec-only')
-            await this.status_db.update_status(request_metadata, spec_description);
+            await this.status_db.replace_status(request_metadata, spec_description);
         return [metadata, spec];
     }
 
@@ -93,7 +93,7 @@ export class Entity_API_Impl implements Entity_API {
         const metadata: Metadata = { uuid: uuid, kind: kind.name, spec_version: spec_version } as Metadata;
         const [_, spec] = await this.spec_db.update_spec(metadata, spec_description);
         if (kind.kind_structure[kind.name]['x-papiea-entity'] === 'spec-only')
-            await this.status_db.update_status(metadata, spec_description);
+            await this.status_db.replace_status(metadata, spec_description);
         return [metadata, spec];
     }
 

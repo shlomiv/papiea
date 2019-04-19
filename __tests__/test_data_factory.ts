@@ -49,7 +49,7 @@ export function getProviderWithSpecOnlyEnitityKindNoOperations(): Provider {
     const spec_only_kind = getSpecOnlyEntityKind();
     const providerPrefix = randomString(12);
     const providerVersion = "0.1.0";
-    const provider: Provider = { prefix: providerPrefix, version: providerVersion, kinds: [spec_only_kind], procedures: {} };
+    const provider: Provider = { prefix: providerPrefix, version: providerVersion, kinds: [spec_only_kind], procedures: {}, extension_structure: {} };
     return provider;
 }
 

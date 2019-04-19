@@ -1,7 +1,7 @@
 import "jest"
 import axios from "axios"
 import { Provider } from "../src/papiea";
-import { getProviderWithSpecOnlyEnitityKindNoOperations } from "./test_data_factory";
+import { getProviderWithSpecOnlyEnitityKindNoOperations, loadYaml } from "./test_data_factory";
 
 declare var process: {
     env: {
@@ -31,7 +31,7 @@ describe("Provider API tests", () => {
     });
 
     test("Register provider", done => {
-        const provider: Provider = { prefix: providerPrefix, version: providerVersion, kinds: [], procedures: {} };
+        const provider: Provider = { prefix: providerPrefix, version: providerVersion, kinds: [], procedures: {}, extension_structure: {} };
         providerApi.post('/', provider).then(() => done()).catch(done.fail);
     });
 
@@ -50,7 +50,7 @@ describe("Provider API tests", () => {
 
     test("Get multiple providers", async done => {
         const version = "1.0.0";
-        const provider: Provider = { prefix: providerPrefix, version: version, kinds: [], procedures: {} };
+        const provider: Provider = { prefix: providerPrefix, version: version, kinds: [], procedures: {}, extension_structure: {} };
         providerApi.post('/', provider).then().catch(done.fail);
         try {
             const res = await providerApi.get(`/${ providerPrefix }`);
@@ -162,5 +162,12 @@ describe("Provider API tests", () => {
         } catch (e) {
             done.fail(e);
         }
+    });
+
+    test("Register provider with extension structure", done => {
+        const extension_desc = loadYaml("./metadata_extension.yml");
+        const provider: Provider = { prefix: providerPrefix, version: providerVersion, kinds: [], procedures: {}, extension_structure: extension_desc };
+        providerApi.post('/', provider).then().catch(done.fail);
+        providerApi.delete(`/${ providerPrefix }/${ providerVersion }`).then(() => done()).catch(done.fail);
     });
 });

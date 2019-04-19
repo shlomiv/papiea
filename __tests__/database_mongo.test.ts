@@ -35,7 +35,8 @@ describe("MongoDb tests", () => {
             kind: "test",
             spec_version: 0,
             created_at: new Date(),
-            deleted_at: undefined
+            deleted_at: undefined,
+            extension: {}
         };
         const spec: core.Spec = { a: "A" };
         await specDb.update_spec(entity_metadata, spec);
@@ -48,7 +49,8 @@ describe("MongoDb tests", () => {
             kind: "test",
             spec_version: 1,
             created_at: new Date(),
-            deleted_at: undefined
+            deleted_at: undefined,
+            extension: {}
         };
         const spec: core.Spec = { a: "A1" };
         await specDb.update_spec(entity_metadata, spec);
@@ -62,7 +64,8 @@ describe("MongoDb tests", () => {
             kind: "test",
             spec_version: 1,
             created_at: new Date(),
-            deleted_at: undefined
+            deleted_at: undefined,
+            extension: {}
         };
         const spec: core.Spec = { a: "A2" };
         try {
@@ -200,7 +203,7 @@ describe("MongoDb tests", () => {
     test("Register Provider", async (done) => {
         const providerDb: Provider_DB = await connection.get_provider_db();
         const test_kind = {} as Kind;
-        const provider: Provider = { prefix: "test", version: "0.1.0", kinds: [test_kind], procedures: {} };
+        const provider: Provider = { prefix: "test", version: "0.1.0", kinds: [test_kind], procedures: {}, extension_structure: {} };
         await providerDb.register_provider(provider);
         done();
     });

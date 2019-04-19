@@ -17,6 +17,7 @@ export class ProviderSdk implements ProviderImpl {
     _provider: Provider | null;
     papiea_url: string;
     papiea_port: number;
+    private _meta_ext: { [key: string]: string };
     private server_manager: Provider_Server_Manager;
 
 
@@ -29,6 +30,7 @@ export class ProviderSdk implements ProviderImpl {
         this.papiea_port = papiea_port;
         this.server_manager = server_manager;
         this._procedures = {};
+        this._meta_ext = {};
         this.get_prefix = this.get_prefix.bind(this);
     }
 
@@ -112,6 +114,10 @@ export class ProviderSdk implements ProviderImpl {
         this._prefix = prefix;
     }
 
+    metadata_extension(ext: Data_Description) {
+        this._meta_ext = ext;
+    }
+
     provider_procedure(name: string, rbac: any,
                        strategy: Procedural_Execution_Strategy,
                        input_desc: any,
@@ -144,7 +150,8 @@ export class ProviderSdk implements ProviderImpl {
                 kinds: [...this._kind],
                 version: this._version!,
                 prefix: this._prefix!,
-                procedures: this._procedures
+                procedures: this._procedures,
+                extension_structure: this._meta_ext
             };
             try {
                 await axios.post(`http://${ this.papiea_url }:${ this.papiea_port }/provider/`, this._provider);

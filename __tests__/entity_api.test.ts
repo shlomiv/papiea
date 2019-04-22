@@ -428,41 +428,6 @@ describe("Entity API tests", () => {
         }
     });
 
-    test("Filter entity by additional fields", async (done) => {
-        try {
-            await entityApi.post(`/${providerPrefix}/${kind_name}`, {
-                spec: {
-                    x: 10,
-                    y: 11
-                },
-                metadata: {
-                    _key: "123"
-                }
-            });
-            const res = await entityApi.post(`${providerPrefix}/${kind_name}/filter`, {
-                metadata: {
-                    _key: "123"
-                }
-            });
-            expect(res.data.length).toBeGreaterThanOrEqual(1);
-        } catch (e) {
-            done.fail(e);
-            return;
-        }
-        try {
-            const res = await entityApi.post(`${providerPrefix}/${kind_name}/filter`, {
-                metadata: {
-                    _key: "abc"
-                }
-            });
-            expect(res.data.length).toBe(0);
-        } catch (e) {
-            done.fail(e);
-            return;
-        }
-        done();
-    });
-
     test("Create entity with non valid uuid should be an error", async (done) => {
         try {
             const { data: { metadata, spec } } = await entityApi.post(`/${providerPrefix}/${kind_name}`, {
@@ -554,6 +519,11 @@ describe("Entity API with metadata extension tests", () => {
     const locationDataDescription = getLocationDataDescription();
     const metadata_ext_description = getMetadataDescription();
     const kind_name = Object.keys(locationDataDescription)[0];
+    const owner_name = "test@owner.com";
+    const tenant_id = "sample_id";
+
+    let entity_metadata: Metadata;
+    let entity_spec: Spec;
 
     beforeAll(async () => {
         const sdk = ProviderSdk.create_sdk(papiea_config.host, papiea_config.port, server_config.host, server_config.port);
@@ -587,21 +557,35 @@ describe("Entity API with metadata extension tests", () => {
 
     test("Create entity with metadata extension", async done => {
         try {
-            await entityApi.post(`/${providerPrefix}/${kind_name}`, {
+            const { data: { metadata, spec } } = await entityApi.post(`/${providerPrefix}/${kind_name}`, {
                 spec: {
                     x: 100,
                     y: 11
                 },
                 metadata: {
                     extension: {
-                        "owner": "test@owner.com",
-                        "tenant_id": "sample_id"
+                        "owner": owner_name,
+                        "tenant_id": tenant_id
                     }
                 }
             });
+            entity_metadata = metadata;
+            entity_spec = spec;
             done();
         } catch (err) {
             done.fail(err);
+        }
+    });
+
+    test("Get spec-only entity with extension", async (done) => {
+        expect.assertions(2);
+        try {
+            const res = await entityApi.get(`/${providerPrefix}/${kind_name}/${entity_metadata.uuid}`);
+            expect(res.data.spec).toEqual(entity_spec);
+            expect(res.data.status).toEqual(entity_spec);
+            done();
+        } catch (e) {
+            done.fail(e);
         }
     });
 
@@ -614,7 +598,7 @@ describe("Entity API with metadata extension tests", () => {
                 },
                 metadata: {
                     extension: {
-                        "owner": "test@owner.com",
+                        "owner": owner_name,
                         "tenant_id": 123
                     }
                 }
@@ -627,4 +611,19 @@ describe("Entity API with metadata extension tests", () => {
             done();
         }
     });
+
+    test("Filter entity by extension", async done => {
+        try {
+            const res = await entityApi.post(`/${providerPrefix}/${kind_name}/filter`, {
+                metadata: {
+                    "extension.owner": owner_name,
+                    "extension.tenant_id": tenant_id
+                }
+            });
+            expect(res.data.length).toBe(1);
+            done();
+        } catch (e) {
+            done.fail(e);
+        }
+    })
 });

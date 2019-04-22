@@ -3,27 +3,30 @@ import createAPIDocsRouter from "./api_docs/api_docs_routes";
 import ApiDocsGenerator from "./api_docs/api_docs_generator";
 import createProviderAPIRouter from "./provider/provider_routes";
 import { Provider_API_Impl } from "./provider/provider_api_impl";
-import { Provider_API } from "./provider/provider_api_interface";
 import { MongoConnection } from "./databases/mongo";
 import { createEntityRoutes } from "./entity/entity_routes";
 import { Entity_API_Impl, ProcedureInvocationError } from "./entity/entity_api_impl";
 import { ValidationError, Validator } from "./validator";
 import { EntityNotFoundError } from "./databases/utils/errors";
+import * as morgan from "morgan";
 
 declare var process: {
     env: {
         SERVER_PORT: string,
         MONGO_URL: string,
-        MONGO_DB: string
+        MONGO_DB: string,
+        LOG_LEVEL: string,
     },
     title: string;
 };
 process.title = 'papiea';
 const serverPort = parseInt(process.env.SERVER_PORT || '3000');
+const log_level = process.env.LOG_LEVEL === "DEV" ? "dev" : "common";
 
 async function setUpApplication(): Promise<express.Express> {
     const app = express();
     app.use(express.json());
+    app.use(morgan(log_level));
     const mongoConnection: MongoConnection = new MongoConnection(process.env.MONGO_URL || 'mongodb://mongo:27017', process.env.MONGO_DB || 'papiea');
     await mongoConnection.connect();
     const providerDb = await mongoConnection.get_provider_db();

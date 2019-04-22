@@ -26,7 +26,7 @@ export function createEntityRoutes(entity_api: Entity_API): Router {
         return Object.values(uuidToEntity);
     };
 
-    router.get("/:prefix/:kind", asyncHandler(async (req, res) => {
+    router.get("/:prefix/:version/:kind", asyncHandler(async (req, res) => {
         const filter: any = {};
         if (req.query.spec) {
             filter.spec = JSON.parse(req.query.spec);
@@ -46,13 +46,13 @@ export function createEntityRoutes(entity_api: Entity_API): Router {
         res.json(await filterEntities(req.params.kind, filter));
     }));
 
-    router.get("/:prefix/:kind/:uuid", asyncHandler(async (req, res) => {
+    router.get("/:prefix/:version/:kind/:uuid", asyncHandler(async (req, res) => {
         const [metadata, spec] = await entity_api.get_entity_spec(req.params.kind, req.params.uuid);
         const [_, status] = await entity_api.get_entity_status(req.params.kind, req.params.uuid);
         res.json({ "metadata": metadata, "spec": spec, "status": status });
     }));
 
-    router.post("/:prefix/:kind/filter", asyncHandler(async (req, res) => {
+    router.post("/:prefix/:version/:kind/filter", asyncHandler(async (req, res) => {
         const filter: any = {};
         if (req.body.spec) {
             filter.spec = req.body.spec;
@@ -73,40 +73,40 @@ export function createEntityRoutes(entity_api: Entity_API): Router {
         res.json(await filterEntities(req.params.kind, filter));
     }));
 
-    router.put("/:prefix/:kind/:uuid", asyncHandler(async (req, res) => {
+    router.put("/:prefix/:version/:kind/:uuid", asyncHandler(async (req, res) => {
         const request_metadata = req.body.metadata;
-        const [metadata, spec] = await entity_api.update_entity_spec(req.params.uuid, request_metadata.spec_version, req.params.kind, req.body.spec);
+        const [metadata, spec] = await entity_api.update_entity_spec(req.params.uuid, req.params.prefix, request_metadata.spec_version, req.params.kind, req.params.version, req.body.spec);
         res.json({ "metadata": metadata, "spec": spec });
     }));
 
-    router.post("/:prefix/:kind", asyncHandler(async (req, res) => {
+    router.post("/:prefix/:version/:kind", asyncHandler(async (req, res) => {
         if (req.params.status) {
-            const [metadata, spec] = await entity_api.save_entity(req.params.kind, req.body.spec, req.body.metadata);
+            const [metadata, spec] = await entity_api.save_entity(req.params.prefix, req.params.kind, req.params.version, req.body.spec, req.body.metadata);
             res.json({ "metadata": metadata, "spec": spec });
         } else {
             // Spec only entity
-            const [metadata, spec] = await entity_api.save_entity(req.params.kind, req.body.spec, req.body.metadata);
+            const [metadata, spec] = await entity_api.save_entity(req.params.prefix, req.params.kind, req.params.version, req.body.spec, req.body.metadata);
             res.json({ "metadata": metadata, "spec": spec });
         }
     }));
 
-    router.delete("/:prefix/:kind/:uuid", asyncHandler(async (req, res) => {
+    router.delete("/:prefix/:version/:kind/:uuid", asyncHandler(async (req, res) => {
         await entity_api.delete_entity_spec(req.params.kind, req.params.uuid);
         res.json("OK")
     }));
 
-    router.post("/:prefix/:kind/:uuid/procedure/:procedure_name", asyncHandler(async (req, res) => {
-        const result: any = await entity_api.call_procedure(req.params.kind, req.params.uuid, req.params.procedure_name, req.body.input);
+    router.post("/:prefix/:version/:kind/:uuid/procedure/:procedure_name", asyncHandler(async (req, res) => {
+        const result: any = await entity_api.call_procedure(req.params.prefix, req.params.kind, req.params.version, req.params.uuid, req.params.procedure_name, req.body.input);
         res.json(result);
     }));
 
-    router.post("/:prefix/procedure/:procedure_name", asyncHandler(async (req, res) => {
-        const result: any = await entity_api.call_provider_procedure(req.params.prefix, req.params.procedure_name, req.body.input);
+    router.post("/:prefix/:version/:kind/procedure/:procedure_name", asyncHandler(async (req, res) => {
+        const result: any = await entity_api.call_kind_procedure(req.params.prefix, req.params.kind, req.params.version, req.params.procedure_name, req.body.input);
         res.json(result);
     }));
 
-    router.post("/:prefix/:kind/procedure/:procedure_name", asyncHandler(async (req, res) => {
-        const result: any = await entity_api.call_kind_procedure(req.params.kind, req.params.procedure_name, req.body.input);
+    router.post("/:prefix/:version/procedure/:procedure_name", asyncHandler(async (req, res) => {
+        const result: any = await entity_api.call_provider_procedure(req.params.prefix, req.params.version, req.params.procedure_name, req.body.input);
         res.json(result);
     }));
 

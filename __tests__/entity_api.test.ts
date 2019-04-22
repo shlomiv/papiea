@@ -276,7 +276,7 @@ describe("Entity API tests", () => {
                     v: {
                         e: 12,
                         d: 13
-                    }
+                    },
                 }
             });
             expect(res.data.length).toBeGreaterThanOrEqual(1);

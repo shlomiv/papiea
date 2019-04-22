@@ -18,9 +18,8 @@ export interface Provider_API {
     // DELETE "/provider/{prefix}/{version}"
     unregister_provider(user: UserAuthInfo, provider_prefix: string, version: core.Version): Promise<void>;
 
-    // Updating status and progress
-    // POST "/provider/update_status"
-    update_status(user: UserAuthInfo, context: any, entity_ref: core.Entity_Reference, status: core.Status): Promise<void>;
+    // Replace status with a specified one
+    replace_status(user: UserAuthInfo, context: any, entity_ref: core.Entity_Reference, status: core.Status): Promise<void>;
 
     // POST "/provider/update_progress"
     update_progress(user: UserAuthInfo, context: any, message: string, done_percent: number): Promise<void>;
@@ -40,4 +39,8 @@ export interface Provider_API {
     update_auth(user: UserAuthInfo, provider_prefix: string, provider_version: Version, policy: string): Promise<void>;
 
     on_auth_change(callbackfn: (provider: Provider) => void): void;
+
+    // Updating status
+    // POST "/provider/update_status"
+    update_status(user: UserAuthInfo, context: any, entity_ref: core.Entity_Reference, status: core.Status): Promise<void>
 }

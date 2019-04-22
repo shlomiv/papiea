@@ -143,7 +143,38 @@ describe("Provider API tests", () => {
             });
             const { data: { policy } } = await providerApi.get(`/${provider.prefix}/${provider.version}`);
             expect(policy).toEqual(originalPolicy);
+            done();
+        } catch (e) {
+            done.fail(e);
+        }
+    });
+    
+    test("Update status with partial status definition", async done => {
+        try {
+            const provider: Provider = getProviderWithSpecOnlyEnitityKindNoOperations();
+            await providerApi.post('/', provider);
+            const kind_name = provider.kinds[0].name;
+            const { data: { metadata, spec } } = await entityApi.post(`/${ provider.prefix }/${ kind_name }`, {
+                spec: {
+                    x: 10,
+                    y: 11
+                }
+            });
 
+            const newStatus = { y: 20, z: 111 };
+            await providerApi.patch('/update_status', {
+                context: "some context",
+                entity_ref: {
+                    uuid: metadata.uuid,
+                    kind: kind_name
+                },
+                status: newStatus
+            });
+
+            const res = await entityApi.get(`/${ provider.prefix }/${ kind_name }/${ metadata.uuid }`);
+            expect(res.data.status.x).toEqual(10);
+            expect(res.data.status.y).toEqual(20);
+            expect(res.data.status.z).toEqual(111);
             done();
         } catch (e) {
             done.fail(e);

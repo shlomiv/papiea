@@ -9,7 +9,9 @@ import { createEntityAPIRouter } from "./entity/entity_routes";
 import { Entity_API_Impl, ProcedureInvocationError } from "./entity/entity_api_impl";
 import { ValidationError, Validator } from "./validator";
 import { EntityNotFoundError } from "./databases/utils/errors";
-import { test_authn } from "./auth/authn";
+import { UnauthorizedError } from "./auth/authn";
+import { createOAuth2Router } from "./auth/oauth2";
+import { JWTHMAC } from "./auth/crypto";
 import { Authorizer, NoAuthAuthorizer, PerProviderAuthorizer, TestAuthorizer, PermissionDeniedError } from "./auth/authz";
 import { ProviderCasbinAuthorizerFactory } from "./auth/casbin";
 import { resolve } from "path";
@@ -42,7 +44,6 @@ async function getEntityApiAuthorizer(providerApi: Provider_API): Promise<Author
 async function setUpApplication(): Promise<express.Express> {
     const app = express();
     app.use(express.json());
-    app.use(test_authn);
     const mongoConnection: MongoConnection = new MongoConnection(process.env.MONGO_URL || 'mongodb://mongo:27017', process.env.MONGO_DB || 'papiea');
     await mongoConnection.connect();
     const providerDb = await mongoConnection.get_provider_db();
@@ -50,6 +51,7 @@ async function setUpApplication(): Promise<express.Express> {
     const statusDb = await mongoConnection.get_status_db();
     const validator = new Validator();
     const providerApi = new Provider_API_Impl(providerDb, statusDb, validator, new NoAuthAuthorizer());
+    app.use(createOAuth2Router(new JWTHMAC('shhhhh'), providerApi));
     const entityApiAuthorizer: Authorizer = await getEntityApiAuthorizer(providerApi);
     app.use('/provider', createProviderAPIRouter(providerApi));
     app.use('/entity', createEntityAPIRouter(new Entity_API_Impl(statusDb, specDb, providerApi, validator, entityApiAuthorizer)));
@@ -70,6 +72,10 @@ async function setUpApplication(): Promise<express.Express> {
             case EntityNotFoundError:
                 res.status(404);
                 res.json({ error: `Entity with kind: ${err.kind}, uuid: ${err.uuid} not found` });
+                return;
+            case UnauthorizedError:
+                res.status(401);
+                res.json({ error: 'Unauthorized' });
                 return;
             case PermissionDeniedError:
                 res.status(403);

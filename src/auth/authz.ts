@@ -1,4 +1,4 @@
-import { UserAuthInfo } from "./authn";
+import { UserAuthInfo, UnauthorizedError } from "./authn";
 import { Provider_API } from "../provider/provider_api_interface";
 import { Provider } from "../papiea";
 
@@ -75,7 +75,7 @@ export class TestAuthorizer extends Authorizer {
     }
 
     async checkPermission(user: UserAuthInfo, object: any, action: Action): Promise<void> {
-        if (user.doNotCheck) {
+        if (!user) {
             return;
         }
         await this.authorizerToBeTested.checkPermission(user, object, action);
@@ -131,6 +131,9 @@ export class PerProviderAuthorizer extends Authorizer {
     }
 
     async checkPermission(user: UserAuthInfo, object: any, action: Action): Promise<void> {
+        if (!user) {
+            throw new UnauthorizedError();
+        }
         const authorizer: Authorizer = await this.getAuthorizerByObject(user, object);
         return authorizer.checkPermission(user, object, action);
     }

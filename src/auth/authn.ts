@@ -1,14 +1,18 @@
 import { Request, Response, NextFunction } from "express";
 
+export class UnauthorizedError extends Error {
+    constructor() {
+        super("Unauthorized");
+        Object.setPrototypeOf(this, UnauthorizedError.prototype);
+    }
+}
+
 export interface UserAuthInfoRequest extends Request {
     user: UserAuthInfo
 }
 
 export interface UserAuthInfo {
-    owner: string,
-    tenant?: string,
-    // For tests
-    doNotCheck?: boolean
+    [key: string]: any;
 }
 
 export interface UserAuthRequestHandler {
@@ -21,15 +25,4 @@ export function asyncHandler(fn: UserAuthRequestHandler): any {
         const fnReturn = fn(requestWrapper, res, next);
         return Promise.resolve(fnReturn).catch(next);
     };
-}
-
-// For tests
-export function test_authn(req: Request, res: Response, next: NextFunction) {
-    let requestWrapper: UserAuthInfoRequest = <UserAuthInfoRequest>req;
-    requestWrapper.user = {
-        owner: req.header('Owner') || 'anonymous',
-        tenant: req.header('Tenant'),
-        doNotCheck: req.header('Owner') === undefined
-    }
-    next();
 }

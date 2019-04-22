@@ -2,7 +2,7 @@ import "jest"
 import axios from "axios"
 import { ProviderSdk } from "../src/provider_sdk/typescript_sdk";
 import { Metadata, Spec } from "../src/core";
-import { getLocationDataDescription } from "./test_data_factory";
+import { getLocationDataDescription, getMetadataDescription } from "./test_data_factory";
 import { stringify } from "querystring"
 import uuid = require("uuid");
 
@@ -540,10 +540,91 @@ describe("Entity API tests", () => {
                 expect(res.data.length).toBe(1);
                 expect(res.data[0].spec).toEqual(spec);
                 expect(res.data[0].status).toEqual(spec);
-            })
+            });
             done();
         } catch (e) {
             done.fail(e);
+        }
+    });
+});
+
+describe("Entity API with metadata extension tests", () => {
+    const providerPrefix = "test";
+    const providerVersion = "0.1.0";
+    const locationDataDescription = getLocationDataDescription();
+    const metadata_ext_description = getMetadataDescription();
+    const kind_name = Object.keys(locationDataDescription)[0];
+
+    beforeAll(async () => {
+        const sdk = ProviderSdk.create_sdk(papiea_config.host, papiea_config.port, server_config.host, server_config.port);
+        sdk.new_kind(locationDataDescription);
+        sdk.version(providerVersion);
+        sdk.prefix(providerPrefix);
+        sdk.metadata_extension(metadata_ext_description);
+        await sdk.register();
+    });
+
+    afterAll(async () => {
+        await axios.delete(`http://127.0.0.1:${serverPort}/provider/${providerPrefix}/${providerVersion}`);
+    });
+
+    test("Create entity with missing metadata extension should fail validation", async done => {
+        try {
+            await entityApi.post(`/${providerPrefix}/${kind_name}`, {
+                spec: {
+                    x: 100,
+                    y: 11
+                }
+            });
+            done.fail();
+        } catch (err) {
+            const res = err.response;
+            expect(res.status).toEqual(400);
+            expect(res.data.errors.length).toEqual(1);
+            done();
+        }
+    });
+
+    test("Create entity with metadata extension", async done => {
+        try {
+            await entityApi.post(`/${providerPrefix}/${kind_name}`, {
+                spec: {
+                    x: 100,
+                    y: 11
+                },
+                metadata: {
+                    extension: {
+                        "owner": "test@owner.com",
+                        "tenant_id": "sample_id"
+                    }
+                }
+            });
+            done();
+        } catch (err) {
+            done.fail(err);
+        }
+    });
+
+    test("Create entity with non-valid metadata extension", async done => {
+        try {
+            await entityApi.post(`/${providerPrefix}/${kind_name}`, {
+                spec: {
+                    x: 100,
+                    y: 11
+                },
+                metadata: {
+                    extension: {
+                        "owner": "test@owner.com",
+                        "tenant_id": 123
+                    }
+                }
+            });
+            done.fail();
+        } catch (err) {
+            const res = err.response;
+            expect(res.status).toEqual(400);
+            expect(res.data.errors.length).toEqual(1);
+            done();
         }
     });
 });

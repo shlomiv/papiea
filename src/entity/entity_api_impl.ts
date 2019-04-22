@@ -206,11 +206,8 @@ export class Entity_API_Impl implements Entity_API {
         if (metadata === undefined) {
             return
         }
-        console.dir("Metadata: " + metadata);
-        console.dir(extension_structure);
         // Check extension structure is an empty object
         if (Object.entries(extension_structure).length === 0 && extension_structure.constructor === Object) {
-            console.log("Got here");
             return
         }
         const schemas: any = Object.assign({}, extension_structure);

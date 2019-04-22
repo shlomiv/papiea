@@ -30,6 +30,11 @@ export function getLocationDataDescription(): Data_Description {
     return randomizedLocationDataDescription;
 }
 
+export function getMetadataDescription(): Data_Description {
+    let MetadataDescription = loadYaml("./metadata_extension.yml");
+    return MetadataDescription;
+}
+
 export function getSpecOnlyEntityKind(): SpecOnlyEntityKind {
     const locationDataDescription = getLocationDataDescription();
     const name = Object.keys(locationDataDescription)[0];

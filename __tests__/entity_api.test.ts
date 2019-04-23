@@ -25,7 +25,7 @@ const server_config = {
 };
 
 const entityApi = axios.create({
-    baseURL: `http://127.0.0.1:${serverPort}/entity`,
+    baseURL: `http://127.0.0.1:${serverPort}/services`,
     timeout: 1000,
     headers: { 'Content-Type': 'application/json' }
 });
@@ -52,7 +52,7 @@ describe("Entity API tests", () => {
     test("Create spec-only entity", async (done) => {
         expect.assertions(3);
         try {
-            const { data: { metadata, spec } } = await entityApi.post(`/${providerPrefix}/${kind_name}`, {
+            const { data: { metadata, spec } } = await entityApi.post(`/${providerPrefix}/${providerVersion}/${kind_name}`, {
                 spec: {
                     x: 10,
                     y: 11
@@ -72,7 +72,7 @@ describe("Entity API tests", () => {
     test("Create entity with malformed spec should fail", async (done) => {
         expect.assertions(2);
         try {
-            await entityApi.post(`/${providerPrefix}/${kind_name}`, {
+            await entityApi.post(`/${providerPrefix}/${providerVersion}/${kind_name}`, {
                 spec: {
                     x: "Totally not a number",
                     y: 11
@@ -90,7 +90,7 @@ describe("Entity API tests", () => {
     test("Get spec-only entity", async (done) => {
         expect.assertions(2);
         try {
-            const res = await entityApi.get(`/${providerPrefix}/${kind_name}/${entity_metadata.uuid}`);
+            const res = await entityApi.get(`/${providerPrefix}/${providerVersion}/${kind_name}/${entity_metadata.uuid}`);
             expect(res.data.spec).toEqual(entity_spec);
             expect(res.data.status).toEqual(entity_spec);
             done();
@@ -102,7 +102,7 @@ describe("Entity API tests", () => {
     test("Get non-existent spec-only entity should fail", async (done) => {
         expect.assertions(2);
         try {
-            await entityApi.get(`/${ providerPrefix }/${ kind_name }/${ uuid() }`);
+            await entityApi.get(`/${ providerPrefix }/${providerVersion}/${ kind_name }/${ uuid() }`);
             done.fail();
         } catch (e) {
             expect(e.response.status).toBe(404);
@@ -113,14 +113,14 @@ describe("Entity API tests", () => {
 
     test("Filter entity", async (done) => {
         try {
-            let res = await entityApi.post(`${providerPrefix}/${kind_name}/filter`, {
+            let res = await entityApi.post(`${providerPrefix}/${providerVersion}/${kind_name}/filter`, {
                 spec: {
                     x: 10,
                     y: 11
                 }
             });
             expect(res.data.length).toBeGreaterThanOrEqual(1);
-            res = await entityApi.post(`${providerPrefix}/${kind_name}/filter`, {
+            res = await entityApi.post(`${providerPrefix}/${providerVersion}/${kind_name}/filter`, {
                 spec: {
                     x: 10,
                     y: 11,
@@ -136,7 +136,7 @@ describe("Entity API tests", () => {
 
     test("Filter spec only entity should contain status", async (done) => {
         try {
-            const res = await entityApi.post(`${providerPrefix}/${kind_name}/filter`, {
+            const res = await entityApi.post(`${providerPrefix}/${providerVersion}/${kind_name}/filter`, {
                 spec: {
                     x: 10,
                     y: 11
@@ -154,7 +154,7 @@ describe("Entity API tests", () => {
 
     test("Filter entity by status", async (done) => {
         try {
-            let res = await entityApi.post(`${providerPrefix}/${kind_name}/filter`, {
+            let res = await entityApi.post(`${providerPrefix}/${providerVersion}/${kind_name}/filter`, {
                 status: {
                     x: 10,
                     y: 11
@@ -165,7 +165,7 @@ describe("Entity API tests", () => {
                 expect(entity.status.x).toEqual(10);
                 expect(entity.status.y).toEqual(11);
             });
-            res = await entityApi.post(`${providerPrefix}/${kind_name}/filter`, {
+            res = await entityApi.post(`${providerPrefix}/${providerVersion}/${kind_name}/filter`, {
                 status: {
                     x: 10
                 }
@@ -174,7 +174,7 @@ describe("Entity API tests", () => {
             res.data.forEach((entity: any) => {
                 expect(entity.status.x).toEqual(10);
             });
-            res = await entityApi.post(`${providerPrefix}/${kind_name}/filter`, {
+            res = await entityApi.post(`${providerPrefix}/${providerVersion}/${kind_name}/filter`, {
                 status: {
                     x: 10,
                     z: 1111
@@ -189,7 +189,7 @@ describe("Entity API tests", () => {
 
     test("Filter entity by spec and status", async (done) => {
         try {
-            const res = await entityApi.post(`${providerPrefix}/${kind_name}/filter`, {
+            const res = await entityApi.post(`${providerPrefix}/${providerVersion}/${kind_name}/filter`, {
                 spec: {
                     x: 10,
                     y: 11
@@ -214,7 +214,7 @@ describe("Entity API tests", () => {
 
     test("Filter entity by nested fields", async (done) => {
         try {
-            await entityApi.post(`/${providerPrefix}/${kind_name}`, {
+            await entityApi.post(`/${providerPrefix}/${providerVersion}/${kind_name}`, {
                 spec: {
                     x: 10,
                     y: 11,
@@ -224,7 +224,7 @@ describe("Entity API tests", () => {
                     }
                 }
             });
-            let res = await entityApi.post(`${providerPrefix}/${kind_name}/filter`, {
+            let res = await entityApi.post(`${providerPrefix}/${providerVersion}/${kind_name}/filter`, {
                 spec: {
                     x: 10,
                     "v.e": 12
@@ -235,7 +235,7 @@ describe("Entity API tests", () => {
                 expect(entity.spec.x).toEqual(10);
                 expect(entity.spec.v.e).toEqual(12);
             });
-            res = await entityApi.post(`${providerPrefix}/${kind_name}/filter`, {
+            res = await entityApi.post(`${providerPrefix}/${providerVersion}/${kind_name}/filter`, {
                 spec: {
                     x: 10,
                     v: {
@@ -249,7 +249,7 @@ describe("Entity API tests", () => {
                 expect(entity.spec.x).toEqual(10);
                 expect(entity.spec.v.e).toEqual(12);
             });
-            res = await entityApi.post(`${providerPrefix}/${kind_name}/filter`, {
+            res = await entityApi.post(`${providerPrefix}/${providerVersion}/${kind_name}/filter`, {
                 spec: {
                     x: 10,
                     v: {
@@ -259,7 +259,7 @@ describe("Entity API tests", () => {
             });
             expect(res.data.length).toBe(0);
             
-            res = await entityApi.post(`${providerPrefix}/${kind_name}/filter`, {
+            res = await entityApi.post(`${providerPrefix}/${providerVersion}/${kind_name}/filter`, {
                 status: {
                     x: 10,
                     "v.e": 12
@@ -270,7 +270,7 @@ describe("Entity API tests", () => {
                 expect(entity.status.x).toEqual(10);
                 expect(entity.status.v.e).toEqual(12);
             });
-            res = await entityApi.post(`${providerPrefix}/${kind_name}/filter`, {
+            res = await entityApi.post(`${providerPrefix}/${providerVersion}/${kind_name}/filter`, {
                 status: {
                     x: 10,
                     v: {
@@ -284,7 +284,7 @@ describe("Entity API tests", () => {
                 expect(entity.status.x).toEqual(10);
                 expect(entity.status.v.e).toEqual(12);
             });
-            res = await entityApi.post(`${providerPrefix}/${kind_name}/filter`, {
+            res = await entityApi.post(`${providerPrefix}/${providerVersion}/${kind_name}/filter`, {
                 status: {
                     x: 10,
                     v: {
@@ -294,7 +294,7 @@ describe("Entity API tests", () => {
             });
             expect(res.data.length).toBe(0);
 
-            res = await entityApi.post(`${providerPrefix}/${kind_name}/filter`, {
+            res = await entityApi.post(`${providerPrefix}/${providerVersion}/${kind_name}/filter`, {
                 spec: {
                     x: 10,
                     "v.e": 12
@@ -327,7 +327,7 @@ describe("Entity API tests", () => {
             spec: JSON.stringify(spec)
         };
         try {
-            const res = await entityApi.get(`${providerPrefix}/${kind_name}?${stringify(spec_query)}`);
+            const res = await entityApi.get(`${providerPrefix}/${providerVersion}/${kind_name}?${stringify(spec_query)}`);
             expect(res.data.length).toBeGreaterThanOrEqual(1);
             done();
         } catch (e) {
@@ -338,7 +338,7 @@ describe("Entity API tests", () => {
     test("Update spec-only entity spec", async (done) => {
         expect.assertions(3);
         try {
-            let res = await entityApi.put(`/${providerPrefix}/${kind_name}/${entity_metadata.uuid}`, {
+            let res = await entityApi.put(`/${providerPrefix}/${providerVersion}/${kind_name}/${entity_metadata.uuid}`, {
                 spec: {
                     x: 20,
                     y: 21
@@ -348,7 +348,7 @@ describe("Entity API tests", () => {
                 }
             });
             expect(res.data.spec.x).toEqual(20);
-            res = await entityApi.get(`/${providerPrefix}/${kind_name}/${entity_metadata.uuid}`);
+            res = await entityApi.get(`/${providerPrefix}/${providerVersion}/${kind_name}/${entity_metadata.uuid}`);
             expect(res.data.spec.x).toEqual(20);
             expect(res.data.status.x).toEqual(20);
             done();
@@ -360,14 +360,14 @@ describe("Entity API tests", () => {
     test("Update entity with malformed spec should fail", async (done) => {
         expect.assertions(3);
         try {
-            const { data: { metadata, spec } } = await entityApi.post(`/${providerPrefix}/${kind_name}`, {
+            const { data: { metadata, spec } } = await entityApi.post(`/${providerPrefix}/${providerVersion}/${kind_name}`, {
                 spec: {
                     x: 10,
                     y: 11
                 }
             });
             expect(metadata).not.toBeUndefined();
-            await entityApi.put(`/${providerPrefix}/${kind_name}/${metadata.uuid}`, {
+            await entityApi.put(`/${providerPrefix}/${providerVersion}/${kind_name}/${metadata.uuid}`, {
                 spec: {
                     x: "Totally not a number",
                     y: 21
@@ -388,7 +388,7 @@ describe("Entity API tests", () => {
     test("Create entity without additional fields, additional fields should be empty", async (done) => {
         expect.assertions(4);
         try {
-            const { data: { metadata, spec } } = await entityApi.post(`/${providerPrefix}/${kind_name}`, {
+            const { data: { metadata, spec } } = await entityApi.post(`/${providerPrefix}/${providerVersion}/${kind_name}`, {
                 spec: {
                     x: 10,
                     y: 11
@@ -398,7 +398,7 @@ describe("Entity API tests", () => {
             expect(metadata.spec_version).toEqual(1);
             expect(spec).not.toBeUndefined();
             expect(metadata._key).toBeUndefined();
-            await entityApi.delete(`/${providerPrefix}/${kind_name}/${metadata.uuid}`);
+            await entityApi.delete(`/${providerPrefix}/${providerVersion}/${kind_name}/${metadata.uuid}`);
             done();
         } catch (e) {
             done.fail(e);
@@ -408,7 +408,7 @@ describe("Entity API tests", () => {
     test("Create entity with additional fields", async (done) => {
         expect.assertions(4);
         try {
-            const { data: { metadata, spec } } = await entityApi.post(`/${providerPrefix}/${kind_name}`, {
+            const { data: { metadata, spec } } = await entityApi.post(`/${providerPrefix}/${providerVersion}/${kind_name}`, {
                 spec: {
                     x: 10,
                     y: 11
@@ -421,7 +421,7 @@ describe("Entity API tests", () => {
             expect(metadata.spec_version).toEqual(1);
             expect(spec).not.toBeUndefined();
             expect(metadata._key).toBe("123");
-            await entityApi.delete(`/${providerPrefix}/${kind_name}/${metadata.uuid}`);
+            await entityApi.delete(`/${providerPrefix}/${providerVersion}/${kind_name}/${metadata.uuid}`);
             done();
         } catch (e) {
             done.fail(e);
@@ -430,7 +430,7 @@ describe("Entity API tests", () => {
 
     test("Create entity with non valid uuid should be an error", async (done) => {
         try {
-            const { data: { metadata, spec } } = await entityApi.post(`/${providerPrefix}/${kind_name}`, {
+            const { data: { metadata, spec } } = await entityApi.post(`/${providerPrefix}/${providerVersion}/${kind_name}`, {
                 spec: {
                     x: 10,
                     y: 11
@@ -447,7 +447,7 @@ describe("Entity API tests", () => {
     test("Create entity and provide uuid", async (done) => {
         try {
             const entity_uuid = uuid();
-            const { data: { metadata, spec } } = await entityApi.post(`/${providerPrefix}/${kind_name}`, {
+            const { data: { metadata, spec } } = await entityApi.post(`/${providerPrefix}/${providerVersion}/${kind_name}`, {
                 spec: {
                     x: 10,
                     y: 11
@@ -457,7 +457,7 @@ describe("Entity API tests", () => {
                 }
             });
             expect(metadata.uuid).toEqual(entity_uuid);
-            const res = await entityApi.get(`/${providerPrefix}/${kind_name}/${entity_uuid}`);
+            const res = await entityApi.get(`/${providerPrefix}/${providerVersion}/${kind_name}/${entity_uuid}`);
             expect(res.data.metadata.uuid).toEqual(entity_uuid);
             done();
         } catch (e) {
@@ -467,13 +467,13 @@ describe("Entity API tests", () => {
 
     test("Delete entity", async (done) => {
         try {
-            await entityApi.delete(`/${providerPrefix}/${kind_name}/${entity_metadata.uuid}`);
+            await entityApi.delete(`/${providerPrefix}/${providerVersion}/${kind_name}/${entity_metadata.uuid}`);
         } catch (e) {
             done.fail(e);
             return;
         }
         try {
-            await entityApi.get(`/${providerPrefix}/${kind_name}/${entity_metadata.uuid}`);
+            await entityApi.get(`/${providerPrefix}/${providerVersion}/${kind_name}/${entity_metadata.uuid}`);
             done.fail("Entity has not been removed");
         } catch (e) {
             done();
@@ -482,21 +482,21 @@ describe("Entity API tests", () => {
 
     test("Filter deleted entity", async (done) => {
         try {
-            const { data: { metadata, spec } } = await entityApi.post(`/${providerPrefix}/${kind_name}`, {
+            const { data: { metadata, spec } } = await entityApi.post(`/${providerPrefix}/${providerVersion}/${kind_name}`, {
                 spec: {
                     x: 10,
                     y: 11
                 }
             });
-            await entityApi.delete(`/${providerPrefix}/${kind_name}/${metadata.uuid}`);
-            let res = await entityApi.post(`${providerPrefix}/${kind_name}/filter`, {
+            await entityApi.delete(`/${providerPrefix}/${providerVersion}/${kind_name}/${metadata.uuid}`);
+            let res = await entityApi.post(`${providerPrefix}/${providerVersion}/${kind_name}/filter`, {
                 metadata: {
                     uuid: metadata.uuid
                 }
             });
             expect(res.data.length).toBe(0);
             ["papiea_one_hour_ago", "papiea_one_day_ago"].forEach(async deleted_at => {
-                let res = await entityApi.post(`${providerPrefix}/${kind_name}/filter`, {
+                let res = await entityApi.post(`${providerPrefix}/${providerVersion}/${kind_name}/filter`, {
                     metadata: {
                         uuid: metadata.uuid,
                         deleted_at: deleted_at
@@ -625,5 +625,5 @@ describe("Entity API with metadata extension tests", () => {
         } catch (e) {
             done.fail(e);
         }
-    })
+    });
 });

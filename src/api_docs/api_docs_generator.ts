@@ -295,7 +295,7 @@ export default class ApiDocsGenerator {
         return {
             "description": `Calls a procedure ${procedure.name}`,
             "operationId": `call${provider.prefix}${procedure.name}`,
-            "tags": [`${provider.prefix}/${kind.name}/${procedure.name}`],
+            "tags": [`${provider.prefix}/${provider.version}/${kind.name}/${procedure.name}`],
             "parameters": [
                 {
                     "name": "uuid",
@@ -308,6 +308,42 @@ export default class ApiDocsGenerator {
                     }
                 },
             ],
+            "requestBody": {
+                "description": `${procedure.name} input`,
+                "required": true,
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "properties": {
+                                "input": {
+                                    "$ref": `#/components/schemas/${Object.keys(procedure.argument)[0]}`
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "responses": {
+                "200": {
+                    "description": `${procedure.name} response`,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": `#/components/schemas/${Object.keys(procedure.result)[0]}`
+                            }
+                        }
+                    }
+                },
+                "default": this.getDefaultResponse()
+            }
+        };
+    }
+
+    callProviderProcedure(provider: papiea.Provider, procedure: papiea.Procedural_Signature) {
+        return {
+            "description": `Calls a procedure ${procedure.name}`,
+            "operationId": `call${provider.prefix}${procedure.name}`,
+            "tags": [`${provider.prefix}/${provider.version}/${procedure.name}`],
             "requestBody": {
                 "description": `${procedure.name} input`,
                 "required": true,
@@ -450,26 +486,33 @@ export default class ApiDocsGenerator {
         const providers = await this.providerDb.list_providers();
         providers.forEach(provider => {
             provider.kinds.forEach(kind => {
-                paths[`/entity/${provider.prefix}/${kind.name}`] = {
+                paths[`/services/${provider.prefix}/${provider.version}/${kind.name}`] = {
                     "get": this.getKind(provider, kind),
                     "post": this.postKind(provider, kind)
                 };
-                paths[`/entity/${provider.prefix}/${kind.name}/filter`] = {
+                paths[`/services/${provider.prefix}/${provider.version}/${kind.name}/filter`] = {
                     "post": this.postKindFilter(provider, kind)
                 };
-                paths[`/entity/${provider.prefix}/${kind.name}/{uuid}`] = {
+                paths[`/services/${provider.prefix}/${provider.version}/${kind.name}/{uuid}`] = {
                     "get": this.getKindEntity(provider, kind),
                     "delete": this.deleteKindEntity(provider, kind),
                     "put": this.putKindEntity(provider, kind)
                 };
                 Object.values(kind.procedures).forEach(procedure => {
-                    paths[`/entity/${provider.prefix}/${kind.name}/{uuid}/procedure/${procedure.name}`] = {
+                    paths[`/services/${provider.prefix}/${provider.version}/${kind.name}/{uuid}/procedure/${procedure.name}`] = {
                         "post": this.callProcedure(provider, kind, procedure)
                     };
                     Object.assign(schemas, procedure.argument);
                     Object.assign(schemas, procedure.result);
                 });
                 Object.assign(schemas, kind.kind_structure);
+            });
+            Object.values(provider.procedures).forEach(procedure => {
+                paths[`/services/${provider.prefix}/${provider.version}/procedure/${procedure.name}`] = {
+                    "post": this.callProviderProcedure(provider, procedure)
+                };
+                Object.assign(schemas, procedure.argument);
+                Object.assign(schemas, procedure.result);
             });
         });
 

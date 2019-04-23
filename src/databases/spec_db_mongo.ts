@@ -30,9 +30,6 @@ export class Spec_DB_Mongo implements Spec_DB {
             additional_fields = encode({"metadata.extension": entity_metadata.extension});
         }
         additional_fields["metadata.created_at"] = new Date();
-        if (entity_metadata["deleted_at"] !== undefined) {
-            additional_fields["metadata.deleted_at"] = entity_metadata["deleted_at"]
-        }
         const filter = {
             "metadata.uuid": entity_metadata.uuid,
             "metadata.kind": entity_metadata.kind,

@@ -1,5 +1,5 @@
 import * as express from "express";
-import { asyncHandler, UserAuthInfo } from "./authn";
+import { asyncHandler, UserAuthInfo, UnauthorizedError } from "./authn";
 import { Signature } from "./crypto";
 import { Provider } from "../papiea";
 import { Provider_DB } from "../databases/provider_db_interface";
@@ -115,7 +115,11 @@ export function createOAuth2Router(signature: Signature, providerDb: Provider_DB
         if (token === null) {
             return next();
         }
-        req.user = await signature.verify(token);
+        const userInfo: UserAuthInfo = await signature.verify(token);
+        if (userInfo.provider_prefix !== req.params.prefix) {
+            throw new UnauthorizedError();
+        }
+        req.user = userInfo;
         next();
     }));
 

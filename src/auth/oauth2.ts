@@ -1,36 +1,15 @@
 import * as express from "express";
 import { asyncHandler, UserAuthInfo } from "./authn";
 import { Signature } from "./crypto";
-import { Provider_API } from "../provider/provider_api_interface";
+import { Provider } from "../papiea";
+import { Provider_DB } from "../databases/provider_db_interface";
 const simpleOauthModule = require("simple-oauth2"),
     queryString = require("query-string");
 
-// !!!!!!!!!!!! TODO(adolgarev): below is provider specific code !!!!!!!!!!!!
-// See https://github.com/nutanix/papiea-js/pull/94
 const redirect_uri = "http://localhost:3000/provider/auth/callback";
-const oauth2_config = {
-    client: {
-        id: "XXX",
-        secret: "YYY"
-    },
-    auth: {
-        tokenHost: "http://127.0.0.1:9002",
-        tokenPath: "/oauth2/token",
-        authorizePath: "/oauth2/authorize",
-        revokePath: "/oauth2/revoke"
-    },
-    options: {
-        authorizationMethod: "body",
-        bodyFormat: "form"
-    }
-};
-const oauth2_authuri_extra_options = {
-    scope: "openid",
-    prompt: "login"
-};
-const oauth2 = simpleOauthModule.create(oauth2_config);
 
-
+// !!!!!!!!!!!! TODO(adolgarev): below is provider specific function !!!!!!!!!!!!
+// See https://github.com/nutanix/papiea-js/pull/94
 function getUserInfoFromToken(token: any): UserAuthInfo {
     const userInfo: UserAuthInfo = {};
 
@@ -94,7 +73,6 @@ function getUserInfoFromToken(token: any): UserAuthInfo {
     userInfo.tenant = id_token.default_tenant;
     return userInfo;
 }
-// !!!!!!!!!!!! TODO(adolgarev): above is provider specific code !!!!!!!!!!!!
 
 function getToken(req: any): string | null {
     if (req.headers.authorization && req.headers.authorization.split(' ')[0] === 'Bearer') {
@@ -107,19 +85,23 @@ function getToken(req: any): string | null {
     return null;
 }
 
-export function createOAuth2Router(signature: Signature, providerApi: Provider_API) {
+export function createOAuth2Router(signature: Signature, providerDb: Provider_DB) {
     const router = express.Router();
 
     router.use('/provider/:prefix/:version/auth/login', asyncHandler(async (req, res) => {
+        const provider: Provider = await providerDb.get_provider(req.params.prefix, req.params.version);
+        const oauth2 = simpleOauthModule.create(provider.oauth2);
         const state = {
-            prefix: req.params.prefix,
+            provider_prefix: provider.prefix,
+            provider_version: provider.version,
             redirect_uri: req.header("Referer")
         };
         const options = {
             redirect_uri: redirect_uri,
-            state: queryString.stringify(state)
+            state: queryString.stringify(state),
+            scope: "openid",
+            prompt: "login"
         };
-        Object.assign(options, oauth2_authuri_extra_options);
         const authorizationUri = oauth2.authorizationCode.authorizeURL(options);
         res.redirect(authorizationUri);
     }));
@@ -127,6 +109,8 @@ export function createOAuth2Router(signature: Signature, providerApi: Provider_A
     router.use('/provider/auth/callback', asyncHandler(async (req, res, next) => {
         const code = req.query.code;
         const state = queryString.parse(req.query.state);
+        const provider: Provider = await providerDb.get_provider(state.provider_prefix, state.provider_version);
+        const oauth2 = simpleOauthModule.create(provider.oauth2);
         try {
             const result = await oauth2.authorizationCode.getToken({
                 code,
@@ -134,7 +118,8 @@ export function createOAuth2Router(signature: Signature, providerApi: Provider_A
             });
             const token = oauth2.accessToken.create(result);
             const userInfo = getUserInfoFromToken(token);
-            userInfo.prefix = state.prefix;
+            userInfo.provider_prefix = state.provider_prefix;
+            userInfo.provider_version = state.provider_version;
             const newSignedToken = await signature.sign(userInfo);
             return res.status(200).json({ token: newSignedToken });
         } catch (error) {
@@ -143,7 +128,7 @@ export function createOAuth2Router(signature: Signature, providerApi: Provider_A
         }
     }));
 
-    router.use('/entity', asyncHandler(async (req, res, next) => {
+    router.use('/entity/:prefix', asyncHandler(async (req, res, next) => {
         const token = getToken(req);
         if (token === null) {
             return next();

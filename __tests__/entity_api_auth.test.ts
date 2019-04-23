@@ -40,12 +40,28 @@ function base64UrlEncode(...parts: any[]): string {
 }
 
 describe("Entity API tests", () => {
+    const oauth2ServerHost = '127.0.0.1';
+    const oauth2ServerPort = 9002;
     const provider: Provider = getProviderWithSpecOnlyEnitityKindNoOperations();
+    provider.oauth2 = {
+        client: {
+            id: "XXX",
+            secret: "YYY"
+        },
+        auth: {
+            tokenHost: `http://${oauth2ServerHost}:${oauth2ServerPort}`,
+            tokenPath: "/oauth2/token",
+            authorizePath: "/oauth2/authorize",
+            revokePath: "/oauth2/revoke"
+        },
+        options: {
+            authorizationMethod: "body",
+            bodyFormat: "form"
+        }
+    };
     const kind_name = provider.kinds[0].name;
     let entity_metadata: Metadata, entity_spec: Spec;
 
-    const oauth2ServerHost = '127.0.0.1';
-    const oauth2ServerPort = 9002;
     const tenant_uuid = uuid();
     const oauth2Server = http.createServer((req, res) => {
         if (req.method == 'GET') {

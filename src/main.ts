@@ -51,7 +51,7 @@ async function setUpApplication(): Promise<express.Express> {
     const statusDb = await mongoConnection.get_status_db();
     const validator = new Validator();
     const providerApi = new Provider_API_Impl(providerDb, statusDb, validator, new NoAuthAuthorizer());
-    app.use(createOAuth2Router(new JWTHMAC('shhhhh'), providerApi));
+    app.use(createOAuth2Router(new JWTHMAC('shhhhh'), providerDb));
     const entityApiAuthorizer: Authorizer = await getEntityApiAuthorizer(providerApi);
     app.use('/provider', createProviderAPIRouter(providerApi));
     app.use('/entity', createEntityAPIRouter(new Entity_API_Impl(statusDb, specDb, providerApi, validator, entityApiAuthorizer)));

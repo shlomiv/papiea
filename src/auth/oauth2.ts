@@ -38,39 +38,21 @@ function getUserInfoFromToken(token: any): UserAuthInfo {
         return { header: {}, content: {} };
     }
 
-    // function get_highest_nunet_role(roles: string[]) {
-    //     const highest_role = _.find(roles, ur => _.find(["nunet-admin", "nunet-user"], r => ur.name == r))
-    //     if (highest_role)
-    //         return highest_role.name
-    //     return null
-    // }
-
     const access_token = token.token.access_token;
     const id_token = parseJwt(token.token.id_token).content;
     const xi_roles = parseJwt(id_token.xi_role).header[0].roles;
 
-    // const user_role = get_highest_nunet_role(xi_roles)
-    // if (!user_role) {
-    //     console.info(`User ${id_token.email} has no nunet roles ${JSON.stringify(xi_roles)}, denying access`)
-    //     return res.status(403).send(`Authentication failed. User ${id_token.email} does not have a nunet role`);
-    // }
-    // const user_info: any = _.pick(id_token, ['sub', 'email', 'default_tenant', 'last_name', 'given_name', 'federated_idp'])
-    // user_info.roles = xi_roles
-    // if (!user_info.default_tenant) {
-    //     console.log('user_info:', user_info)
-    //     return res.status(403).send('Authentication failed. User does not have a tenant id');
-    // }
-    // // Add headers for auth and user details
-    // const headers: any = {};
-    // headers.authorization = `Bearer ${access_token}`;
-    // headers['tenant-email'] = user_info.email;
-    // headers['tenant-id'] = user_info.default_tenant;
-    // headers['tenant-fname'] = user_info.given_name;
-    // headers['tenant-lname'] = user_info.last_name;
-    // headers['tenant-role'] = user_info.roles;
-
     userInfo.owner = id_token.sub;
     userInfo.tenant = id_token.default_tenant;
+    userInfo.headers = {
+        authorization: `Bearer ${access_token}`,
+        "tenant-email": id_token.email,
+        "tenant-id": id_token.default_tenant,
+        "tenant-fname": id_token.given_name,
+        "tenant-lname": id_token.last_name,
+        "tenant-role": xi_roles
+    };
+
     return userInfo;
 }
 

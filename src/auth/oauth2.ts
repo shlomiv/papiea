@@ -1,5 +1,6 @@
 import * as express from "express";
-import { asyncHandler, UserAuthInfo, UnauthorizedError } from "./authn";
+import { Request, Response, NextFunction } from "express";
+import { asyncHandler, UserAuthInfo, UnauthorizedError, UserAuthInfoRequest } from "./authn";
 import { Signature } from "./crypto";
 import { Provider } from "../papiea";
 import { Provider_DB } from "../databases/provider_db_interface";
@@ -110,7 +111,7 @@ export function createOAuth2Router(signature: Signature, providerDb: Provider_DB
         }
     }));
 
-    router.use('/entity/:prefix', asyncHandler(async (req, res, next) => {
+    async function injectUserInfo(req: UserAuthInfoRequest, res: Response, next: NextFunction): Promise<void> {
         const token = getToken(req);
         if (token === null) {
             return next();
@@ -126,6 +127,13 @@ export function createOAuth2Router(signature: Signature, providerDb: Provider_DB
         }
         req.user = userInfo;
         next();
+    }
+
+    router.use('/entity/:prefix', asyncHandler(injectUserInfo));
+    router.use('/provider/:prefix', asyncHandler(injectUserInfo));
+
+    router.use('/provider/:prefix/:version/auth/user_info', asyncHandler(async (req, res) => {
+        res.json(req.user);
     }));
 
     return router;

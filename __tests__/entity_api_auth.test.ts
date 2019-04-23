@@ -196,6 +196,20 @@ describe("Entity API tests", () => {
         await entityApi.delete(`/${provider.prefix}/${kind_name}/${entity_metadata.uuid}`);
     });
 
+    test("Get user info", async done => {
+        try {
+            const { data: { token } } = await providerApi.get(`/${provider.prefix}/${provider.version}/auth/login`);
+            const { data } = await providerApi.get(`/${provider.prefix}/${provider.version}/auth/user_info`,
+                { headers: { 'Authorization': 'Bearer ' + token } }
+            );
+            expect(data.owner).toEqual("alice");
+            expect(data.tenant).toEqual(tenant_uuid);
+            done();
+        } catch (e) {
+            done.fail(e);
+        }
+    });
+
     test("Get entity should raise permission denied", async done => {
         try {
             const { data: { token } } = await providerApi.get(`/${provider.prefix}/${provider.version}/auth/login`);

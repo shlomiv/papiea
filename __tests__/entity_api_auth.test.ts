@@ -5,7 +5,7 @@ const url = require("url");
 const queryString = require("query-string");
 import { Metadata, Spec } from "../src/core";
 import { Provider } from "../src/papiea";
-import { getProviderWithSpecOnlyEnitityKindNoOperations } from "./test_data_factory";
+import { getProviderWithSpecOnlyEnitityKindWithOperations } from "./test_data_factory";
 import uuid = require("uuid");
 
 
@@ -42,7 +42,9 @@ function base64UrlEncode(...parts: any[]): string {
 describe("Entity API tests", () => {
     const oauth2ServerHost = '127.0.0.1';
     const oauth2ServerPort = 9002;
-    const provider: Provider = getProviderWithSpecOnlyEnitityKindNoOperations();
+    const procedureCallbackHostname = "127.0.0.1";
+    const procedureCallbackPort = 9001;
+    const provider: Provider = getProviderWithSpecOnlyEnitityKindWithOperations(`http://${procedureCallbackHostname}:${procedureCallbackPort}/`);
     provider.oauth2 = {
         client: {
             id: "XXX",
@@ -225,5 +227,42 @@ describe("Entity API tests", () => {
         } catch (e) {
             done.fail(e);
         }
+    });
+
+    test("Entity procedure should receive headers", async (done) => {
+        let headers: any = {};
+        const server = http.createServer((req, res) => {
+            if (req.method == 'POST') {
+                Object.assign(headers, req.headers);
+                let body = '';
+                req.on('data', function (data) {
+                    body += data;
+                });
+                req.on('end', function () {
+                    const post = JSON.parse(body);
+                    res.statusCode = 200;
+                    res.setHeader('Content-Type', 'text/plain');
+                    res.end(JSON.stringify(post.spec));
+                    server.close();
+                });
+            }
+        });
+        server.listen(procedureCallbackPort, procedureCallbackHostname, () => {
+            console.log(`Server running at http://${procedureCallbackHostname}:${procedureCallbackPort}/`);
+        });
+        const { data: { token } } = await providerApi.get(`/${provider.prefix}/${provider.version}/auth/login`);
+        await providerApi.post(`/${provider.prefix}/${provider.version}/auth`, {
+            policy: `p, alice, owner, ${kind_name}, *, allow`
+        });
+        await entityApi.post(`/${provider.prefix}/${kind_name}/${entity_metadata.uuid}/procedure/moveX`, { input: 5 },
+            { headers: { 'Authorization': 'Bearer ' + token } }
+        );
+        expect(headers.authorization).toBeDefined();
+        expect(headers["tenant-email"]).toEqual("alice@localhost");
+        expect(headers["tenant-id"]).toEqual(tenant_uuid);
+        expect(headers["tenant-fname"]).toEqual("Alice");
+        expect(headers["tenant-lname"]).toEqual("Doe");
+        expect(headers["tenant-role"]).toEqual('[{"name":"account-admin"},{"name":"papiea-admin"}]');
+        done();
     });
 });

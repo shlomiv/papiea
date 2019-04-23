@@ -127,11 +127,14 @@ export class Entity_API_Impl implements Entity_API {
         Object.assign(schemas, procedure.result);
         this.validator.validate(input, Object.values(procedure.argument)[0], schemas);
         try {
-            const { data } = await axios.post(procedure.procedure_callback, {
-                metadata: entity_data[0],
-                spec: entity_data[1],
-                input: input
-            });
+            const { data } = await axios.post(procedure.procedure_callback,
+                {
+                    metadata: entity_data[0],
+                    spec: entity_data[1],
+                    input: input
+                }, {
+                    headers: user ? user.headers : undefined
+                });
             this.validator.validate(data, Object.values(procedure.result)[0], schemas);
             return data;
         } catch (err) {
@@ -160,9 +163,12 @@ export class Entity_API_Impl implements Entity_API {
         Object.assign(schemas, procedure.result);
         this.validator.validate(input, Object.values(procedure.argument)[0], schemas);
         try {
-            const { data } = await axios.post(procedure.procedure_callback, {
-                input: input
-            });
+            const { data } = await axios.post(procedure.procedure_callback,
+                {
+                    input: input
+                }, {
+                    headers: user ? user.headers : undefined
+                });
             this.validator.validate(data, Object.values(procedure.result)[0], schemas);
             return data;
         } catch (err) {
@@ -186,9 +192,12 @@ export class Entity_API_Impl implements Entity_API {
         Object.assign(schemas, procedure.result);
         this.validator.validate(input, Object.values(procedure.argument)[0], schemas);
         try {
-            const { data } = await axios.post(procedure.procedure_callback, {
-                input: input
-            });
+            const { data } = await axios.post(procedure.procedure_callback,
+                {
+                    input: input
+                }, {
+                    headers: user ? user.headers : undefined
+                });
             this.validator.validate(data, Object.values(procedure.result)[0], schemas);
             return data;
         } catch (err) {

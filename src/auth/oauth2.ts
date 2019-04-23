@@ -50,7 +50,7 @@ function getUserInfoFromToken(token: any): UserAuthInfo {
         "tenant-id": id_token.default_tenant,
         "tenant-fname": id_token.given_name,
         "tenant-lname": id_token.last_name,
-        "tenant-role": xi_roles
+        "tenant-role": JSON.stringify(xi_roles)
     };
 
     return userInfo;

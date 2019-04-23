@@ -49,13 +49,17 @@ describe("Provider API tests", () => {
     });
 
     test("Get multiple providers", async done => {
-        const version = "1.0.0";
-        const provider: Provider = { prefix: providerPrefix, version: version, kinds: [], procedures: {} };
-        providerApi.post('/', provider).then().catch(done.fail);
+        const version1 = "1.0.0";
+        const provider1: Provider = { prefix: providerPrefix, version: version1, kinds: [], procedures: {} };
+        providerApi.post('/', provider1).then().catch(done.fail);
+        const version2 = "2.0.0";
+        const provider2: Provider = { prefix: providerPrefix, version: version2, kinds: [], procedures: {} };
+        providerApi.post('/', provider2).then().catch(done.fail);
         try {
             const res = await providerApi.get(`/${providerPrefix}`);
             expect(res.data.length).toBeGreaterThanOrEqual(2);
-            providerApi.delete(`/${providerPrefix}/${version}`).then(() => done()).catch(done.fail);
+            await providerApi.delete(`/${providerPrefix}/${version1}`);
+            await providerApi.delete(`/${providerPrefix}/${version2}`);
             done();
         } catch (e) {
             done.fail(e)

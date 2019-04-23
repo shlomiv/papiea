@@ -115,7 +115,12 @@ export function createOAuth2Router(signature: Signature, providerDb: Provider_DB
         if (token === null) {
             return next();
         }
-        const userInfo: UserAuthInfo = await signature.verify(token);
+        var userInfo: UserAuthInfo;
+        try {
+            userInfo = await signature.verify(token);
+        } catch (e) {
+            throw new UnauthorizedError();
+        }
         if (userInfo.provider_prefix !== req.params.prefix) {
             throw new UnauthorizedError();
         }

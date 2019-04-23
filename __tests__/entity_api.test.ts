@@ -540,7 +540,7 @@ describe("Entity API with metadata extension tests", () => {
 
     test("Create entity with missing metadata extension should fail validation", async done => {
         try {
-            await entityApi.post(`/${providerPrefix}/${kind_name}`, {
+            await entityApi.post(`/${providerPrefix}/${providerVersion}/${kind_name}`, {
                 spec: {
                     x: 100,
                     y: 11
@@ -557,7 +557,7 @@ describe("Entity API with metadata extension tests", () => {
 
     test("Create entity with metadata extension", async done => {
         try {
-            const { data: { metadata, spec } } = await entityApi.post(`/${providerPrefix}/${kind_name}`, {
+            const { data: { metadata, spec } } = await entityApi.post(`/${providerPrefix}/${providerVersion}/${kind_name}`, {
                 spec: {
                     x: 100,
                     y: 11
@@ -580,7 +580,7 @@ describe("Entity API with metadata extension tests", () => {
     test("Get spec-only entity with extension", async (done) => {
         expect.assertions(2);
         try {
-            const res = await entityApi.get(`/${providerPrefix}/${kind_name}/${entity_metadata.uuid}`);
+            const res = await entityApi.get(`/${providerPrefix}/${providerVersion}/${kind_name}/${entity_metadata.uuid}`);
             expect(res.data.spec).toEqual(entity_spec);
             expect(res.data.status).toEqual(entity_spec);
             done();
@@ -591,7 +591,7 @@ describe("Entity API with metadata extension tests", () => {
 
     test("Create entity with non-valid metadata extension", async done => {
         try {
-            await entityApi.post(`/${providerPrefix}/${kind_name}`, {
+            await entityApi.post(`/${providerPrefix}/${providerVersion}/${kind_name}`, {
                 spec: {
                     x: 100,
                     y: 11
@@ -614,7 +614,7 @@ describe("Entity API with metadata extension tests", () => {
 
     test("Filter entity by extension", async done => {
         try {
-            const res = await entityApi.post(`/${providerPrefix}/${kind_name}/filter`, {
+            const res = await entityApi.post(`/${providerPrefix}/${providerVersion}/${kind_name}/filter`, {
                 metadata: {
                     "extension.owner": owner_name,
                     "extension.tenant_id": tenant_id

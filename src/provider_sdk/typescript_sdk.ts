@@ -17,7 +17,6 @@ export class ProviderSdk implements ProviderImpl {
     _provider: Provider | null;
     papiea_url: string;
     papiea_port: number;
-    private readonly server_manager: Provider_Server_Manager;
     private meta_ext: { [key: string]: string };
     private readonly server_manager: Provider_Server_Manager;
 

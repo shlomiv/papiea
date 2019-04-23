@@ -21,18 +21,20 @@ declare var process: {
         SERVER_PORT: string,
         MONGO_URL: string,
         MONGO_DB: string,
-        AUTHORIZER: string
+        AUTHORIZER: string,
+        TOKEN_SECRET: string
     },
     title: string;
 };
-process.title = 'papiea';
-const serverPort = parseInt(process.env.SERVER_PORT || '3000');
+process.title = "papiea";
+const serverPort = parseInt(process.env.SERVER_PORT || "3000");
+const tokenSecret = process.env.TOKEN_SECRET || "secret";
 
 async function getEntityApiAuthorizer(providerApi: Provider_API): Promise<Authorizer> {
-    const pathToDefaultModel: string = resolve(__dirname, './auth/default_provider_model.txt');
-    if (process.env.AUTHORIZER === 'CasbinAuthorizer') {
+    const pathToDefaultModel: string = resolve(__dirname, "./auth/default_provider_model.txt");
+    if (process.env.AUTHORIZER === "CasbinAuthorizer") {
         return new PerProviderAuthorizer(providerApi, new ProviderCasbinAuthorizerFactory(pathToDefaultModel));
-    } else if (process.env.AUTHORIZER === 'CasbinTestAuthorizer') {
+    } else if (process.env.AUTHORIZER === "CasbinTestAuthorizer") {
         const authorizerToBeTested = new PerProviderAuthorizer(providerApi, new ProviderCasbinAuthorizerFactory(pathToDefaultModel));
         const authorizer = new TestAuthorizer(authorizerToBeTested);
         return authorizer;
@@ -51,7 +53,7 @@ async function setUpApplication(): Promise<express.Express> {
     const statusDb = await mongoConnection.get_status_db();
     const validator = new Validator();
     const providerApi = new Provider_API_Impl(providerDb, statusDb, validator, new NoAuthAuthorizer());
-    app.use(createOAuth2Router(new JWTHMAC('shhhhh'), providerDb));
+    app.use(createOAuth2Router(new JWTHMAC(tokenSecret), providerDb));
     const entityApiAuthorizer: Authorizer = await getEntityApiAuthorizer(providerApi);
     app.use('/provider', createProviderAPIRouter(providerApi));
     app.use('/entity', createEntityAPIRouter(new Entity_API_Impl(statusDb, specDb, providerApi, validator, entityApiAuthorizer)));

@@ -94,7 +94,7 @@ export function createOAuth2Router(signature: Signature, providerDb: Provider_DB
         const state = {
             provider_prefix: provider.prefix,
             provider_version: provider.version,
-            redirect_uri: req.header("Referer")
+            redirect_uri: req.query.redirect_uri
         };
         const options = {
             redirect_uri: redirect_uri,

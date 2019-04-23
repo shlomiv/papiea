@@ -227,7 +227,6 @@ describe("Entity API tests", () => {
                 console.log(`Server running at http://${hostname}:${port}/`);
             });
             const { data: { token } } = await providerApi.get(`/${provider.prefix}/${provider.version}/auth/login?redirect_uri=http://${hostname}:${port}/`);
-            console.log(token);
             const { data } = await providerApi.get(`/${provider.prefix}/${provider.version}/auth/user_info`,
                 { headers: { 'Authorization': 'Bearer ' + token } }
             );

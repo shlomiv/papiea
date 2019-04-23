@@ -103,7 +103,13 @@ export function createOAuth2Router(redirect_uri: string, signature: Signature, p
             userInfo.provider_prefix = state.provider_prefix;
             userInfo.provider_version = state.provider_version;
             const newSignedToken = await signature.sign(userInfo);
-            return res.status(200).json({ token: newSignedToken });
+            if (state.redirect_uri) {
+                const client_url = new url.URL(state.redirect_uri);
+                client_url.searchParams.append("token", newSignedToken);
+                return res.redirect(client_url.toString());
+            } else {
+                return res.status(200).json({ token: newSignedToken });
+            }
         } catch (error) {
             console.error('Access Token Error', error.message);
             return res.status(500).json('Authentication failed');

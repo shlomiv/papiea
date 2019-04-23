@@ -210,6 +210,35 @@ describe("Entity API tests", () => {
         }
     });
 
+    test("Login from SPA", async done => {
+        try {
+            const hostname = "127.0.0.1";
+            const port = 9003;
+            const server = http.createServer((req, res) => {
+                if (req.method == 'GET') {
+                    const token = queryString.parse(url.parse(req.url).query).token;
+                    res.statusCode = 200;
+                    res.setHeader('Content-Type', 'application/json');
+                    res.end(JSON.stringify({ token }));
+                    server.close();
+                }
+            });
+            server.listen(port, hostname, () => {
+                console.log(`Server running at http://${hostname}:${port}/`);
+            });
+            const { data: { token } } = await providerApi.get(`/${provider.prefix}/${provider.version}/auth/login?redirect_uri=http://${hostname}:${port}/`);
+            console.log(token);
+            const { data } = await providerApi.get(`/${provider.prefix}/${provider.version}/auth/user_info`,
+                { headers: { 'Authorization': 'Bearer ' + token } }
+            );
+            expect(data.owner).toEqual("alice");
+            expect(data.tenant).toEqual(tenant_uuid);
+            done();
+        } catch (e) {
+            done.fail(e);
+        }
+    });
+
     test("Get entity should raise permission denied", async done => {
         try {
             const { data: { token } } = await providerApi.get(`/${provider.prefix}/${provider.version}/auth/login`);

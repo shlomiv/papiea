@@ -1,13 +1,12 @@
 import * as express from "express";
-import { Request, Response, NextFunction } from "express";
+import { Response, NextFunction } from "express";
 import { asyncHandler, UserAuthInfo, UnauthorizedError, UserAuthInfoRequest } from "./authn";
 import { Signature } from "./crypto";
 import { Provider } from "../papiea";
 import { Provider_DB } from "../databases/provider_db_interface";
 const simpleOauthModule = require("simple-oauth2"),
-    queryString = require("query-string");
-
-const redirect_uri = "http://localhost:3000/provider/auth/callback";
+    queryString = require("query-string"),
+    url = require("url");
 
 // !!!!!!!!!!!! TODO(adolgarev): below is provider specific function !!!!!!!!!!!!
 // See https://github.com/nutanix/papiea-js/pull/94
@@ -68,7 +67,7 @@ function getToken(req: any): string | null {
     return null;
 }
 
-export function createOAuth2Router(signature: Signature, providerDb: Provider_DB) {
+export function createOAuth2Router(redirect_uri: string, signature: Signature, providerDb: Provider_DB) {
     const router = express.Router();
 
     router.use('/provider/:prefix/:version/auth/login', asyncHandler(async (req, res) => {
@@ -89,7 +88,7 @@ export function createOAuth2Router(signature: Signature, providerDb: Provider_DB
         res.redirect(authorizationUri);
     }));
 
-    router.use('/provider/auth/callback', asyncHandler(async (req, res, next) => {
+    router.use(url.parse(redirect_uri).path, asyncHandler(async (req, res, next) => {
         const code = req.query.code;
         const state = queryString.parse(req.query.state);
         const provider: Provider = await providerDb.get_provider(state.provider_prefix, state.provider_version);

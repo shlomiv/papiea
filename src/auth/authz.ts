@@ -64,31 +64,13 @@ export class NoAuthAuthorizer extends Authorizer {
     }
 }
 
-// For tests, check perms only if user info is present,
-// otherwise allows autotests to call endpoints without auth
-export class TestAuthorizer extends Authorizer {
-    private authorizerToBeTested: Authorizer;
-
-    constructor(authorizerToBeTested: Authorizer) {
-        super();
-        this.authorizerToBeTested = authorizerToBeTested;
-    }
-
-    async checkPermission(user: UserAuthInfo, object: any, action: Action): Promise<void> {
-        if (!user) {
-            return;
-        }
-        await this.authorizerToBeTested.checkPermission(user, object, action);
-    }
-}
-
 export interface ProviderAuthorizerFactory {
     createAuthorizer(provider: Provider): Promise<Authorizer>;
 }
 
 export class PerProviderAuthorizer extends Authorizer {
     private providerApi: Provider_API;
-    private providerToAuthorizer: { [key: string]: Authorizer; };
+    private providerToAuthorizer: { [key: string]: Authorizer | null; };
     private kindToProviderPrefix: { [key: string]: string; };
     private providerAuthorizerFactory: ProviderAuthorizerFactory;
 
@@ -115,26 +97,40 @@ export class PerProviderAuthorizer extends Authorizer {
         return provider.prefix;
     }
 
-    private async getAuthorizerByObject(user: UserAuthInfo, object: any): Promise<Authorizer> {
-        if (!object.metadata || !object.metadata.kind) {
-            throw new PermissionDeniedError();
+    private async getProviderPrefixByObject(user: UserAuthInfo, object: any): Promise<string> {
+        if (object.metadata && object.metadata.kind) {
+            return this.getProviderPrefixByKindName(user, object.metadata.kind);
+        } else if (object.kind) {
+            return this.getProviderPrefixByKindName(user, object.kind.name);
+        } else if (object.provider) {
+            return object.provider.prefix;
         }
-        const providerPrefix = await this.getProviderPrefixByKindName(user, object.metadata.kind);
+        throw new PermissionDeniedError();
+    }
+
+    private async getAuthorizerByObject(user: UserAuthInfo, object: any): Promise<Authorizer | null> {
+        const providerPrefix = await this.getProviderPrefixByObject(user, object);
         if (providerPrefix in this.providerToAuthorizer) {
             return this.providerToAuthorizer[providerPrefix];
         }
-
         const provider: Provider = await this.providerApi.get_latest_provider(user, providerPrefix);
+        if (!provider.policy) {
+            this.providerToAuthorizer[providerPrefix] = null;
+            return null;
+        }
         const authorizer = await this.providerAuthorizerFactory.createAuthorizer(provider);
         this.providerToAuthorizer[providerPrefix] = authorizer;
         return authorizer;
     }
 
     async checkPermission(user: UserAuthInfo, object: any, action: Action): Promise<void> {
+        const authorizer: Authorizer | null = await this.getAuthorizerByObject(user, object);
+        if (authorizer === null) {
+            return;
+        }
         if (!user) {
             throw new UnauthorizedError();
         }
-        const authorizer: Authorizer = await this.getAuthorizerByObject(user, object);
         return authorizer.checkPermission(user, object, action);
     }
 }

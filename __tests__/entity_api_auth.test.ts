@@ -168,6 +168,9 @@ describe("Entity API tests", () => {
     });
 
     beforeEach(async () => {
+        await providerApi.post(`/${provider.prefix}/${provider.version}/auth`, {
+            policy: null
+        });
         const { data: { metadata, spec } } = await entityApi.post(`/${provider.prefix}/${kind_name}`, {
             metadata: {
                 extension: {
@@ -185,12 +188,18 @@ describe("Entity API tests", () => {
     });
 
     afterEach(async () => {
+        await providerApi.post(`/${provider.prefix}/${provider.version}/auth`, {
+            policy: null
+        });
         await entityApi.delete(`/${provider.prefix}/${kind_name}/${entity_metadata.uuid}`);
     });
 
     test("Get entity should raise permission denied", async done => {
         try {
             const { data: { token } } = await providerApi.get(`/${provider.prefix}/${provider.version}/auth/login`);
+            await providerApi.post(`/${provider.prefix}/${provider.version}/auth`, {
+                policy: `p, bill, owner, ${kind_name}, *, allow`
+            });
             await entityApi.get(`/${provider.prefix}/${kind_name}/${entity_metadata.uuid}`,
                 { headers: { 'Authorization': 'Bearer ' + token } }
             );

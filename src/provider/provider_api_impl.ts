@@ -80,10 +80,10 @@ export class Provider_API_Impl implements Provider_API {
 
     async update_auth(user: UserAuthInfo, provider_prefix: string, provider_version: string, auth: any): Promise<void> {
         const provider: Provider = await this.get_provider(user, provider_prefix, provider_version);
-        if (auth.policy) {
+        if (auth.policy !== undefined) {
             provider.policy = auth.policy;
         }
-        if (auth.oauth2) {
+        if (auth.oauth2 !== undefined) {
             provider.oauth2 = auth.oauth2;
         }
         await this.providerDb.save_provider(provider);

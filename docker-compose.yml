@@ -10,8 +10,6 @@ services:
                         - mongo
                 ports:
                         - "3333:3000"
-                environment:
-                        - AUTHORIZER=CasbinTestAuthorizer
         mongo:
                 image: mongo:4.1
 

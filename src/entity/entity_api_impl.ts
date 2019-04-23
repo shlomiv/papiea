@@ -59,7 +59,6 @@ export class Entity_API_Impl implements Entity_API {
         if (!uuid_validate(request_metadata.uuid)) {
             throw new Error("uuid is not valid")
         }
-        request_metadata.created_at = new Date();
         request_metadata.kind = kind.name;
         await this.authorizer.checkPermission(user, { "metadata": request_metadata }, CreateAction);
         const [metadata, spec] = await this.spec_db.update_spec(request_metadata, spec_description);

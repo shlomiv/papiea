@@ -11,13 +11,15 @@ export interface Signature {
 
 export class JWTHMAC implements Signature {
     private secret: string;
+    private expiresInSeconds: number;
 
-    constructor(secret: string) {
+    constructor(secret: string, expiresInSeconds: number) {
         this.secret = secret;
+        this.expiresInSeconds = expiresInSeconds;
     }
 
     async sign(data: any): Promise<string> {
-        return jwtSign(data, this.secret);
+        return jwtSign(data, this.secret, { expiresIn: this.expiresInSeconds });
     }
 
     async verify(token: string): Promise<any> {

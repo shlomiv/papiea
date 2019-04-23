@@ -20,13 +20,15 @@ declare var process: {
         SERVER_PORT: string,
         MONGO_URL: string,
         MONGO_DB: string,
-        TOKEN_SECRET: string
+        TOKEN_SECRET: string,
+        TOKEN_EXPIRES_SECONDS: string
     },
     title: string;
 };
 process.title = "papiea";
 const serverPort = parseInt(process.env.SERVER_PORT || "3000");
 const tokenSecret = process.env.TOKEN_SECRET || "secret";
+const tokenExpiresSeconds = parseInt(process.env.TOKEN_EXPIRES_SECONDS || (60 * 60 * 24 * 7).toString());
 const pathToDefaultModel: string = resolve(__dirname, "./auth/default_provider_model.txt");
 
 async function setUpApplication(): Promise<express.Express> {
@@ -39,7 +41,7 @@ async function setUpApplication(): Promise<express.Express> {
     const statusDb = await mongoConnection.get_status_db();
     const validator = new Validator();
     const providerApi = new Provider_API_Impl(providerDb, statusDb, validator, new NoAuthAuthorizer());
-    app.use(createOAuth2Router(new JWTHMAC(tokenSecret), providerDb));
+    app.use(createOAuth2Router(new JWTHMAC(tokenSecret, tokenExpiresSeconds), providerDb));
     const entityApiAuthorizer: Authorizer = new PerProviderAuthorizer(providerApi, new ProviderCasbinAuthorizerFactory(pathToDefaultModel));
     app.use('/provider', createProviderAPIRouter(providerApi));
     app.use('/entity', createEntityAPIRouter(new Entity_API_Impl(statusDb, specDb, providerApi, validator, entityApiAuthorizer)));

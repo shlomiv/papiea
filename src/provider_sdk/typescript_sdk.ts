@@ -12,13 +12,13 @@ import { ProceduralCtx } from "./typescript_sdk_context_impl";
 export class ProviderSdk implements ProviderImpl {
     private _version: Version | null;
     private _prefix: string | null;
-    private _kind: Kind[];
-    private _procedures: { [key: string]: Procedural_Signature };
+    private readonly _kind: Kind[];
+    private readonly _procedures: { [key: string]: Procedural_Signature };
     _provider: Provider | null;
     papiea_url: string;
     papiea_port: number;
-    private _meta_ext: { [key: string]: string };
-    private server_manager: Provider_Server_Manager;
+    private meta_ext: { [key: string]: string };
+    private readonly server_manager: Provider_Server_Manager;
 
 
     constructor(papiea_url: string, papiea_port: number, server_manager: Provider_Server_Manager) {
@@ -30,7 +30,7 @@ export class ProviderSdk implements ProviderImpl {
         this.papiea_port = papiea_port;
         this.server_manager = server_manager;
         this._procedures = {};
-        this._meta_ext = {};
+        this.meta_ext = {};
         this.get_prefix = this.get_prefix.bind(this);
     }
 
@@ -115,7 +115,7 @@ export class ProviderSdk implements ProviderImpl {
     }
 
     metadata_extension(ext: Data_Description) {
-        this._meta_ext = ext;
+        this.meta_ext = ext;
     }
 
     provider_procedure(name: string, rbac: any,
@@ -151,7 +151,7 @@ export class ProviderSdk implements ProviderImpl {
                 version: this._version!,
                 prefix: this._prefix!,
                 procedures: this._procedures,
-                extension_structure: this._meta_ext
+                extension_structure: this.meta_ext
             };
             try {
                 await axios.post(`http://${ this.papiea_url }:${ this.papiea_port }/provider/`, this._provider);

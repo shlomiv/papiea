@@ -30,7 +30,6 @@
     "js-yaml": "^3.12.0",
     "mongo-dot-notation-tool": "^1.0.1",
     "mongodb": "^3.1.10",
-    "morgan": "^1.9.1",
     "pluralize": "^7.0.0",
     "query-string": "^6.2.0",
     "swagger-model-validator": "^3.0.6",

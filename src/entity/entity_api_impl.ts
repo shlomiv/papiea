@@ -47,12 +47,8 @@ export class Entity_API_Impl implements Entity_API {
         return found_kind;
     }
 
-    private async get_provider_by_kind(kind_name: string): Promise<Provider> {
-        return await this.provider_api.get_latest_provider_by_kind(kind_name);
-    }
-
     async save_entity(kind_name: string, spec_description: Spec, request_metadata: Metadata = {} as Metadata): Promise<[Metadata, Spec]> {
-        const provider = await this.get_provider_by_kind(kind_name);
+        const provider = await this.provider_api.get_latest_provider_by_kind(kind_name);
         const kind = this.find_kind(provider, kind_name);
         this.validate_metadata_extension(provider.extension_structure, request_metadata);
         this.validate_spec(spec_description, kind);

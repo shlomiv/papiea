@@ -121,7 +121,7 @@ export function createOAuth2Router(redirect_uri: string, signature: Signature, p
         if (token === null) {
             return next();
         }
-        var userInfo: UserAuthInfo;
+        let userInfo: UserAuthInfo;
         try {
             userInfo = await signature.verify(token);
         } catch (e) {
@@ -134,7 +134,7 @@ export function createOAuth2Router(redirect_uri: string, signature: Signature, p
         next();
     }
 
-    router.use('/entity/:prefix', asyncHandler(injectUserInfo));
+    router.use('/services/:prefix', asyncHandler(injectUserInfo));
     router.use('/provider/:prefix', asyncHandler(injectUserInfo));
 
     router.use('/provider/:prefix/:version/auth/user_info', asyncHandler(async (req, res) => {

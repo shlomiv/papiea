@@ -17,7 +17,7 @@ declare var process: {
 const serverPort = parseInt(process.env.SERVER_PORT || '3000');
 
 const entityApi = axios.create({
-    baseURL: `http://127.0.0.1:${serverPort}/entity`,
+    baseURL: `http://127.0.0.1:${serverPort}/services`,
     timeout: 1000,
     headers: { 'Content-Type': 'application/json' }
 });
@@ -39,7 +39,7 @@ function base64UrlEncode(...parts: any[]): string {
     return parts.map(x => base64UrlEncodePart(x)).join('.');
 }
 
-describe("Entity API tests", () => {
+describe("Entity API auth tests", () => {
     const oauth2ServerHost = '127.0.0.1';
     const oauth2ServerPort = 9002;
     const procedureCallbackHostname = "127.0.0.1";
@@ -173,7 +173,7 @@ describe("Entity API tests", () => {
         await providerApi.post(`/${provider.prefix}/${provider.version}/auth`, {
             policy: null
         });
-        const { data: { metadata, spec } } = await entityApi.post(`/${provider.prefix}/${kind_name}`, {
+        const { data: { metadata, spec } } = await entityApi.post(`/${provider.prefix}/${provider.version}/${kind_name}`, {
             metadata: {
                 extension: {
                     owner: "alice",
@@ -193,7 +193,7 @@ describe("Entity API tests", () => {
         await providerApi.post(`/${provider.prefix}/${provider.version}/auth`, {
             policy: null
         });
-        await entityApi.delete(`/${provider.prefix}/${kind_name}/${entity_metadata.uuid}`);
+        await entityApi.delete(`/${provider.prefix}/${provider.version}/${kind_name}/${entity_metadata.uuid}`);
     });
 
     test("Get user info", async done => {
@@ -244,7 +244,7 @@ describe("Entity API tests", () => {
             await providerApi.post(`/${provider.prefix}/${provider.version}/auth`, {
                 policy: `p, bill, owner, ${kind_name}, *, allow`
             });
-            await entityApi.get(`/${provider.prefix}/${kind_name}/${entity_metadata.uuid}`,
+            await entityApi.get(`/${provider.prefix}/${provider.version}/${kind_name}/${entity_metadata.uuid}`,
                 { headers: { 'Authorization': 'Bearer ' + token } }
             );
             done.fail();
@@ -260,7 +260,7 @@ describe("Entity API tests", () => {
             await providerApi.post(`/${provider.prefix}/${provider.version}/auth`, {
                 policy: `p, alice, owner, ${kind_name}, *, allow`
             });
-            const { data: { metadata, spec } } = await entityApi.get(`/${provider.prefix}/${kind_name}/${entity_metadata.uuid}`,
+            const { data: { metadata, spec } } = await entityApi.get(`/${provider.prefix}/${provider.version}/${kind_name}/${entity_metadata.uuid}`,
                 { headers: { 'Authorization': 'Bearer ' + token } }
             );
             expect(metadata).toEqual(entity_metadata);
@@ -274,7 +274,7 @@ describe("Entity API tests", () => {
     test("Get entity of another provider should raise unauthorized", async done => {
         try {
             const { data: { token } } = await providerApi.get(`/${provider.prefix}/${provider.version}/auth/login`);
-            await entityApi.get(`/${provider.prefix}1/${kind_name}/${entity_metadata.uuid}`,
+            await entityApi.get(`/${provider.prefix}1/${provider.version}/${kind_name}/${entity_metadata.uuid}`,
                 { headers: { 'Authorization': 'Bearer ' + token } }
             );
             done.fail();
@@ -309,7 +309,7 @@ describe("Entity API tests", () => {
         await providerApi.post(`/${provider.prefix}/${provider.version}/auth`, {
             policy: `p, alice, owner, ${kind_name}, *, allow`
         });
-        await entityApi.post(`/${provider.prefix}/${kind_name}/${entity_metadata.uuid}/procedure/moveX`, { input: 5 },
+        await entityApi.post(`/${provider.prefix}/${provider.version}/${kind_name}/${entity_metadata.uuid}/procedure/moveX`, { input: 5 },
             { headers: { 'Authorization': 'Bearer ' + token } }
         );
         expect(headers.authorization).toBeDefined();

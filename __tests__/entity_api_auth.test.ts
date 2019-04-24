@@ -5,7 +5,7 @@ const url = require("url");
 const queryString = require("query-string");
 import { Metadata, Spec } from "../src/core";
 import { Provider } from "../src/papiea";
-import { getProviderWithSpecOnlyEnitityKindWithOperations } from "./test_data_factory";
+import { getProviderWithSpecOnlyEnitityKindWithOperations, loadYaml } from "./test_data_factory";
 import uuid = require("uuid");
 
 
@@ -45,22 +45,8 @@ describe("Entity API auth tests", () => {
     const procedureCallbackHostname = "127.0.0.1";
     const procedureCallbackPort = 9001;
     const provider: Provider = getProviderWithSpecOnlyEnitityKindWithOperations(`http://${procedureCallbackHostname}:${procedureCallbackPort}/`);
-    provider.oauth2 = {
-        client: {
-            id: "XXX",
-            secret: "YYY"
-        },
-        auth: {
-            tokenHost: `http://${oauth2ServerHost}:${oauth2ServerPort}`,
-            tokenPath: "/oauth2/token",
-            authorizePath: "/oauth2/authorize",
-            revokePath: "/oauth2/revoke"
-        },
-        options: {
-            authorizationMethod: "body",
-            bodyFormat: "form"
-        }
-    };
+    const provider_oauth_description = loadYaml("./auth.yaml");
+    provider.oauth2 = provider_oauth_description;
     const kind_name = provider.kinds[0].name;
     let entity_metadata: Metadata, entity_spec: Spec;
 

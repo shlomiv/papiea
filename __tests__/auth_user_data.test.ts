@@ -1,7 +1,7 @@
 import 'jest'
 import * as yaml from 'js-yaml'
 import { readFileSync } from 'fs'
-import { deref, evaluate_headers, parseJwt } from '../src/oauth/user_data_evaluator'
+import { deref, evaluate_headers, parseJwt } from '../src/auth/user_data_evaluator'
 import * as _ from "lodash"
 import * as color from 'colors'
 import * as JSON from 'node-json-color-stringify'

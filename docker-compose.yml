@@ -11,7 +11,7 @@ services:
                 ports:
                         - "3333:3000"
                 environment:
-                        - HOT_RELOAD=${HOT_RELOAD}
+                        - HOT_RELOAD=${HOT_RELOAD:-false}
         mongo:
                 image: mongo:4.1
 

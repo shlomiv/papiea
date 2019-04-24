@@ -8,7 +8,7 @@ fi
 export DEBUG=express:* 
 npm install
 npm run build-clj
-if [ $HOT_RELOAD ]
+if [ $HOT_RELOAD == 'true' ]
 then
     npm run dev
 else

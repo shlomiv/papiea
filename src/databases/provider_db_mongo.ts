@@ -41,13 +41,10 @@ export class Provider_DB_Mongo implements Provider_DB {
     }
 
     async get_provider(provider_prefix: string, version: Version): Promise<Provider> {
-        const filter: any = { prefix: provider_prefix };
-        if (version !== undefined) {
-            filter.version = version;
-        }
+        const filter: any = { prefix: provider_prefix, version };
         const provider: Provider | null = await this.collection.findOne(filter);
         if (provider === null) {
-            throw new Error(`Provider with prefix ${ provider_prefix } not found`);
+            throw new Error(`Provider with prefix ${ provider_prefix } and version ${ version } not found`);
         } else {
             return provider;
         }

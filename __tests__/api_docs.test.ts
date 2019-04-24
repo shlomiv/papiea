@@ -78,13 +78,14 @@ describe("API Docs Tests", () => {
         try {
             const providerPrefix = providerDbMock.provider.prefix;
             const entityName = providerDbMock.provider.kinds[0].name;
+            const providerVersion = providerDbMock.provider.version;
             const apiDoc = await apiDocsGenerator.getApiDocs();
-            expect(Object.keys(apiDoc.paths)).toContain(`/entity/${providerPrefix}/${entityName}`);
-            const kindPath = apiDoc.paths[`/entity/${providerPrefix}/${entityName}`];
+            expect(Object.keys(apiDoc.paths)).toContain(`/services/${providerPrefix}/${providerVersion}/${entityName}`);
+            const kindPath = apiDoc.paths[`/services/${providerPrefix}/${providerVersion}/${entityName}`];
             expect(Object.keys(kindPath)).toContain("get");
             expect(Object.keys(kindPath)).toContain("post");
-            expect(Object.keys(apiDoc.paths)).toContain(`/entity/${providerPrefix}/${entityName}/{uuid}`);
-            const kindEntityPath = apiDoc.paths[`/entity/${providerPrefix}/${entityName}/{uuid}`];
+            expect(Object.keys(apiDoc.paths)).toContain(`/services/${providerPrefix}/${providerVersion}/${entityName}/{uuid}`);
+            const kindEntityPath = apiDoc.paths[`/services/${providerPrefix}/${providerVersion}/${entityName}/{uuid}`];
             expect(Object.keys(kindEntityPath)).toContain("get");
             expect(Object.keys(kindEntityPath)).toContain("delete");
             expect(Object.keys(kindEntityPath)).toContain("put");

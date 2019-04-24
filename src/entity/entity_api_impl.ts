@@ -2,7 +2,7 @@ import axios from "axios"
 import { Status_DB } from "../databases/status_db_interface";
 import { Spec_DB } from "../databases/spec_db_interface";
 import { Kind, Procedural_Signature } from "../papiea";
-import { Entity_Reference, Metadata, Spec, uuid4, Status } from "../core";
+import { Entity_Reference, Metadata, Spec, uuid4, Status, Version } from "../core";
 import uuid = require("uuid");
 import { Entity_API } from "./entity_api_interface";
 import { ValidationError, Validator } from "../validator";
@@ -34,8 +34,8 @@ export class Entity_API_Impl implements Entity_API {
         this.validator = validator;
     }
 
-    private async get_kind(kind_name: string): Promise<Kind> {
-        const provider = await this.provider_api.get_latest_provider_by_kind(kind_name);
+    private async get_kind(prefix: string, kind_name: string, version: Version): Promise<Kind> {
+        const provider = await this.provider_api.get_provider(prefix, version);
         const found_kind: Kind | undefined = provider.kinds.find(elem => elem.name === kind_name);
         if (found_kind === undefined) {
             throw new Error(`Kind: ${kind_name} not found`);
@@ -43,8 +43,8 @@ export class Entity_API_Impl implements Entity_API {
         return found_kind;
     }
 
-    async save_entity(kind_name: string, spec_description: Spec, request_metadata: Metadata = {} as Metadata): Promise<[Metadata, Spec]> {
-        const kind: Kind = await this.get_kind(kind_name);
+    async save_entity(prefix: string, kind_name: string, version: Version, spec_description: Spec, request_metadata: Metadata = {} as Metadata): Promise<[Metadata, Spec]> {
+        const kind: Kind = await this.get_kind(prefix, kind_name, version);
         this.validate_spec(spec_description, kind);
         if (!request_metadata.uuid) {
             request_metadata.uuid = uuid();
@@ -87,8 +87,8 @@ export class Entity_API_Impl implements Entity_API {
         return res;
     }
 
-    async update_entity_spec(uuid: uuid4, spec_version: number, kind_name: string, spec_description: Spec): Promise<[Metadata, Spec]> {
-        const kind: Kind = await this.get_kind(kind_name);
+    async update_entity_spec(uuid: uuid4, prefix: string, spec_version: number, kind_name: string, version: Version, spec_description: Spec): Promise<[Metadata, Spec]> {
+        const kind: Kind = await this.get_kind(prefix, kind_name, version);
         this.validate_spec(spec_description, kind);
         const metadata: Metadata = { uuid: uuid, kind: kind.name, spec_version: spec_version } as Metadata;
         const [_, spec] = await this.spec_db.update_spec(metadata, spec_description);
@@ -104,8 +104,8 @@ export class Entity_API_Impl implements Entity_API {
         await this.status_db.delete_status(entity_ref);
     }
 
-    async call_procedure(kind_name: string, entity_uuid: uuid4, procedure_name: string, input: any): Promise<any> {
-        const kind: Kind = await this.get_kind(kind_name);
+    async call_procedure(prefix: string, kind_name: string, version: Version, entity_uuid: uuid4, procedure_name: string, input: any): Promise<any> {
+        const kind: Kind = await this.get_kind(prefix, kind_name, version);
         const entity_data: [Metadata, Spec] = await this.get_entity_spec(kind_name, entity_uuid);
         const procedure: Procedural_Signature | undefined = kind.procedures[procedure_name];
         if (procedure === undefined) {
@@ -134,8 +134,8 @@ export class Entity_API_Impl implements Entity_API {
         }
     }
 
-    async call_provider_procedure(prefix: string, procedure_name: string, input: any): Promise<any> {
-        const provider = await this.provider_api.get_latest_provider(prefix);
+    async call_provider_procedure(prefix: string, version: Version, procedure_name: string, input: any): Promise<any> {
+        const provider = await this.provider_api.get_provider(prefix, version);
         if (provider.procedures === undefined) {
             throw new Error(`Procedure ${procedure_name} not found for provider ${prefix}`);
         }
@@ -162,8 +162,8 @@ export class Entity_API_Impl implements Entity_API {
         }
     }
 
-    async call_kind_procedure(kind_name: string, procedure_name: string, input: any): Promise<any> {
-        const kind: Kind = await this.get_kind(kind_name);
+    async call_kind_procedure(prefix: string, kind_name: string, version: Version, procedure_name: string, input: any): Promise<any> {
+        const kind: Kind = await this.get_kind(prefix, kind_name, version);
         const procedure: Procedural_Signature | undefined = kind.procedures[procedure_name];
         if (procedure === undefined) {
             throw new Error(`Procedure ${procedure_name} not found for kind ${kind.name}`);

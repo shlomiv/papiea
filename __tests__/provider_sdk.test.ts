@@ -189,15 +189,15 @@ describe("Provider Sdk tests", () => {
         });
         await sdk.register();
         const kind_name = sdk.provider.kinds[0].name;
-        const { data: { metadata, spec } } = await axios.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ kind_name }`, {
+        const { data: { metadata, spec } } = await axios.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }`, {
             spec: {
                 x: 10,
                 y: 11
             }
         });
         try {
-            const res: any = await axios.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ kind_name }/${ metadata.uuid }/procedure/moveX`, { input: 5 });
-            const updatedEntity: any = await axios.get(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ kind_name }/${ metadata.uuid }`);
+            const res: any = await axios.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }/procedure/moveX`, { input: 5 });
+            const updatedEntity: any = await axios.get(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`);
             expect(updatedEntity.data.metadata.spec_version).toEqual(2);
             expect(updatedEntity.data.spec.x).toEqual(15);
         } catch (e) {
@@ -226,14 +226,14 @@ describe("Provider Sdk tests", () => {
         });
         await sdk.register();
         const kind_name = sdk.provider.kinds[0].name;
-        const { data: { metadata, spec } } = await axios.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ kind_name }`, {
+        const { data: { metadata, spec } } = await axios.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }`, {
             spec: {
                 x: 10,
                 y: 11
             }
         });
         try {
-            const res: any = await axios.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ kind_name }/${ metadata.uuid }/procedure/moveX`, { input: 5 });
+            const res: any = await axios.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }/procedure/moveX`, { input: 5 });
         } catch (e) {
             done();
         } finally {
@@ -359,7 +359,7 @@ describe("Provider Sdk tests", () => {
         await sdk.register();
         const kind_name = sdk.provider.kinds[0].name;
         try {
-            const res: any = await axios.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ kind_name }/procedure/computeGeolocation`, { input: "2" });
+            const res: any = await axios.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/procedure/computeGeolocation`, { input: "2" });
             expect(res.data).toBe("us.west.2");
         } catch (e) {
             done.fail(e)
@@ -451,7 +451,7 @@ describe("Provider Sdk tests", () => {
         );
         await sdk.register();
         try {
-            const res: any = await axios.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/procedure/computeSum`, { input: {"a": 5, "b": 5} });
+            const res: any = await axios.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/procedure/computeSum`, { input: {"a": 5, "b": 5} });
             expect(res.data).toBe(10);
         } catch (e) {
             done.fail(e)

@@ -12,7 +12,7 @@ declare var process: {
 const serverPort = parseInt(process.env.SERVER_PORT || '3000');
 
 const entityApi = axios.create({
-    baseURL: `http://127.0.0.1:${serverPort}/entity`,
+    baseURL: `http://127.0.0.1:${serverPort}/services`,
     timeout: 1000,
     headers: { 'Content-Type': 'application/json' }
 });
@@ -47,7 +47,7 @@ describe("Procedures tests", () => {
                 req.on('end', function () {
                     const post = JSON.parse(body);
                     post.spec.x += post.input;
-                    entityApi.put(`/${provider.prefix}/${kind_name}/${post.metadata.uuid}`, {
+                    entityApi.put(`/${provider.prefix}/${provider.version}/${kind_name}/${post.metadata.uuid}`, {
                         spec: post.spec,
                         metadata: post.metadata
                     }).then(() => {
@@ -64,27 +64,27 @@ describe("Procedures tests", () => {
         server.listen(port, hostname, () => {
             console.log(`Server running at http://${hostname}:${port}/`);
         });
-        const { data: { metadata, spec } } = await entityApi.post(`/${provider.prefix}/${kind_name}`, {
+        const { data: { metadata, spec } } = await entityApi.post(`/${provider.prefix}/${provider.version}/${kind_name}`, {
             spec: {
                 x: 10,
                 y: 11
             }
         });
-        const res: any = await entityApi.post(`/${provider.prefix}/${kind_name}/${metadata.uuid}/procedure/moveX`, { input: 5 });
-        const updatedEntity: any = await entityApi.get(`/${provider.prefix}/${kind_name}/${metadata.uuid}`);
+        const res: any = await entityApi.post(`/${provider.prefix}/${provider.version}/${kind_name}/${metadata.uuid}/procedure/moveX`, { input: 5 });
+        const updatedEntity: any = await entityApi.get(`/${provider.prefix}/${provider.version}/${kind_name}/${metadata.uuid}`);
         expect(updatedEntity.data.metadata.spec_version).toEqual(2);
         expect(updatedEntity.data.spec.x).toEqual(15);
         done();
     });
     test("Procedure input validation", async (done) => {
-        const { data: { metadata, spec } } = await entityApi.post(`/${provider.prefix}/${kind_name}`, {
+        const { data: { metadata, spec } } = await entityApi.post(`/${provider.prefix}/${provider.version}/${kind_name}`, {
             spec: {
                 x: 10,
                 y: 11
             }
         });
         try {
-            await entityApi.post(`/${provider.prefix}/${kind_name}/${metadata.uuid}/procedure/moveX`, { input: "5" });
+            await entityApi.post(`/${provider.prefix}/${provider.version}/${kind_name}/${metadata.uuid}/procedure/moveX`, { input: "5" });
         } catch (err) {
             const res = err.response;
             expect(res.status).toEqual(400);
@@ -95,14 +95,14 @@ describe("Procedures tests", () => {
         done.fail();
     });
     test("Procedure empty input", async (done) => {
-        const { data: { metadata, spec } } = await entityApi.post(`/${provider.prefix}/${kind_name}`, {
+        const { data: { metadata, spec } } = await entityApi.post(`/${provider.prefix}/${provider.version}/${kind_name}`, {
             spec: {
                 x: 10,
                 y: 11
             }
         });
         try {
-            await entityApi.post(`/${provider.prefix}/${kind_name}/${metadata.uuid}/procedure/moveX`, {});
+            await entityApi.post(`/${provider.prefix}/${provider.version}/${kind_name}/${metadata.uuid}/procedure/moveX`, {});
         } catch (err) {
             const res = err.response;
             expect(res.status).toEqual(400);
@@ -129,14 +129,14 @@ describe("Procedures tests", () => {
         server.listen(port, hostname, () => {
             console.log(`Server running at http://${hostname}:${port}/`);
         });
-        const { data: { metadata, spec } } = await entityApi.post(`/${provider.prefix}/${kind_name}`, {
+        const { data: { metadata, spec } } = await entityApi.post(`/${provider.prefix}/${provider.version}/${kind_name}`, {
             spec: {
                 x: 10,
                 y: 11
             }
         });
         try {
-            await entityApi.post(`/${provider.prefix}/${kind_name}/${metadata.uuid}/procedure/moveX`, { input: 5 });
+            await entityApi.post(`/${provider.prefix}/${provider.version}/${kind_name}/${metadata.uuid}/procedure/moveX`, { input: 5 });
         } catch (err) {
             const res = err.response;
             expect(res.status).toEqual(500);
@@ -170,7 +170,7 @@ describe("Procedures tests", () => {
             console.log(`Server running at http://${ hostname }:${ port }/`);
         });
         try {
-            const res: any = await entityApi.post(`/${ provider.prefix }/procedure/computeSum`, {
+            const res: any = await entityApi.post(`/${ provider.prefix }/${provider.version}/procedure/computeSum`, {
                 input: {
                     "a": 5,
                     "b": 5
@@ -206,7 +206,7 @@ describe("Procedures tests", () => {
             console.log(`Server running at http://${ hostname }:${ port }/`);
         });
         try {
-            const res: any = await entityApi.post(`/${ provider.prefix }/procedure/computeSum`, { input: {"a": 10, "b": "Totally not a number"} });
+            const res: any = await entityApi.post(`/${ provider.prefix }/${provider.version}/procedure/computeSum`, { input: {"a": 10, "b": "Totally not a number"} });
         } catch (e) {
             expect(e.response.status).toBe(400);
             server.close();
@@ -235,7 +235,7 @@ describe("Procedures tests", () => {
         server.listen(port, hostname, () => {
             console.log(`Server running at http://${hostname}:${port}/`);
         });
-        const res: any = await entityApi.post(`/${provider.prefix}/${kind_name}/procedure/computeGeolocation`, { input: "2" });
+        const res: any = await entityApi.post(`/${provider.prefix}/${provider.version}/${kind_name}/procedure/computeGeolocation`, { input: "2" });
         expect(res.data).toBe("us.west.2");
         done();
     });
@@ -262,7 +262,7 @@ describe("Procedures tests", () => {
             console.log(`Server running at http://${hostname}:${port}/`);
         });
         try {
-            const res: any = await entityApi.post(`/${provider.prefix}/${kind_name}/procedure/computeGeolocation`, { input: ["String expected got array"] });
+            const res: any = await entityApi.post(`/${provider.prefix}/${provider.version}/${kind_name}/procedure/computeGeolocation`, { input: ["String expected got array"] });
         } catch(e) {
             expect(e.response.status).toBe(400);
             server.close();

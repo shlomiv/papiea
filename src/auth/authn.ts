@@ -16,6 +16,15 @@ export interface UserAuthInfo {
     headers?: { [key: string]: string; };
 }
 
+export function mapHeadersToFields(user_auth_info: UserAuthInfo) {
+    if (user_auth_info.headers === undefined) {
+        throw new UnauthorizedError();
+    }
+    for (let header in user_auth_info.headers) {
+        user_auth_info[header] = user_auth_info.headers[header]
+    }
+}
+
 export interface UserAuthRequestHandler {
     (req: UserAuthInfoRequest, res: Response, next: NextFunction): any;
 }

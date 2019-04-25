@@ -29,8 +29,8 @@ oauth:
     role: # Find the role of the user
         first_match: # This directive checks each line from top to bottom and returns the first
                      # one that matches. Items must be ordered according in descending order
-          - ^extracted_roles.$find(name:nunet-admin).name 
-          - ^extracted_roles.$find(name:nunet-user).name
+          - ^extracted_roles.$find(name:papiea-admin).name
+          - ^extracted_roles.$find(name:account-admin).name
           - anonymous # If none of the above matched, simply put a constant "anonymous" role
           
     # headers is the only entry that is mandatory in this section
@@ -39,8 +39,9 @@ oauth:
       # These will use the same syntax as role above
       tenant-email: ^id_token.email
       tenant-id:    ^id_token.default_tenant
-      tenant-fname: ^id_token.last_name
-      tenant-lname: ^id_token.given_name
-      
+      tenant-fname: ^id_token.given_name
+      tenant-lname: ^id_token.last_name
+      owner: ^id_token.sub
+
       # role will be populated by what `role` got resolved into in its section above
       tenant-role: ^role

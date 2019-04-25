@@ -1,6 +1,6 @@
 import * as express from "express";
 import { Response, NextFunction } from "express";
-import { asyncHandler, UserAuthInfo, UnauthorizedError, UserAuthInfoRequest } from "./authn";
+import { asyncHandler, UserAuthInfo, UnauthorizedError, UserAuthInfoRequest, mapHeadersToFields } from "./authn";
 import { Signature } from "./crypto";
 import { Provider } from "../papiea";
 import { Provider_DB } from "../databases/provider_db_interface";
@@ -19,7 +19,7 @@ function convertToSimpleOauth2(description: any) {
     const simple_oauth_config = {
         client: {
             id: oauth.client_id,
-            secret: oauth.cleint_secret
+            secret: oauth.client_secret
         },
         auth: {
             tokenHost: `http://${oauth.auth_host}`,
@@ -41,12 +41,12 @@ function getUserInfoFromToken(token: any, oauth_description: any): UserAuthInfo 
     const headers = oauth_description.oauth.user_info.headers;
     let env = _.omit(oauth_description.oauth.user_info, ['headers']);
 
-    const extracted_headers = evaluate_headers(env, headers);
+    env.token = token.token;
 
-    const id_token = parseJwt(token.token.id_token).content;
+    const extracted_headers = evaluate_headers(env, headers);
+    extracted_headers.authorization = `Bearer ${token.token.access_token}`;
+
     userInfo.headers = extracted_headers;
-    userInfo.owner = id_token.sub;
-    userInfo.tenant = extracted_headers["tenant-id"];
 
     return userInfo;
 }
@@ -67,7 +67,8 @@ export function createOAuth2Router(redirect_uri: string, signature: Signature, p
 
     router.use('/provider/:prefix/:version/auth/login', asyncHandler(async (req, res) => {
         const provider: Provider = await providerDb.get_provider(req.params.prefix, req.params.version);
-        const oauth2 = simpleOauthModule.create(provider.oauth2);
+        const converted_oauth = convertToSimpleOauth2(provider.oauth2);
+        const oauth2 = simpleOauthModule.create(converted_oauth);
         const state = {
             provider_prefix: provider.prefix,
             provider_version: provider.version,
@@ -120,6 +121,9 @@ export function createOAuth2Router(redirect_uri: string, signature: Signature, p
         let userInfo: UserAuthInfo;
         try {
             userInfo = await signature.verify(token);
+
+            // TODO: this doesn't look good, maybe rework this completely or introduce functional approach
+            mapHeadersToFields(userInfo);
         } catch (e) {
             throw new UnauthorizedError();
         }

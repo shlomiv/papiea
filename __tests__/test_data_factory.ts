@@ -82,7 +82,7 @@ export function getProviderWithSpecOnlyEnitityKindWithOperations(procedure_callb
     return provider;
 }
 
-export function getProviderWithSpecOnlyEnitityKindWithOperationsOauthDescription(procedure_callback: Provider_Callback_URL): Provider {
+export function getProviderWithSpecOnlyEntityKindWithOperationsAndOAuth2Description(procedure_callback: Provider_Callback_URL): Provider {
     const provider: Provider = getProviderWithSpecOnlyEnitityKindNoOperations();
     const proceduralSignatureForKind: Procedural_Signature = {
         name: "moveX",

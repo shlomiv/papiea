@@ -35,7 +35,7 @@ function convertToSimpleOauth2(description: any) {
     return simple_oauth_config;
 }
 
-function getOauth2(provider: Provider) {
+function getOAuth2(provider: Provider) {
     const converted_oauth = convertToSimpleOauth2(provider.oauth2);
     return simpleOauthModule.create(converted_oauth);
 }
@@ -67,7 +67,7 @@ export function createOAuth2Router(redirect_uri: string, signature: Signature, p
 
     router.use('/provider/:prefix/:version/auth/login', asyncHandler(async (req, res) => {
         const provider: Provider = await providerDb.get_provider(req.params.prefix, req.params.version);
-        const oauth2 = getOauth2(provider);
+        const oauth2 = getOAuth2(provider);
         const state = {
             provider_prefix: provider.prefix,
             provider_version: provider.version,
@@ -87,7 +87,7 @@ export function createOAuth2Router(redirect_uri: string, signature: Signature, p
         const code = req.query.code;
         const state = queryString.parse(req.query.state);
         const provider: Provider = await providerDb.get_provider(state.provider_prefix, state.provider_version);
-        const oauth2 = getOauth2(provider);
+        const oauth2 = getOAuth2(provider);
         try {
             const result = await oauth2.authorizationCode.getToken({
                 code,

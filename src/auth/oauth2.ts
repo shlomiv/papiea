@@ -1,11 +1,12 @@
 import * as express from "express";
-import { Response, NextFunction } from "express";
-import { asyncHandler, UserAuthInfo, UnauthorizedError, UserAuthInfoRequest, mapHeadersToFields } from "./authn";
+import { NextFunction, Response } from "express";
+import { asyncHandler, mapHeadersToFields, UnauthorizedError, UserAuthInfo, UserAuthInfoRequest } from "./authn";
 import { Signature } from "./crypto";
 import { Provider } from "../papiea";
 import { Provider_DB } from "../databases/provider_db_interface";
 import * as _ from "lodash";
-import { evaluate_headers, parseJwt } from "./user_data_evaluator";
+import { evaluate_headers, extract_headers } from "./user_data_evaluator";
+
 const simpleOauthModule = require("simple-oauth2"),
     queryString = require("query-string"),
     url = require("url");
@@ -22,7 +23,7 @@ function convertToSimpleOauth2(description: any) {
             secret: oauth.client_secret
         },
         auth: {
-            tokenHost: `http://${oauth.auth_host}`,
+            tokenHost: oauth.auth_host,
             tokenPath: oauth.token_uri,
             authorizePath: oauth.authorize_uri,
             revokePath: oauth.revoke_uri
@@ -35,16 +36,15 @@ function convertToSimpleOauth2(description: any) {
     return simple_oauth_config;
 }
 
-function getUserInfoFromToken(token: any, oauth_description: any): UserAuthInfo {
+function getOauth2(provider: Provider) {
+    const converted_oauth = convertToSimpleOauth2(provider.oauth2);
+    return simpleOauthModule.create(converted_oauth);
+}
+
+function getUserInfoFromToken(token: any, provider: Provider): UserAuthInfo {
     const userInfo: UserAuthInfo = {};
 
-    const headers = oauth_description.oauth.user_info.headers;
-    let env = _.omit(oauth_description.oauth.user_info, ['headers']);
-
-    env.token = token.token;
-
-    const extracted_headers = evaluate_headers(env, headers);
-    extracted_headers.authorization = `Bearer ${token.token.access_token}`;
+    const extracted_headers = extract_headers(token, provider.oauth2);
 
     userInfo.headers = extracted_headers;
 
@@ -67,8 +67,7 @@ export function createOAuth2Router(redirect_uri: string, signature: Signature, p
 
     router.use('/provider/:prefix/:version/auth/login', asyncHandler(async (req, res) => {
         const provider: Provider = await providerDb.get_provider(req.params.prefix, req.params.version);
-        const converted_oauth = convertToSimpleOauth2(provider.oauth2);
-        const oauth2 = simpleOauthModule.create(converted_oauth);
+        const oauth2 = getOauth2(provider);
         const state = {
             provider_prefix: provider.prefix,
             provider_version: provider.version,
@@ -88,15 +87,14 @@ export function createOAuth2Router(redirect_uri: string, signature: Signature, p
         const code = req.query.code;
         const state = queryString.parse(req.query.state);
         const provider: Provider = await providerDb.get_provider(state.provider_prefix, state.provider_version);
-        const converted_oauth = convertToSimpleOauth2(provider.oauth2);
-        const oauth2 = simpleOauthModule.create(converted_oauth);
+        const oauth2 = getOauth2(provider);
         try {
             const result = await oauth2.authorizationCode.getToken({
                 code,
                 redirect_uri
             });
             const token = oauth2.accessToken.create(result);
-            const userInfo = getUserInfoFromToken(token, provider.oauth2);
+            const userInfo = getUserInfoFromToken(token, provider);
             userInfo.provider_prefix = state.provider_prefix;
             userInfo.provider_version = state.provider_version;
             const newSignedToken = await signature.sign(userInfo);

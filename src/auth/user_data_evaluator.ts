@@ -1,4 +1,3 @@
-import * as yaml from 'js-yaml'
 import * as _ from 'lodash'
 import * as JSON from 'node-json-color-stringify'
 import * as color from 'colors'
@@ -122,4 +121,15 @@ ${ str(part_env) }`));
 
 export function evaluate_headers(env: Object, headers: Object) {
     return _.mapValues(headers, (v: any) => deref(env, v))
+}
+
+export function extract_headers(token: any, oauth_description: any) {
+    const headers = oauth_description.oauth.user_info.headers;
+    let env = _.omit(oauth_description.oauth.user_info, ['headers']);
+
+    env.token = token.token;
+
+    const extracted_headers = evaluate_headers(env, headers);
+    extracted_headers.authorization = `Bearer ${token.token.access_token}`;
+    return extracted_headers;
 }

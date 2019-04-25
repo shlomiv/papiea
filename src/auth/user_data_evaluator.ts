@@ -37,7 +37,7 @@ function is_reference(line: any) {
 }
 
 function get_reference(line: any) {
-    if (!is_reference(line)) throw new Error(`'${ line }' not a reference.`)
+    if (!is_reference(line)) throw new Error(`'${ line }' not a reference.`);
     return line.substring(1)
 }
 
@@ -46,7 +46,7 @@ function is_function(line: any) {
 }
 
 function get_function(line: any) {
-    if (!is_function(line)) throw new Error(`'${ line }' not a function.`)
+    if (!is_function(line)) throw new Error(`'${ line }' not a function.`);
     return line.substring(1)
 }
 
@@ -123,7 +123,16 @@ export function evaluate_headers(env: Object, headers: Object) {
     return _.mapValues(headers, (v: any) => deref(env, v))
 }
 
-export function extract_headers(token: any, oauth_description: any) {
+export function extract_user_props(token: any, oauth_description: any): any {
+    const user_identifiers = oauth_description.oauth.user_info.user_props;
+    let env = _.omit(oauth_description.oauth.user_info, ['user_props']);
+
+    env.token = token.token;
+
+    return _.mapValues(user_identifiers, (v: any) => deref(env, v))
+}
+
+export function extract_headers(token: any, oauth_description: any): any {
     const headers = oauth_description.oauth.user_info.headers;
     let env = _.omit(oauth_description.oauth.user_info, ['headers']);
 

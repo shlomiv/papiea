@@ -172,7 +172,6 @@ describe("Evaluating a full yaml file", () => {
                     "tenant-fname": "shlomi",
                     "tenant-lname": "vaknin",
                     "tenant-role": "account-admin",
-                    "owner": "shlomi.vaknin@nutanix.com"
                 });
             done()
         } catch (e) {

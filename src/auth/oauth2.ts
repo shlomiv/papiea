@@ -1,11 +1,10 @@
 import * as express from "express";
 import { NextFunction, Response } from "express";
-import { asyncHandler, mapHeadersToFields, UnauthorizedError, UserAuthInfo, UserAuthInfoRequest } from "./authn";
+import { asyncHandler, UnauthorizedError, UserAuthInfo, UserAuthInfoRequest } from "./authn";
 import { Signature } from "./crypto";
 import { Provider } from "../papiea";
 import { Provider_DB } from "../databases/provider_db_interface";
-import * as _ from "lodash";
-import { evaluate_headers, extract_headers } from "./user_data_evaluator";
+import { extract_headers, extract_user_props } from "./user_data_evaluator";
 
 const simpleOauthModule = require("simple-oauth2"),
     queryString = require("query-string"),
@@ -42,11 +41,12 @@ function getOauth2(provider: Provider) {
 }
 
 function getUserInfoFromToken(token: any, provider: Provider): UserAuthInfo {
-    const userInfo: UserAuthInfo = {};
 
     const extracted_headers = extract_headers(token, provider.oauth2);
+    const extracted_user_props = extract_user_props(token, provider.oauth2);
+    console.log(extracted_user_props);
 
-    userInfo.headers = extracted_headers;
+    const userInfo: UserAuthInfo = {headers: extracted_headers, ...extracted_user_props};
 
     return userInfo;
 }
@@ -119,9 +119,6 @@ export function createOAuth2Router(redirect_uri: string, signature: Signature, p
         let userInfo: UserAuthInfo;
         try {
             userInfo = await signature.verify(token);
-
-            // TODO: this doesn't look good, maybe rework this completely or introduce functional approach
-            mapHeadersToFields(userInfo);
         } catch (e) {
             throw new UnauthorizedError();
         }

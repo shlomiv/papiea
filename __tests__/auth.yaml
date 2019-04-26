@@ -47,3 +47,4 @@ oauth:
 
       # role will be populated by what `role` got resolved into in its section above
       tenant-role: ^role
+      authorization: $bearer(^token.access_token)

@@ -50,10 +50,43 @@ function is_first_match(val: any) {
     return (_.isObject(val) && _.isEqual(_.keys(val), ['first_match']))
 }
 
-const funcNameParamRegex = /([^\.]+)\(([^)]+)\)/;
+const funcNameParamRegex = /([^.]+)\(([^)]+)\)/;
+
+function invoke_function(env: any, part: any) {
+    const func = get_function(part);
+    const matches = funcNameParamRegex.exec(func);
+
+    switch ((matches && matches[1]) || func) {
+        case 'JWT':
+            return parseJwt(env);
+        case 'find':
+            if (!matches)
+                throw Error("no params found for 'find' function");
+
+            const [k, v] = matches[2].split(':');
+            if (k && v) return _.find(env, (x: any) => x[k] == v);
+
+            throw Error(`bad params found for 'find' function. ${ matches[2] }`);
+        case 'bearer':
+            if (!matches)
+                throw Error("no params found for 'bearer' function");
+            if (is_reference(matches[2])) {
+                return `Bearer ${deref(env, matches[2])}`
+            } else {
+                return `Bearer ${matches[2]}`
+            }
+    }
+
+}
 
 export function deref(env: any, query_inp: any): any {
     //console.log("Inside with", query_inp)
+    const is_func = is_function(query_inp);
+
+    if (is_func) {
+        return invoke_function(env, query_inp);
+    }
+
     const reference = is_reference(query_inp);
 
     // If we are not a reference, than the input is already a const
@@ -70,22 +103,7 @@ export function deref(env: any, query_inp: any): any {
         if (!part_env) return null;
         if (is_function(current_part)) {
             // Get parameters
-            const func = get_function(current_part);
-            const matches = funcNameParamRegex.exec(func);
-
-            switch ((matches && matches[1]) || func) {
-                case 'JWT':
-                    return parseJwt(part_env);
-                case 'find':
-                    if (!matches)
-                        throw Error("no params found for 'find' function");
-
-                    const [k, v] = matches[2].split(':');
-                    if (k && v) return _.find(part_env, (x: any) => x[k] == v);
-
-                    throw Error(`bad params found for 'find' function. ${ matches[2] }`)
-
-            }
+            return invoke_function(part_env, current_part)
 
         } else { // current_part is an index into an object or array returned in part_env
             let value = part_env[current_part];
@@ -114,23 +132,11 @@ export function deref(env: any, query_inp: any): any {
     return _.reduce(parts, part_processor, env)
 }
 
-export function extract_user_props(token: any, oauth_description: any): any {
-    const user_identifiers = oauth_description.oauth.user_info.user_props;
-    let env = _.omit(oauth_description.oauth.user_info, ['user_props']);
+export function extract_property(token: any, oauth_description: any, property: string): any {
+    const user_identifiers = oauth_description.oauth.user_info[property];
+    let env = _.omit(oauth_description.oauth.user_info, [property]);
 
     env.token = token.token;
 
     return _.mapValues(user_identifiers, (v: any) => deref(env, v))
-}
-
-export function extract_headers(token: any, oauth_description: any): any {
-    const headers = oauth_description.oauth.user_info.headers;
-    let env = _.omit(oauth_description.oauth.user_info, ['headers']);
-
-    env.token = token.token;
-
-    const extracted_headers = _.mapValues(headers, (v: any) => deref(env, v))
-;
-    extracted_headers.authorization = `Bearer ${token.token.access_token}`;
-    return extracted_headers;
 }

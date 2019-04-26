@@ -4,7 +4,7 @@ import { asyncHandler, UnauthorizedError, UserAuthInfo, UserAuthInfoRequest } fr
 import { Signature } from "./crypto";
 import { Provider } from "../papiea";
 import { Provider_DB } from "../databases/provider_db_interface";
-import { extract_headers, extract_user_props } from "./user_data_evaluator";
+import { extract_property } from "./user_data_evaluator";
 
 const simpleOauthModule = require("simple-oauth2"),
     queryString = require("query-string"),
@@ -42,8 +42,8 @@ function getOAuth2(provider: Provider) {
 
 function getUserInfoFromToken(token: any, provider: Provider): UserAuthInfo {
 
-    const extracted_headers = extract_headers(token, provider.oauth2);
-    const extracted_user_props = extract_user_props(token, provider.oauth2);
+    const extracted_headers = extract_property(token, provider.oauth2, "headers");
+    const extracted_user_props = extract_property(token, provider.oauth2, "user_props");
 
     const userInfo: UserAuthInfo = {headers: extracted_headers, ...extracted_user_props};
 

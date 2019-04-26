@@ -145,7 +145,19 @@ describe("Test deref", ()=> {
         expect(deref(env, "^token.id_token.$JWT.content.given_name")).toEqual("shlomi");
         expect(deref(env, "^token.id_token.$JWT.content.xi_role.$JWT.header.0.roles.1.name")).toEqual("nunet-admin");
         done()
-    })
+    });
+
+    test("deref on function first with ref as parameter", done => {
+        let env = {token:token.token};
+        expect(deref(env, "$bearer(^token.access_token)")).toEqual(`Bearer ${token.token.access_token}`)
+        done();
+    });
+
+    test("deref on function first without ref as parameter", done => {
+        let env = {token:token.token};
+        expect(deref(env, "$bearer(abcd)")).toEqual(`Bearer abcd`);
+        done();
+    });
 });
 
 describe("Evaluating a full yaml file", () => {
@@ -159,6 +171,8 @@ describe("Evaluating a full yaml file", () => {
 
     test("Headers", (done) => {
         try {
+
+            //evaluate headers
             const the_headers = _.mapValues(headers, (v: any) => deref(env, v));
             expect(the_headers).toEqual(
                 {
@@ -167,6 +181,7 @@ describe("Evaluating a full yaml file", () => {
                     "tenant-fname": "shlomi",
                     "tenant-lname": "vaknin",
                     "tenant-role": "account-admin",
+                    "authorization": `Bearer ${token.token.access_token}`
                 });
             done()
         } catch (e) {

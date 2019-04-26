@@ -21,7 +21,8 @@ export class Provider_DB_Mongo implements Provider_DB {
         }
     }
 
-    async register_provider(provider: Provider): Promise<void> {
+    async save_provider(provider: Provider): Promise<void> {
+        delete provider["created_at"];
         const result = await this.collection.updateOne({
                 "prefix": provider.prefix,
                 "version": provider.version

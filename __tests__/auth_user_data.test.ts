@@ -1,12 +1,7 @@
 import 'jest'
-import * as yaml from 'js-yaml'
-import { readFileSync } from 'fs'
-import { deref, evaluate_headers, parseJwt } from '../src/auth/user_data_evaluator'
+import { deref, parseJwt } from '../src/auth/user_data_evaluator'
 import * as _ from "lodash"
-import * as color from 'colors'
-import * as JSON from 'node-json-color-stringify'
-
-const str = (x:any) =>JSON.colorStringify(x, null, 2);
+import { loadYaml } from "./test_data_factory";
 
 const token =
     {
@@ -116,7 +111,7 @@ describe("Test deref", ()=> {
             deref(env, '^none');
             done.fail("Error not thrown")
         } catch (err) {
-            expect(err.message).toEqual(color.red(`Variable, index or key '${color.yellow('none')}' not found in:\n${str(env)}`));
+            expect(err.message).toEqual(`Variable, index or key 'none' not found`);
             done()
         }
     });
@@ -127,7 +122,7 @@ describe("Test deref", ()=> {
             deref(env, '^t.$find');
             done.fail("Error not thrown")
         } catch (err) {
-            expect(err.message).toEqual(color.red(`no params found for '${color.yellow('find')}' function. ${color.green('find')}`));
+            expect(err.message).toEqual("no params found for 'find' function");
             done()
         }
     });
@@ -139,7 +134,7 @@ describe("Test deref", ()=> {
             done.fail("Error not thrown")
         } catch (err) {
             expect(err.message)
-                .toEqual(color.red(`bad params found for '${color.yellow('find')}' function. ${color.green('asdasd')}`));
+                .toEqual(`bad params found for 'find' function. asdasd`);
             done()
         }
     });
@@ -154,7 +149,7 @@ describe("Test deref", ()=> {
 });
 
 describe("Evaluating a full yaml file", () => {
-    const doc = yaml.safeLoad(readFileSync('__tests__/auth.yaml', 'utf8'));
+    const doc = loadYaml("./auth.yaml");
 
     const headers = doc.oauth.user_info.headers;
     let env = _.omit(doc.oauth.user_info, ['headers']);
@@ -164,7 +159,7 @@ describe("Evaluating a full yaml file", () => {
 
     test("Headers", (done) => {
         try {
-            const the_headers = evaluate_headers(env, headers);
+            const the_headers = _.mapValues(headers, (v: any) => deref(env, v));
             expect(the_headers).toEqual(
                 {
                     "tenant-email": "shlomi.vaknin@nutanix.com",

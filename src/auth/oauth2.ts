@@ -44,7 +44,6 @@ function getUserInfoFromToken(token: any, provider: Provider): UserAuthInfo {
 
     const extracted_headers = extract_headers(token, provider.oauth2);
     const extracted_user_props = extract_user_props(token, provider.oauth2);
-    console.log(extracted_user_props);
 
     const userInfo: UserAuthInfo = {headers: extracted_headers, ...extracted_user_props};
 

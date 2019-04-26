@@ -5,11 +5,7 @@ const url = require("url");
 const queryString = require("query-string");
 import { Metadata, Spec } from "../src/core";
 import { Provider } from "../src/papiea";
-import {
-    getProviderWithSpecOnlyEnitityKindWithOperations,
-    getProviderWithSpecOnlyEntityKindWithOperationsAndOAuth2Description,
-    loadYaml
-} from "./test_data_factory";
+import { getProviderWithSpecOnlyEntityKindWithOperationsAndOAuth2Description } from "./test_data_factory";
 import uuid = require("uuid");
 
 

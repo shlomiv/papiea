@@ -1,8 +1,4 @@
 import * as _ from 'lodash'
-import * as JSON from 'node-json-color-stringify'
-import * as color from 'colors'
-
-const str = (x: any) => JSON.colorStringify(x, null, 2);
 
 // Taken from https://git.coolaj86.com/coolaj86/atob.js/src/branch/master/node-atob.js#L3-L5
 export function atob(str: string) {
@@ -82,12 +78,12 @@ export function deref(env: any, query_inp: any): any {
                     return parseJwt(part_env);
                 case 'find':
                     if (!matches)
-                        throw Error(color.red(`no params found for '${ color.yellow('find') }' function. ${ color.green(func) }`));
+                        throw Error("no params found for 'find' function");
 
                     const [k, v] = matches[2].split(':');
                     if (k && v) return _.find(part_env, (x: any) => x[k] == v);
 
-                    throw Error(color.red(`bad params found for '${ color.yellow('find') }' function. ${ color.green(matches[2]) }`))
+                    throw Error(`bad params found for 'find' function. ${ matches[2] }`)
 
             }
 
@@ -95,8 +91,7 @@ export function deref(env: any, query_inp: any): any {
             let value = part_env[current_part];
 
             if (!value)
-                throw Error(color.red(`Variable, index or key '${ color.yellow(current_part) }' not found in:
-${ str(part_env) }`));
+                throw Error(`Variable, index or key '${ current_part }' not found`);
 
             if (is_first_match(value)) {
                 return _.find(_.map(value.first_match, (x: any) => deref(env, x)))
@@ -119,10 +114,6 @@ ${ str(part_env) }`));
     return _.reduce(parts, part_processor, env)
 }
 
-export function evaluate_headers(env: Object, headers: Object) {
-    return _.mapValues(headers, (v: any) => deref(env, v))
-}
-
 export function extract_user_props(token: any, oauth_description: any): any {
     const user_identifiers = oauth_description.oauth.user_info.user_props;
     let env = _.omit(oauth_description.oauth.user_info, ['user_props']);
@@ -138,7 +129,8 @@ export function extract_headers(token: any, oauth_description: any): any {
 
     env.token = token.token;
 
-    const extracted_headers = evaluate_headers(env, headers);
+    const extracted_headers = _.mapValues(headers, (v: any) => deref(env, v))
+;
     extracted_headers.authorization = `Bearer ${token.token.access_token}`;
     return extracted_headers;
 }

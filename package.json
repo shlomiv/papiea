@@ -36,7 +36,8 @@
     "simple-oauth2": "^2.2.1",
     "swagger-model-validator": "^3.0.6",
     "uuid": "^3.3.2",
-    "uuid-validate": "0.0.3"
+    "uuid-validate": "0.0.3",
+    "wait-port": "^0.2.2"
   },
   "devDependencies": {
     "@types/jest": "^23.3.10",

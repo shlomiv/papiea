@@ -13,7 +13,6 @@ export interface UserAuthInfoRequest extends Request {
 
 export interface UserAuthInfo {
     [key: string]: any;
-    headers?: { [key: string]: string; };
 }
 export interface UserAuthRequestHandler {
     (req: UserAuthInfoRequest, res: Response, next: NextFunction): any;

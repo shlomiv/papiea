@@ -69,6 +69,8 @@ export interface Provider {
     procedures: { [key: string]: Procedural_Signature; };
     extension_structure: Data_Description
     created_at?: Date;
+    policy?: string;
+    oauth2?: any;
 }
 
 // provider-desc-struct ends here

@@ -4,21 +4,34 @@ import ApiDocsGenerator from "./api_docs/api_docs_generator";
 import createProviderAPIRouter from "./provider/provider_routes";
 import { Provider_API_Impl } from "./provider/provider_api_impl";
 import { MongoConnection } from "./databases/mongo";
-import { createEntityRoutes } from "./entity/entity_routes";
+import { createEntityAPIRouter } from "./entity/entity_routes";
 import { Entity_API_Impl, ProcedureInvocationError } from "./entity/entity_api_impl";
 import { ValidationError, Validator } from "./validator";
 import { EntityNotFoundError } from "./databases/utils/errors";
+import { UnauthorizedError } from "./auth/authn";
+import { createOAuth2Router } from "./auth/oauth2";
+import { JWTHMAC } from "./auth/crypto";
+import { Authorizer, NoAuthAuthorizer, PerProviderAuthorizer, PermissionDeniedError } from "./auth/authz";
+import { ProviderCasbinAuthorizerFactory } from "./auth/casbin";
+import { resolve } from "path";
 
 declare var process: {
     env: {
         SERVER_PORT: string,
         MONGO_URL: string,
         MONGO_DB: string,
+        TOKEN_SECRET: string,
+        TOKEN_EXPIRES_SECONDS: string,
+        OAUTH2_REDIRECT_URI: string
     },
     title: string;
 };
-process.title = 'papiea';
-const serverPort = parseInt(process.env.SERVER_PORT || '3000');
+process.title = "papiea";
+const serverPort = parseInt(process.env.SERVER_PORT || "3000");
+const tokenSecret = process.env.TOKEN_SECRET || "secret";
+const tokenExpiresSeconds = parseInt(process.env.TOKEN_EXPIRES_SECONDS || (60 * 60 * 24 * 7).toString());
+const pathToDefaultModel: string = resolve(__dirname, "./auth/default_provider_model.txt");
+const oauth2RedirectUri: string = process.env.OAUTH2_REDIRECT_URI || "http://localhost:3000/provider/auth/callback";
 
 async function setUpApplication(): Promise<express.Express> {
     const app = express();
@@ -29,9 +42,11 @@ async function setUpApplication(): Promise<express.Express> {
     const specDb = await mongoConnection.get_spec_db();
     const statusDb = await mongoConnection.get_status_db();
     const validator = new Validator();
-    const providerApi = new Provider_API_Impl(providerDb, statusDb, validator);
+    const providerApi = new Provider_API_Impl(providerDb, statusDb, validator, new NoAuthAuthorizer());
+    app.use(createOAuth2Router(oauth2RedirectUri, new JWTHMAC(tokenSecret, tokenExpiresSeconds), providerDb));
+    const entityApiAuthorizer: Authorizer = new PerProviderAuthorizer(providerApi, new ProviderCasbinAuthorizerFactory(pathToDefaultModel));
     app.use('/provider', createProviderAPIRouter(providerApi));
-    app.use('/services', createEntityRoutes(new Entity_API_Impl(statusDb, specDb, providerApi, validator)));
+    app.use('/services', createEntityAPIRouter(new Entity_API_Impl(statusDb, specDb, providerApi, validator, entityApiAuthorizer)));
     app.use('/api-docs', createAPIDocsRouter('/api-docs', new ApiDocsGenerator(providerDb)));
     app.use(function (err: any, req: any, res: any, next: any) {
         if (res.headersSent) {
@@ -49,6 +64,14 @@ async function setUpApplication(): Promise<express.Express> {
             case EntityNotFoundError:
                 res.status(404);
                 res.json({ error: `Entity with kind: ${err.kind}, uuid: ${err.uuid} not found` });
+                return;
+            case UnauthorizedError:
+                res.status(401);
+                res.json({ error: 'Unauthorized' });
+                return;
+            case PermissionDeniedError:
+                res.status(403);
+                res.json({ error: 'Forbidden' });
                 return;
             default:
                 res.status(500);

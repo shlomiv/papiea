@@ -187,7 +187,7 @@ describe("Entity API auth tests", () => {
                 { headers: { 'Authorization': 'Bearer ' + token } }
             );
             expect(data.owner).toEqual("alice");
-            expect(data["tenant-id"]).toEqual(tenant_uuid);
+            expect(data.tenant).toEqual(tenant_uuid);
             done();
         } catch (e) {
             done.fail(e);
@@ -215,7 +215,7 @@ describe("Entity API auth tests", () => {
                 { headers: { 'Authorization': 'Bearer ' + token } }
             );
             expect(data.owner).toEqual("alice");
-            expect(data["tenant-id"]).toEqual(tenant_uuid);
+            expect(data.tenant).toEqual(tenant_uuid);
             done();
         } catch (e) {
             done.fail(e);

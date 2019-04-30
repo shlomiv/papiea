@@ -6,7 +6,7 @@ import { resolve } from "path";
 
 
 describe("Casbin authorizer tests", () => {
-    const pathToModel: string = resolve(__dirname, "./test_provider_model.txt");
+    const pathToModel: string = resolve(__dirname, "../src/auth/default_provider_model.txt");
     const pathToPolicy: string = resolve(__dirname, "../src/auth/provider_policy_example.txt");
     const authorizer = new CasbinAuthorizer(pathToModel, pathToPolicy);
 

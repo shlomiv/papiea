@@ -36,8 +36,8 @@ oauth:
     # All lines listed will be added to the request's header. 
     headers:
       # These will use the same syntax as role above
+      tenant:    ^id_token.default_tenant
       tenant-email: ^id_token.email
-      tenant-id:    ^id_token.default_tenant
       tenant-fname: ^id_token.given_name
       tenant-lname: ^id_token.last_name
 

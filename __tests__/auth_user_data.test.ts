@@ -224,7 +224,7 @@ describe("Evaluating a full yaml file", () => {
             expect(the_headers).toEqual(
                 {
                     "tenant-email": "alice@localhost",
-                    "tenant-id": tenant_uuid,
+                    "tenant": tenant_uuid,
                     "tenant-fname": "Alice",
                     "tenant-lname": "Doe",
                     "tenant-role": "papiea-admin",

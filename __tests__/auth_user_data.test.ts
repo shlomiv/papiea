@@ -181,7 +181,8 @@ describe("Evaluating a full yaml file", () => {
                     "tenant-fname": "shlomi",
                     "tenant-lname": "vaknin",
                     "tenant-role": "account-admin",
-                    "authorization": `Bearer ${token.token.access_token}`
+                    "authorization": `Bearer ${token.token.access_token}`,
+                    "owner": "shlomi.vaknin@nutanix.com"
                 });
             done()
         } catch (e) {

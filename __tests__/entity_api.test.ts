@@ -385,49 +385,6 @@ describe("Entity API tests", () => {
         }
     });
 
-    test("Create entity without additional fields, additional fields should be empty", async (done) => {
-        expect.assertions(4);
-        try {
-            const { data: { metadata, spec } } = await entityApi.post(`/${providerPrefix}/${providerVersion}/${kind_name}`, {
-                spec: {
-                    x: 10,
-                    y: 11
-                },
-            });
-            expect(metadata).not.toBeUndefined();
-            expect(metadata.spec_version).toEqual(1);
-            expect(spec).not.toBeUndefined();
-            expect(metadata._key).toBeUndefined();
-            await entityApi.delete(`/${providerPrefix}/${providerVersion}/${kind_name}/${metadata.uuid}`);
-            done();
-        } catch (e) {
-            done.fail(e);
-        }
-    });
-
-    test("Create entity with additional fields", async (done) => {
-        expect.assertions(4);
-        try {
-            const { data: { metadata, spec } } = await entityApi.post(`/${providerPrefix}/${providerVersion}/${kind_name}`, {
-                spec: {
-                    x: 10,
-                    y: 11
-                },
-                metadata: {
-                    _key: "123"
-                }
-            });
-            expect(metadata).not.toBeUndefined();
-            expect(metadata.spec_version).toEqual(1);
-            expect(spec).not.toBeUndefined();
-            expect(metadata._key).toBe("123");
-            await entityApi.delete(`/${providerPrefix}/${providerVersion}/${kind_name}/${metadata.uuid}`);
-            done();
-        } catch (e) {
-            done.fail(e);
-        }
-    });
-
     test("Create entity with non valid uuid should be an error", async (done) => {
         try {
             const { data: { metadata, spec } } = await entityApi.post(`/${providerPrefix}/${providerVersion}/${kind_name}`, {

@@ -50,10 +50,10 @@ describe("Provider API tests", () => {
 
     test("Get multiple providers", async done => {
         const version1 = "1.0.0";
-        const provider1: Provider = { prefix: providerPrefix, version: version1, kinds: [], procedures: {} };
+        const provider1: Provider = { prefix: providerPrefix, version: version1, kinds: [], procedures: {}, extension_structure: {} };
         providerApi.post('/', provider1).then().catch(done.fail);
         const version2 = "2.0.0";
-        const provider2: Provider = { prefix: providerPrefix, version: version2, kinds: [], procedures: {} };
+        const provider2: Provider = { prefix: providerPrefix, version: version2, kinds: [], procedures: {}, extension_structure: {} };
         providerApi.post('/', provider2).then().catch(done.fail);
         try {
             const res = await providerApi.get(`/${providerPrefix}`);

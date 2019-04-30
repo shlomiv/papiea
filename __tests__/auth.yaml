@@ -9,10 +9,6 @@ oauth:
   user_info:
     access_token: ^token.access_token.$JWT.content  # how to get the access_token from the token
     id_token: ^token.id_token.$JWT.content # how to get the access_token from the token
-    user_props:
-      owner: ^id_token.sub
-      tenant: ^id_token.default_tenant
-
     
     # `role` will be set to the first item in the list that is not undefined, so they must be
     # ordered properly.

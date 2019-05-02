@@ -30,6 +30,11 @@ export function getLocationDataDescription(): Data_Description {
     return randomizedLocationDataDescription;
 }
 
+export function getMetadataDescription(): Data_Description {
+    let MetadataDescription = loadYaml("./metadata_extension.yml");
+    return MetadataDescription;
+}
+
 export function getSpecOnlyEntityKind(): SpecOnlyEntityKind {
     const locationDataDescription = getLocationDataDescription();
     const name = Object.keys(locationDataDescription)[0];
@@ -49,7 +54,7 @@ export function getProviderWithSpecOnlyEnitityKindNoOperations(): Provider {
     const spec_only_kind = getSpecOnlyEntityKind();
     const providerPrefix = randomString(12);
     const providerVersion = "0.1.0";
-    const provider: Provider = { prefix: providerPrefix, version: providerVersion, kinds: [spec_only_kind], procedures: {} };
+    const provider: Provider = { prefix: providerPrefix, version: providerVersion, kinds: [spec_only_kind], procedures: {}, extension_structure: {} };
     return provider;
 }
 

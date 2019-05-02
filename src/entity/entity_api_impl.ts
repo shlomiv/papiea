@@ -1,15 +1,15 @@
 import axios from "axios"
 import { Status_DB } from "../databases/status_db_interface";
 import { Spec_DB } from "../databases/spec_db_interface";
-import { Kind, Procedural_Signature } from "../papiea";
-import { Entity_Reference, Metadata, Spec, uuid4, Status, Version } from "../core";
-import uuid = require("uuid");
+import { Kind, Procedural_Signature, Provider } from "../papiea";
+import { Data_Description, Entity_Reference, Metadata, Spec, Status, uuid4, Version } from "../core";
 import { Entity_API } from "./entity_api_interface";
 import { ValidationError, Validator } from "../validator";
 import * as uuid_validate from "uuid-validate";
 import { Authorizer, ReadAction, CreateAction, DeleteAction, UpdateAction, CallProcedureByNameAction } from "../auth/authz";
 import { UserAuthInfo } from "../auth/authn";
 import { Provider_API } from "../provider/provider_api_interface";
+import uuid = require("uuid");
 
 export class ProcedureInvocationError extends Error {
     errors: string[];
@@ -40,6 +40,10 @@ export class Entity_API_Impl implements Entity_API {
 
     private async get_kind(user: UserAuthInfo, prefix: string, kind_name: string, version: Version): Promise<Kind> {
         const provider = await this.provider_api.get_provider(user, prefix, version);
+        return this.find_kind(provider, kind_name);
+    }
+
+    private find_kind(provider: Provider, kind_name: string): Kind {
         const found_kind: Kind | undefined = provider.kinds.find(elem => elem.name === kind_name);
         if (found_kind === undefined) {
             throw new Error(`Kind: ${kind_name} not found`);
@@ -48,7 +52,9 @@ export class Entity_API_Impl implements Entity_API {
     }
 
     async save_entity(user: UserAuthInfo, prefix: string, kind_name: string, version: Version, spec_description: Spec, request_metadata: Metadata = {} as Metadata): Promise<[Metadata, Spec]> {
-        const kind: Kind = await this.get_kind(user, prefix, kind_name, version);
+        const provider = await this.provider_api.get_provider(user, prefix, version);
+        const kind = this.find_kind(provider, kind_name);
+        this.validate_metadata_extension(provider.extension_structure, request_metadata);
         this.validate_spec(spec_description, kind);
         if (!request_metadata.uuid) {
             request_metadata.uuid = uuid();
@@ -212,5 +218,17 @@ export class Entity_API_Impl implements Entity_API {
     private validate_spec(spec: Spec, kind: Kind) {
         const schemas: any = Object.assign({}, kind.kind_structure);
         this.validator.validate(spec, Object.values(kind.kind_structure)[0], schemas);
+    }
+
+    private validate_metadata_extension(extension_structure: Data_Description, metadata: Metadata | undefined) {
+        if (metadata === undefined) {
+            return
+        }
+        // Check extension structure is an empty object
+        if (Object.entries(extension_structure).length === 0 && extension_structure.constructor === Object) {
+            return
+        }
+        const schemas: any = Object.assign({}, extension_structure);
+        this.validator.validate(metadata.extension, Object.values(extension_structure)[0], schemas);
     }
 }

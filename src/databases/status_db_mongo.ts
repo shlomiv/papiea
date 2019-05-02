@@ -3,7 +3,7 @@ import { Status_DB } from "./status_db_interface";
 import { Db, Collection } from "mongodb";
 import { Entity } from "../core";
 import { datestringToFilter } from "./utils/date";
-import {encode} from "mongo-dot-notation-tool"
+import { encode } from "mongo-dot-notation-tool"
 
 export class Status_DB_Mongo implements Status_DB {
     collection: Collection;

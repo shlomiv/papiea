@@ -8,6 +8,7 @@ fi
 export DEBUG=express:*
 npm install
 npm run build-clj
+wait-port mongo:27017
 if [ $HOT_RELOAD == 'true' ]
 then
     npm run dev

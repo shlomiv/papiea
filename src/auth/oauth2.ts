@@ -1,57 +1,50 @@
 import * as express from "express";
-import { Response, NextFunction } from "express";
-import { asyncHandler, UserAuthInfo, UnauthorizedError, UserAuthInfoRequest } from "./authn";
+import { NextFunction, Response } from "express";
+import { asyncHandler, UnauthorizedError, UserAuthInfo, UserAuthInfoRequest } from "./authn";
 import { Signature } from "./crypto";
 import { Provider } from "../papiea";
 import { Provider_DB } from "../databases/provider_db_interface";
+import { extract_property } from "./user_data_evaluator";
+
 const simpleOauthModule = require("simple-oauth2"),
     queryString = require("query-string"),
     url = require("url");
 
 // !!!!!!!!!!!! TODO(adolgarev): below is provider specific function !!!!!!!!!!!!
 // See https://github.com/nutanix/papiea-js/pull/94
-function getUserInfoFromToken(token: any): UserAuthInfo {
-    const userInfo: UserAuthInfo = {};
 
-    function atob(str: string) {
-        return Buffer.from(str, 'base64').toString('binary');
-    }
+function convertToSimpleOauth2(description: any) {
+    const oauth = description.oauth;
 
-    function parseJwt(token: string): any {
-        // partly from https://stackoverflow.com/a/38552302
-        if (token) {
-            const token_parts = token.split('.');
-            const header_base64Url = token_parts[0];
-            let header = {};
-            if (header_base64Url) {
-                const header_base64 = header_base64Url.replace(/-/g, '+').replace(/_/g, '/');
-                header = JSON.parse(atob(header_base64));
-            }
-            const content_base64Url = token_parts[1];
-            let content = {};
-            if (content_base64Url) {
-                const content_base64 = content_base64Url.replace(/-/g, '+').replace(/_/g, '/');
-                content = JSON.parse(atob(content_base64));
-            }
-            return { header, content };
+    const simple_oauth_config = {
+        client: {
+            id: oauth.client_id,
+            secret: oauth.client_secret
+        },
+        auth: {
+            tokenHost: oauth.auth_host,
+            tokenPath: oauth.token_uri,
+            authorizePath: oauth.authorize_uri,
+            revokePath: oauth.revoke_uri
+        },
+        options: {
+            authorizationMethod: "body",
+            bodyFormat: "form"
         }
-        return { header: {}, content: {} };
-    }
-
-    const access_token = token.token.access_token;
-    const id_token = parseJwt(token.token.id_token).content;
-    const xi_roles = parseJwt(id_token.xi_role).header[0].roles;
-
-    userInfo.owner = id_token.sub;
-    userInfo.tenant = id_token.default_tenant;
-    userInfo.headers = {
-        authorization: `Bearer ${access_token}`,
-        "tenant-email": id_token.email,
-        "tenant-id": id_token.default_tenant,
-        "tenant-fname": id_token.given_name,
-        "tenant-lname": id_token.last_name,
-        "tenant-role": JSON.stringify(xi_roles)
     };
+    return simple_oauth_config;
+}
+
+function getOAuth2(provider: Provider) {
+    const converted_oauth = convertToSimpleOauth2(provider.oauth2);
+    return simpleOauthModule.create(converted_oauth);
+}
+
+function getUserInfoFromToken(token: any, provider: Provider): UserAuthInfo {
+
+    const extracted_headers = extract_property(token, provider.oauth2, "headers");
+
+    const userInfo: UserAuthInfo = {...extracted_headers};
 
     return userInfo;
 }
@@ -72,7 +65,7 @@ export function createOAuth2Router(redirect_uri: string, signature: Signature, p
 
     router.use('/provider/:prefix/:version/auth/login', asyncHandler(async (req, res) => {
         const provider: Provider = await providerDb.get_provider(req.params.prefix, req.params.version);
-        const oauth2 = simpleOauthModule.create(provider.oauth2);
+        const oauth2 = getOAuth2(provider);
         const state = {
             provider_prefix: provider.prefix,
             provider_version: provider.version,
@@ -92,14 +85,14 @@ export function createOAuth2Router(redirect_uri: string, signature: Signature, p
         const code = req.query.code;
         const state = queryString.parse(req.query.state);
         const provider: Provider = await providerDb.get_provider(state.provider_prefix, state.provider_version);
-        const oauth2 = simpleOauthModule.create(provider.oauth2);
+        const oauth2 = getOAuth2(provider);
         try {
             const result = await oauth2.authorizationCode.getToken({
                 code,
                 redirect_uri
             });
             const token = oauth2.accessToken.create(result);
-            const userInfo = getUserInfoFromToken(token);
+            const userInfo = getUserInfoFromToken(token, provider);
             userInfo.provider_prefix = state.provider_prefix;
             userInfo.provider_version = state.provider_version;
             const newSignedToken = await signature.sign(userInfo);

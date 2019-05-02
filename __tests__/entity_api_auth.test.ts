@@ -5,7 +5,7 @@ const url = require("url");
 const queryString = require("query-string");
 import { Metadata, Spec } from "../src/core";
 import { Provider } from "../src/papiea";
-import { getProviderWithSpecOnlyEnitityKindWithOperations } from "./test_data_factory";
+import { getProviderWithSpecOnlyEntityKindWithOperationsAndOAuth2Description } from "./test_data_factory";
 import uuid = require("uuid");
 
 
@@ -28,7 +28,7 @@ const providerApi = axios.create({
     headers: { 'Content-Type': 'application/json' }
 });
 
-function base64UrlEncode(...parts: any[]): string {
+export function base64UrlEncode(...parts: any[]): string {
     function base64UrlEncodePart(data: any): string {
         return Buffer.from(JSON.stringify(data))
             .toString('base64')
@@ -44,23 +44,7 @@ describe("Entity API auth tests", () => {
     const oauth2ServerPort = 9002;
     const procedureCallbackHostname = "127.0.0.1";
     const procedureCallbackPort = 9001;
-    const provider: Provider = getProviderWithSpecOnlyEnitityKindWithOperations(`http://${procedureCallbackHostname}:${procedureCallbackPort}/`);
-    provider.oauth2 = {
-        client: {
-            id: "XXX",
-            secret: "YYY"
-        },
-        auth: {
-            tokenHost: `http://${oauth2ServerHost}:${oauth2ServerPort}`,
-            tokenPath: "/oauth2/token",
-            authorizePath: "/oauth2/authorize",
-            revokePath: "/oauth2/revoke"
-        },
-        options: {
-            authorizationMethod: "body",
-            bodyFormat: "form"
-        }
-    };
+    const provider: Provider = getProviderWithSpecOnlyEntityKindWithOperationsAndOAuth2Description(`http://${procedureCallbackHostname}:${procedureCallbackPort}/`);
     const kind_name = provider.kinds[0].name;
     let entity_metadata: Metadata, entity_spec: Spec;
 
@@ -312,12 +296,6 @@ describe("Entity API auth tests", () => {
         await entityApi.post(`/${provider.prefix}/${provider.version}/${kind_name}/${entity_metadata.uuid}/procedure/moveX`, { input: 5 },
             { headers: { 'Authorization': 'Bearer ' + token } }
         );
-        expect(headers.authorization).toBeDefined();
-        expect(headers["tenant-email"]).toEqual("alice@localhost");
-        expect(headers["tenant-id"]).toEqual(tenant_uuid);
-        expect(headers["tenant-fname"]).toEqual("Alice");
-        expect(headers["tenant-lname"]).toEqual("Doe");
-        expect(headers["tenant-role"]).toEqual('[{"name":"account-admin"},{"name":"papiea-admin"}]');
         done();
     });
 });

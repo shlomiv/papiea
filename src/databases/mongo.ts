@@ -15,7 +15,11 @@ export class MongoConnection {
     constructor(url: string, dbName: string) {
         this.url = url;
         this.dbName = dbName;
-        this.client = new MongoClient(this.url, { useNewUrlParser: true });
+        this.client = new MongoClient(this.url, { 
+            useNewUrlParser: true,
+            reconnectInterval: 2000,
+            reconnectTries: 60,
+            autoReconnect: true });
         this.db = undefined;
         this.specDb = undefined;
         this.providerDb = undefined;

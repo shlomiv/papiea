@@ -338,7 +338,7 @@ describe("Entity API tests", () => {
     test("Update spec-only entity spec", async (done) => {
         expect.assertions(3);
         try {
-            let res = await entityApi.put(`/${providerPrefix}/${providerVersion}/${kind_name}/${entity_metadata.uuid}`, {
+            let res = await entityApi.patch(`/${providerPrefix}/${providerVersion}/${kind_name}/${entity_metadata.uuid}`, {
                 spec: {
                     x: 20,
                     y: 21
@@ -367,7 +367,7 @@ describe("Entity API tests", () => {
                 }
             });
             expect(metadata).not.toBeUndefined();
-            await entityApi.put(`/${providerPrefix}/${providerVersion}/${kind_name}/${metadata.uuid}`, {
+            await entityApi.patch(`/${providerPrefix}/${providerVersion}/${kind_name}/${metadata.uuid}`, {
                 spec: {
                     x: "Totally not a number",
                     y: 21

@@ -73,7 +73,7 @@ export function createEntityAPIRouter(entity_api: Entity_API): Router {
         res.json(await filterEntities(req.user, req.params.kind, filter));
     }));
 
-    router.put("/:prefix/:version/:kind/:uuid", asyncHandler(async (req, res) => {
+    router.patch("/:prefix/:version/:kind/:uuid", asyncHandler(async (req, res) => {
         const request_metadata = req.body.metadata;
         const [metadata, spec] = await entity_api.update_entity_spec(req.user, req.params.uuid, req.params.prefix, request_metadata.spec_version, req.params.kind, req.params.version, req.body.spec);
         res.json({ "metadata": metadata, "spec": spec });

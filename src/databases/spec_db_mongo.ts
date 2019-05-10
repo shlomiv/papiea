@@ -41,9 +41,7 @@ export class Spec_DB_Mongo implements Spec_DB {
                 $inc: {
                     "metadata.spec_version": 1
                 },
-                $set: {
-                    "spec": partial_spec_query
-                },
+                $set: partial_spec_query,
                 $setOnInsert: additional_fields
             }, {
                     upsert: true

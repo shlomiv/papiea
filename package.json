@@ -5,8 +5,8 @@
   "main": "main.js",
   "scripts": {
     "start": "ts-node src/main.ts",
-    "test": "jest --runInBand --coverage --detectOpenHandles",
-    "test-ci": "jest --runInBand --coverage --ci --reporters=default --reporters=jest-junit",
+    "test": "jest --runInBand --coverage --detectOpenHandles --forceExit",
+    "test-ci": "jest --runInBand --coverage --ci --reporters=default --reporters=jest-junit --detectOpenHandles --forceExit",
     "dev": "./node_modules/nodemon/bin/nodemon.js",
     "test-watch": "jest --watchAll",
     "build-clj": "cd papiea-lib-clj && lein cljsbuild once",

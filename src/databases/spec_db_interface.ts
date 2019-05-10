@@ -12,6 +12,8 @@ export interface Spec_DB {
     // spec_version and the new CASed in spec.
     update_spec(entity_metadata: core.Metadata, spec:core.Spec): Promise<[core.Metadata, core.Spec]>;
 
+    replace_spec(entity_metadata: core.Metadata, spec:core.Spec): Promise<[core.Metadata, core.Spec]>;
+
     // Get the spec of a particular entity from the db. Returns both
     // current metadata and the spec of that entity.
     get_spec(entity_ref: core.Entity_Reference): Promise<[core.Metadata, core.Spec]>;

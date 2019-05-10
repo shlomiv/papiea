@@ -153,7 +153,7 @@ describe("Provider Sdk tests", () => {
         };
         location.entity_procedure(proceduralSignature.name, {}, proceduralSignature.execution_strategy, proceduralSignature.argument, proceduralSignature.result, async (ctx, entity, input) => {
             entity.spec.x += input;
-            const res = await axios.put(ctx.url_for(entity), {
+            const res = await axios.patch(ctx.url_for(entity), {
                 spec: entity.spec,
                 metadata: entity.metadata
             });
@@ -181,7 +181,7 @@ describe("Provider Sdk tests", () => {
         };
         location.entity_procedure(proceduralSignature.name, {}, proceduralSignature.execution_strategy, proceduralSignature.argument, proceduralSignature.result, async (ctx, entity, input) => {
             entity.spec.x += input;
-            const res = await axios.put(ctx.url_for(entity), {
+            const res = await axios.patch(ctx.url_for(entity), {
                 spec: entity.spec,
                 metadata: entity.metadata
             });
@@ -196,7 +196,7 @@ describe("Provider Sdk tests", () => {
             }
         });
         try {
-            const res: any = await axios.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }/procedure/moveX`, { input: 5 });
+            const res: any = await axios.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }/procedure/moveX`, { input: 5 });                
             const updatedEntity: any = await axios.get(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`);
             expect(updatedEntity.data.metadata.spec_version).toEqual(2);
             expect(updatedEntity.data.spec.x).toEqual(15);
@@ -256,7 +256,7 @@ describe("Provider Sdk tests", () => {
         try {
             location.entity_procedure(proceduralSignature.name, {}, proceduralSignature.execution_strategy, proceduralSignature.argument, proceduralSignature.result, async (ctx, entity, input) => {
                 entity.spec.x += input;
-                const res = await axios.put(ctx.url_for(entity), {
+                const res = await axios.patch(ctx.url_for(entity), {
                     spec: entity.spec,
                     metadata: entity.metadata
                 });
@@ -282,7 +282,7 @@ describe("Provider Sdk tests", () => {
         };
         location.entity_procedure(proceduralSignature.name, {}, proceduralSignature.execution_strategy, proceduralSignature.argument, proceduralSignature.result, async (ctx, entity, input) => {
             entity.spec.x += input;
-            const res = await axios.put(ctx.url_for(entity), {
+            const res = await axios.patch(ctx.url_for(entity), {
                 spec: entity.spec,
                 metadata: entity.metadata
             });
@@ -331,7 +331,7 @@ describe("Provider Sdk tests", () => {
         };
         location.entity_procedure(proceduralSignature.name, {}, proceduralSignature.execution_strategy, proceduralSignature.argument, proceduralSignature.result, async (ctx, entity, input) => {
             entity.spec.x += input;
-            const res = await axios.put(ctx.url_for(entity), {
+            const res = await axios.patch(ctx.url_for(entity), {
                 spec: entity.spec,
                 metadata: entity.metadata
             });
@@ -382,7 +382,7 @@ describe("Provider Sdk tests", () => {
         };
         location.entity_procedure(proceduralSignature.name, {}, proceduralSignature.execution_strategy, proceduralSignature.argument, proceduralSignature.result, async (ctx, entity, input) => {
             entity.spec.x += input;
-            const res = await axios.put(ctx.url_for(entity), {
+            const res = await axios.patch(ctx.url_for(entity), {
                 spec: entity.spec,
                 metadata: entity.metadata
             });
@@ -427,7 +427,7 @@ describe("Provider Sdk tests", () => {
         };
         location.entity_procedure(proceduralSignature.name, {}, proceduralSignature.execution_strategy, proceduralSignature.argument, proceduralSignature.result, async (ctx, entity, input) => {
             entity.spec.x += input;
-            const res = await axios.put(ctx.url_for(entity), {
+            const res = await axios.patch(ctx.url_for(entity), {
                 spec: entity.spec,
                 metadata: entity.metadata
             });

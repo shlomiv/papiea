@@ -14,6 +14,8 @@ export interface Entity_API {
 
     update_entity_spec(user: UserAuthInfo, uuid: uuid4, prefix: string, spec_version: number, kind_name: string, version: Version, spec_description: any): Promise<[Metadata, Spec]>
 
+    replace_entity_spec(user: UserAuthInfo, uuid: uuid4, prefix: string, spec_version: number, kind_name: string, version: Version, spec_description: any): Promise<[Metadata, Spec]>
+
     delete_entity_spec(user: UserAuthInfo, kind_name: string, entity_uuid: uuid4): Promise<void>
 
     call_procedure(user: UserAuthInfo, prefix: string, kind_name: string, version: Version, entity_uuid: uuid4, procedure_name: string, input: any): Promise<any>

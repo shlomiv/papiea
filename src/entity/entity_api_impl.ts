@@ -106,9 +106,7 @@ export class Entity_API_Impl implements Entity_API {
         this.validate_spec(spec_description, kind);
         const metadata: Metadata = { uuid: uuid, kind: kind.name, spec_version: spec_version } as Metadata;
         await this.authorizer.checkPermission(user, { "metadata": metadata }, UpdateAction);
-        const current_spec = await this.get_entity_spec(user, kind_name, uuid);
-        const updated_spec = Object.assign(current_spec, spec_description);
-        const [_, spec] = await this.spec_db.update_spec(metadata, updated_spec);
+        const [_, spec] = await this.spec_db.update_spec(metadata, spec_description);
         if (kind.kind_structure[kind.name]['x-papiea-entity'] === 'spec-only')
             await this.status_db.replace_status(metadata, spec_description);
         return [metadata, spec];

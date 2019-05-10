@@ -35,13 +35,14 @@ export class Spec_DB_Mongo implements Spec_DB {
             "metadata.kind": entity_metadata.kind,
             "metadata.spec_version": entity_metadata.spec_version
         };
+        const partial_spec_query = encode({"spec": spec});
         try {
             const result = await this.collection.updateOne(filter, {
                 $inc: {
                     "metadata.spec_version": 1
                 },
                 $set: {
-                    "spec": spec
+                    "spec": partial_spec_query
                 },
                 $setOnInsert: additional_fields
             }, {

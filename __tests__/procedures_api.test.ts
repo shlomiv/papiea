@@ -2,7 +2,7 @@ import "jest"
 import * as http from "http"
 import axios from "axios"
 import { Provider } from "../src/papiea"
-import { getProviderWithSpecOnlyEnitityKindWithOperations } from "./test_data_factory"
+import { ProviderBuilder } from "./test_data_factory"
 
 declare var process: {
     env: {
@@ -26,7 +26,14 @@ const providerApi = axios.create({
 describe("Procedures tests", () => {
     const hostname = '127.0.0.1';
     const port = 9001;
-    const provider: Provider = getProviderWithSpecOnlyEnitityKindWithOperations(`http://${hostname}:${port}/`);
+    const provider: Provider = new ProviderBuilder()
+                                .withVersion("0.1.0")
+                                .withKinds()
+                                .withCallback(`http://${hostname}:${port}`)
+                                .withEntityProcedures()
+                                .withKindProcedures()
+                                .withProviderProcedures()
+                                .build();
     const kind_name = provider.kinds[0].name;
 
     beforeAll(async () => {

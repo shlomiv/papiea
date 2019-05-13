@@ -3,7 +3,7 @@ import { readFileSync } from "fs";
 import { resolve } from "path";
 import { plural } from "pluralize";
 import { Provider, SpecOnlyEntityKind, Procedural_Signature, Procedural_Execution_Strategy, Kind } from "../src/papiea";
-import { Data_Description, Provider_Callback_URL, Version } from "../src/core";
+import { Data_Description, Version } from "../src/core";
 
 function randomString(len: number) {
     const charSet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -18,11 +18,6 @@ function randomString(len: number) {
 export function loadYaml(relativePath: string): any {
     return load(readFileSync(resolve(__dirname, relativePath), "utf-8"));
 }
-
-export function loadJson(relativePath: string): any {
-    return JSON.parse(readFileSync(resolve(__dirname, relativePath), 'utf8'));
-}
-
 export function getLocationDataDescription(): Data_Description {
     let locationDataDescription = loadYaml("./location_kind_test_data.yml");
     let randomizedLocationDataDescription: any = {};
@@ -54,14 +49,18 @@ function formatErrorMsg(current_field: string, missing_field: string) {
     return `Please specify ${missing_field} before ${current_field}`
 }
 
+const default_hostname = "127.0.0.1";
+const port = 9001;
+
 export class ProviderBuilder {
     private readonly _prefix: string;
     private _version: Version = "0.1.0";
     private _kinds: Kind[] = [];
     private _procedures: { [key: string]: Procedural_Signature; } = {};
-    private _oauth2: any;
-    private _extension_structure: any;
+    private _oauth2: any = undefined;
+    private _extension_structure: any = undefined;
     private _policy: any;
+    private _callback: string = `http://${default_hostname}:${port}/`;
 
     constructor(prefix?: string) {
         if (prefix !== undefined) {
@@ -88,6 +87,15 @@ export class ProviderBuilder {
 
     get policy(): any {
         return this._policy
+    }
+
+    public withCallback(address: string) {
+        this._callback = address;
+        return this;
+    }
+
+    get callback() {
+        return this._callback;
     }
 
     public withPolicy(value?: any) {
@@ -121,14 +129,14 @@ export class ProviderBuilder {
         return this;
     }
 
-    public withProviderProcedures(callback: string, value?: { [p: string]: Procedural_Signature }) {
+    public withProviderProcedures(value?: { [p: string]: Procedural_Signature }) {
         if (value === undefined) {
             const proceduralSignatureForProvider: Procedural_Signature = {
                 name: "computeSum",
                 argument: loadYaml("./procedure_sum_input.yml"),
                 result: loadYaml("./procedure_sum_output.yml"),
                 execution_strategy: Procedural_Execution_Strategy.Halt_Intentful,
-                procedure_callback: callback
+                procedure_callback: this._callback
             };
             this._procedures[proceduralSignatureForProvider.name] = proceduralSignatureForProvider;
         }
@@ -143,14 +151,14 @@ export class ProviderBuilder {
         return this._kinds[0].procedures;
     }
 
-    public withKindProcedures(callback: string, value?: { [p: string]: Procedural_Signature }) {
+    public withKindProcedures(value?: { [p: string]: Procedural_Signature }) {
         if (value === undefined) {
             const geolocationComputeProceduralSignature: Procedural_Signature = {
                 name: "computeGeolocation",
                 argument: loadYaml("./procedure_geolocation_compute_input.yml"),
                 result: loadYaml("./procedure_geolocation_compute_input.yml"),
                 execution_strategy: Procedural_Execution_Strategy.Halt_Intentful,
-                procedure_callback: callback
+                procedure_callback: this._callback
             };
             if (this._kinds.length >= 1) {
                 this._kinds[0].procedures[geolocationComputeProceduralSignature.name] = geolocationComputeProceduralSignature
@@ -165,14 +173,14 @@ export class ProviderBuilder {
         return this._kinds[0].procedures;
     }
 
-    public withEntityProcedures(callback: string, value?: { [p: string]: Procedural_Signature }) {
+    public withEntityProcedures(value?: { [p: string]: Procedural_Signature }) {
         if (value === undefined) {
             const proceduralSignatureForKind: Procedural_Signature = {
                 name: "moveX",
                 argument: loadYaml("./procedure_move_input.yml"),
                 result: loadYaml("./location_kind_test_data.yml"),
                 execution_strategy: Procedural_Execution_Strategy.Halt_Intentful,
-                procedure_callback: callback
+                procedure_callback: this._callback
             };
             if (this._kinds.length >= 1) {
                 this._kinds[0].procedures[proceduralSignatureForKind.name] = proceduralSignatureForKind
@@ -203,71 +211,4 @@ export class ProviderBuilder {
         this._version = value;
         return this;
     }
-}
-
-export function getProviderWithSpecOnlyEnitityKindNoOperations(): Provider {
-    const spec_only_kind = getSpecOnlyEntityKind();
-    const providerPrefix = randomString(12);
-    const providerVersion = "0.1.0";
-    const provider: Provider = { prefix: providerPrefix, version: providerVersion, kinds: [spec_only_kind], procedures: {}, extension_structure: {} };
-    return provider;
-}
-
-export function getProviderWithSpecOnlyEnitityKindWithOperations(procedure_callback: Provider_Callback_URL): Provider {
-    const provider: Provider = getProviderWithSpecOnlyEnitityKindNoOperations();
-    const proceduralSignatureForKind: Procedural_Signature = {
-        name: "moveX",
-        argument: loadYaml("./procedure_move_input.yml"),
-        result: loadYaml("./location_kind_test_data.yml"),
-        execution_strategy: Procedural_Execution_Strategy.Halt_Intentful,
-        procedure_callback: procedure_callback
-    };
-    provider.kinds[0].procedures[proceduralSignatureForKind.name] = proceduralSignatureForKind;
-    const proceduralSignatureForProvider: Procedural_Signature = {
-        name: "computeSum",
-        argument: loadYaml("./procedure_sum_input.yml"),
-        result: loadYaml("./procedure_sum_output.yml"),
-        execution_strategy: Procedural_Execution_Strategy.Halt_Intentful,
-        procedure_callback: procedure_callback
-    };
-    provider.procedures[proceduralSignatureForProvider.name] = proceduralSignatureForProvider;
-    const geolocationComputeProceduralSignature: Procedural_Signature = {
-        name: "computeGeolocation",
-        argument: loadYaml("./procedure_geolocation_compute_input.yml"),
-        result: loadYaml("./procedure_geolocation_compute_input.yml"),
-        execution_strategy: Procedural_Execution_Strategy.Halt_Intentful,
-        procedure_callback: procedure_callback
-    };
-    provider.kinds[0].procedures[geolocationComputeProceduralSignature.name] = geolocationComputeProceduralSignature;
-    return provider;
-}
-
-export function getProviderWithSpecOnlyEntityKindWithOperationsAndOAuth2Description(procedure_callback: Provider_Callback_URL): Provider {
-    const provider: Provider = getProviderWithSpecOnlyEnitityKindNoOperations();
-    const proceduralSignatureForKind: Procedural_Signature = {
-        name: "moveX",
-        argument: loadYaml("./procedure_move_input.yml"),
-        result: loadYaml("./location_kind_test_data.yml"),
-        execution_strategy: Procedural_Execution_Strategy.Halt_Intentful,
-        procedure_callback: procedure_callback
-    };
-    provider.kinds[0].procedures[proceduralSignatureForKind.name] = proceduralSignatureForKind;
-    const proceduralSignatureForProvider: Procedural_Signature = {
-        name: "computeSum",
-        argument: loadYaml("./procedure_sum_input.yml"),
-        result: loadYaml("./procedure_sum_output.yml"),
-        execution_strategy: Procedural_Execution_Strategy.Halt_Intentful,
-        procedure_callback: procedure_callback
-    };
-    provider.procedures[proceduralSignatureForProvider.name] = proceduralSignatureForProvider;
-    const geolocationComputeProceduralSignature: Procedural_Signature = {
-        name: "computeGeolocation",
-        argument: loadYaml("./procedure_geolocation_compute_input.yml"),
-        result: loadYaml("./procedure_geolocation_compute_input.yml"),
-        execution_strategy: Procedural_Execution_Strategy.Halt_Intentful,
-        procedure_callback: procedure_callback
-    };
-    provider.kinds[0].procedures[geolocationComputeProceduralSignature.name] = geolocationComputeProceduralSignature;
-    provider.oauth2 = loadYaml("./auth.yaml");
-    return provider;
 }

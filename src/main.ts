@@ -18,7 +18,6 @@ import { resolve } from "path";
 declare var process: {
     env: {
         SERVER_PORT: string,
-        MONGO_URL: string,
         MONGO_DB: string,
         TOKEN_SECRET: string,
         TOKEN_EXPIRES_SECONDS: string,

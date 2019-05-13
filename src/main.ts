@@ -40,7 +40,7 @@ const mongoPort = process.env.MONGO_PORT || '27017'
 async function setUpApplication(): Promise<express.Express> {
     const app = express();
     app.use(express.json());
-    const mongoConnection: MongoConnection = new MongoConnection(process.env.MONGO_URL || `mongodb://${mongoHost}:${mongoPort}`, process.env.MONGO_DB || 'papiea');
+    const mongoConnection: MongoConnection = new MongoConnection(`mongodb://${mongoHost}:${mongoPort}`, process.env.MONGO_DB || 'papiea');
     await mongoConnection.connect();
     const providerDb = await mongoConnection.get_provider_db();
     const specDb = await mongoConnection.get_spec_db();

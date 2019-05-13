@@ -1,7 +1,7 @@
 import "jest"
 import axios from "axios"
 import { Provider } from "../src/papiea";
-import { getProviderWithSpecOnlyEnitityKindNoOperations, loadYaml } from "./test_data_factory";
+import { loadYaml, ProviderBuilder } from "./test_data_factory";
 
 declare var process: {
     env: {
@@ -82,7 +82,7 @@ describe("Provider API tests", () => {
 
     test("Update status", async done => {
         try {
-            const provider: Provider = getProviderWithSpecOnlyEnitityKindNoOperations();
+            const provider: Provider = new ProviderBuilder().withVersion("0.1.0").withKinds().build();
             await providerApi.post('/', provider);
             const kind_name = provider.kinds[0].name;
             const { data: { metadata, spec } } = await entityApi.post(`/${ provider.prefix }/${provider.version}/${ kind_name }`, {
@@ -111,7 +111,7 @@ describe("Provider API tests", () => {
     });
 
     test("Update status with malformed status should fail validation", async done => {
-        const provider: Provider = getProviderWithSpecOnlyEnitityKindNoOperations();
+        const provider: Provider = new ProviderBuilder().withVersion("0.1.0").withKinds().build();;
         await providerApi.post('/', provider);
         const kind_name = provider.kinds[0].name;
         const { data: { metadata, spec } } = await entityApi.post(`/${ provider.prefix }/${provider.version}/${ kind_name }`, {
@@ -138,7 +138,7 @@ describe("Provider API tests", () => {
 
     test("Update policy", async done => {
         try {
-            const provider: Provider = getProviderWithSpecOnlyEnitityKindNoOperations();
+            const provider: Provider = new ProviderBuilder().withVersion("0.1.0").withKinds().build();
             await providerApi.post('/', provider);
 
             const originalPolicy = "g, admin, admin_group";
@@ -155,7 +155,7 @@ describe("Provider API tests", () => {
 
     test("Update status with partial status definition", async done => {
         try {
-            const provider: Provider = getProviderWithSpecOnlyEnitityKindNoOperations();
+            const provider: Provider = new ProviderBuilder().withVersion("0.1.0").withKinds().build();
             await providerApi.post('/', provider);
             const kind_name = provider.kinds[0].name;
             const { data: { metadata, spec } } = await entityApi.post(`/${ provider.prefix }/${provider.version}/${ kind_name }`, {

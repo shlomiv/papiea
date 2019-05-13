@@ -34,11 +34,13 @@ const tokenSecret = process.env.TOKEN_SECRET || "secret";
 const tokenExpiresSeconds = parseInt(process.env.TOKEN_EXPIRES_SECONDS || (60 * 60 * 24 * 7).toString());
 const pathToDefaultModel: string = resolve(__dirname, "./auth/default_provider_model.txt");
 const oauth2RedirectUri: string = process.env.OAUTH2_REDIRECT_URI || "http://localhost:3000/provider/auth/callback";
+const mongoHost = process.env.MONGO_HOST || 'mongo'
+const mongoPort = process.env.MONGO_PORT || '27017'
 
 async function setUpApplication(): Promise<express.Express> {
     const app = express();
     app.use(express.json());
-    const mongoConnection: MongoConnection = new MongoConnection(process.env.MONGO_URL || `mongodb://${process.env.MONGO_HOST}:${process.env.MONGO_PORT}`, process.env.MONGO_DB || 'papiea');
+    const mongoConnection: MongoConnection = new MongoConnection(process.env.MONGO_URL || `mongodb://${mongoHost}:${mongoPort}`, process.env.MONGO_DB || 'papiea');
     await mongoConnection.connect();
     const providerDb = await mongoConnection.get_provider_db();
     const specDb = await mongoConnection.get_spec_db();

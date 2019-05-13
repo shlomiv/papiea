@@ -6,8 +6,6 @@ services:
                         context: .
                 environment:
                         - JEST_JUNIT_OUTPUT=reports/junit/results.xml
-                        - MONGO_HOST=mongo
-                        - MONGO_PORT=27017
                 depends_on:
                         - mongo
         mongo:

@@ -5,10 +5,12 @@ if [ -d "/node_modules" ] && [ ! -d "node_modules" ]; then
     mv /node_modules node_modules
 fi
 
+DB_HOST=${$MONGO_HOST:-'mongo'}
+DB_PORT=${$MONGO_PORT:-'27017'}
 export DEBUG=express:*
 npm install
 npm run build-clj
-wait-port mongo:27017
+wait-port $DB_HOST:$DB_PORT
 if [ $HOT_RELOAD == 'true' ]
 then
     npm run dev

@@ -11,13 +11,16 @@ import { ConflictingEntityError } from "../src/databases/utils/errors";
 
 declare var process: {
     env: {
-        MONGO_URL: string,
-        MONGO_DB: string
+        MONGO_DB: string,
+        MONGO_HOST: string,
+        MONGO_PORT: string
     }
 };
+const mongoHost = process.env.MONGO_HOST || 'mongo'
+const mongoPort = process.env.MONGO_PORT || '27017'
 
 describe("MongoDb tests", () => {
-    const connection: MongoConnection = new MongoConnection(process.env.MONGO_URL || 'mongodb://mongo:27017', process.env.MONGO_DB || 'papiea');
+    const connection: MongoConnection = new MongoConnection(`mongodb://${mongoHost}:${mongoPort}`, process.env.MONGO_DB || 'papiea');
     beforeEach(() => {
         jest.setTimeout(50000);
     });

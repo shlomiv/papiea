@@ -14,6 +14,7 @@ import { JWTHMAC } from "./auth/crypto";
 import { Authorizer, NoAuthAuthorizer, PerProviderAuthorizer, PermissionDeniedError } from "./auth/authz";
 import { ProviderCasbinAuthorizerFactory } from "./auth/casbin";
 import { resolve } from "path";
+import morgan = require("morgan");
 
 declare var process: {
     env: {
@@ -22,13 +23,15 @@ declare var process: {
         MONGO_DB: string,
         TOKEN_SECRET: string,
         TOKEN_EXPIRES_SECONDS: string,
-        OAUTH2_REDIRECT_URI: string
+        OAUTH2_REDIRECT_URI: string,
+        DEBUG_LEVEL: string
     },
     title: string;
 };
 process.title = "papiea";
 const serverPort = parseInt(process.env.SERVER_PORT || "3000");
 const tokenSecret = process.env.TOKEN_SECRET || "secret";
+const debugLevel = process.env.DEBUG_LEVEL || "common";
 const tokenExpiresSeconds = parseInt(process.env.TOKEN_EXPIRES_SECONDS || (60 * 60 * 24 * 7).toString());
 const pathToDefaultModel: string = resolve(__dirname, "./auth/default_provider_model.txt");
 const oauth2RedirectUri: string = process.env.OAUTH2_REDIRECT_URI || "http://localhost:3000/provider/auth/callback";
@@ -36,6 +39,7 @@ const oauth2RedirectUri: string = process.env.OAUTH2_REDIRECT_URI || "http://loc
 async function setUpApplication(): Promise<express.Express> {
     const app = express();
     app.use(express.json());
+    app.use(morgan(debugLevel));
     const mongoConnection: MongoConnection = new MongoConnection(process.env.MONGO_URL || 'mongodb://mongo:27017', process.env.MONGO_DB || 'papiea');
     await mongoConnection.connect();
     const providerDb = await mongoConnection.get_provider_db();

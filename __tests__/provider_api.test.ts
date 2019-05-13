@@ -1,7 +1,7 @@
 import "jest"
 import axios from "axios"
 import { Provider } from "../src/papiea";
-import { getProviderWithSpecOnlyEnitityKindNoOperations } from "./test_data_factory";
+import { getProviderWithSpecOnlyEnitityKindNoOperations, loadYaml } from "./test_data_factory";
 
 declare var process: {
     env: {
@@ -11,7 +11,7 @@ declare var process: {
 const serverPort = parseInt(process.env.SERVER_PORT || '3000');
 
 const providerApi = axios.create({
-    baseURL: `http://127.0.0.1:${ serverPort }/provider/`,
+    baseURL: `http://127.0.0.1:${serverPort}/provider/`,
     timeout: 1000,
     headers: { 'Content-Type': 'application/json' }
 });
@@ -31,7 +31,7 @@ describe("Provider API tests", () => {
     });
 
     test("Register provider", done => {
-        const provider: Provider = { prefix: providerPrefix, version: providerVersion, kinds: [], procedures: {} };
+        const provider: Provider = { prefix: providerPrefix, version: providerVersion, kinds: [], procedures: {}, extension_structure: {} };
         providerApi.post('/', provider).then(() => done()).catch(done.fail);
     });
 
@@ -49,13 +49,17 @@ describe("Provider API tests", () => {
     });
 
     test("Get multiple providers", async done => {
-        const version = "1.0.0";
-        const provider: Provider = { prefix: providerPrefix, version: version, kinds: [], procedures: {} };
-        providerApi.post('/', provider).then().catch(done.fail);
+        const version1 = "1.0.0";
+        const provider1: Provider = { prefix: providerPrefix, version: version1, kinds: [], procedures: {}, extension_structure: {} };
+        providerApi.post('/', provider1).then().catch(done.fail);
+        const version2 = "2.0.0";
+        const provider2: Provider = { prefix: providerPrefix, version: version2, kinds: [], procedures: {}, extension_structure: {} };
+        providerApi.post('/', provider2).then().catch(done.fail);
         try {
-            const res = await providerApi.get(`/${ providerPrefix }`);
+            const res = await providerApi.get(`/${providerPrefix}`);
             expect(res.data.length).toBeGreaterThanOrEqual(2);
-            providerApi.delete(`/${ providerPrefix }/${ version }`).then(() => done()).catch(done.fail);
+            await providerApi.delete(`/${providerPrefix}/${version1}`);
+            await providerApi.delete(`/${providerPrefix}/${version2}`);
             done();
         } catch (e) {
             done.fail(e)
@@ -65,11 +69,11 @@ describe("Provider API tests", () => {
     // TODO(adolgarev): there is no API to list providers
 
     test("Unregister provider", done => {
-        providerApi.delete(`/${ providerPrefix }/${ providerVersion }`).then(() => done()).catch(done.fail);
+        providerApi.delete(`/${providerPrefix}/${providerVersion}`).then(() => done()).catch(done.fail);
     });
 
     test("Unregister non-existend provider", done => {
-        providerApi.delete(`/${ providerPrefix }/${ providerVersion }`).then(() => done.fail()).catch(() => done());
+        providerApi.delete(`/${providerPrefix}/${providerVersion}`).then(() => done.fail()).catch(() => done());
     });
 
     test("Unregister never existed provider", done => {
@@ -132,6 +136,23 @@ describe("Provider API tests", () => {
         }
     });
 
+    test("Update policy", async done => {
+        try {
+            const provider: Provider = getProviderWithSpecOnlyEnitityKindNoOperations();
+            await providerApi.post('/', provider);
+
+            const originalPolicy = "g, admin, admin_group";
+            await providerApi.post(`/${provider.prefix}/${provider.version}/auth`, {
+                policy: originalPolicy
+            });
+            const { data: { policy } } = await providerApi.get(`/${provider.prefix}/${provider.version}`);
+            expect(policy).toEqual(originalPolicy);
+            done();
+        } catch (e) {
+            done.fail(e);
+        }
+    });
+
     test("Update status with partial status definition", async done => {
         try {
             const provider: Provider = getProviderWithSpecOnlyEnitityKindNoOperations();
@@ -162,5 +183,12 @@ describe("Provider API tests", () => {
         } catch (e) {
             done.fail(e);
         }
+    });
+
+    test("Register provider with extension structure", done => {
+        const extension_desc = loadYaml("./metadata_extension.yml");
+        const provider: Provider = { prefix: providerPrefix, version: providerVersion, kinds: [], procedures: {}, extension_structure: extension_desc };
+        providerApi.post('/', provider).then().catch(done.fail);
+        providerApi.delete(`/${ providerPrefix }/${ providerVersion }`).then(() => done()).catch(done.fail);
     });
 });

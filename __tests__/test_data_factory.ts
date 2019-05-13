@@ -30,6 +30,11 @@ export function getLocationDataDescription(): Data_Description {
     return randomizedLocationDataDescription;
 }
 
+export function getMetadataDescription(): Data_Description {
+    let MetadataDescription = loadYaml("./metadata_extension.yml");
+    return MetadataDescription;
+}
+
 export function getSpecOnlyEntityKind(): SpecOnlyEntityKind {
     const locationDataDescription = getLocationDataDescription();
     const name = Object.keys(locationDataDescription)[0];
@@ -49,7 +54,7 @@ export function getProviderWithSpecOnlyEnitityKindNoOperations(): Provider {
     const spec_only_kind = getSpecOnlyEntityKind();
     const providerPrefix = randomString(12);
     const providerVersion = "0.1.0";
-    const provider: Provider = { prefix: providerPrefix, version: providerVersion, kinds: [spec_only_kind], procedures: {} };
+    const provider: Provider = { prefix: providerPrefix, version: providerVersion, kinds: [spec_only_kind], procedures: {}, extension_structure: {} };
     return provider;
 }
 
@@ -79,5 +84,35 @@ export function getProviderWithSpecOnlyEnitityKindWithOperations(procedure_callb
         procedure_callback: procedure_callback
     };
     provider.kinds[0].procedures[geolocationComputeProceduralSignature.name] = geolocationComputeProceduralSignature;
+    return provider;
+}
+
+export function getProviderWithSpecOnlyEntityKindWithOperationsAndOAuth2Description(procedure_callback: Provider_Callback_URL): Provider {
+    const provider: Provider = getProviderWithSpecOnlyEnitityKindNoOperations();
+    const proceduralSignatureForKind: Procedural_Signature = {
+        name: "moveX",
+        argument: loadYaml("./procedure_move_input.yml"),
+        result: loadYaml("./location_kind_test_data.yml"),
+        execution_strategy: Procedural_Execution_Strategy.Halt_Intentful,
+        procedure_callback: procedure_callback
+    };
+    provider.kinds[0].procedures[proceduralSignatureForKind.name] = proceduralSignatureForKind;
+    const proceduralSignatureForProvider: Procedural_Signature = {
+        name: "computeSum",
+        argument: loadYaml("./procedure_sum_input.yml"),
+        result: loadYaml("./procedure_sum_output.yml"),
+        execution_strategy: Procedural_Execution_Strategy.Halt_Intentful,
+        procedure_callback: procedure_callback
+    };
+    provider.procedures[proceduralSignatureForProvider.name] = proceduralSignatureForProvider;
+    const geolocationComputeProceduralSignature: Procedural_Signature = {
+        name: "computeGeolocation",
+        argument: loadYaml("./procedure_geolocation_compute_input.yml"),
+        result: loadYaml("./procedure_geolocation_compute_input.yml"),
+        execution_strategy: Procedural_Execution_Strategy.Halt_Intentful,
+        procedure_callback: procedure_callback
+    };
+    provider.kinds[0].procedures[geolocationComputeProceduralSignature.name] = geolocationComputeProceduralSignature;
+    provider.oauth2 = loadYaml("./auth.yaml");
     return provider;
 }

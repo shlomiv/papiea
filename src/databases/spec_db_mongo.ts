@@ -4,6 +4,7 @@ import { Spec_DB } from "./spec_db_interface";
 import { Collection, Db } from "mongodb";
 import { ConflictingEntityError, EntityNotFoundError } from "./utils/errors";
 import { datestringToFilter } from "./utils/date";
+import { encode } from "mongo-dot-notation-tool";
 
 export class Spec_DB_Mongo implements Spec_DB {
     collection: Collection;
@@ -24,17 +25,16 @@ export class Spec_DB_Mongo implements Spec_DB {
     }
 
     async update_spec(entity_metadata: core.Metadata, spec: core.Spec): Promise<[core.Metadata, core.Spec]> {
+        let additional_fields: any = {};
+        if (entity_metadata.extension !== undefined) {
+            additional_fields = encode({"metadata.extension": entity_metadata.extension});
+        }
+        additional_fields["metadata.created_at"] = new Date();
         const filter = {
             "metadata.uuid": entity_metadata.uuid,
             "metadata.kind": entity_metadata.kind,
             "metadata.spec_version": entity_metadata.spec_version
         };
-        const additional_fields: any = { "metadata.created_at": new Date() };
-        for (let key in entity_metadata) {
-            if (key !== "created_at" && key !== "deleted_at" && !Object.keys(filter).includes("metadata." + key)) {
-                additional_fields["metadata." + key] = entity_metadata[key];
-            }
-        }
         try {
             const result = await this.collection.updateOne(filter, {
                 $inc: {
@@ -50,8 +50,7 @@ export class Spec_DB_Mongo implements Spec_DB {
             if (result.result.n !== 1) {
                 throw new Error(`Amount of updated entries doesn't equal to 1: ${result.result.n}`)
             }
-            entity_metadata.spec_version++;
-            return [entity_metadata, spec]
+            return this.get_spec({ uuid: entity_metadata.uuid, kind: entity_metadata.kind });
         } catch (err) {
             if (err.code === 11000) {
                 const entity_ref: core.Entity_Reference = { uuid: entity_metadata.uuid, kind: entity_metadata.kind };

@@ -5,7 +5,13 @@ if [ -d "/node_modules" ] && [ ! -d "node_modules" ]; then
     mv /node_modules node_modules
 fi
 
-export DEBUG=express:* 
+export DEBUG=express:*
 npm install
 npm run build-clj
-npm run start
+wait-port mongo:27017
+if [ $HOT_RELOAD == 'true' ]
+then
+    npm run dev
+else
+    npm run start
+fi

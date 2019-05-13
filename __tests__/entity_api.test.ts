@@ -2,7 +2,7 @@ import "jest"
 import axios from "axios"
 import { ProviderSdk } from "../src/provider_sdk/typescript_sdk";
 import { Metadata, Spec } from "../src/core";
-import { getLocationDataDescription } from "./test_data_factory";
+import { getLocationDataDescription, getMetadataDescription } from "./test_data_factory";
 import { stringify } from "querystring"
 import uuid = require("uuid");
 
@@ -385,84 +385,6 @@ describe("Entity API tests", () => {
         }
     });
 
-    test("Create entity without additional fields, additional fields should be empty", async (done) => {
-        expect.assertions(4);
-        try {
-            const { data: { metadata, spec } } = await entityApi.post(`/${providerPrefix}/${providerVersion}/${kind_name}`, {
-                spec: {
-                    x: 10,
-                    y: 11
-                },
-            });
-            expect(metadata).not.toBeUndefined();
-            expect(metadata.spec_version).toEqual(1);
-            expect(spec).not.toBeUndefined();
-            expect(metadata._key).toBeUndefined();
-            await entityApi.delete(`/${providerPrefix}/${providerVersion}/${kind_name}/${metadata.uuid}`);
-            done();
-        } catch (e) {
-            done.fail(e);
-        }
-    });
-
-    test("Create entity with additional fields", async (done) => {
-        expect.assertions(4);
-        try {
-            const { data: { metadata, spec } } = await entityApi.post(`/${providerPrefix}/${providerVersion}/${kind_name}`, {
-                spec: {
-                    x: 10,
-                    y: 11
-                },
-                metadata: {
-                    _key: "123"
-                }
-            });
-            expect(metadata).not.toBeUndefined();
-            expect(metadata.spec_version).toEqual(1);
-            expect(spec).not.toBeUndefined();
-            expect(metadata._key).toBe("123");
-            await entityApi.delete(`/${providerPrefix}/${providerVersion}/${kind_name}/${metadata.uuid}`);
-            done();
-        } catch (e) {
-            done.fail(e);
-        }
-    });
-
-    test("Filter entity by additional fields", async (done) => {
-        try {
-            await entityApi.post(`/${providerPrefix}/${providerVersion}/${kind_name}`, {
-                spec: {
-                    x: 10,
-                    y: 11
-                },
-                metadata: {
-                    _key: "123"
-                }
-            });
-            const res = await entityApi.post(`${providerPrefix}/${providerVersion}/${kind_name}/filter`, {
-                metadata: {
-                    _key: "123"
-                }
-            });
-            expect(res.data.length).toBeGreaterThanOrEqual(1);
-        } catch (e) {
-            done.fail(e);
-            return;
-        }
-        try {
-            const res = await entityApi.post(`${providerPrefix}/${providerVersion}/${kind_name}/filter`, {
-                metadata: {
-                    _key: "abc"
-                }
-            });
-            expect(res.data.length).toBe(0);
-        } catch (e) {
-            done.fail(e);
-            return;
-        }
-        done();
-    });
-
     test("Create entity with non valid uuid should be an error", async (done) => {
         try {
             const { data: { metadata, spec } } = await entityApi.post(`/${providerPrefix}/${providerVersion}/${kind_name}`, {
@@ -541,6 +463,121 @@ describe("Entity API tests", () => {
                 expect(res.data[0].spec).toEqual(spec);
                 expect(res.data[0].status).toEqual(spec);
             });
+            done();
+        } catch (e) {
+            done.fail(e);
+        }
+    });
+});
+
+describe("Entity API with metadata extension tests", () => {
+    const providerPrefix = "test";
+    const providerVersion = "0.1.0";
+    const locationDataDescription = getLocationDataDescription();
+    const metadata_ext_description = getMetadataDescription();
+    const kind_name = Object.keys(locationDataDescription)[0];
+    const owner_name = "test@owner.com";
+    const tenant_id = "sample_id";
+
+    let entity_metadata: Metadata;
+    let entity_spec: Spec;
+
+    beforeAll(async () => {
+        const sdk = ProviderSdk.create_sdk(papiea_config.host, papiea_config.port, server_config.host, server_config.port);
+        sdk.new_kind(locationDataDescription);
+        sdk.version(providerVersion);
+        sdk.prefix(providerPrefix);
+        sdk.metadata_extension(metadata_ext_description);
+        await sdk.register();
+    });
+
+    afterAll(async () => {
+        await axios.delete(`http://127.0.0.1:${serverPort}/provider/${providerPrefix}/${providerVersion}`);
+    });
+
+    test("Create entity with missing metadata extension should fail validation", async done => {
+        try {
+            await entityApi.post(`/${providerPrefix}/${providerVersion}/${kind_name}`, {
+                spec: {
+                    x: 100,
+                    y: 11
+                }
+            });
+            done.fail();
+        } catch (err) {
+            const res = err.response;
+            expect(res.status).toEqual(400);
+            expect(res.data.errors.length).toEqual(1);
+            done();
+        }
+    });
+
+    test("Create entity with metadata extension", async done => {
+        try {
+            const { data: { metadata, spec } } = await entityApi.post(`/${providerPrefix}/${providerVersion}/${kind_name}`, {
+                spec: {
+                    x: 100,
+                    y: 11
+                },
+                metadata: {
+                    extension: {
+                        "owner": owner_name,
+                        "tenant_id": tenant_id
+                    }
+                }
+            });
+            entity_metadata = metadata;
+            entity_spec = spec;
+            done();
+        } catch (err) {
+            done.fail(err);
+        }
+    });
+
+    test("Get spec-only entity with extension", async (done) => {
+        expect.assertions(2);
+        try {
+            const res = await entityApi.get(`/${providerPrefix}/${providerVersion}/${kind_name}/${entity_metadata.uuid}`);
+            expect(res.data.spec).toEqual(entity_spec);
+            expect(res.data.status).toEqual(entity_spec);
+            done();
+        } catch (e) {
+            done.fail(e);
+        }
+    });
+
+    test("Create entity with non-valid metadata extension", async done => {
+        try {
+            await entityApi.post(`/${providerPrefix}/${providerVersion}/${kind_name}`, {
+                spec: {
+                    x: 100,
+                    y: 11
+                },
+                metadata: {
+                    extension: {
+                        "owner": owner_name,
+                        "tenant_id": 123
+                    }
+                }
+            });
+            done.fail();
+        } catch (err) {
+            const res = err.response;
+            expect(res.status).toEqual(400);
+            expect(res.data.errors.length).toEqual(1);
+            done();
+        }
+    });
+
+    test("Filter entity by extension", async done => {
+        try {
+            const res = await entityApi.post(`/${providerPrefix}/${providerVersion}/${kind_name}/filter`, {
+                metadata: {
+                    "extension.owner": owner_name,
+                    "extension.tenant_id": tenant_id
+                }
+            });
+            expect(res.data.length).toBe(1);
             done();
         } catch (e) {
             done.fail(e);

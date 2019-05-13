@@ -4,6 +4,7 @@ import * as differ from "./intentful_core/differ_interface"
 import * as spec from "./databases/spec_db_interface"
 import * as status from "./databases/status_db_interface"
 import * as provider from "./databases/provider_db_interface"
+import { Data_Description } from "./core";
 
 // [[file:~/work/papiea-js/Papiea-design.org::#h-Kind-241][kind-struct]]
 export interface Kind {
@@ -66,7 +67,10 @@ export interface Provider {
     version: core.Version;
     kinds: Kind[];
     procedures: { [key: string]: Procedural_Signature; };
+    extension_structure: Data_Description
     created_at?: Date;
+    policy?: string;
+    oauth2?: any;
 }
 
 // provider-desc-struct ends here

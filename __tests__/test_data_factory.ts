@@ -58,7 +58,7 @@ export class ProviderBuilder {
     private _kinds: Kind[] = [];
     private _procedures: { [key: string]: Procedural_Signature; } = {};
     private _oauth2: any = undefined;
-    private _extension_structure: any = undefined;
+    private _extension_structure: any = {};
     private _policy: any;
     private _callback: string = `http://${default_hostname}:${port}/`;
 
@@ -113,7 +113,7 @@ export class ProviderBuilder {
 
     public withExtensionStructure(value?: any) {
         if (value === undefined) {
-            this._extension_structure = undefined
+            this._extension_structure = getMetadataDescription();
         } else {
             this._extension_structure = value
         }

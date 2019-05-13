@@ -52,7 +52,6 @@ describe("Entity API auth tests", () => {
                                 .withKindProcedures()
                                 .withProviderProcedures()
                                 .withOAuth2Description()
-                                .withExtensionStructure()
                                 .build();
     console.dir(provider);
     const kind_name = provider.kinds[0].name;

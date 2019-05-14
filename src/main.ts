@@ -19,10 +19,11 @@ import morgan = require("morgan");
 declare var process: {
     env: {
         SERVER_PORT: string,
-        MONGO_URL: string,
         MONGO_DB: string,
         TOKEN_SECRET: string,
         TOKEN_EXPIRES_SECONDS: string,
+        MONGO_HOST: string,
+        MONGO_PORT: string
         OAUTH2_REDIRECT_URI: string,
         DEBUG_LEVEL: string
     },
@@ -35,12 +36,14 @@ const debugLevel = process.env.DEBUG_LEVEL || "common";
 const tokenExpiresSeconds = parseInt(process.env.TOKEN_EXPIRES_SECONDS || (60 * 60 * 24 * 7).toString());
 const pathToDefaultModel: string = resolve(__dirname, "./auth/default_provider_model.txt");
 const oauth2RedirectUri: string = process.env.OAUTH2_REDIRECT_URI || "http://localhost:3000/provider/auth/callback";
+const mongoHost = process.env.MONGO_HOST || 'mongo'
+const mongoPort = process.env.MONGO_PORT || '27017'
 
 async function setUpApplication(): Promise<express.Express> {
     const app = express();
     app.use(express.json());
     app.use(morgan(debugLevel));
-    const mongoConnection: MongoConnection = new MongoConnection(process.env.MONGO_URL || 'mongodb://mongo:27017', process.env.MONGO_DB || 'papiea');
+    const mongoConnection: MongoConnection = new MongoConnection(`mongodb://${mongoHost}:${mongoPort}`, process.env.MONGO_DB || 'papiea');
     await mongoConnection.connect();
     const providerDb = await mongoConnection.get_provider_db();
     const specDb = await mongoConnection.get_spec_db();

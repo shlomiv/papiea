@@ -6,7 +6,7 @@ import { Version } from "../src/core";
 import { Provider } from "../src/papiea";
 import { Provider_DB } from "../src/databases/provider_db_interface";
 import ApiDocsGenerator from "../src/api_docs/api_docs_generator";
-import { getProviderWithSpecOnlyEnitityKindNoOperations } from "./test_data_factory";
+import { ProviderBuilder } from "./test_data_factory";
 
 declare var process: {
     env: {
@@ -25,7 +25,8 @@ class Provider_DB_Mock implements Provider_DB {
     provider: Provider;
 
     constructor() {
-        this.provider = getProviderWithSpecOnlyEnitityKindNoOperations();
+        this.provider = new ProviderBuilder().withVersion("0.1.0").withKinds().build();
+
     }
 
     async save_provider(provider: Provider): Promise<void> {

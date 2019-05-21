@@ -1,8 +1,9 @@
 version: '3'
 services:
-        server:
+        papiea-engine:
+                container_name: papiea-engine
                 build:
-                        dockerfile: .circleci/Dockerfile
+                        dockerfile: Dockerfile
                         context: .
                 environment:
                         - JEST_JUNIT_OUTPUT=reports/junit/results.xml

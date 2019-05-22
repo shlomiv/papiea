@@ -1,8 +1,8 @@
 {
   "name": "papiea-engine",
-  "version": "1.0.2",
+  "version": "1.0.7",
   "description": "",
-  "main": "build/provider_sdk/typescript_sdk.js",
+  "main": "build/main.js",
   "files": [
     "build/",
     "src/"

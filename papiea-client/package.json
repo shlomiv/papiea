@@ -1,8 +1,8 @@
 {
   "name": "papiea-client",
   "description": "",
-  "version": "1.0.2",
-  "main": "index.js",
+  "version": "1.0.7",
+  "main": "build/entity_client.js",
   "scripts": {
     "clean": "rm -rf build",
     "build": "tsc"
@@ -10,12 +10,12 @@
   "author": "Shlomi Vaknin",
   "license": "ISC",
   "dependencies": {
-    "@types/node": "^12.0.2",
     "axios": "^0.18.0",
     "papiea-core": "file:../papiea-core",
     "wait-port": "^0.2.2"
   },
   "devDependencies": {
-    "typescript": "^3.4.5"
+    "typescript": "^3.4.5",
+    "@types/node": "^12.0.2"
   }
 }

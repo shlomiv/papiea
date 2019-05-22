@@ -38,7 +38,8 @@ export function getSpecOnlyEntityKind(): SpecOnlyEntityKind {
         kind_structure: locationDataDescription,
         intentful_signatures: new Map(),
         dependency_tree: new Map(),
-        procedures: {},
+        kind_procedures: {},
+        entity_procedures: {},
         differ: undefined,
     };
     return spec_only_kind;
@@ -147,7 +148,7 @@ export class ProviderBuilder {
     }
 
     get kindProcedures(): { [p: string]: Procedural_Signature } {
-        return this._kinds[0].procedures;
+        return this._kinds[0].kind_procedures;
     }
 
     public withKindProcedures(value?: { [p: string]: Procedural_Signature }) {
@@ -160,7 +161,7 @@ export class ProviderBuilder {
                 procedure_callback: this._callback
             };
             if (this._kinds.length >= 1) {
-                this._kinds[0].procedures[geolocationComputeProceduralSignature.name] = geolocationComputeProceduralSignature
+                this._kinds[0].kind_procedures[geolocationComputeProceduralSignature.name] = geolocationComputeProceduralSignature
             } else {
                 throw new Error(formatErrorMsg("Kind Procedures", "Kinds"))
             }
@@ -169,7 +170,7 @@ export class ProviderBuilder {
     }
 
     get entityProcedures(): { [p: string]: Procedural_Signature } {
-        return this._kinds[0].procedures;
+        return this._kinds[0].entity_procedures;
     }
 
     public withEntityProcedures(value?: { [p: string]: Procedural_Signature }) {
@@ -182,7 +183,7 @@ export class ProviderBuilder {
                 procedure_callback: this._callback
             };
             if (this._kinds.length >= 1) {
-                this._kinds[0].procedures[proceduralSignatureForKind.name] = proceduralSignatureForKind
+                this._kinds[0].entity_procedures[proceduralSignatureForKind.name] = proceduralSignatureForKind
             } else {
                 throw new Error(formatErrorMsg("Entity Procedures", "Kinds"))
             }

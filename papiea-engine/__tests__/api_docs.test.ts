@@ -2,9 +2,9 @@ import "jest"
 import { writeFileSync, unlinkSync } from "fs";
 import { validate } from "swagger-parser";
 import axios from "axios"
-import { ProviderBuilder } from "./test_data_factory";
+import { loadYaml, ProviderBuilder } from "./test_data_factory";
 import { Provider_DB } from "../src/databases/provider_db_interface";
-import { Provider, Version } from "papiea-core";
+import { Provider, Version, Procedural_Signature, Procedural_Execution_Strategy } from "papiea-core";
 import ApiDocsGenerator from "../src/api_docs/api_docs_generator";
 declare var process: {
     env: {
@@ -15,6 +15,12 @@ const serverPort = parseInt(process.env.SERVER_PORT || '3000');
 
 const api = axios.create({
     baseURL: `http://127.0.0.1:${serverPort}/`,
+    timeout: 1000,
+    headers: { 'Content-Type': 'application/json' }
+});
+
+const providerApi = axios.create({
+    baseURL: `http://127.0.0.1:${serverPort}/provider`,
     timeout: 1000,
     headers: { 'Content-Type': 'application/json' }
 });

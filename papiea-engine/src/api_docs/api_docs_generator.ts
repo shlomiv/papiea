@@ -292,11 +292,11 @@ export default class ApiDocsGenerator {
     }
 
     processEmptyValidation(proc_def: any, sig: Procedural_Signature) {
-        if (!sig.argument) {
-            proc_def.requestBody.content["application/json"].schema.properties.input.$ref = `#/components/schemas/Nothing`
+        if (Object.entries(sig.argument).length === 0 && sig.argument.constructor === Object) {
+            proc_def.requestBody.content["application/json"].schema.properties.input['$ref'] = `#/components/schemas/Nothing`
         }
-        if (!sig.result) {
-            proc_def.responses["200"].content["application/json"].schema.properties.input.$ref = `#/components/schemas/Nothing`
+        if (Object.entries(sig.result).length === 0 && sig.result.constructor === Object) {
+            proc_def.responses["200"].content["application/json"].schema["$ref"] = `#/components/schemas/Nothing`
         }
         return proc_def
     }
@@ -339,7 +339,7 @@ export default class ApiDocsGenerator {
     }
 
     callEntityProcedure(provider: Provider, kind: Kind, procedure: Procedural_Signature) {
-        const procedural_def =  {
+        const procedural_def = {
             "description": `Calls a procedure ${ procedure.name }`,
             "operationId": `call${ provider.prefix }${ procedure.name }`,
             "tags": [`${ provider.prefix }/${ provider.version }/${ kind.name }/procedure`],
@@ -424,6 +424,16 @@ export default class ApiDocsGenerator {
             }
         };
         return this.processEmptyValidation(procedural_def, procedure)
+    }
+
+    removeStatusFields(schema: any) {
+        for (let prop in schema) {
+            if (typeof schema[prop] === 'object' && "x-papiea" in schema[prop] && schema[prop]["x-papiea"] === "status-only") {
+                delete schema[prop];
+            }
+            else if (typeof schema[prop] === 'object')
+                this.removeStatusFields(schema[prop]);
+        }
     }
 
     async getApiDocs(): Promise<any> {
@@ -580,6 +590,7 @@ export default class ApiDocsGenerator {
                         Object.assign(schemas, procedure.result);
                     });
                 }
+                this.removeStatusFields(kind.kind_structure[Object.keys(kind.kind_structure)[0]]);
                 Object.assign(schemas, kind.kind_structure);
             });
         });

@@ -4,6 +4,9 @@ import { Signature } from "./crypto";
 import { Provider_DB } from "../databases/provider_db_interface";
 import { extract_property } from "./user_data_evaluator";
 import { Provider } from "papiea-core";
+import Axios from "axios";
+const querystring = require('querystring');
+import { access } from "fs";
 
 const simpleOauthModule = require("simple-oauth2"),
     queryString = require("query-string"),
@@ -11,7 +14,6 @@ const simpleOauthModule = require("simple-oauth2"),
 
 function convertToSimpleOauth2(description: any) {
     const oauth = description.oauth;
-
     const simple_oauth_config = {
         client: {
             id: oauth.client_id,
@@ -59,11 +61,24 @@ export function createOAuth2Router(redirect_uri: string, signature: Signature, p
         const options = {
             redirect_uri: redirect_uri,
             state: queryString.stringify(state),
-            scope: "openid"
-            // prompt: "login"
+            scope: "openid",
+            prompt: "login"
         };
         const authorizationUri = oauth2.authorizationCode.authorizeURL(options);
         res.redirect(authorizationUri);
+    }));
+
+    router.use('/provider/:prefix/:version/auth/logout', asyncHandler(async (req, res) => {
+        const provider: Provider = await providerDb.get_provider(req.params.prefix, req.params.version);
+        const oauth2 = getOAuth2(provider);
+        const token = oauth2.accessToken.create({ "access_token": req.user.authorization.split(' ')[1] });
+        try {
+            await token.revoke('access_token');
+        } catch (e) {
+            console.dir(e)
+            return res.status(400).json("failed");
+        }
+        return res.status(200).json("OK");
     }));
 
     router.use(url.parse(redirect_uri).path, asyncHandler(async (req, res, next) => {

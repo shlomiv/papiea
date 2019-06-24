@@ -436,6 +436,28 @@ export default class ApiDocsGenerator {
         }
     }
 
+    setSecurityScheme() {
+        return {
+            "securitySchemes": {
+                "bearerAuth": {
+                    "type": "http",
+                    "scheme": "bearer",
+                    "bearerFormat": "JWT"
+                }
+            }
+        }
+    }
+
+    setSecurity() {
+        return {
+            "security": [
+                {
+                    "bearerAuth": []
+                }
+            ]
+        }
+    }
+
     async getApiDocs(): Promise<any> {
         const root: any = {
             "openapi": "3.0.0",
@@ -594,6 +616,9 @@ export default class ApiDocsGenerator {
                 Object.assign(schemas, kind.kind_structure);
             });
         });
+
+        Object.assign(root.components, this.setSecurityScheme());
+        Object.assign(root, this.setSecurity());
 
         return root;
     }

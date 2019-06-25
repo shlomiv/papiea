@@ -53,21 +53,31 @@ export class Entity_API_Impl implements Entity_API {
 
     async save_entity(user: UserAuthInfo, prefix: string, kind_name: string, version: Version, spec_description: Spec, request_metadata: Metadata = {} as Metadata): Promise<[Metadata, Spec]> {
         const provider = await this.provider_api.get_provider(user, prefix, version);
+        console.log("GOT PROVIDER");
         const kind = this.find_kind(provider, kind_name);
+        console.log("GOT KIND");
         this.validate_metadata_extension(provider.extension_structure, request_metadata);
+        console.log("VALIDATED METADATA EXTENSION");
         this.validate_spec(spec_description, kind);
+        console.log("VALIDATED SPEC");
         if (!request_metadata.uuid) {
+            console.log("NO UUID");
             request_metadata.uuid = uuid();
         }
         if (!request_metadata.spec_version) {
+            console.log("NO SPEC_VERSION");
             request_metadata.spec_version = 0;
         }
         if (!uuid_validate(request_metadata.uuid)) {
+            console.log("NO VALID UUID");
             throw new Error("uuid is not valid")
         }
         request_metadata.kind = kind.name;
+        console.log("CHECKING PERMISSION");
         await this.authorizer.checkPermission(user, { "metadata": request_metadata }, CreateAction);
+        console.log("CHECKED PERMISSION");
         const [metadata, spec] = await this.spec_db.update_spec(request_metadata, spec_description);
+        console.log("UPDATED SPEC");
         if (kind.kind_structure[kind.name]['x-papiea-entity'] === 'spec-only')
             await this.status_db.replace_status(request_metadata, spec_description);
         return [metadata, spec];

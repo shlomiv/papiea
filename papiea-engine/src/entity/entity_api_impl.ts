@@ -52,10 +52,16 @@ export class Entity_API_Impl implements Entity_API {
     }
 
     async save_entity(user: UserAuthInfo, prefix: string, kind_name: string, version: Version, spec_description: Spec, request_metadata: Metadata = {} as Metadata): Promise<[Metadata, Spec]> {
+        console.log("request_metadata");
+        console.log(request_metadata);
+        console.log("spec_description");
+        console.log(spec_description);
         const provider = await this.provider_api.get_provider(user, prefix, version);
         console.log("GOT PROVIDER");
+        console.log(provider)
         const kind = this.find_kind(provider, kind_name);
         console.log("GOT KIND");
+        console.log(kind);
         this.validate_metadata_extension(provider.extension_structure, request_metadata);
         console.log("VALIDATED METADATA EXTENSION");
         this.validate_spec(spec_description, kind);

@@ -40,6 +40,8 @@ function getOAuth2(provider: Provider) {
 
 function getUserInfoFromToken(token: any, provider: Provider): UserAuthInfo {
 
+    console.log("SHLOMI: What is provider.oauth2?", provider.oauth2)
+    console.log("SHLOMI: What is the received token?", token)
     const extracted_headers = extract_property(token, provider.oauth2, "headers");
 
     const userInfo: UserAuthInfo = {...extracted_headers};

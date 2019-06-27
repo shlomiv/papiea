@@ -69,7 +69,7 @@ export function createOAuth2Router(redirect_uri: string, signature: Signature, p
     }));
 
     router.use('/provider/:prefix/:version/auth/logout', asyncHandler(async (req, res) => {
-        console.log("SHLOMI: LOGOUT", req.user.authorization)
+        console.log("SHLOMI: LOGOUT", req)
         const provider: Provider = await providerDb.get_provider(req.params.prefix, req.params.version);
         const oauth2 = getOAuth2(provider);
         const token = oauth2.accessToken.create({ "access_token": req.user.authorization.split(' ')[1] });
@@ -77,7 +77,6 @@ export function createOAuth2Router(redirect_uri: string, signature: Signature, p
             await token.revokeAll()
         } catch (e) {
             console.dir(e)
-            console.error(e)
             return res.status(400).json("failed");
         }
         return res.status(200).json("OK");

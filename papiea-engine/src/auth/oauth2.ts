@@ -77,6 +77,7 @@ export function createOAuth2Router(redirect_uri: string, signature: Signature, p
             await token.revokeAll()
         } catch (e) {
             console.dir(e)
+            console.error(e)
             return res.status(400).json("failed");
         }
         return res.status(200).json("OK");

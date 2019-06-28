@@ -63,8 +63,7 @@ export function createOAuth2Router(redirect_uri: string, signature: Signature, p
         const options = {
             redirect_uri: redirect_uri,
             state: queryString.stringify(state),
-            scope: "openid",
-            prompt: "login"
+            scope: "openid"
         };
         const authorizationUri = oauth2.authorizationCode.authorizeURL(options);
         res.redirect(authorizationUri);

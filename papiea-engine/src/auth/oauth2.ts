@@ -76,7 +76,7 @@ export function createOAuth2Router(redirect_uri: string, signature: Signature, p
         const token = oauth2.accessToken.create({ "access_token": req.user.authorization.split(' ')[1] });
         try {
             await token.revokeAll()
-        } catch (e) {
+        } catch (e) {   
             console.dir(e)
             //return res.status(400).json("failed");
         }

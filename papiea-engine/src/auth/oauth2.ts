@@ -44,7 +44,7 @@ function getUserInfoFromToken(token: any, provider: Provider): UserAuthInfo {
     console.log("SHLOMI: What is the received token?", token)
     const extracted_headers = extract_property(token, provider.oauth2, "headers");
 
-    const userInfo: UserAuthInfo = {...extracted_headers};
+    const userInfo: UserAuthInfo = {...extracted_headers, debug:'shlomi', originalToken:token};
 
     return userInfo;
 }
@@ -78,7 +78,16 @@ export function createOAuth2Router(redirect_uri: string, signature: Signature, p
             await token.revokeAll()
         } catch (e) {
             console.dir(e)
-            return res.status(400).json("failed");
+            //return res.status(400).json("failed");
+        }
+
+        console.log("DEBUG - lets try to use the original token here for the logout")
+        const origToken = oauth2.accessToken.create(req.user.originalToken)
+        try {
+            await origToken.revokeAll()
+        } catch (e) {
+            console.dir("DEBUG", e)
+            //return res.status(400).json("failed");
         }
         return res.status(200).json("OK");
     }));

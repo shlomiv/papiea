@@ -44,7 +44,9 @@ function getUserInfoFromToken(token: any, provider: Provider): UserAuthInfo {
     console.log("SHLOMI: What is the received token?", token)
     const extracted_headers = extract_property(token, provider.oauth2, "headers");
 
-    const userInfo: UserAuthInfo = {...extracted_headers, debug:'shlomi', originalToken:token};
+    const tempToken = {access_token : token.access_token, refresh_token: token.refresh_token}
+
+    const userInfo: UserAuthInfo = {...extracted_headers, originalToken:tempToken};
 
     return userInfo;
 }
@@ -70,16 +72,16 @@ export function createOAuth2Router(redirect_uri: string, signature: Signature, p
     }));
 
     router.use('/provider/:prefix/:version/auth/logout', asyncHandler(async (req, res) => {
-        console.log("SHLOMI: LOGOUT", req)
+        console.log("SHLOMI: LOGOUT", req.user)
         const provider: Provider = await providerDb.get_provider(req.params.prefix, req.params.version);
         const oauth2 = getOAuth2(provider);
-        const token = oauth2.accessToken.create({ "access_token": req.user.authorization.split(' ')[1] });
+        /*const token = oauth2.accessToken.create({ "access_token": req.user.authorization.split(' ')[1] });
         try {
             await token.revokeAll()
         } catch (e) {   
             console.dir(e)
             //return res.status(400).json("failed");
-        }
+        }*/
 
         console.log("DEBUG - lets try to use the original token here for the logout")
         const origToken = oauth2.accessToken.create(req.user.originalToken)

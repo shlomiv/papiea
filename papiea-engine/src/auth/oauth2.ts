@@ -44,7 +44,7 @@ function getUserInfoFromToken(token: any, provider: Provider): UserAuthInfo {
     console.log("SHLOMI: What is the received token?", token)
     const extracted_headers = extract_property(token, provider.oauth2, "headers");
 
-    const tempToken = {access_token : token.access_token, refresh_token: token.refresh_token}
+    const tempToken = {access_token : token.token.access_token, refresh_token: token.token.refresh_token}
 
     const userInfo: UserAuthInfo = {...extracted_headers, originalToken:tempToken};
 

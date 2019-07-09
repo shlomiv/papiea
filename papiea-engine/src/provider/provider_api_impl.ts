@@ -142,6 +142,7 @@ export class Provider_API_Impl implements Provider_API {
     }
 
     async inactivate_key(user: UserAuthInfo, key: Key, name: string): Promise<void> {
+        console.log("In inactivate_key");
         const s2skey = await this.s2skeyDb.get_key(key, name);
         await this.authorizer.checkPermission(user, s2skey, InactivateS2SKeyAction);
         await this.s2skeyDb.inactivate_key(key);

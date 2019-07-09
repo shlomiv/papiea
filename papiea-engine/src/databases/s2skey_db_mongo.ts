@@ -33,10 +33,6 @@ export class S2S_Key_DB_Mongo implements S2S_Key_DB {
     }
 
     async get_key(key: Key, name?: string): Promise<S2S_Key> {
-        console.log(key);
-        console.log("key");
-        console.log(name);
-        console.log("name");
         let result: S2S_Key | null;
         if (name) {
             result = await this.collection.findOne({

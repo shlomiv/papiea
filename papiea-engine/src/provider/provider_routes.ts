@@ -65,7 +65,6 @@ export default function createProviderAPIRouter(providerApi: Provider_API) {
 
     providerApiRouter.put('/:prefix/:version/s2skey', asyncHandler(async (req, res) => {
         if (req.body.active === false) {
-            console.log("Inactivating key");
             await providerApi.inactivate_key(req.user, req.body.key, req.body.name);
         }
         res.json("OK");

@@ -59,7 +59,6 @@ export class S2S_Key_DB_Mongo implements S2S_Key_DB {
     }
 
     async inactivate_key(key: Key): Promise<void> {
-        console.log("Setting deleted_at")
         const result = await this.collection.updateOne({
             "key": key
         }, {
@@ -67,14 +66,12 @@ export class S2S_Key_DB_Mongo implements S2S_Key_DB {
                     "deleted_at": new Date()
                 }
             });
-        console.dir(result);
         if (result.result.n === undefined || result.result.ok !== 1) {
             throw new Error("Failed to inactivate key");
         }
         if (result.result.n !== 1 && result.result.n !== 0) {
             throw new Error(`Amount of key inactivated must be 0 or 1, found: ${result.result.n}`);
         }
-        console.log("Set deleted_at");
         return;
     }
 }

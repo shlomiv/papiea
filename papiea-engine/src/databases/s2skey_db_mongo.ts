@@ -67,6 +67,7 @@ export class S2S_Key_DB_Mongo implements S2S_Key_DB {
                     "deleted_at": new Date()
                 }
             });
+        console.dir(result);
         if (result.result.n === undefined || result.result.ok !== 1) {
             throw new Error("Failed to inactivate key");
         }

@@ -47,6 +47,6 @@ export interface Provider_API {
 
     list_keys(user: UserAuthInfo, fields_map: any): Promise<S2S_Key[]>;
 
-    inactivate_key(user: UserAuthInfo, key: Key): Promise<void>;
+    inactivate_key(user: UserAuthInfo, key: Key, name: string): Promise<void>;
 
 }

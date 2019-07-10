@@ -327,6 +327,7 @@ describe("Entity API auth tests", () => {
             );
             const { data: s2skey } = await providerApi.post(`/${provider.prefix}/${provider.version}/s2skey`,
                 {
+                    name: "keyName1",
                     owner: userInfo.owner,
                     provider_prefix: userInfo.provider_prefix
                 },
@@ -374,6 +375,7 @@ describe("Entity API auth tests", () => {
             );
             const { data: s2skey } = await providerApi.post(`/${provider.prefix}/${provider.version}/s2skey`,
                 {
+                    name: "keyName2",
                     owner: userInfo.owner,
                     provider_prefix: userInfo.provider_prefix
                 },
@@ -399,6 +401,7 @@ describe("Entity API auth tests", () => {
             try {
                 await providerApi.post(`/${provider.prefix}/${provider.version}/s2skey`,
                     {
+                        name: "KeyName3",
                         owner: "another_owner",
                         provider_prefix: userInfo.provider_prefix
                     },

@@ -145,9 +145,9 @@ export class Provider_API_Impl implements Provider_API {
         let s2skey: S2S_Key;
         if (key) {
             s2skey = await this.s2skeyDb.get_key(key);
-        } else if (name) (
+        } else if (name) {
             s2skey = await this.s2skeyDb.get_key_by_name(name);
-        )
+        }
         await this.authorizer.checkPermission(user, s2skey, InactivateS2SKeyAction);
         await this.s2skeyDb.inactivate_key(s2skey.key);
     }

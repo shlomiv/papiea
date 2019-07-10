@@ -142,7 +142,7 @@ export class Provider_API_Impl implements Provider_API {
     }
 
     async inactivate_key(user: UserAuthInfo, key: Key, name: string): Promise<void> {
-        let s2skey: S2S_Key;
+        let s2skey: S2S_Key| null = null;
         if (key) {
             s2skey = await this.s2skeyDb.get_key(key);
         } else if (name) {

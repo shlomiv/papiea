@@ -20,6 +20,10 @@ export class S2S_Key_DB_Mongo implements S2S_Key_DB {
                 { "owner": 1, "provider_prefix": 1 },
                 { name: "user_provider_keys", unique: false },
             );
+            await this.collection.createIndex(
+                { "name": 1 },
+                { name: "keyName", unique: true },
+            );
         } catch (err) {
             throw err
         }

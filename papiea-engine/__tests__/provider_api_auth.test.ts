@@ -47,6 +47,7 @@ describe("Provider API auth tests", () => {
         try {
             const { data: s2skey } = await providerApiAdmin.post(`/${provider.prefix}/${provider.version}/s2skey`,
                 {
+                    name: "ProviderAdmin",
                     extension: {
                         provider_prefix: provider.prefix,
                         is_provider_admin: true
@@ -69,6 +70,7 @@ describe("Provider API auth tests", () => {
             const key = uuid();
             const { data: s2skey } = await providerApiAdmin.post(`/${provider.prefix}/${provider.version}/s2skey`,
                 {
+                    name: "ProviderAdminKey",
                     key: key,
                     extension: {
                         provider_prefix: provider.prefix,
@@ -92,6 +94,7 @@ describe("Provider API auth tests", () => {
         try {
             const { data: s2skey } = await providerApiAdmin.post(`/${provider.prefix}/${provider.version}/s2skey`,
                 {
+                    name: "ProviderAdminRegister",
                     extension: {
                         provider_prefix: provider.prefix,
                         is_provider_admin: true
@@ -133,6 +136,7 @@ describe("Provider API auth tests", () => {
         try {
             const { data: s2skey } = await providerApiAdmin.post(`/${provider.prefix}/${provider.version}/s2skey`,
                 {
+                    name: "ProviderAdminStatus",
                     extension: {
                         provider_prefix: provider.prefix,
                         is_provider_admin: true

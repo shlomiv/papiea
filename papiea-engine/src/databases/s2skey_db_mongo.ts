@@ -32,19 +32,22 @@ export class S2S_Key_DB_Mongo implements S2S_Key_DB {
         return;
     }
 
-    async get_key(key: Key, name?: string): Promise<S2S_Key> {
-        let result: S2S_Key | null;
-        if (name) {
-            result = await this.collection.findOne({
-                "name": name,
-                "deleted_at": null
-            });
-        } else {
-            result = await this.collection.findOne({
-                "key": key,
-                "deleted_at": null
-            });
+    async get_key(key: Key): Promise<S2S_Key> {
+        const result: S2S_Key | null = await this.collection.findOne({
+            "key": key,
+            "deleted_at": null
+        });
+        if (result === null) {
+            throw new Error("key not found");
         }
+        return result;
+    }
+
+    async get_key_by_name(name: string): Promise<S2S_Key> {
+        const result = await this.collection.findOne({
+            "name": name,
+            "deleted_at": null
+        });
         if (result === null) {
             throw new Error("key not found");
         }

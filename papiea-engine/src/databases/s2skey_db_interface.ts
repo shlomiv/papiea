@@ -4,7 +4,9 @@ export interface S2S_Key_DB {
 
     create_key(s2skey: S2S_Key): Promise<void>;
 
-    get_key(key: Key, name?: string): Promise<S2S_Key>;
+    get_key(key: Key): Promise<S2S_Key>;
+
+    get_key_by_name(name: string): Promise<S2S_Key>;
 
     list_keys(fields_map: any): Promise<S2S_Key[]>;
 

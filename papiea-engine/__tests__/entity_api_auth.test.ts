@@ -327,7 +327,6 @@ describe("Entity API auth tests", () => {
             );
             const { data: s2skey } = await providerApi.post(`/${provider.prefix}/${provider.version}/s2skey`,
                 {
-                    name: "keyName1",
                     owner: userInfo.owner,
                     provider_prefix: userInfo.provider_prefix
                 },
@@ -346,7 +345,7 @@ describe("Entity API auth tests", () => {
             expect(data.provider_prefix).toEqual(provider.prefix);
             await providerApi.put(`/${provider.prefix}/${provider.version}/s2skey`,
                 {
-                    key: s2skey.key,
+                    uuid: s2skey.uuid,
                     active: false
                 },
                 { headers: { 'Authorization': 'Bearer ' + token } }
@@ -375,7 +374,6 @@ describe("Entity API auth tests", () => {
             );
             const { data: s2skey } = await providerApi.post(`/${provider.prefix}/${provider.version}/s2skey`,
                 {
-                    name: "keyName2",
                     owner: userInfo.owner,
                     provider_prefix: userInfo.provider_prefix
                 },
@@ -401,7 +399,6 @@ describe("Entity API auth tests", () => {
             try {
                 await providerApi.post(`/${provider.prefix}/${provider.version}/s2skey`,
                     {
-                        name: "KeyName3",
                         owner: "another_owner",
                         provider_prefix: userInfo.provider_prefix
                     },

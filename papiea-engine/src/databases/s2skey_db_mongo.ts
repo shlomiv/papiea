@@ -43,6 +43,18 @@ export class S2S_Key_DB_Mongo implements S2S_Key_DB {
         return result;
     }
 
+    async get_key_by_secret(key: Key): Promise<S2S_Key> {
+        const result: S2S_Key | null = await this.collection.findOne({
+            "key": key,
+            "deleted_at": null
+        });
+        if (result === null) {
+            throw new Error("key not found");
+        }
+        return result;
+    }
+
+
     async list_keys(fields_map: any): Promise<S2S_Key[]> {
         const filter: any = Object.assign({}, fields_map);
         filter["deleted_at"] = datestringToFilter(fields_map.deleted_at);

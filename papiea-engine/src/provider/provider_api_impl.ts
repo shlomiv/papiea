@@ -140,6 +140,11 @@ export class Provider_API_Impl implements Provider_API {
 
     async list_keys(user: UserAuthInfo, fields_map: any): Promise<S2S_Key[]> {
         const res = await this.s2skeyDb.list_keys(fields_map);
+        let secret;
+        for (let s2s_key of res) {
+            secret = s2s_key.key;
+            s2s_key.key = secret.slice(0, 2) + "*****" + secret.slice(-2);
+        }
         return this.authorizer.filter(user, res, ReadS2SKeyAction);
     }
 

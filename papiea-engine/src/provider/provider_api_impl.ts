@@ -129,7 +129,7 @@ export class Provider_API_Impl implements Provider_API {
         s2skey.key = key ? key : createHash(s2skey);
         await this.authorizer.checkPermission(user, s2skey, CreateS2SKeyAction);
         await this.s2skeyDb.create_key(s2skey);
-        return this.s2skeyDb.get_key(s2skey.key);
+        return this.s2skeyDb.get_key(s2skey.uuid);
     }
 
     async get_key(user: UserAuthInfo, uuid: string): Promise<S2S_Key> {

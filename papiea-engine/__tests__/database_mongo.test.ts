@@ -263,6 +263,7 @@ describe("MongoDb tests", () => {
         const s2skey: S2S_Key = {
             name: uuid4(),
             owner: uuid4(),
+            uuid: uuid4(),
             provider_prefix: "test_provider",
             key: uuid4(),
             created_at: new Date(),
@@ -270,7 +271,7 @@ describe("MongoDb tests", () => {
             extension: {}
         };
         await s2skeyDb.create_key(s2skey);
-        const res: S2S_Key = await s2skeyDb.get_key(s2skey.key);
+        const res: S2S_Key = await s2skeyDb.get_key(s2skey.uuid);
         expect(res.name).toEqual(s2skey.name);
         expect(res.owner).toEqual(s2skey.owner);
         expect(res.provider_prefix).toEqual(s2skey.provider_prefix);
@@ -283,6 +284,7 @@ describe("MongoDb tests", () => {
         const s2skey: S2S_Key = {
             name: uuid4(),
             owner: uuid4(),
+            uuid: uuid4(),
             provider_prefix: "test_provider",
             key: uuid4(),
             created_at: new Date(),
@@ -302,6 +304,7 @@ describe("MongoDb tests", () => {
         const s2skey: S2S_Key = {
             name: uuid4(),
             owner: uuid4(),
+            uuid: uuid4(),
             provider_prefix: "test_provider",
             key: uuid4(),
             created_at: new Date(),
@@ -325,6 +328,7 @@ describe("MongoDb tests", () => {
         const s2skey: S2S_Key = {
             name: uuid4(),
             owner: uuid4(),
+            uuid: uuid4(),
             provider_prefix: "test_provider",
             key: uuid4(),
             created_at: new Date(),
@@ -332,9 +336,9 @@ describe("MongoDb tests", () => {
             extension: {}
         };
         await s2skeyDb.create_key(s2skey);
-        await s2skeyDb.inactivate_key(s2skey.key);
+        await s2skeyDb.inactivate_key(s2skey.uuid);
         try {
-            await s2skeyDb.get_key(s2skey.key);
+            await s2skeyDb.get_key(s2skey.uuid);
             done.fail("Key is still active");
         } catch(e) {
             done();

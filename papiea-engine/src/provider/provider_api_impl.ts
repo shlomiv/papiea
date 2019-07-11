@@ -132,8 +132,8 @@ export class Provider_API_Impl implements Provider_API {
         return this.s2skeyDb.get_key(s2skey.key);
     }
 
-    async get_key(user: UserAuthInfo, key: Key): Promise<S2S_Key> {
-        const s2skey = await this.s2skeyDb.get_key(key);
+    async get_key(user: UserAuthInfo, uuid: string): Promise<S2S_Key> {
+        const s2skey = await this.s2skeyDb.get_key(uuid);
         await this.authorizer.checkPermission(user, s2skey, ReadS2SKeyAction);
         return s2skey;
     }
@@ -143,13 +143,8 @@ export class Provider_API_Impl implements Provider_API {
         return this.authorizer.filter(user, res, ReadS2SKeyAction);
     }
 
-    async inactivate_key(user: UserAuthInfo, key: Key, name: string): Promise<void> {
-        let s2skey: S2S_Key;
-        if (key) {
-            s2skey = await this.s2skeyDb.get_key(key);
-        } else {
-            s2skey = await this.s2skeyDb.get_key_by_name(name);
-        }
+    async inactivate_key(user: UserAuthInfo, uuid: string): Promise<void> {
+        const s2skey: S2S_Key = await this.s2skeyDb.get_key(uuid);
         await this.authorizer.checkPermission(user, s2skey, InactivateS2SKeyAction);
         await this.s2skeyDb.inactivate_key(s2skey.key);
     }

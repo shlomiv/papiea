@@ -32,20 +32,9 @@ export class S2S_Key_DB_Mongo implements S2S_Key_DB {
         return;
     }
 
-    async get_key(key: Key): Promise<S2S_Key> {
+    async get_key(uuid: string): Promise<S2S_Key> {
         const result: S2S_Key | null = await this.collection.findOne({
-            "key": key,
-            "deleted_at": null
-        });
-        if (result === null) {
-            throw new Error("key not found");
-        }
-        return result;
-    }
-
-    async get_key_by_name(name: string): Promise<S2S_Key> {
-        const result = await this.collection.findOne({
-            "name": name,
+            "uuid": uuid,
             "deleted_at": null
         });
         if (result === null) {
@@ -61,9 +50,9 @@ export class S2S_Key_DB_Mongo implements S2S_Key_DB {
         return result;
     }
 
-    async inactivate_key(key: Key): Promise<void> {
+    async inactivate_key(uuid: string): Promise<void> {
         const result = await this.collection.updateOne({
-            "key": key
+            "uuid": uuid
         }, {
                 $set: {
                     "deleted_at": new Date()

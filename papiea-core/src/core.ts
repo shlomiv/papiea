@@ -194,6 +194,7 @@ export type Key = string;
 export interface S2S_Key {
     name: string;
     owner: string;
+    uuid: string;
     provider_prefix: string;
     key: Key;
 
@@ -202,5 +203,5 @@ export interface S2S_Key {
     deleted_at?: Date;
     extension: {
         [key: string]: any;
-    }
+    };
 }

@@ -13,6 +13,7 @@ import { createHash } from "../auth/crypto";
 import { EventEmitter } from "events";
 import { Entity_Reference, Version, Status, Provider, Kind, S2S_Key, Key } from "papiea-core";
 import { Maybe } from "../utils/utils";
+import uuid = require("uuid");
 
 export class Provider_API_Impl implements Provider_API {
     private providerDb: Provider_DB;
@@ -117,6 +118,7 @@ export class Provider_API_Impl implements Provider_API {
     async create_key(user: UserAuthInfo, name: string, owner: string, provider_prefix: string, extension?: any, key?: string): Promise<S2S_Key> {
         const s2skey: S2S_Key = {
             name: name,
+            uuid: uuid(),
             owner: owner,
             provider_prefix: provider_prefix,
             key: "",

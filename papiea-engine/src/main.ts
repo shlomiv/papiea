@@ -14,6 +14,7 @@ import { JWTHMAC } from "./auth/crypto";
 import { Authorizer, AdminAuthorizer, PerProviderAuthorizer, PermissionDeniedError } from "./auth/authz";
 import { ProviderCasbinAuthorizerFactory } from "./auth/casbin";
 import morgan = require("morgan");
+import { generateSecret } from "./utils/utils";
 
 declare var process: {
     env: {
@@ -32,7 +33,7 @@ declare var process: {
 };
 process.title = "papiea";
 const serverPort = parseInt(process.env.SERVER_PORT || "3000");
-const tokenSecret = process.env.TOKEN_SECRET || "secret";
+const tokenSecret = process.env.TOKEN_SECRET || generateSecret();
 const debugLevel = process.env.DEBUG_LEVEL || "common";
 const tokenExpiresSeconds = parseInt(process.env.TOKEN_EXPIRES_SECONDS || (60 * 60 * 24 * 7).toString());
 const publicAddr: string = process.env.PAPIEA_PUBLIC_ADDR || "http://localhost:3000";

@@ -1,4 +1,6 @@
 import { ValidationError } from "../validator";
+import "js-sha256"
+import { sha256 } from "js-sha256";
 
 export class Maybe<T> {
     private constructor(private value: T | null) {}
@@ -71,4 +73,19 @@ export function isEmpty(obj: any) {
             return false;
     }
     return true;
+}
+
+function generateRandomString(len: number): string {
+    let random_string = '';
+    let random_ascii;
+    for(let i = 0; i < len; i++) {
+        random_ascii = Math.floor((Math.random() * 25) + 97);
+        random_string += String.fromCharCode(random_ascii)
+    }
+    return random_string
+}
+
+export function generateSecret(): string {
+    let rnd = generateRandomString(50);
+    return sha256(rnd);
 }

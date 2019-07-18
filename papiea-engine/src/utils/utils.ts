@@ -87,5 +87,5 @@ function generateRandomString(len: number): string {
 
 export function generateSecret(): string {
     let rnd = generateRandomString(50);
-    return sha256(rnd);
+    return sha256(rnd + Date.now());
 }

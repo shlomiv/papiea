@@ -23,6 +23,8 @@ export class ProcedureInvocationError extends Error {
     }
 }
 
+export type SortParams = { [key: string]: number };
+
 export class Entity_API_Impl implements Entity_API {
     private status_db: Status_DB;
     private spec_db: Spec_DB;
@@ -87,16 +89,16 @@ export class Entity_API_Impl implements Entity_API {
         return [metadata, status];
     }
 
-    async filter_entity_spec(user: UserAuthInfo, kind_name: string, fields: any): Promise<[Metadata, Spec][]> {
+    async filter_entity_spec(user: UserAuthInfo, kind_name: string, fields: any, sortParams?: SortParams): Promise<[Metadata, Spec][]> {
         fields.metadata.kind = kind_name;
-        const res = await this.spec_db.list_specs(fields);
+        const res = await this.spec_db.list_specs(fields, sortParams);
         const filteredRes = await this.authorizer.filter(user, res, ReadAction, x => { return { "metadata": x[0] } });
         return filteredRes;
     }
 
-    async filter_entity_status(user: UserAuthInfo, kind_name: string, fields: any): Promise<[Metadata, Status][]> {
+    async filter_entity_status(user: UserAuthInfo, kind_name: string, fields: any, sortParams?: SortParams): Promise<[Metadata, Status][]> {
         fields.metadata.kind = kind_name;
-        const res = await this.status_db.list_status(fields);
+        const res = await this.status_db.list_status(fields, sortParams);
         const filteredRes = await this.authorizer.filter(user, res, ReadAction, x => { return { "metadata": x[0] } });
         return filteredRes;
     }
@@ -141,7 +143,7 @@ export class Entity_API_Impl implements Entity_API {
                     status: entity_status[1],
                     input: input
                 }, {
-                    headers: user ? user.headers : undefined
+                    headers: user
                 });
             this.validator.validate(data, Maybe.fromValue(Object.values(procedure.result)[0]), schemas);
             return data;
@@ -175,7 +177,7 @@ export class Entity_API_Impl implements Entity_API {
                 {
                     input: input
                 }, {
-                    headers: user ? user.headers : undefined
+                    headers: user
                 });
             this.validator.validate(data, Maybe.fromValue(Object.values(procedure.result)[0]), schemas);
             return data;
@@ -204,7 +206,7 @@ export class Entity_API_Impl implements Entity_API {
                 {
                     input: input
                 }, {
-                    headers: user ? user.headers : undefined
+                    headers: user
                 });
             this.validator.validate(data, Maybe.fromValue(Object.values(procedure.result)[0]), schemas);
             return data;

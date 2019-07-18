@@ -1,5 +1,5 @@
 import { ValidationError } from "../validator";
-import "js-sha256"
+import { SortParams } from "../entity/entity_api_impl";
 import { sha256 } from "js-sha256";
 
 export class Maybe<T> {
@@ -65,6 +65,31 @@ export function processPaginationParams(offset: number | undefined, limit: numbe
         return [skip, size]
     }
 
+}
+
+export function processSortQuery(query: string | undefined): undefined | SortParams {
+    if (query === undefined) {
+        return undefined;
+    }
+    const processedQuery: SortParams = {};
+    const splitFields = query.split(",");
+    splitFields.forEach(fieldQuery => {
+        const [field, sortOrd] = fieldQuery.split(":");
+        switch (sortOrd) {
+            case "asc":
+                processedQuery[field] = 1;
+                break;
+            case "desc":
+                processedQuery[field] = -1;
+                break;
+            case undefined:
+                processedQuery[field] = 1;
+                break;
+            default:
+                throw new ValidationError([new Error("Sorting key's value must be either 'asc' or 'desc'")])
+        }
+    });
+    return processedQuery;
 }
 
 export function isEmpty(obj: any) {

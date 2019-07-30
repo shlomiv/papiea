@@ -73,7 +73,6 @@ class SecurityApiImpl implements SecurityApi {
 export class ProviderSdk implements ProviderImpl {
     protected readonly _kind: Kind[];
     protected readonly _procedures: { [key: string]: Procedural_Signature };
-    protected readonly validator: Validator;
     protected readonly _server_manager: Provider_Server_Manager;
     protected readonly providerApiAxios: AxiosInstance;
     protected _version: Version | null;
@@ -86,8 +85,9 @@ export class ProviderSdk implements ProviderImpl {
     protected _oauth2: string | null = null;
     protected _authModel: any | null = null;
     protected readonly _securityApi : SecurityApi;
+    protected allowExtraProps: boolean;
 
-    constructor(papiea_url: string, s2skey: string, server_manager?: Provider_Server_Manager, validator?: Validator) {
+    constructor(papiea_url: string, s2skey: string, server_manager?: Provider_Server_Manager, allowExtraProps?: boolean) {
         this._version = null;
         this._prefix = null;
         this._kind = [];
@@ -97,7 +97,7 @@ export class ProviderSdk implements ProviderImpl {
         this._server_manager = server_manager || new Provider_Server_Manager();
         this._procedures = {};
         this.meta_ext = {};
-        this.validator = validator || new Validator(true);
+        this.allowExtraProps = allowExtraProps || false;
         this.get_prefix = this.get_prefix.bind(this);
         this.get_version = this.get_version.bind(this);
         this._securityApi = new SecurityApiImpl(this, s2skey);
@@ -151,7 +151,7 @@ export class ProviderSdk implements ProviderImpl {
         return this._server_manager.server;
     }
 
-    new_kind(entity_description: Data_Description, validator?: Validator): Kind_Builder {
+    new_kind(entity_description: Data_Description): Kind_Builder {
         if (Object.keys(entity_description).length === 0) {
             throw new Error("Wrong kind description specified")
         }
@@ -168,7 +168,7 @@ export class ProviderSdk implements ProviderImpl {
                     entity_procedures: {},
                     differ: undefined,
                 };
-                const kind_builder = new Kind_Builder(spec_only_kind, this, validator || this.validator);
+                const kind_builder = new Kind_Builder(spec_only_kind, this, this.allowExtraProps);
                 this._kind.push(spec_only_kind);
                 return kind_builder;
             } else {
@@ -183,7 +183,7 @@ export class ProviderSdk implements ProviderImpl {
     add_kind(kind: Kind): Kind_Builder | null {
         if (this._kind.indexOf(kind) === -1) {
             this._kind.push(kind);
-            const kind_builder = new Kind_Builder(kind, this);
+            const kind_builder = new Kind_Builder(kind, this, this.allowExtraProps);
             return kind_builder;
         } else {
             return null;
@@ -234,7 +234,7 @@ export class ProviderSdk implements ProviderImpl {
         this._server_manager.register_handler("/" + name, async (req, res) => {
             try {
                 const result = await handler(new ProceduralCtx(this, prefix, version, req.headers), req.body.input);
-                this.validator.validate(result, Maybe.fromValue(Object.values(output_desc)[0]), Validator.build_schemas(input_desc, output_desc));
+                Validator.validate(result, Maybe.fromValue(Object.values(output_desc)[0]), Validator.build_schemas(input_desc, output_desc), this.allowExtraProps);
                 res.json(result);
             } catch (e) {
                 if (e instanceof ValidationError) {
@@ -257,9 +257,10 @@ export class ProviderSdk implements ProviderImpl {
                 prefix: this._prefix!,
                 procedures: this._procedures,
                 extension_structure: this.meta_ext,
+                allowExtraProps: this.allowExtraProps,
                 ...(this._policy) && {policy: this._policy},
                 ...(this._oauth2) && {oauth2: this._oauth2},
-                ...(this._authModel) && {authModel: this._authModel}
+                ...(this._authModel) && {authModel: this._authModel},
             };
             try {
                 await this.providerApiAxios.post('/', this._provider);
@@ -284,9 +285,9 @@ export class ProviderSdk implements ProviderImpl {
         throw new Error(`Malformed provider description. Missing: ${ missing_field }`)
     }
 
-    static create_provider(papiea_url: string, s2skey: string, public_host?: string, public_port?: number, validator?: Validator): ProviderSdk {
+    static create_provider(papiea_url: string, s2skey: string, public_host?: string, public_port?: number, allowExtraProps: boolean = false): ProviderSdk {
         const server_manager = new Provider_Server_Manager(public_host, public_port);
-        return new ProviderSdk(papiea_url, s2skey, server_manager, validator)
+        return new ProviderSdk(papiea_url, s2skey, server_manager, allowExtraProps)
     }
 
     public secure_with(oauth_config: any, casbin_model: string, casbin_initial_policy: string) : ProviderSdk {
@@ -372,10 +373,10 @@ export class Kind_Builder {
     get_version: () => string;
     private server_manager: Provider_Server_Manager;
     provider_url: string;
-    private validator: Validator;
+    private readonly allowExtraProps: boolean;
     private readonly provider: ProviderSdk;
 
-    constructor (kind: Kind, provider: ProviderSdk, validator?: Validator) {
+    constructor (kind: Kind, provider: ProviderSdk, allowExtraProps: boolean) {
         this.provider = provider;
         this.server_manager = provider.server_manager;
         this.kind = kind;
@@ -383,7 +384,7 @@ export class Kind_Builder {
         this.provider_url = provider.provider_url;
         this.get_prefix = provider.get_prefix;
         this.get_version = provider.get_version;
-        this.validator = validator || new Validator(true)
+        this.allowExtraProps = allowExtraProps
     }
 
     entity_procedure(name: string, rbac: any,
@@ -409,7 +410,7 @@ export class Kind_Builder {
                     spec: req.body.spec,
                     status: req.body.status
                 }, req.body.input);
-                this.validator.validate(result, Maybe.fromValue(Object.values(output_desc)[0]), Validator.build_schemas(input_desc, output_desc));
+                Validator.validate(result, Maybe.fromValue(Object.values(output_desc)[0]), Validator.build_schemas(input_desc, output_desc), this.allowExtraProps);
                 res.json(result);
             } catch (e) {
                 if (e instanceof ValidationError) {
@@ -443,7 +444,7 @@ export class Kind_Builder {
         this.server_manager.register_handler(`/${this.kind.name}/${name}`, async (req, res) => {
             try {
                 const result = await handler(new ProceduralCtx(this.provider, prefix, version, req.headers), req.body.input);
-                this.validator.validate(result, Maybe.fromValue(Object.values(output_desc)[0]), Validator.build_schemas(input_desc, output_desc));
+                Validator.validate(result, Maybe.fromValue(Object.values(output_desc)[0]), Validator.build_schemas(input_desc, output_desc), this.allowExtraProps);
                 res.json(result);
             } catch (e) {
                 if (e instanceof ValidationError) {

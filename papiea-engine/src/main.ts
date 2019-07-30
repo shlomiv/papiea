@@ -47,14 +47,13 @@ async function setUpApplication(): Promise<express.Express> {
     const specDb = await mongoConnection.get_spec_db();
     const statusDb = await mongoConnection.get_status_db();
     const s2skeyDb = await mongoConnection.get_s2skey_db();
-    const validator = new Validator(disallowExtraProps);
-    const providerApi = new Provider_API_Impl(providerDb, statusDb, s2skeyDb, validator, new AdminAuthorizer());
+    const providerApi = new Provider_API_Impl(providerDb, statusDb, s2skeyDb, new AdminAuthorizer());
     app.use(createAuthnRouter(adminKey, s2skeyDb, providerDb));
     app.use(createOAuth2Router(oauth2RedirectUri, providerDb));
     const entityApiAuthorizer: Authorizer = new PerProviderAuthorizer(providerApi, new ProviderCasbinAuthorizerFactory());
     app.use('/provider', createProviderAPIRouter(providerApi));
-    app.use('/services', createEntityAPIRouter(new Entity_API_Impl(statusDb, specDb, providerApi, validator, entityApiAuthorizer)));
-    app.use('/api-docs', createAPIDocsRouter('api-docs', new ApiDocsGenerator(providerDb)));
+    app.use('/services', createEntityAPIRouter(new Entity_API_Impl(statusDb, specDb, providerApi, entityApiAuthorizer)));
+    app.use('/api-docs', createAPIDocsRouter('/api-docs', new ApiDocsGenerator(providerDb)));
     app.use(function (err: any, req: any, res: any, next: any) {
         if (res.headersSent) {
             return next(err);

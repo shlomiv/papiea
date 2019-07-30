@@ -58,7 +58,7 @@ export function createAuthnRouter(adminKey: string, signature: Signature, s2skey
                 userInfo = await signature.verify(token);
             } catch (e) {
                 try {
-                    const s2skey: S2S_Key = await s2skeyDb.get_key(token);
+                    const s2skey: S2S_Key = await s2skeyDb.get_key_by_secret(token);
                     userInfo = s2skey.extension;
                 } catch (e) {
                     throw new UnauthorizedError();

@@ -1,19 +1,19 @@
 import { ProceduralCtx_Interface, SecurityApi } from "./typescript_sdk_interface";
-import { Entity, Status, Entity_Reference, Action, Version } from "papiea-core";
+import { Entity, Status, Entity_Reference, Action, Version, Secret } from "papiea-core";
 import axios, { AxiosInstance } from "axios";
 import { ProviderSdk } from "./typescript_sdk";
 import { IncomingHttpHeaders } from "http";
 
-export class ProceduralCtx implements ProceduralCtx_Interface {
+export class ProceduralCtx<T> implements ProceduralCtx_Interface<T> {
     base_url: string;
     provider_prefix: string;
     provider_version: string;
     provider_url: string;
     private readonly providerApiAxios: AxiosInstance;
-    provider: ProviderSdk;
+    provider: ProviderSdk<T>;
     headers: IncomingHttpHeaders;
 
-    constructor(provider:ProviderSdk, provider_prefix: string, provider_version: string, headers: IncomingHttpHeaders) {
+    constructor(provider:ProviderSdk<T>, provider_prefix: string, provider_version: string, headers: IncomingHttpHeaders) {
 
         this.provider_url = provider.provider_url;
         this.base_url = provider.entity_url;
@@ -59,11 +59,11 @@ export class ProceduralCtx implements ProceduralCtx_Interface {
         throw new Error("Unimplemented")
     }
 
-    get_provider_security_api(): SecurityApi {
+    get_provider_security_api(): SecurityApi<T> {
         return this.provider.providerSecurityApi
     }
-    get_user_security_api(user_s2skey: string): SecurityApi {
-        return this.provider.new_security_api(user_s2skey)
+    get_user_security_api(secret: Secret<T>): SecurityApi<T> {
+        return this.provider.new_security_api(secret)
     }
     get_headers(): IncomingHttpHeaders {
         return this.headers

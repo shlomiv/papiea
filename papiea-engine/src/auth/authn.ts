@@ -1,17 +1,18 @@
 import { NextFunction, Request, Response, Router } from "express";
 import { S2S_Key_DB } from "../databases/s2skey_db_interface";
-import { Provider, S2S_Key, Version } from "papiea-core";
+import { Provider, S2S_Key, Version, Secret } from "papiea-core";
 import { Provider_DB } from "../databases/provider_db_interface";
 import { getUserInfoFromToken } from "./oauth2";
 import { UnauthorizedError } from "../errors/permission_error";
 import atob = require("atob");
+import { SecretImpl } from "./crypto";
 
 
-interface AuthenticationStrategy {
-    getUserAuthInfo(token: string): Promise<UserAuthInfo | null>
+interface AuthenticationStrategy<T> {
+    getUserAuthInfo(secret: Secret<T>): Promise<UserAuthInfo | null>
 }
 
-class IdpAuthenticationStrategy implements AuthenticationStrategy {
+class IdpAuthenticationStrategy implements AuthenticationStrategy<string> {
     private readonly providerDb: Provider_DB;
     private readonly provider_prefix?: string;
     private readonly provider_version?: Version;
@@ -22,13 +23,13 @@ class IdpAuthenticationStrategy implements AuthenticationStrategy {
         this.provider_version = provider_version;
     }
 
-    async getUserAuthInfo(token: string): Promise<UserAuthInfo | null> {
+    async getUserAuthInfo(secret: Secret<string>): Promise<UserAuthInfo | null> {
         try {
             if (!this.provider_prefix || !this.provider_version) {
                 return null;
             }
             const provider: Provider = await this.providerDb.get_provider(this.provider_prefix, this.provider_version);
-            const userInfo = getUserInfoFromToken(JSON.parse(atob(token)), provider);
+            const userInfo = getUserInfoFromToken(JSON.parse(atob(secret.getSecret())), provider);
             userInfo.provider_prefix = this.provider_prefix;
             userInfo.provider_version = this.provider_version;
             delete userInfo.is_admin;
@@ -40,15 +41,15 @@ class IdpAuthenticationStrategy implements AuthenticationStrategy {
     }
 }
 
-class AdminAuthenticationStrategy implements AuthenticationStrategy {
-    private readonly adminKey: string;
+class AdminAuthenticationStrategy<T> implements AuthenticationStrategy<T> {
+    private readonly adminKey: T;
 
-    constructor(adminKey: string) {
+    constructor(adminKey: T) {
         this.adminKey = adminKey;
     }
 
-    async getUserAuthInfo(token: string): Promise<UserAuthInfo | null> {
-        if (token === this.adminKey) {
+    async getUserAuthInfo(secret: Secret<T>): Promise<UserAuthInfo | null> {
+        if (secret.getSecret() === this.adminKey) {
             return { is_admin: true }
         } else {
             return null;
@@ -56,16 +57,16 @@ class AdminAuthenticationStrategy implements AuthenticationStrategy {
     }
 }
 
-class S2SKeyAuthenticationStrategy implements AuthenticationStrategy {
+class S2SKeyAuthenticationStrategy<T> implements AuthenticationStrategy<T> {
     private readonly s2skeyDb: S2S_Key_DB;
 
     constructor(s2skeyDb: S2S_Key_DB) {
         this.s2skeyDb = s2skeyDb;
     }
 
-    async getUserAuthInfo(token: string): Promise<UserAuthInfo | null> {
+    async getUserAuthInfo(secret: Secret<T>): Promise<UserAuthInfo | null> {
         try {
-            const s2skey: S2S_Key = await this.s2skeyDb.get_key_by_secret(token);
+            const s2skey: S2S_Key = await this.s2skeyDb.get_key_by_secret(secret.getSecret());
             const userInfo = s2skey.userInfo;
             userInfo.authorization = 'Bearer ' + s2skey.key;
             return userInfo;
@@ -77,13 +78,13 @@ class S2SKeyAuthenticationStrategy implements AuthenticationStrategy {
 
 
 class AuthenticationContext {
-    private authStrategies: AuthenticationStrategy[] = [];
-    protected token: string;
+    private authStrategies: AuthenticationStrategy<string>[] = [];
+    protected secret: Secret<string>;
 
 
     // TODO: I.Korotach maybe introduce a DI factory
-    constructor(token: string, adminKey: string, s2skeyDb: S2S_Key_DB, providerDb: Provider_DB, provider_prefix: string, provider_version: Version) {
-        this.token = token;
+    constructor(secret: Secret<string>, adminKey: string, s2skeyDb: S2S_Key_DB, providerDb: Provider_DB, provider_prefix: string, provider_version: Version) {
+        this.secret = secret;
         this.authStrategies = [
             new AdminAuthenticationStrategy(adminKey),
             new S2SKeyAuthenticationStrategy(s2skeyDb),
@@ -95,7 +96,7 @@ class AuthenticationContext {
         let userAuthInfo: UserAuthInfo | null = null;
         let i = 0;
         while (userAuthInfo === null && i < this.authStrategies.length) {
-            userAuthInfo = await this.authStrategies[i].getUserAuthInfo(this.token);
+            userAuthInfo = await this.authStrategies[i].getUserAuthInfo(this.secret);
             i++;
         }
         if (userAuthInfo !== null) {
@@ -146,10 +147,11 @@ export function createAuthnRouter(adminKey: string, s2skeyDb: S2S_Key_DB, provid
         if (token === null) {
             return next();
         }
+        const secret = new SecretImpl(token)
         const urlParts = req.originalUrl.split('/');
         const provider_prefix: string | undefined = urlParts[2];
         const provider_version: Version | undefined = urlParts[3];
-        const AuthCtx = new AuthenticationContext(token, adminKey, s2skeyDb, providerDb, provider_prefix, provider_version);
+        const AuthCtx = new AuthenticationContext(secret, adminKey, s2skeyDb, providerDb, provider_prefix, provider_version);
 
         const userInfo = await AuthCtx.getUserAuthInfo();
 

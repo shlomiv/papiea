@@ -141,7 +141,7 @@ describe("Provider Sdk tests", () => {
         sdk.new_kind(geo_location_yaml);
         done();
     });
-    let location_kind_manager: Kind_Builder<string>;
+    let location_kind_manager: Kind_Builder;
     test("Duplicate delete on kind should return false", (done) => {
         const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
         location_kind_manager = sdk.new_kind(location_yaml);

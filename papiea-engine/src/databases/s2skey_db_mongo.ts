@@ -47,7 +47,7 @@ export class S2S_Key_DB_Mongo implements S2S_Key_DB {
         return result;
     }
 
-    async get_key_by_secret<T>(secret: T): Promise<S2S_Key> {
+    async get_key_by_secret(secret: string): Promise<S2S_Key> {
         const result: S2S_Key | null = await this.collection.findOne({
             "key": secret,
             "deleted_at": null

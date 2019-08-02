@@ -194,14 +194,6 @@ export interface UserInfo {
     [key: string]: any;
 }
 
-export interface Secret<T> {
-    _secret: T
-
-    getSecret(): T
-
-    setSecret(secret: T): void
-}
-
 export interface S2S_Key {
     name?: string
     owner: string

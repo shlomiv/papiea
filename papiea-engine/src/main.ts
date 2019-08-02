@@ -13,6 +13,7 @@ import { Authorizer, AdminAuthorizer, PerProviderAuthorizer} from "./auth/authz"
 import { ProviderCasbinAuthorizerFactory } from "./auth/casbin";
 import morgan = require("morgan");
 import { PapieaErrorImpl } from "./errors/papiea_error_impl";
+import { SecretImpl } from "./auth/crypto";
 
 declare var process: {
     env: {
@@ -48,7 +49,7 @@ async function setUpApplication(): Promise<express.Express> {
     const statusDb = await mongoConnection.get_status_db();
     const s2skeyDb = await mongoConnection.get_s2skey_db();
     const providerApi = new Provider_API_Impl(providerDb, statusDb, s2skeyDb, new AdminAuthorizer());
-    app.use(createAuthnRouter(adminKey, s2skeyDb, providerDb));
+    app.use(createAuthnRouter(new SecretImpl(adminKey), s2skeyDb, providerDb));
     app.use(createOAuth2Router(oauth2RedirectUri, providerDb));
     const entityApiAuthorizer: Authorizer = new PerProviderAuthorizer(providerApi, new ProviderCasbinAuthorizerFactory());
     app.use('/provider', createProviderAPIRouter(providerApi));

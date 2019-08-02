@@ -185,6 +185,12 @@ export interface Provider {
     allowExtraProps: boolean;
 }
 
+export interface Secret {
+    getSecret(): any
+
+    setSecret(secret: any): void
+}
+
 // Add support for partial types where relevant
 export type Partial<T> = {
     [P in keyof T]?: T[P];
@@ -198,7 +204,7 @@ export interface S2S_Key {
     name?: string
     owner: string
     provider_prefix: string
-    key: string
+    secret: any
     uuid: string;
 
     // Additional fields

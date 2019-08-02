@@ -6,7 +6,7 @@ export interface S2S_Key_DB {
 
     get_key(uuid: string): Promise<S2S_Key>;
 
-    get_key_by_secret(secret: string): Promise<S2S_Key>;
+    get_key_by_secret(secret: any): Promise<S2S_Key>;
 
     list_keys(fields_map: any): Promise<S2S_Key[]>;
 

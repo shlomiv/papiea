@@ -110,7 +110,7 @@ export class Provider_API_Impl implements Provider_API {
         this.eventEmitter.on('authChange', callbackfn);
     }
 
-    async create_key(user: UserAuthInfo, name: string, owner: string, provider_prefix: string, userInfo?: any, key?: string): Promise<S2S_Key> {
+    async create_key(user: UserAuthInfo, name: string, owner: string, provider_prefix: string, userInfo?: any, secret?: string): Promise<S2S_Key> {
         // - name is not mandatory, displayed in UI
         // - owner is the owner of the key (usually email),
         // it is not unique, different providers may have same owner
@@ -127,12 +127,12 @@ export class Provider_API_Impl implements Provider_API {
             uuid: uuid(),
             owner: owner,
             provider_prefix: provider_prefix,
-            key: "",
+            secret: "",
             created_at: new Date(),
             deleted_at: undefined,
             userInfo: userInfo ? userInfo : user
         };
-        s2skey.key = key ? key : createHash(s2skey);
+        s2skey.secret = secret ? secret : createHash(s2skey);
         await this.authorizer.checkPermission(user, s2skey, Action.CreateS2SKey);
         await this.s2skeyDb.create_key(s2skey);
         return this.s2skeyDb.get_key(s2skey.uuid);
@@ -148,8 +148,8 @@ export class Provider_API_Impl implements Provider_API {
         const res = await this.s2skeyDb.list_keys(fields_map);
         let secret;
         for (let s2s_key of res) {
-            secret = s2s_key.key;
-            s2s_key.key = secret.slice(0, 2) + "*****" + secret.slice(-2);
+            secret = s2s_key.secret;
+            s2s_key.secret = secret.slice(0, 2) + "*****" + secret.slice(-2);
         }
         return this.authorizer.filter(user, res, Action.ReadS2SKey);
     }

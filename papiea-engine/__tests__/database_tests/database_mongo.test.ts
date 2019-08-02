@@ -263,7 +263,7 @@ describe("MongoDb tests", () => {
             owner: uuid4(),
             uuid: uuid4(),
             provider_prefix: "test_provider",
-            key: uuid4(),
+            secret: uuid4(),
             created_at: new Date(),
             deleted_at: undefined,
             userInfo: {}
@@ -273,7 +273,7 @@ describe("MongoDb tests", () => {
         expect(res.name).toEqual(s2skey.name);
         expect(res.owner).toEqual(s2skey.owner);
         expect(res.provider_prefix).toEqual(s2skey.provider_prefix);
-        expect(res.key).toEqual(s2skey.key);
+        expect(res.secret).toEqual(s2skey.secret);
         expect(res.deleted_at).toBeFalsy();
     });
 
@@ -285,7 +285,7 @@ describe("MongoDb tests", () => {
             owner: uuid4(),
             uuid: uuid4(),
             provider_prefix: "test_provider",
-            key: uuid4(),
+            secret: uuid4(),
             created_at: new Date(),
             deleted_at: undefined,
             userInfo: {}
@@ -306,7 +306,7 @@ describe("MongoDb tests", () => {
             owner: uuid4(),
             uuid: uuid4(),
             provider_prefix: "test_provider",
-            key: uuid4(),
+            secret: uuid4(),
             created_at: new Date(),
             deleted_at: undefined,
             userInfo: {}
@@ -319,7 +319,7 @@ describe("MongoDb tests", () => {
         expect(res.name).toEqual(s2skey.name);
         expect(res.owner).toEqual(s2skey.owner);
         expect(res.provider_prefix).toEqual(s2skey.provider_prefix);
-        expect(res.key).toEqual(s2skey.key);
+        expect(res.secret).toEqual(s2skey.secret);
         expect(res.deleted_at).toBeFalsy();
     });
 
@@ -331,7 +331,7 @@ describe("MongoDb tests", () => {
             owner: uuid4(),
             uuid: uuid4(),
             provider_prefix: "test_provider",
-            key: uuid4(),
+            secret: uuid4(),
             created_at: new Date(),
             deleted_at: undefined,
             userInfo: {}

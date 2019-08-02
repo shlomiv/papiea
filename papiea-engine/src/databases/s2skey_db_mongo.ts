@@ -13,8 +13,8 @@ export class S2S_Key_DB_Mongo implements S2S_Key_DB {
     async init(): Promise<void> {
         try {
             await this.collection.createIndex(
-                { "key": 1 },
-                { name: "key", unique: true },
+                { "secret": 1 },
+                { name: "secret", unique: true },
             );
             await this.collection.createIndex(
                 { "owner": 1, "provider_prefix": 1 },
@@ -33,7 +33,6 @@ export class S2S_Key_DB_Mongo implements S2S_Key_DB {
         s2skey.created_at = new Date();
         s2skey.deleted_at = undefined;
         await this.collection.insertOne(s2skey);
-        return;
     }
 
     async get_key(uuid: string): Promise<S2S_Key> {
@@ -47,9 +46,9 @@ export class S2S_Key_DB_Mongo implements S2S_Key_DB {
         return result;
     }
 
-    async get_key_by_secret(secret: string): Promise<S2S_Key> {
+    async get_key_by_secret(secret: any): Promise<S2S_Key> {
         const result: S2S_Key | null = await this.collection.findOne({
-            "key": secret,
+            "secret": secret,
             "deleted_at": null
         });
         if (result === null) {

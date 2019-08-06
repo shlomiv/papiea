@@ -16,6 +16,7 @@ import { ProceduralCtx } from "./typescript_sdk_context_impl";
 import { Version, Kind, Procedural_Signature, Provider, Data_Description, SpecOnlyEntityKind, Procedural_Execution_Strategy, Entity, S2S_Key, UserInfo } from "papiea-core";
 import { InvocationError } from "./typescript_sdk_exceptions";
 import { SecretImpl } from "./typescript_sdk_crypto";
+import { Secret } from "papiea-core";
 
 
 class SecurityApiImpl implements SecurityApi {

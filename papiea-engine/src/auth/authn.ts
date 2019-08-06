@@ -67,7 +67,7 @@ class S2SKeyAuthenticationStrategy implements AuthenticationStrategy {
     async getUserAuthInfo(secret: Secret): Promise<UserAuthInfo | null> {
         try {
             const s2skey: S2S_Key = await this.s2skeyDb.get_key_by_secret(secret.getSecret());
-            const userInfo = s2skey.userInfo;
+            const userInfo = s2skey.user_info;
             userInfo.authorization = 'Bearer ' + s2skey.secret;
             return userInfo;
         } catch (e) {

@@ -55,7 +55,7 @@ describe("Provider API auth tests", () => {
             }
         );
         const { data: user_info } = await providerApi.get(`/${ provider.prefix }/${ provider.version }/auth/user_info`,
-            { headers: { 'Authorization': `Bearer ${ s2skey.key }` } }
+            { headers: { 'Authorization': `Bearer ${ s2skey.secret }` } }
         );
         expect(user_info.provider_prefix).toEqual(provider.prefix);
         expect(user_info.is_provider_admin).toBeTruthy();
@@ -76,7 +76,7 @@ describe("Provider API auth tests", () => {
         );
         expect(s2skey.secret).toEqual(secret);
         const { data: user_info } = await providerApi.get(`/${ provider.prefix }/${ provider.version }/auth/user_info`,
-            { headers: { 'Authorization': `Bearer ${ s2skey.key }` } }
+            { headers: { 'Authorization': `Bearer ${ s2skey.secret }` } }
         );
         expect(user_info.provider_prefix).toEqual(provider.prefix);
         expect(user_info.is_provider_admin).toBeTruthy();

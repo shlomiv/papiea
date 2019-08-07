@@ -88,7 +88,6 @@ export function createOAuth2Router(redirect_uri: string, providerDb: Provider_DB
             });
             const token = oauth2.accessToken.create(result);
             const base64Token = btoa(JSON.stringify(token.token));
-            res.cookie('auth', base64Token); // Shlomi: TODO: Should this be generalized to a name given to login as a parameter?
             if (state.redirect_uri) {
                 const client_url = new url.URL(state.redirect_uri);
                 client_url.searchParams.append("token", base64Token);

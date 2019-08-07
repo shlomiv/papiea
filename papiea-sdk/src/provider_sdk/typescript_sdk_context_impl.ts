@@ -5,6 +5,7 @@ import { ProviderSdk } from "./typescript_sdk";
 import { IncomingHttpHeaders } from "http";
 
 export class ProceduralCtx implements ProceduralCtx_Interface {
+    cookies: any
     base_url: string;
     provider_prefix: string;
     provider_version: string;
@@ -13,7 +14,7 @@ export class ProceduralCtx implements ProceduralCtx_Interface {
     provider: ProviderSdk;
     headers: IncomingHttpHeaders;
 
-    constructor(provider:ProviderSdk, provider_prefix: string, provider_version: string, headers: IncomingHttpHeaders) {
+    constructor(provider:ProviderSdk, provider_prefix: string, provider_version: string, headers: IncomingHttpHeaders, cookies: any) {
 
         this.provider_url = provider.provider_url;
         this.base_url = provider.entity_url;
@@ -22,6 +23,7 @@ export class ProceduralCtx implements ProceduralCtx_Interface {
         this.providerApiAxios = provider.provider_api_axios;
         this.provider = provider;
         this.headers = headers
+        this.cookies = cookies;
     }
 
     url_for(entity: Entity): string {
@@ -75,5 +77,8 @@ export class ProceduralCtx implements ProceduralCtx_Interface {
                 return parts[1]
         }
         throw new Error("No invoking user")
+    }
+    set_cookie(name: string, val: string): void {
+        this.cookies(name, val)
     }
 }

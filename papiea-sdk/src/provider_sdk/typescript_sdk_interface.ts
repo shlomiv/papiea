@@ -64,6 +64,7 @@ export interface IntentfulCtx_Interface {
     get_headers(): IncomingHttpHeaders
     get_invoking_token(): string
     check_permission(entityAction: [Action, Entity_Reference][], provider_prefix: string, provider_version: Version): Promise<boolean>
+    set_cookie(name:string, value:string):void
 }
 
 // For the time being these are equal. Later they may differ

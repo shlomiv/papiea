@@ -55,7 +55,7 @@ export async function invoke_provider_procedure(provider: string, version: strin
 
 async function filter_entity(provider: string, kind: string, version: string, filter: any, papiea_url: string, s2skey: string): Promise<Entity[]> {
     const res = await axios.post(`${papiea_url}/services/${provider}/${version}/${kind}/filter/`, filter, {headers:{"Authorization": `Bearer ${s2skey}`}});
-    return res.data;
+    return res.data["results"];
 }
 
 export interface ProviderClient {

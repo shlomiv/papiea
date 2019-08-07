@@ -40,6 +40,7 @@ export class PapieaErrorImpl implements PapieaError {
 
     static create(err: Error) {
         let errorPayload: { message: string }[];
+        console.error("Got Error:", err)
         switch (err.constructor) {
             case ValidationError:
                 errorPayload = (err as ValidationError).errors.map(description => {

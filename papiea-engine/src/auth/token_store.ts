@@ -1,19 +1,19 @@
-function hash_string(str:string):number {
-    var hash = 0, i = 0, len = str.length;
-    while ( i < len ) {
-        hash  = ((hash << 5) - hash + str.charCodeAt(i++)) << 0;
-    }
-    return hash;
-};
-
 export class TokenStore {
-    private tokens:any = {};
+    private tokens:any;
+
+    public hash_string(str:string):number {
+        var hash = 0, i = 0, len = str.length;
+        while ( i < len ) {
+            hash  = ((hash << 5) - hash + str.charCodeAt(i++)) << 0;
+        }
+        return hash;
+    };
 
     /**
      * add_token
      */
     public add_token(token: string): number {
-        const token_hash = hash_string(token)
+        const token_hash = this.hash_string(token)
         this.tokens[token_hash] = token
         return token_hash
     }

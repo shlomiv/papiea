@@ -1,11 +1,11 @@
 import "jest"
-import { MongoConnection } from "../src/databases/mongo";
-import { Spec_DB } from "../src/databases/spec_db_interface";
-import { Status_DB } from "../src/databases/status_db_interface";
-import { Provider_DB } from "../src/databases/provider_db_interface";
-import { S2S_Key_DB } from "../src/databases/s2skey_db_interface";
+import { MongoConnection } from "../../src/databases/mongo";
+import { Spec_DB } from "../../src/databases/spec_db_interface";
+import { Status_DB } from "../../src/databases/status_db_interface";
+import { Provider_DB } from "../../src/databases/provider_db_interface";
+import { S2S_Key_DB } from "../../src/databases/s2skey_db_interface";
 import { v4 as uuid4 } from 'uuid';
-import { ConflictingEntityError } from "../src/databases/utils/errors";
+import { ConflictingEntityError } from "../../src/databases/utils/errors";
 import { Metadata, Spec, Entity_Reference, Status, Kind, Provider, S2S_Key } from "papiea-core";
 
 declare var process: {
@@ -266,7 +266,7 @@ describe("MongoDb tests", () => {
             key: uuid4(),
             created_at: new Date(),
             deleted_at: undefined,
-            userInfo: {}
+            user_info: {}
         };
         await s2skeyDb.create_key(s2skey);
         const res: S2S_Key = await s2skeyDb.get_key(s2skey.uuid);
@@ -288,7 +288,7 @@ describe("MongoDb tests", () => {
             key: uuid4(),
             created_at: new Date(),
             deleted_at: undefined,
-            userInfo: {}
+            user_info: {}
         };
         await s2skeyDb.create_key(s2skey);
         try {
@@ -309,7 +309,7 @@ describe("MongoDb tests", () => {
             key: uuid4(),
             created_at: new Date(),
             deleted_at: undefined,
-            userInfo: {}
+            user_info: {}
         };
         await s2skeyDb.create_key(s2skey);
         const res: S2S_Key = (await s2skeyDb.list_keys({
@@ -334,7 +334,7 @@ describe("MongoDb tests", () => {
             key: uuid4(),
             created_at: new Date(),
             deleted_at: undefined,
-            userInfo: {}
+            user_info: {}
         };
         await s2skeyDb.create_key(s2skey);
         await s2skeyDb.inactivate_key(s2skey.uuid);

@@ -231,7 +231,7 @@ export class ProviderSdk implements ProviderImpl {
         const version = this.get_version();
         this._server_manager.register_handler("/" + name, async (req, res) => {
             try {
-                const result = await handler(new ProceduralCtx(this, prefix, version, req.headers), req.body.input);
+                const result = await handler(new ProceduralCtx(this, prefix, version, req.headers, res.cookie), req.body.input);
                 res.json(result);
             } catch (e) {
                 if (e instanceof InvocationError) {
@@ -400,7 +400,7 @@ export class Kind_Builder {
         const version = this.get_version();
         this.server_manager.register_handler(`/${this.kind.name}/${name}`, async (req, res) => {
             try {
-                const result = await handler(new ProceduralCtx(this.provider, prefix, version, req.headers), {
+                const result = await handler(new ProceduralCtx(this.provider, prefix, version, req.headers, res.cookie), {
                     metadata: req.body.metadata,
                     spec: req.body.spec,
                     status: req.body.status
@@ -435,7 +435,7 @@ export class Kind_Builder {
         const version = this.get_version();
         this.server_manager.register_handler(`/${this.kind.name}/${name}`, async (req, res) => {
             try {
-                const result = await handler(new ProceduralCtx(this.provider, prefix, version, req.headers), req.body.input);
+                const result = await handler(new ProceduralCtx(this.provider, prefix, version, req.headers, res.cookie), req.body.input);
                 res.json(result);
             } catch (e) {
                 if (e instanceof InvocationError) {

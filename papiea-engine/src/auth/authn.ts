@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response, Router } from "express";
 import { UnauthorizedError } from "../errors/permission_error";
 import Logger from "../logger_interface";
+import { tokenStore } from "./token_store";
 
 
 export interface UserAuthInfoExtractor {
@@ -64,11 +65,12 @@ export function asyncHandler(fn: UserAuthRequestHandler): any {
 
 function getToken(req: any): string | null {
     if (req.headers.authorization && req.headers.authorization.split(' ')[0] === 'Bearer') {
-        return req.headers.authorization.split(' ')[1];
+        const bearer = req.headers.authorization.split(' ')[1]; 
+        return tokenStore.get_token(Number(bearer)) || bearer
     } else if (req.query && req.query.token) {
-        return req.query.token;
+        return tokenStore.get_token(Number(req.query.token)) || req.query.token;
     } else if (req.cookies && req.cookies.token) {
-        return req.cookies.token;
+        return tokenStore.get_token(Number(req.cookies.token)) || req.cookies.token;
     }
     return null;
 }

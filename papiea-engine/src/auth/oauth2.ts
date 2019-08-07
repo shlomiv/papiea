@@ -6,6 +6,7 @@ import { Provider } from "papiea-core";
 import btoa = require("btoa");
 import atob = require("atob");
 import Logger from "../logger_interface";
+import { tokenStore } from "./token_store";
 
 const simpleOauthModule = require("simple-oauth2"),
     queryString = require("query-string"),
@@ -113,12 +114,13 @@ export function createOAuth2Router(logger: Logger, redirect_uri: string, provide
             });
             const token = oauth2.accessToken.create(result);
             const base64Token = btoa(JSON.stringify(token.token));
+            const token_hash = tokenStore.add_token(token)
             if (state.redirect_uri) {
                 const client_url = new url.URL(state.redirect_uri);
-                client_url.searchParams.append("token", base64Token);
+                client_url.searchParams.append("token", token_hash);
                 return res.redirect(client_url.toString());
             } else {
-                return res.status(200).json({ token: base64Token });
+                return res.status(200).json({ token: token_hash });
             }
         } catch (error) {
             logger.error('Access Token Error', error.message);

@@ -1,13 +1,46 @@
 import { Router } from "express";
-import { asyncHandler, UserAuthInfo } from "./authn";
+import { asyncHandler, UserAuthInfo, UserAuthInfoExtractor } from "./authn";
 import { Provider_DB } from "../databases/provider_db_interface";
 import { extract_property } from "./user_data_evaluator";
 import { Provider } from "papiea-core";
 import btoa = require("btoa");
+import atob = require("atob");
+import Logger from "../logger_interface";
 
 const simpleOauthModule = require("simple-oauth2"),
     queryString = require("query-string"),
     url = require("url");
+
+
+export class IdpUserAuthInfoExtractor implements UserAuthInfoExtractor {
+    private readonly providerDb: Provider_DB;
+
+    constructor(providerDb: Provider_DB) {
+        this.providerDb = providerDb;
+    }
+
+    getUserInfoFromToken(token: any, provider: Provider): UserAuthInfo {
+        const extracted_headers = extract_property({ token }, provider.oauth2, "headers");
+        const user_info: UserAuthInfo = { ...extracted_headers };
+        return user_info;
+    }
+
+    async getUserAuthInfo(token: string, provider_prefix?: string, provider_version?: string): Promise<UserAuthInfo | null> {
+        try {
+            if (!provider_prefix || !provider_version) {
+                return null;
+            }
+            const provider: Provider = await this.providerDb.get_provider(provider_prefix, provider_version);
+            const user_info = this.getUserInfoFromToken(JSON.parse(atob(token)), provider);
+            delete user_info.is_admin;
+            return user_info;
+        } catch (e) {
+            console.error(`While trying to authenticate with IDP error: '${e}' occurred`);
+            return null;
+        }
+    }
+}
+
 
 function convertToSimpleOauth2(description: any) {
     const oauth = description.oauth;
@@ -35,16 +68,8 @@ function getOAuth2(provider: Provider) {
     return simpleOauthModule.create(converted_oauth);
 }
 
-export function getUserInfoFromToken(token: any, provider: Provider): UserAuthInfo {
 
-    const extracted_headers = extract_property({ token }, provider.oauth2, "headers");
-
-    const userInfo: UserAuthInfo = {...extracted_headers};
-
-    return userInfo;
-}
-
-export function createOAuth2Router(redirect_uri: string, providerDb: Provider_DB): Router {
+export function createOAuth2Router(logger: Logger, redirect_uri: string, providerDb: Provider_DB): Router {
     const router = Router();
 
     router.use('/provider/:prefix/:version/auth/login', asyncHandler(async (req, res) => {
@@ -96,7 +121,7 @@ export function createOAuth2Router(redirect_uri: string, providerDb: Provider_DB
                 return res.status(200).json({ token: base64Token });
             }
         } catch (error) {
-            console.error('Access Token Error', error.message);
+            logger.error('Access Token Error', error.message);
             return res.status(500).json('Authentication failed');
         }
     }));

@@ -9,6 +9,7 @@ import { createHash } from "../auth/crypto";
 import { EventEmitter } from "events";
 import { Entity_Reference, Version, Status, Provider, Kind, S2S_Key, Action } from "papiea-core";
 import uuid = require("uuid");
+import Logger from "../logger_interface";
 
 export class Provider_API_Impl implements Provider_API {
     private providerDb: Provider_DB;
@@ -16,14 +17,16 @@ export class Provider_API_Impl implements Provider_API {
     private s2skeyDb: S2S_Key_DB;
     private authorizer: Authorizer;
     private eventEmitter: EventEmitter;
+    private logger: Logger;
     private validator: Validator
 
-    constructor(providerDb: Provider_DB, statusDb: Status_DB, s2skeyDb: S2S_Key_DB, authorizer: Authorizer, validator: Validator) {
+    constructor(logger: Logger, providerDb: Provider_DB, statusDb: Status_DB, s2skeyDb: S2S_Key_DB, authorizer: Authorizer, validator: Validator) {
         this.providerDb = providerDb;
         this.statusDb = statusDb;
         this.s2skeyDb = s2skeyDb;
         this.authorizer = authorizer;
         this.eventEmitter = new EventEmitter();
+        this.logger = logger;
         this.validator = validator
     }
 
@@ -111,7 +114,7 @@ export class Provider_API_Impl implements Provider_API {
         this.eventEmitter.on('authChange', callbackfn);
     }
 
-    async create_key(user: UserAuthInfo, name: string, owner: string, provider_prefix: string, userInfo?: any, key?: string): Promise<S2S_Key> {
+    async create_key(user: UserAuthInfo, name: string, owner: string, provider_prefix: string, user_info?: any, key?: string): Promise<S2S_Key> {
         // - name is not mandatory, displayed in UI
         // - owner is the owner of the key (usually email),
         // it is not unique, different providers may have same owner
@@ -131,7 +134,7 @@ export class Provider_API_Impl implements Provider_API {
             key: "",
             created_at: new Date(),
             deleted_at: undefined,
-            user_info: userInfo ? userInfo : user
+            user_info: Object.assign({}, user_info ? user_info : user)
         };
         s2skey.key = key ? key : createHash(s2skey);
         await this.authorizer.checkPermission(user, s2skey, Action.CreateS2SKey);

@@ -7,7 +7,8 @@ import { ProviderBuilder } from "../test_data_factory";
 import uuid = require("uuid");
 import { Metadata, Spec, Provider } from "papiea-core";
 import btoa = require("btoa");
-
+import { WinstonLogger } from "../../src/logger";
+import Logger from "../../src/logger_interface";
 
 declare var process: {
     env: {
@@ -68,6 +69,7 @@ describe("Entity API auth tests", () => {
     const kind_name = provider.kinds[0].name;
     let entity_metadata: Metadata, entity_spec: Spec;
     let idp_token: string;
+    const entityApiAuthTestLogger: Logger = new WinstonLogger("info", "entity_api_auth_test.log");
 
     const tenant_uuid = uuid();
     const oauth2Server = http.createServer((req, res) => {
@@ -167,7 +169,7 @@ describe("Entity API auth tests", () => {
     beforeAll(async () => {
         await providerApiAdmin.post('/', provider);
         oauth2Server.listen(oauth2ServerPort, oauth2ServerHost, () => {
-            console.log(`Server running at http://${oauth2ServerHost}:${oauth2ServerPort}/`);
+            entityApiAuthTestLogger.info(`Server running at http://${oauth2ServerHost}:${oauth2ServerPort}/`);
         });
     });
 
@@ -211,7 +213,16 @@ describe("Entity API auth tests", () => {
         );
         expect(data.owner).toEqual("alice");
         expect(data.tenant).toEqual(tenant_uuid);
-        expect(data.provider_prefix).toEqual(provider.prefix);
+    });
+
+    test("Get user info via cookie", async () => {
+        expect.hasAssertions();
+        const { data: { token } } = await providerApi.get(`/${ provider.prefix }/${ provider.version }/auth/login`);
+        const { data } = await providerApi.get(`/${ provider.prefix }/${ provider.version }/auth/user_info`,
+            { headers: { 'Cookie': 'token=' + token } }
+        );
+        expect(data.owner).toEqual("alice");
+        expect(data.tenant).toEqual(tenant_uuid);
     });
 
     test("Login from SPA", async () => {
@@ -228,7 +239,7 @@ describe("Entity API auth tests", () => {
             }
         });
         server.listen(port, hostname, () => {
-            console.log(`Server running at http://${ hostname }:${ port }/`);
+            entityApiAuthTestLogger.info(`Server running at http://${ hostname }:${ port }/`);
         });
         const { data: { token } } = await providerApi.get(`/${ provider.prefix }/${ provider.version }/auth/login?redirect_uri=http://${ hostname }:${ port }/`);
         const { data } = await providerApi.get(`/${ provider.prefix }/${ provider.version }/auth/user_info`,
@@ -296,7 +307,7 @@ describe("Entity API auth tests", () => {
             }
         });
         server.listen(procedureCallbackPort, procedureCallbackHostname, () => {
-            console.log(`Server running at http://${ procedureCallbackHostname }:${ procedureCallbackPort }/`);
+            entityApiAuthTestLogger.info(`Server running at http://${ procedureCallbackHostname }:${ procedureCallbackPort }/`);
         });
         const { data: { token } } = await providerApi.get(`/${ provider.prefix }/${ provider.version }/auth/login`);
         await providerApiAdmin.post(`/${ provider.prefix }/${ provider.version }/auth`, {
@@ -322,8 +333,7 @@ describe("Entity API auth tests", () => {
         );
         const { data: s2skey } = await providerApi.post(`/${ provider.prefix }/${ provider.version }/s2skey`,
             {
-                owner: user_info.owner,
-                provider_prefix: user_info.provider_prefix
+                owner: user_info.owner
             },
             { headers: { 'Authorization': 'Bearer ' + token } }
         );
@@ -366,8 +376,7 @@ describe("Entity API auth tests", () => {
         );
         const { data: s2skey } = await providerApi.post(`/${ provider.prefix }/${ provider.version }/s2skey`,
             {
-                owner: user_info.owner,
-                provider_prefix: user_info.provider_prefix
+                owner: user_info.owner
             },
             { headers: { 'Authorization': 'Bearer ' + token } }
         );
@@ -397,7 +406,7 @@ describe("Entity API auth tests", () => {
             }
         });
         server.listen(procedureCallbackPort, procedureCallbackHostname, () => {
-            console.log(`Server running at http://${ procedureCallbackHostname }:${ procedureCallbackPort }/`);
+            entityApiAuthTestLogger.info(`Server running at http://${ procedureCallbackHostname }:${ procedureCallbackPort }/`);
         });
         const { data: { token } } = await providerApi.get(`/${ provider.prefix }/${ provider.version }/auth/login`);
         await providerApiAdmin.post(`/${ provider.prefix }/${ provider.version }/auth`, {
@@ -408,8 +417,7 @@ describe("Entity API auth tests", () => {
         );
         const { data: s2skey } = await providerApi.post(`/${ provider.prefix }/${ provider.version }/s2skey`,
             {
-                owner: user_info.owner,
-                provider_prefix: user_info.provider_prefix
+                owner: user_info.owner
             },
             { headers: { 'Authorization': 'Bearer ' + token } }
         );
@@ -420,8 +428,8 @@ describe("Entity API auth tests", () => {
         expect(headers['authorization']).toBe(`Bearer ${s2skey.key}`);
     });
 
-    test("Create s2s key with another owner or provider should fail", async () => {
-        expect.assertions(2 + expectAssertionsFromOauth2Server);
+    test("Create s2s key with another owner should fail", async () => {
+        expect.assertions(1 + expectAssertionsFromOauth2Server);
         const { data: { token } } = await providerApi.get(`/${ provider.prefix }/${ provider.version }/auth/login`);
         const { data: user_info } = await providerApi.get(`/${ provider.prefix }/${ provider.version }/auth/user_info`,
             { headers: { 'Authorization': 'Bearer ' + token } }
@@ -429,19 +437,7 @@ describe("Entity API auth tests", () => {
         try {
             await providerApi.post(`/${ provider.prefix }/${ provider.version }/s2skey`,
                 {
-                    owner: "another_owner",
-                    provider_prefix: user_info.provider_prefix
-                },
-                { headers: { 'Authorization': 'Bearer ' + token } }
-            );
-        } catch (e) {
-            expect(e.response.status).toEqual(403);
-        }
-        try {
-            await providerApi.post(`/${ provider.prefix }/${ provider.version }/s2skey`,
-                {
-                    owner: user_info.owner,
-                    provider_prefix: "another_provider"
+                    owner: "another_owner"
                 },
                 { headers: { 'Authorization': 'Bearer ' + token } }
             );
@@ -466,7 +462,7 @@ describe("Entity API auth tests", () => {
             }
         });
         server.listen(procedureCallbackPort, procedureCallbackHostname, () => {
-            console.log(`Server running at http://${ procedureCallbackHostname }:${ procedureCallbackPort }/`);
+            entityApiAuthTestLogger.info(`Server running at http://${ procedureCallbackHostname }:${ procedureCallbackPort }/`);
         });
         try {
             const { data: { token } } = await providerApi.get(`/${provider.prefix}/${provider.version}/auth/login`);
@@ -508,7 +504,7 @@ describe("Entity API auth tests", () => {
             }
         });
         server.listen(procedureCallbackPort, procedureCallbackHostname, () => {
-            console.log(`Server running at http://${ procedureCallbackHostname }:${ procedureCallbackPort }/`);
+            entityApiAuthTestLogger.info(`Server running at http://${ procedureCallbackHostname }:${ procedureCallbackPort }/`);
         });
         const { data: { token } } = await providerApi.get(`/${ provider.prefix }/${ provider.version }/auth/login`);
         await providerApiAdmin.post(`/${ provider.prefix }/${ provider.version }/auth`, {
@@ -536,7 +532,7 @@ describe("Entity API auth tests", () => {
             }
         });
         server.listen(procedureCallbackPort, procedureCallbackHostname, () => {
-            console.log(`Server running at http://${ procedureCallbackHostname }:${ procedureCallbackPort }/`);
+            entityApiAuthTestLogger.info(`Server running at http://${ procedureCallbackHostname }:${ procedureCallbackPort }/`);
         });
         const { data: { token } } = await providerApi.get(`/${provider.prefix}/${provider.version}/auth/login`);
         await providerApiAdmin.post(`/${provider.prefix}/${provider.version}/auth`, {
@@ -564,7 +560,7 @@ describe("Entity API auth tests", () => {
             }
         });
         server.listen(procedureCallbackPort, procedureCallbackHostname, () => {
-            console.log(`Server running at http://${ procedureCallbackHostname }:${ procedureCallbackPort }/`);
+            entityApiAuthTestLogger.info(`Server running at http://${ procedureCallbackHostname }:${ procedureCallbackPort }/`);
         });
         // There should be some policy in place
         await providerApiAdmin.post(`/${ provider.prefix }/${ provider.version }/auth`, {
@@ -573,7 +569,6 @@ describe("Entity API auth tests", () => {
         const { data: s2skey } = await providerApiAdmin.post(`/${ provider.prefix }/${ provider.version }/s2skey`,
             {
                 user_info: {
-                    provider_prefix: provider.prefix,
                     is_provider_admin: true
                 }
             }
@@ -601,7 +596,7 @@ describe("Entity API auth tests", () => {
             }
         });
         server.listen(procedureCallbackPort, procedureCallbackHostname, () => {
-            console.log(`Server running at http://${ procedureCallbackHostname }:${ procedureCallbackPort }/`);
+            entityApiAuthTestLogger.info(`Server running at http://${ procedureCallbackHostname }:${ procedureCallbackPort }/`);
         });
         const { data: { token } } = await providerApi.get(`/${provider.prefix}/${provider.version}/auth/login`);
         await providerApiAdmin.post(`/${provider.prefix}/${provider.version}/auth`, {
@@ -635,7 +630,7 @@ describe("Entity API auth tests", () => {
             }
         });
         server.listen(procedureCallbackPort, procedureCallbackHostname, () => {
-            console.log(`Server running at http://${ procedureCallbackHostname }:${ procedureCallbackPort }/`);
+            entityApiAuthTestLogger.info(`Server running at http://${ procedureCallbackHostname }:${ procedureCallbackPort }/`);
         });
         // There should be some policy in place
         await providerApiAdmin.post(`/${ provider.prefix }/${ provider.version }/auth`, {
@@ -644,7 +639,6 @@ describe("Entity API auth tests", () => {
         const { data: s2skey } = await providerApiAdmin.post(`/${ provider.prefix }/${ provider.version }/s2skey`,
             {
                 user_info: {
-                    provider_prefix: provider.prefix,
                     is_provider_admin: true
                 }
             }
@@ -666,10 +660,9 @@ describe("Entity API auth tests", () => {
             await providerApiAdmin.post(`/${provider.prefix}/${provider.version}/auth`, {
                 policy: `p, alice, owner, ${kind_name}, *, allow`
             });
-            const { data: s2skey } = await providerApiAdmin.post(`/${provider.prefix}/${provider.version}/s2skey`,
+            const { data: s2skey } = await providerApiAdmin.post(`/${provider.prefix + "1"}/${provider.version}/s2skey`,
                 {
                     user_info: {
-                        provider_prefix: provider.prefix + "1",
                         is_provider_admin: true
                     }
                 }

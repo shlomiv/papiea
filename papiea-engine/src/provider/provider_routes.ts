@@ -70,5 +70,10 @@ export default function createProviderAPIRouter(providerApi: Provider_API) {
         res.json("OK");
     }));
 
+    providerApiRouter.get('/:prefix/:version/callback', asyncHandler(async (req, res) => {
+        // Propogate to provider
+        if (req.headers.token) res.cookie('auth', req.headers.token)
+    }));
+
     return providerApiRouter;
 }

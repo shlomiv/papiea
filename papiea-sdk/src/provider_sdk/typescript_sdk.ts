@@ -285,10 +285,16 @@ export class ProviderSdk implements ProviderImpl {
         return new ProviderSdk(papiea_url, s2skey, server_manager, allowExtraProps)
     }
 
-    public secure_with(oauth_config: any, casbin_model: string, casbin_initial_policy: string) : ProviderSdk {
+    public secure_with(oauth_config: any, casbin_model: string, casbin_initial_policy: string, callback_fn?:RequestHandler) : ProviderSdk {
         this._oauth2=oauth_config;
         this._authModel=casbin_model;
         this._policy=casbin_initial_policy;
+        /*callback_fn = callback_fn ? callback_fn : async (req, res) => {
+            if (req.headers.token) res.cookie('auth', req.headers.token)
+        }
+
+        this.server_manager.register_get_handler('/callback', callback_fn)
+        */
         return this
     }
 
@@ -330,10 +336,13 @@ class Provider_Server_Manager {
     }
 
     register_handler(route: string, handler: RequestHandler) {
-        if (!this.should_run) {
-            this.should_run = true;
-        }
+        this.should_run = true;
         this.app.post(route, asyncHandler(handler))
+    }
+
+    register_get_handler(route: string, handler: RequestHandler) {
+        this.should_run = true;
+        this.app.get(route, asyncHandler(handler))
     }
 
     startServer() {

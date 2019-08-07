@@ -5,6 +5,7 @@ import { Provider_DB } from "../databases/provider_db_interface";
 import { getUserInfoFromToken } from "./oauth2";
 import { UnauthorizedError } from "../errors/permission_error";
 import atob = require("atob");
+import Logger from "../logger_interface";
 
 
 interface AuthenticationStrategy {
@@ -15,11 +16,13 @@ class IdpAuthenticationStrategy implements AuthenticationStrategy {
     private readonly providerDb: Provider_DB;
     private readonly provider_prefix?: string;
     private readonly provider_version?: Version;
+    private logger: Logger;
 
-    constructor(providerDb: Provider_DB, provider_prefix?: string, provider_version?: string) {
+    constructor(logger: Logger, providerDb: Provider_DB, provider_prefix?: string, provider_version?: string) {
         this.providerDb = providerDb;
         this.provider_prefix = provider_prefix;
         this.provider_version = provider_version;
+        this.logger = logger;
     }
 
     async getUserAuthInfo(token: string): Promise<UserAuthInfo | null> {
@@ -34,7 +37,7 @@ class IdpAuthenticationStrategy implements AuthenticationStrategy {
             delete userInfo.is_admin;
             return userInfo;
         } catch (e) {
-            console.error(`While trying to authenticate with IDP error: '${e}' occurred`);
+            this.logger.error(`While trying to authenticate with IDP error: '${e}' occurred`);
             return null;
         }
     }
@@ -42,8 +45,10 @@ class IdpAuthenticationStrategy implements AuthenticationStrategy {
 
 class AdminAuthenticationStrategy implements AuthenticationStrategy {
     private readonly adminKey: string;
+    private logger: Logger;
 
-    constructor(adminKey: string) {
+    constructor(logger: Logger, adminKey: string) {
+        this.logger = logger;        
         this.adminKey = adminKey;
     }
 
@@ -58,8 +63,10 @@ class AdminAuthenticationStrategy implements AuthenticationStrategy {
 
 class S2SKeyAuthenticationStrategy implements AuthenticationStrategy {
     private readonly s2skeyDb: S2S_Key_DB;
+    private logger: Logger;
 
-    constructor(s2skeyDb: S2S_Key_DB) {
+    constructor(logger: Logger, s2skeyDb: S2S_Key_DB) {
+        this.logger = logger;        
         this.s2skeyDb = s2skeyDb;
     }
 
@@ -79,15 +86,17 @@ class S2SKeyAuthenticationStrategy implements AuthenticationStrategy {
 class AuthenticationContext {
     private authStrategies: AuthenticationStrategy[] = [];
     protected token: string;
+    private logger: Logger;
 
 
     // TODO: I.Korotach maybe introduce a DI factory
-    constructor(token: string, adminKey: string, s2skeyDb: S2S_Key_DB, providerDb: Provider_DB, provider_prefix: string, provider_version: Version) {
+    constructor(logger: Logger, token: string, adminKey: string, s2skeyDb: S2S_Key_DB, providerDb: Provider_DB, provider_prefix: string, provider_version: Version) {
+        this.logger = logger;        
         this.token = token;
         this.authStrategies = [
-            new AdminAuthenticationStrategy(adminKey),
-            new S2SKeyAuthenticationStrategy(s2skeyDb),
-            new IdpAuthenticationStrategy(providerDb, provider_prefix, provider_version)
+            new AdminAuthenticationStrategy(logger, adminKey),
+            new S2SKeyAuthenticationStrategy(logger, s2skeyDb),
+            new IdpAuthenticationStrategy(logger, providerDb, provider_prefix, provider_version)
         ]
     }
 
@@ -137,7 +146,7 @@ function getToken(req: any): string | null {
     return null;
 }
 
-export function createAuthnRouter(adminKey: string, s2skeyDb: S2S_Key_DB, providerDb: Provider_DB): Router {
+export function createAuthnRouter(logger: Logger, adminKey: string, s2skeyDb: S2S_Key_DB, providerDb: Provider_DB): Router {
 
     const router = Router();
 
@@ -149,7 +158,7 @@ export function createAuthnRouter(adminKey: string, s2skeyDb: S2S_Key_DB, provid
         const urlParts = req.originalUrl.split('/');
         const provider_prefix: string | undefined = urlParts[2];
         const provider_version: Version | undefined = urlParts[3];
-        const AuthCtx = new AuthenticationContext(token, adminKey, s2skeyDb, providerDb, provider_prefix, provider_version);
+        const AuthCtx = new AuthenticationContext(logger, token, adminKey, s2skeyDb, providerDb, provider_prefix, provider_version);
 
         const userInfo = await AuthCtx.getUserAuthInfo();
 

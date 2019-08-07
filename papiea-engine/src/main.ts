@@ -11,8 +11,9 @@ import { createAuthnRouter } from "./auth/authn";
 import { createOAuth2Router } from "./auth/oauth2";
 import { Authorizer, AdminAuthorizer, PerProviderAuthorizer} from "./auth/authz";
 import { ProviderCasbinAuthorizerFactory } from "./auth/casbin";
-import morgan = require("morgan");
 import { PapieaErrorImpl } from "./errors/papiea_error_impl";
+import { WinstonLogger, getLoggingMiddleware } from './logger';
+
 
 declare var process: {
     env: {
@@ -23,37 +24,39 @@ declare var process: {
         PAPIEA_PUBLIC_ADDR: string,
         DEBUG_LEVEL: string,
         ADMIN_S2S_KEY: string,
-        DISALLOW_EXTRA_PROPERTIES: string
+        DISALLOW_EXTRA_PROPERTIES: string,
+        LOGGING_LEVEL: string,
     },
     title: string;
 };
 process.title = "papiea";
 const serverPort = parseInt(process.env.SERVER_PORT || "3000");
-const debugLevel = process.env.DEBUG_LEVEL || "common";
 const publicAddr: string = process.env.PAPIEA_PUBLIC_ADDR || "http://localhost:3000";
 const oauth2RedirectUri: string = publicAddr + "/provider/auth/callback";
 const mongoHost = process.env.MONGO_HOST || 'mongo';
 const mongoPort = process.env.MONGO_PORT || '27017';
 const adminKey = process.env.ADMIN_S2S_KEY || '';
 const disallowExtraProps = process.env.DISALLOW_EXTRA_PROPERTIES !== "false";
+const loggingLevel = process.env.LOGGING_LEVEL || 'info';
 
 async function setUpApplication(): Promise<express.Express> {
+    const logger = new WinstonLogger(loggingLevel);
     const app = express();
     app.use(express.json());
-    app.use(morgan(debugLevel));
+    app.use(getLoggingMiddleware(logger));
     const mongoConnection: MongoConnection = new MongoConnection(`mongodb://${mongoHost}:${mongoPort}`, process.env.MONGO_DB || 'papiea');
     await mongoConnection.connect();
-    const providerDb = await mongoConnection.get_provider_db();
-    const specDb = await mongoConnection.get_spec_db();
-    const statusDb = await mongoConnection.get_status_db();
-    const s2skeyDb = await mongoConnection.get_s2skey_db();
+    const providerDb = await mongoConnection.get_provider_db(logger);
+    const specDb = await mongoConnection.get_spec_db(logger);
+    const statusDb = await mongoConnection.get_status_db(logger);
+    const s2skeyDb = await mongoConnection.get_s2skey_db(logger);
     const validator = new ValidatorImpl()
-    const providerApi = new Provider_API_Impl(providerDb, statusDb, s2skeyDb, new AdminAuthorizer(), validator);
-    app.use(createAuthnRouter(adminKey, s2skeyDb, providerDb));
-    app.use(createOAuth2Router(oauth2RedirectUri, providerDb));
-    const entityApiAuthorizer: Authorizer = new PerProviderAuthorizer(providerApi, new ProviderCasbinAuthorizerFactory());
+    const providerApi = new Provider_API_Impl(logger, providerDb, statusDb, s2skeyDb, new AdminAuthorizer(), validator);
+    app.use(createAuthnRouter(logger, adminKey, s2skeyDb, providerDb));
+    app.use(createOAuth2Router(logger, oauth2RedirectUri, providerDb));
+    const entityApiAuthorizer: Authorizer = new PerProviderAuthorizer(logger, providerApi, new ProviderCasbinAuthorizerFactory(logger));
     app.use('/provider', createProviderAPIRouter(providerApi));
-    app.use('/services', createEntityAPIRouter(new Entity_API_Impl(statusDb, specDb, providerApi, entityApiAuthorizer, validator)));
+    app.use('/services', createEntityAPIRouter(new Entity_API_Impl(logger, statusDb, specDb, providerApi, entityApiAuthorizer, validator)));
     app.use('/api-docs', createAPIDocsRouter('/api-docs', new ApiDocsGenerator(providerDb)));
     app.use(function (err: any, req: any, res: any, next: any) {
         if (res.headersSent) {
@@ -68,6 +71,6 @@ async function setUpApplication(): Promise<express.Express> {
 
 setUpApplication().then(app => {
     app.listen(serverPort, function () {
-        console.log(`Papiea app listening on port ${serverPort}!`);
+        console.info(`Papiea app listening on port ${serverPort}!`);
     });
 }).catch(console.error);

@@ -4,10 +4,14 @@ import { Provider_DB } from "../databases/provider_db_interface";
 import { extract_property } from "./user_data_evaluator";
 import { Provider } from "papiea-core";
 import btoa = require("btoa");
+import Logger from "../logger_interface";
 
 const simpleOauthModule = require("simple-oauth2"),
     queryString = require("query-string"),
     url = require("url");
+
+
+
 
 function convertToSimpleOauth2(description: any) {
     const oauth = description.oauth;
@@ -44,7 +48,7 @@ export function getUserInfoFromToken(token: any, provider: Provider): UserAuthIn
     return userInfo;
 }
 
-export function createOAuth2Router(redirect_uri: string, providerDb: Provider_DB): Router {
+export function createOAuth2Router(logger: Logger, redirect_uri: string, providerDb: Provider_DB): Router {
     const router = Router();
 
     router.use('/provider/:prefix/:version/auth/login', asyncHandler(async (req, res) => {
@@ -96,7 +100,7 @@ export function createOAuth2Router(redirect_uri: string, providerDb: Provider_DB
                 return res.status(200).json({ token: base64Token });
             }
         } catch (error) {
-            console.error('Access Token Error', error.message);
+            logger.error('Access Token Error', error.message);
             return res.status(500).json('Authentication failed');
         }
     }));

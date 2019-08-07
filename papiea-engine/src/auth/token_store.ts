@@ -1,19 +1,12 @@
-function hash_string(str:string):number {
-    let hash = 0, i = 0, len = str.length;
-    while ( i < len ) {
-        hash  = ((hash << 5) - hash + str.charCodeAt(i++)) << 0;
-    }
-    return hash;
-};
+import {Md5} from 'ts-md5/dist/md5'
 
 export class TokenStore {
     private tokens:any = {};
-
-    /**
+        /**
      * add_token
      */
-    public add_token(token: string): number {
-        const token_hash = hash_string(token)
+    public add_token(token: string): string {
+        const token_hash = <string> Md5.hashAsciiStr(token)
         this.tokens[token_hash] = token
         return token_hash
     }
@@ -21,7 +14,7 @@ export class TokenStore {
     /**
      * get_token
      */
-    public get_token(hash: number) {
+    public get_token(hash: string) {
         return this.tokens[hash]
     }
 }

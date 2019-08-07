@@ -66,11 +66,11 @@ export function asyncHandler(fn: UserAuthRequestHandler): any {
 function getToken(req: any): string | null {
     if (req.headers.authorization && req.headers.authorization.split(' ')[0] === 'Bearer') {
         const bearer = req.headers.authorization.split(' ')[1]; 
-        return tokenStore.get_token(Number(bearer)) || bearer
+        return tokenStore.get_token(bearer) || bearer
     } else if (req.query && req.query.token) {
-        return tokenStore.get_token(Number(req.query.token)) || req.query.token;
+        return tokenStore.get_token(req.query.token) || req.query.token;
     } else if (req.cookies && req.cookies.token) {
-        return tokenStore.get_token(Number(req.cookies.token)) || req.cookies.token;
+        return tokenStore.get_token(req.cookies.token) || req.cookies.token;
     }
     return null;
 }

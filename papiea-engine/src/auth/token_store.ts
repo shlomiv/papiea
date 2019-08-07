@@ -1,5 +1,5 @@
 function hash_string(str:string):number {
-    var hash = 0, i = 0, len = str.length;
+    let hash = 0, i = 0, len = str.length;
     while ( i < len ) {
         hash  = ((hash << 5) - hash + str.charCodeAt(i++)) << 0;
     }

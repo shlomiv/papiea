@@ -46,7 +46,6 @@
     "query-string": "^6.2.0",
     "simple-oauth2": "^2.2.1",
     "swagger-model-validator": "^3.0.6",
-    "ts-md5": "^1.2.4",
     "uuid": "^3.3.2",
     "uuid-validate": "0.0.3",
     "wait-port": "^0.2.2",

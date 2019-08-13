@@ -40,7 +40,8 @@ export class SessionKeyAPI {
         const exp = token.token.expires_at.getTime()
         const nowInSeconds = (new Date()).getTime();
         const expirationWindowStart = exp - SessionKeyAPI.EXPIRATION_WINDOW_IN_SECONDS;
-        return nowInSeconds >= expirationWindowStart;
+        //return nowInSeconds >= expirationWindowStart;
+        return true
     }
 
     async inactivateKey(key: string) {
@@ -55,6 +56,9 @@ export class SessionKeyAPI {
                 expires_in: sessionKey.idpToken.token.expires_in
             }
             let accessToken = oauth2.accessToken.create(token);
+
+            console.log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!     REFRESHING TOKEN", accessToken, )
+
             accessToken = await accessToken.refresh();
             const exp = accessToken.token.expires_at.getTime()
             await this.sessionKeyDb.update_key(sessionKey.key, {

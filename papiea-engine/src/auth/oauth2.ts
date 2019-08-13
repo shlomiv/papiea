@@ -33,7 +33,7 @@ function convertToSimpleOauth2(description: any) {
             revokePath: oauth.revoke_uri
         },
         options: {
-            authorizationMethod: "body",
+            authorizationMethod: "header",
             bodyFormat: "form"
         }
     };

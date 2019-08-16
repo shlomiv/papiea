@@ -1,11 +1,9 @@
-import { UserAuthInfo } from "../../src/auth/authn";
 import axios from "axios";
 import { ProviderSdk } from "papiea-sdk";
-import { Metadata, Spec, Action } from "papiea-core";
-import { getLocationDataDescription, getMetadataDescription } from "../test_data_factory";
+import { Metadata, Spec } from "papiea-core";
+import { getLocationDataDescription } from "../test_data_factory";
 import { stringify } from "querystring"
 import uuid = require("uuid");
-import { Authorizer } from "../../src/auth/authz";
 
 declare var process: {
     env: {

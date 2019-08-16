@@ -5,15 +5,16 @@ import { plural } from "pluralize";
 import {
     Data_Description,
     Version,
-    SpecOnlyEntityKind,
     Kind,
     Procedural_Signature,
     Provider,
-    Procedural_Execution_Strategy
+    Procedural_Execution_Strategy,
+    SpecOnlyEntityKind
 } from "papiea-core";
 import * as http from "http";
 import uuid = require("uuid");
 import { IncomingMessage, ServerResponse } from "http"
+import { IntentfulBehaviour } from "papiea-core"
 const url = require("url");
 const queryString = require("query-string");
 
@@ -38,15 +39,22 @@ export function getLocationDataDescription(): Data_Description {
     return randomizedLocationDataDescription;
 }
 
+export function getClusterDataDescription(): Data_Description {
+    let locationDataDescription = loadYaml("./test_data/cluster_kind_test_data.yml");
+    let randomizedLocationDataDescription: any = {};
+    randomizedLocationDataDescription["Cluster" + randomString(5)] = locationDataDescription["Cluster"];
+    return randomizedLocationDataDescription;
+}
+
 export function getMetadataDescription(): Data_Description {
     let MetadataDescription = loadYaml("./test_data/metadata_extension.yml");
     return MetadataDescription;
 }
 
-export function getSpecOnlyEntityKind(): SpecOnlyEntityKind {
+export function getSpecOnlyKind(): SpecOnlyEntityKind {
     const locationDataDescription = getLocationDataDescription();
     const name = Object.keys(locationDataDescription)[0];
-    const spec_only_kind: SpecOnlyEntityKind = {
+    const locationKind: SpecOnlyEntityKind = {
         name,
         name_plural: plural(name),
         kind_structure: locationDataDescription,
@@ -55,8 +63,26 @@ export function getSpecOnlyEntityKind(): SpecOnlyEntityKind {
         kind_procedures: {},
         entity_procedures: {},
         differ: undefined,
+        intentful_behaviour: IntentfulBehaviour.SpecOnly
     };
-    return spec_only_kind;
+    return locationKind;
+}
+
+export function getClusterKind(): Kind {
+    const clusterDataDescription = getClusterDataDescription()
+    const name = Object.keys(clusterDataDescription)[0]
+    const kind = {
+        name,
+        name_plural: plural(name),
+        kind_structure: clusterDataDescription,
+        intentful_signatures: new Map(),
+        dependency_tree: new Map(),
+        kind_procedures: {},
+        entity_procedures: {},
+        differ: undefined,
+        intentful_behaviour: IntentfulBehaviour.Basic
+    }
+    return kind
 }
 
 function formatErrorMsg(current_field: string, missing_field: string) {
@@ -255,7 +281,7 @@ export class ProviderBuilder {
 
     public withKinds(value?: Kind[]) {
         if (value === undefined) {
-            this._kinds = [getSpecOnlyEntityKind()];
+            this._kinds = [getSpecOnlyKind()];
         } else {
             this._kinds = value;
         }

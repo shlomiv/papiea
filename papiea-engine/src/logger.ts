@@ -40,7 +40,9 @@ export class WinstonLogger implements Logger {
 
     constructor(logLevel: string, logFile?: string) {
         if (!this.isValidLevel(logLevel)) {
-            throw new Error("Unsupported logging level");
+            this.error(`Unsupported logging level: ${logLevel}`)
+            // convert message to "warning", for lack of better knowledge
+            logLevel = "warning"
         }
         let winstonFormat = winston.format.combine(winston.format.json(), winston.format.prettyPrint());
         this.logger = winston.createLogger({
@@ -53,7 +55,7 @@ export class WinstonLogger implements Logger {
                     filename: logFile ?
                         resolve(__dirname, `./logs/${ logFile }`) :
                         resolve(__dirname, `./logs/papiea_${ logLevel }.log`),
-                    format: winston.format.json()
+                    format: winstonFormat
                 }),
                 new winston.transports.Console({
                     format: winstonFormat

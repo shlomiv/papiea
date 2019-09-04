@@ -72,10 +72,11 @@ export function isEmpty(obj: any) {
     return true;
 }
 
-export function safeJSONParse(chunk: string) {
+export function safeJSONParse(chunk: string): Object | null {
     try {
         return JSON.parse(chunk)
     } catch (e) {
-        return undefined
+        console.error(`Safe json parse failed: ${e}, Falling back to undefined`)
+        return null
     }
 }

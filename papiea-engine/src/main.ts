@@ -30,7 +30,7 @@ declare var process: {
         PAPIEA_PUBLIC_URL: string,
         DEBUG_LEVEL: string,
         MONGO_USER: string,
-        MONGO_PASSWORD: string
+        MONGO_PASSWORD: string,
         PAPIEA_ADMIN_S2S_KEY: string,
         LOGGING_LEVEL: string
     },

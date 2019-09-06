@@ -1,20 +1,18 @@
-import { UserAuthInfo } from "../../src/auth/authn";
 import axios from "axios";
 import { ProviderSdk } from "papiea-sdk";
-import { Metadata, Spec, Action } from "papiea-core";
-import { getLocationDataDescription, getMetadataDescription } from "../test_data_factory";
+import { Metadata, Spec } from "papiea-core";
+import { getLocationDataDescription } from "../test_data_factory";
 import { stringify } from "querystring"
 import uuid = require("uuid");
-import { Authorizer } from "../../src/auth/authz";
 
 declare var process: {
     env: {
         SERVER_PORT: string,
-        ADMIN_S2S_KEY: string
+        PAPIEA_ADMIN_S2S_KEY: string
     }
 };
 const serverPort = parseInt(process.env.SERVER_PORT || '3000');
-const adminKey = process.env.ADMIN_S2S_KEY || '';
+const adminKey = process.env.PAPIEA_ADMIN_S2S_KEY || '';
 const papieaUrl = `http://127.0.0.1:${serverPort}`;
 
 const server_config = {
@@ -282,6 +280,34 @@ describe("Entity API tests", () => {
         });
     });
 
+    test("Filter entity by wrong field should return bad request", async () => {
+        expect.assertions(3);
+        try {
+            await entityApi.post(`${ providerPrefix }/${ providerVersion }/${ kind_name }/filter`, {
+                'spec.x': 10
+            });
+            throw new Error("Filter entity by wrong field should return bad request");
+        } catch (e) {
+            expect(e.response.status).toEqual(400);
+        }
+        try {
+            await entityApi.post(`${ providerPrefix }/${ providerVersion }/${ kind_name }/filter?a=b`, {
+                spec: {
+                    x: 10
+                }
+            });
+            throw new Error("Filter entity by wrong field should return bad request");
+        } catch (e) {
+            expect(e.response.status).toEqual(400);
+        }
+        try {
+            await entityApi.get(`${ providerPrefix }/${ providerVersion }/${ kind_name }?a=b`);
+            throw new Error("Filter entity by wrong field should return bad request");
+        } catch (e) {
+            expect(e.response.status).toEqual(400);
+        }
+    });
+
     test("Filter entity with query params", async () => {
         expect.assertions(1);
         const spec = {
@@ -370,6 +396,38 @@ describe("Entity API tests", () => {
         expect(metadata.uuid).toEqual(entity_uuid);
         const res = await entityApi.get(`/${ providerPrefix }/${ providerVersion }/${ kind_name }/${ entity_uuid }`);
         expect(res.data.metadata.uuid).toEqual(entity_uuid);
+    });
+
+    test("Create entity with duplicate", async () => {
+        expect.assertions(4);
+        const entity_uuid = uuid();
+        const { data: { metadata, spec } } = await entityApi.post(`/${ providerPrefix }/${ providerVersion }/${ kind_name }`, {
+            spec: {
+                x: 10,
+                y: 11
+            },
+            metadata: {
+                uuid: entity_uuid
+            }
+        });
+        expect(metadata.uuid).toEqual(entity_uuid);
+        const res = await entityApi.get(`/${ providerPrefix }/${ providerVersion }/${ kind_name }/${ entity_uuid }`);
+        expect(res.data.metadata.uuid).toEqual(entity_uuid);
+        try {
+            await entityApi.post(`/${ providerPrefix }/${ providerVersion }/${ kind_name }`, {
+                spec: {
+                    x: 10,
+                    y: 11
+                },
+                metadata: {
+                    uuid: entity_uuid
+                }
+            });
+        } catch (e) {
+            console.log(`Got error: ${JSON.stringify(e.response.data)}`)
+            expect(e.response.status).toEqual(409)
+            expect(e.response.data.error.message).toEqual(`Conflicting Entity: ${entity_uuid} has version ${1}`)
+        }
     });
 
     test("Delete entity", async () => {

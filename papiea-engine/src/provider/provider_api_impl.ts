@@ -9,6 +9,7 @@ import { createHash } from "../auth/crypto";
 import { EventEmitter } from "events";
 import { Entity_Reference, Version, Status, Provider, Kind, S2S_Key, Action } from "papiea-core";
 import uuid = require("uuid");
+import Logger from "../logger_interface";
 
 export class Provider_API_Impl implements Provider_API {
     private providerDb: Provider_DB;
@@ -16,14 +17,16 @@ export class Provider_API_Impl implements Provider_API {
     private s2skeyDb: S2S_Key_DB;
     private authorizer: Authorizer;
     private eventEmitter: EventEmitter;
+    private logger: Logger;
     private validator: Validator
 
-    constructor(providerDb: Provider_DB, statusDb: Status_DB, s2skeyDb: S2S_Key_DB, authorizer: Authorizer, validator: Validator) {
+    constructor(logger: Logger, providerDb: Provider_DB, statusDb: Status_DB, s2skeyDb: S2S_Key_DB, authorizer: Authorizer, validator: Validator) {
         this.providerDb = providerDb;
         this.statusDb = statusDb;
         this.s2skeyDb = s2skeyDb;
         this.authorizer = authorizer;
         this.eventEmitter = new EventEmitter();
+        this.logger = logger;
         this.validator = validator
     }
 
@@ -37,8 +40,24 @@ export class Provider_API_Impl implements Provider_API {
         return this.providerDb.delete_provider(provider_prefix, version);
     }
 
+    private findKind(provider: Provider, kindName: string): Kind {
+        const foundKind: Kind | undefined = provider.kinds.find(elem => elem.name === kindName);
+        if (foundKind === undefined) {
+            throw new Error(`Kind: ${kindName} not found`);
+        }
+        return foundKind
+    }
+
+    private isSpecOnly(kind: Kind) {
+        return kind.kind_structure[kind.name]['x-papiea-entity'] === 'spec-only'
+    }
+
     async replace_status(user: UserAuthInfo, context: any, entity_ref: Entity_Reference, status: Status): Promise<void> {
         const provider: Provider = await this.get_latest_provider_by_kind(user, entity_ref.kind);
+        const kind = this.findKind(provider, entity_ref.kind)
+        if (this.isSpecOnly(kind)) {
+            throw new Error("Cannot change status of a spec-only kind")
+        }
         await this.authorizer.checkPermission(user, provider, Action.UpdateStatus);
         await this.validate_status(provider, entity_ref, status);
         return this.statusDb.replace_status(entity_ref, status);
@@ -46,6 +65,10 @@ export class Provider_API_Impl implements Provider_API {
 
     async update_status(user: UserAuthInfo, context: any, entity_ref: Entity_Reference, status: Status): Promise<void> {
         const provider: Provider = await this.get_latest_provider_by_kind(user, entity_ref.kind);
+        const kind = this.findKind(provider, entity_ref.kind)
+        if (this.isSpecOnly(kind)) {
+            throw new Error("Cannot change status of a spec-only kind")
+        }
         await this.authorizer.checkPermission(user, provider, Action.UpdateStatus);
         return this.statusDb.update_status(entity_ref, status);
     }
@@ -111,7 +134,7 @@ export class Provider_API_Impl implements Provider_API {
         this.eventEmitter.on('authChange', callbackfn);
     }
 
-    async create_key(user: UserAuthInfo, name: string, owner: string, provider_prefix: string, userInfo?: any, secret?: string): Promise<S2S_Key> {
+    async create_key(user: UserAuthInfo, name: string, owner: string, provider_prefix: string, user_info?: any, key?: string): Promise<S2S_Key> {
         // - name is not mandatory, displayed in UI
         // - owner is the owner of the key (usually email),
         // it is not unique, different providers may have same owner
@@ -128,12 +151,12 @@ export class Provider_API_Impl implements Provider_API {
             uuid: uuid(),
             owner: owner,
             provider_prefix: provider_prefix,
-            secret: "",
+            key: "",
             created_at: new Date(),
             deleted_at: undefined,
-            user_info: userInfo ? userInfo : user
+            user_info: Object.assign({}, user_info ? user_info : user)
         };
-        s2skey.secret = secret ? secret : createHash(s2skey);
+        s2skey.key = key ? key : createHash(s2skey);
         await this.authorizer.checkPermission(user, s2skey, Action.CreateS2SKey);
         await this.s2skeyDb.create_key(s2skey);
         return this.s2skeyDb.get_key(s2skey.uuid);
@@ -149,8 +172,8 @@ export class Provider_API_Impl implements Provider_API {
         const res = await this.s2skeyDb.list_keys(fields_map);
         let secret;
         for (let s2s_key of res) {
-            secret = s2s_key.secret;
-            s2s_key.secret = secret.slice(0, 2) + "*****" + secret.slice(-2);
+            secret = s2s_key.key;
+            s2s_key.key = secret.slice(0, 2) + "*****" + secret.slice(-2);
         }
         return this.authorizer.filter(user, res, Action.ReadS2SKey);
     }
@@ -159,5 +182,15 @@ export class Provider_API_Impl implements Provider_API {
         const s2skey: S2S_Key = await this.s2skeyDb.get_key(uuid);
         await this.authorizer.checkPermission(user, s2skey, Action.InactivateS2SKey);
         await this.s2skeyDb.inactivate_key(s2skey.uuid);
+    }
+
+    async filter_keys(user: UserAuthInfo, fields: any): Promise<S2S_Key[]> {
+        const res = await this.s2skeyDb.list_keys(fields);
+        let secret;
+        for (let s2s_key of res) {
+            secret = s2s_key.key;
+            s2s_key.key = secret.slice(0, 2) + "*****" + secret.slice(-2);
+        }
+        return this.authorizer.filter(user, res, Action.ReadS2SKey);
     }
 }

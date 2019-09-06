@@ -13,7 +13,7 @@ import { Express, RequestHandler } from "express";
 import { Server } from "http";
 import { ProceduralCtx } from "./typescript_sdk_context_impl";
 
-import { Version, Kind, Procedural_Signature, Provider, Data_Description, SpecOnlyEntityKind, Procedural_Execution_Strategy, Entity, S2S_Key, UserInfo } from "papiea-core";
+import { Version, Kind, Procedural_Signature, Provider, Data_Description, SpecOnlyEntityKind, Procedural_Execution_Strategy, Entity, S2S_Key, UserInfo, IntentfulBehaviour } from "papiea-core";
 import { InvocationError } from "./typescript_sdk_exceptions";
 import { SecretImpl } from "./typescript_sdk_crypto";
 import { Secret } from "papiea-core";
@@ -44,8 +44,8 @@ class SecurityApiImpl implements SecurityApi {
             const {data: keys } = await this.provider.provider_api_axios.get(`${url}/s2skey`, {headers: {'Authorization': `Bearer ${this.secret.getSecret()}`}});
             return keys
         } catch (e) {
-            console.log("error getting s2skeys", e);
-            throw new Error("Cannot get s2skeys" + e.message)
+            console.log("Cannot list s2skeys: ", e);
+            throw new Error("Cannot list s2skeys: " + e.message)
         }
     }
 
@@ -55,8 +55,8 @@ class SecurityApiImpl implements SecurityApi {
             const {data: s2skey } = await this.provider.provider_api_axios.post(`${url}/s2skey`, new_key, {headers: {'Authorization': `Bearer ${this.secret.getSecret()}`}});
             return s2skey
         } catch (e) {
-            console.log("error getting s2skeys", e);
-            throw new Error("Cannot get s2skeys" + e.message)
+            console.log("Cannot create new key: ", e);
+            throw new Error("Cannot create new key: " + e.message)
         }
     }
 
@@ -66,8 +66,8 @@ class SecurityApiImpl implements SecurityApi {
             const {data: r } = await this.provider.provider_api_axios.put(`${url}/s2skey`, {uuid: uuid, active:false}, {headers: {'Authorization': `Bearer ${this.secret.getSecret()}`}});
             return r
         } catch (e) {
-            console.log("error getting s2skeys", e);
-            throw new Error("Cannot get s2skeys" + e.message)
+            console.log("Cannot deactivate s2skey: ", e);
+            throw new Error("Cannot deactivate s2skey: " + e.message)
         }
     }
 }
@@ -158,24 +158,21 @@ export class ProviderSdk implements ProviderImpl {
         }
         const name = Object.keys(entity_description)[0];
         if (entity_description[name].hasOwnProperty("x-papiea-entity")) {
-            if (entity_description[name]["x-papiea-entity"] === "spec-only") {
-                const spec_only_kind: SpecOnlyEntityKind = {
-                    name,
-                    name_plural: plural(name),
-                    kind_structure: entity_description,
-                    intentful_signatures: new Map(),
-                    dependency_tree: new Map(),
-                    kind_procedures: {},
-                    entity_procedures: {},
-                    differ: undefined,
-                };
-                const kind_builder = new Kind_Builder(spec_only_kind, this, this.allowExtraProps);
-                this._kind.push(spec_only_kind);
-                return kind_builder;
-            } else {
-                //TODO: process non spec-only
-                throw new Error("Unimplemented")
-            }
+            const the_kind: SpecOnlyEntityKind = {
+                name,
+                name_plural: plural(name),
+                kind_structure: entity_description,
+                intentful_signatures: new Map(),
+                dependency_tree: new Map(),
+                kind_procedures: {},
+                entity_procedures: {},
+                intentful_behaviour: (entity_description[name]["x-papiea-entity"] === "spec-only") ? IntentfulBehaviour.SpecOnly : IntentfulBehaviour.Basic,
+                differ: undefined,
+            };
+
+            const kind_builder = new Kind_Builder(the_kind, this, this.allowExtraProps);
+            this._kind.push(the_kind);
+            return kind_builder;
         } else {
             throw new Error(`Entity not a papiea entity. Please make sure you have 'x-papiea-entity' property for '${name}'`);
         }
@@ -451,4 +448,4 @@ export class Kind_Builder {
         return this
     }
 }
-export {Version, Kind, Procedural_Signature, Provider, Data_Description, SpecOnlyEntityKind, Procedural_Execution_Strategy, Entity, ProceduralCtx_Interface, Provider_Power, IntentfulCtx_Interface, UserInfo, S2S_Key}
+export {Version, Kind, Procedural_Signature, Provider, Data_Description, Procedural_Execution_Strategy, Entity, ProceduralCtx_Interface, Provider_Power, IntentfulCtx_Interface, UserInfo, S2S_Key}

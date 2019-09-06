@@ -1,13 +1,23 @@
-import { Router } from "express";
-import { asyncHandler, UserAuthInfo } from "./authn";
-import { Provider_DB } from "../databases/provider_db_interface";
-import { extract_property } from "./user_data_evaluator";
-import { Provider } from "papiea-core";
-import btoa = require("btoa");
+import { Router } from "express"
+import { asyncHandler, UserAuthInfo } from "./authn"
+import { Provider_DB } from "../databases/provider_db_interface"
+import { extract_property } from "./user_data_evaluator"
+import { Provider } from "papiea-core"
+import Logger from "../logger_interface"
+import { SessionKeyAPI } from "./session_key"
+import uuid = require("uuid")
 
 const simpleOauthModule = require("simple-oauth2"),
     queryString = require("query-string"),
     url = require("url");
+
+
+function getUserInfoFromToken(token: any, provider: Provider): UserAuthInfo {
+    const extracted_headers = extract_property({ token }, provider.oauth2, "headers")
+    const user_info: UserAuthInfo = { ...extracted_headers }
+    return user_info
+}
+
 
 function convertToSimpleOauth2(description: any) {
     const oauth = description.oauth;
@@ -30,21 +40,13 @@ function convertToSimpleOauth2(description: any) {
     return simple_oauth_config;
 }
 
-function getOAuth2(provider: Provider) {
+export function getOAuth2(provider: Provider) {
     const converted_oauth = convertToSimpleOauth2(provider.oauth2);
     return simpleOauthModule.create(converted_oauth);
 }
 
-export function getUserInfoFromToken(token: any, provider: Provider): UserAuthInfo {
 
-    const extracted_headers = extract_property({ token }, provider.oauth2, "headers");
-
-    const userInfo: UserAuthInfo = {...extracted_headers};
-
-    return userInfo;
-}
-
-export function createOAuth2Router(redirect_uri: string, providerDb: Provider_DB): Router {
+export function createOAuth2Router(logger: Logger, redirect_uri: string, providerDb: Provider_DB, sessionKeyAPI: SessionKeyAPI): Router {
     const router = Router();
 
     router.use('/provider/:prefix/:version/auth/login', asyncHandler(async (req, res) => {
@@ -67,13 +69,18 @@ export function createOAuth2Router(redirect_uri: string, providerDb: Provider_DB
     router.use('/provider/:prefix/:version/auth/logout', asyncHandler(async (req, res) => {
         const provider: Provider = await providerDb.get_provider(req.params.prefix, req.params.version);
         const oauth2 = getOAuth2(provider);
-        const token = oauth2.accessToken.create({ "access_token": req.user.authorization.split(' ')[1] });
+        const token = req.user.authorization.split(' ')[1]
+        const sessionKey = await sessionKeyAPI.getKey(token, oauth2)
+        const idpToken = oauth2.accessToken.create({ "access_token": sessionKey.idpToken.token.access_token });
         try {
-            await token.revoke('access_token');
+            await sessionKeyAPI.inactivateKey(sessionKey.key)
+            await idpToken.revoke('access_token');
         } catch (e) {
-            return res.status(400).json("failed");
+            logger.error('Logout error: ', e.message);
+            return res.status(400).json("Logout failed");
         }
-        return res.status(200).json("OK");
+        const logoutUrl = new url.URL(provider.oauth2.oauth.logout_uri, provider.oauth2.oauth.auth_host);
+        return res.status(200).json({"logout_uri": `${logoutUrl.href}`});
     }));
 
     router.use('/provider/auth/callback', asyncHandler(async (req, res, next) => {
@@ -87,16 +94,19 @@ export function createOAuth2Router(redirect_uri: string, providerDb: Provider_DB
                 redirect_uri
             });
             const token = oauth2.accessToken.create(result);
-            const base64Token = btoa(JSON.stringify(token.token));
+            const key = uuid()
+            const userInfo = getUserInfoFromToken(token.token, provider)
+            userInfo.authorization = `Bearer ${key}`
+            const sessionKey = await sessionKeyAPI.createKey(userInfo, token, key, oauth2)
             if (state.redirect_uri) {
                 const client_url = new url.URL(state.redirect_uri);
-                client_url.searchParams.append("token", base64Token);
+                client_url.searchParams.append("token", sessionKey.key);
                 return res.redirect(client_url.toString());
             } else {
-                return res.status(200).json({ token: base64Token });
+                return res.status(200).json({ token: sessionKey.key });
             }
         } catch (error) {
-            console.error('Access Token Error', error.message);
+            logger.error('Access Token Error', error.message);
             return res.status(500).json('Authentication failed');
         }
     }));

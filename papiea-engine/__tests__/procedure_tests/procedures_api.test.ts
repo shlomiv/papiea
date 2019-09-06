@@ -3,15 +3,17 @@ import * as http from "http"
 import axios from "axios"
 import { ProviderBuilder } from "../test_data_factory"
 import { Provider } from "papiea-core"
+import { WinstonLogger } from "../../src/logger";
+import Logger from "../../src/logger_interface";
 
 declare var process: {
     env: {
         SERVER_PORT: string,
-        ADMIN_S2S_KEY: string
+        PAPIEA_ADMIN_S2S_KEY: string
     }
 };
 const serverPort = parseInt(process.env.SERVER_PORT || '3000');
-const adminKey = process.env.ADMIN_S2S_KEY || '';
+const adminKey = process.env.PAPIEA_ADMIN_S2S_KEY || '';
 
 const entityApi = axios.create({
     baseURL: `http://127.0.0.1:${serverPort}/services`,
@@ -40,6 +42,7 @@ describe("Procedures tests", () => {
         .withProviderProcedures()
         .build();
     const kind_name = provider.kinds[0].name;
+    const providerApiTestLogger: Logger = new WinstonLogger("info", "provider_api_test.log");
 
     beforeAll(async () => {
         await providerApi.post('/', provider);
@@ -69,13 +72,13 @@ describe("Procedures tests", () => {
                         res.end(JSON.stringify(post.spec));
                         server.close();
                     }).catch((err) => {
-                        console.log(err);
+                        providerApiTestLogger.error(err);
                     });
                 });
             }
         });
         server.listen(port, hostname, () => {
-            console.log(`Server running at http://${hostname}:${port}/`);
+            providerApiTestLogger.info(`Server running at http://${hostname}:${port}/`);
         });
         const { data: { metadata, spec } } = await entityApi.post(`/${provider.prefix}/${provider.version}/${kind_name}`, {
             spec: {
@@ -137,7 +140,7 @@ describe("Procedures tests", () => {
             }
         });
         server.listen(port, hostname, () => {
-            console.log(`Server running at http://${hostname}:${port}/`);
+            providerApiTestLogger.info(`Server running at http://${hostname}:${port}/`);
         });
         const { data: { metadata, spec } } = await entityApi.post(`/${provider.prefix}/${provider.version}/${kind_name}`, {
             spec: {
@@ -177,7 +180,7 @@ describe("Procedures tests", () => {
             }
         });
         server.listen(port, hostname, () => {
-            console.log(`Server running at http://${hostname}:${port}/`);
+            providerApiTestLogger.info(`Server running at http://${hostname}:${port}/`);
         });
         const res: any = await entityApi.post(`/${ provider.prefix }/${ provider.version }/procedure/computeSum`, {
             input: {
@@ -208,7 +211,7 @@ describe("Procedures tests", () => {
             }
         });
         server.listen(port, hostname, () => {
-            console.log(`Server running at http://${hostname}:${port}/`);
+            providerApiTestLogger.info(`Server running at http://${hostname}:${port}/`);
         });
         try {
             const res: any = await entityApi.post(`/${provider.prefix}/${provider.version}/procedure/computeSum`, { input: { "a": 10, "b": "Totally not a number" } });
@@ -238,7 +241,7 @@ describe("Procedures tests", () => {
             }
         });
         server.listen(port, hostname, () => {
-            console.log(`Server running at http://${hostname}:${port}/`);
+            providerApiTestLogger.info(`Server running at http://${hostname}:${port}/`);
         });
         const res: any = await entityApi.post(`/${provider.prefix}/${provider.version}/${kind_name}/procedure/computeGeolocation`, { input: "2" });
         expect(res.data).toBe("us.west.2");
@@ -264,7 +267,7 @@ describe("Procedures tests", () => {
             }
         });
         server.listen(port, hostname, () => {
-            console.log(`Server running at http://${hostname}:${port}/`);
+            providerApiTestLogger.info(`Server running at http://${hostname}:${port}/`);
         });
         try {
             const res: any = await entityApi.post(`/${provider.prefix}/${provider.version}/${kind_name}/procedure/computeGeolocation`, { input: ["String expected got array"] });

@@ -2,6 +2,7 @@ import { UserAuthInfo } from "./authn";
 import { Provider_API } from "../provider/provider_api_interface";
 import { Provider, Action } from "papiea-core";
 import { PermissionDeniedError, UnauthorizedError } from "../errors/permission_error";
+import Logger from "../logger_interface";
 
 function mapAsync<T, U>(array: T[], callbackfn: (value: T, index: number, array: T[]) => Promise<U>): Promise<U[]> {
     return Promise.all(array.map(callbackfn));
@@ -48,8 +49,9 @@ export class PerProviderAuthorizer extends Authorizer {
     private providerToAuthorizer: { [key: string]: Authorizer | null; };
     private kindToProviderPrefix: { [key: string]: string; };
     private providerAuthorizerFactory: ProviderAuthorizerFactory;
+    private logger: Logger;
 
-    constructor(providerApi: Provider_API, providerAuthorizerFactory: ProviderAuthorizerFactory) {
+    constructor(logger: Logger, providerApi: Provider_API, providerAuthorizerFactory: ProviderAuthorizerFactory) {
         super();
         this.providerApi = providerApi;
         providerApi.on_auth_change((provider: Provider) => {
@@ -58,6 +60,7 @@ export class PerProviderAuthorizer extends Authorizer {
         this.providerToAuthorizer = {};
         this.kindToProviderPrefix = {};
         this.providerAuthorizerFactory = providerAuthorizerFactory;
+        this.logger = logger;
     }
 
     private async getProviderPrefixByKindName(user: UserAuthInfo, kind_name: string): Promise<string> {
@@ -111,6 +114,7 @@ export class PerProviderAuthorizer extends Authorizer {
         }
         if (user.is_provider_admin) {
             const providerPrefix = await this.getProviderPrefixByObject(user, object);
+            // For provider-admin provider_prefix must be set
             if (user.provider_prefix === providerPrefix) {
                 return;
             } else {
@@ -133,12 +137,13 @@ export class AdminAuthorizer extends Authorizer {
             return;
         }
         if (action === Action.CreateS2SKey) {
-            // object.extension contains UserInfo which will be used when s2s key is passed
+            // object.user_info contains UserInfo which will be used when s2s key is passed
             // check who can talk on behalf of whom
-            if (object.owner !== user.owner
-                || object.provider_prefix !== user.provider_prefix
-                || object.user_info.provider_prefix !== user.provider_prefix
-                || object.user_info.is_admin) {
+            if (object.owner !== user.owner || object.user_info.is_admin) {
+                throw new PermissionDeniedError();
+            }
+            if (user.provider_prefix !== undefined
+                && object.provider_prefix !== user.provider_prefix) {
                 throw new PermissionDeniedError();
             }
             if (user.is_provider_admin) {
@@ -151,7 +156,8 @@ export class AdminAuthorizer extends Authorizer {
             return;
         }
         if (action === Action.ReadS2SKey || action === Action.InactivateS2SKey) {
-            if (object.owner !== user.owner || object.provider_prefix !== user.provider_prefix) {
+            if (object.owner !== user.owner
+                || (user.provider_prefix !== undefined && object.provider_prefix !== user.provider_prefix)) {
                 throw new PermissionDeniedError();
             } else {
                 return;

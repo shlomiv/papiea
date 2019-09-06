@@ -4,9 +4,14 @@ import { Spec_DB } from "../../src/databases/spec_db_interface";
 import { Status_DB } from "../../src/databases/status_db_interface";
 import { Provider_DB } from "../../src/databases/provider_db_interface";
 import { S2S_Key_DB } from "../../src/databases/s2skey_db_interface";
+import { WinstonLogger } from "../../src/logger";
+import Logger from "../../src/logger_interface";
 import { v4 as uuid4 } from 'uuid';
 import { ConflictingEntityError } from "../../src/databases/utils/errors";
 import { Metadata, Spec, Entity_Reference, Status, Kind, Provider, S2S_Key } from "papiea-core";
+import { SessionKeyDb } from "../../src/databases/session_key_db_interface"
+import { SessionKey } from "papiea-core/build/core"
+import uuid = require("uuid")
 
 declare var process: {
     env: {
@@ -20,6 +25,7 @@ const mongoPort = process.env.MONGO_PORT || '27017';
 
 describe("MongoDb tests", () => {
     const connection: MongoConnection = new MongoConnection(`mongodb://${mongoHost}:${mongoPort}`, process.env.MONGO_DB || 'papiea');
+    const logger: Logger = new WinstonLogger("info", "database_mongo_test.log");
 
     beforeEach(() => {
         jest.setTimeout(50000);
@@ -36,7 +42,7 @@ describe("MongoDb tests", () => {
     const entityA_uuid = uuid4();
 
     test("Insert Spec", async () => {
-        const specDb: Spec_DB = await connection.get_spec_db();
+        const specDb: Spec_DB = await connection.get_spec_db(logger);
         const entity_metadata: Metadata = {
             uuid: entityA_uuid,
             kind: "test",
@@ -50,7 +56,7 @@ describe("MongoDb tests", () => {
     });
 
     test("Update Spec", async () => {
-        const specDb: Spec_DB = await connection.get_spec_db();
+        const specDb: Spec_DB = await connection.get_spec_db(logger);
         const entity_metadata: Metadata = {
             uuid: entityA_uuid,
             kind: "test",
@@ -65,7 +71,7 @@ describe("MongoDb tests", () => {
 
     test("Update Spec with same version should fail", async () => {
         expect.assertions(2);
-        const specDb: Spec_DB = await connection.get_spec_db();
+        const specDb: Spec_DB = await connection.get_spec_db(logger);
         const entity_metadata: Metadata = {
             uuid: entityA_uuid,
             kind: "test",
@@ -85,7 +91,7 @@ describe("MongoDb tests", () => {
 
     test("Get Spec", async () => {
         expect.assertions(5);
-        const specDb: Spec_DB = await connection.get_spec_db();
+        const specDb: Spec_DB = await connection.get_spec_db(logger);
         const entity_ref: Entity_Reference = { uuid: entityA_uuid, kind: "test" };
         const res = await specDb.get_spec(entity_ref);
         expect(res).not.toBeNull();
@@ -101,7 +107,7 @@ describe("MongoDb tests", () => {
 
     test("Get Spec for non existing entity should fail", async () => {
         expect.assertions(1);
-        const specDb: Spec_DB = await connection.get_spec_db();
+        const specDb: Spec_DB = await connection.get_spec_db(logger);
         const entity_ref: Entity_Reference = { uuid: uuid4(), kind: "test" };
         try {
             await specDb.get_spec(entity_ref);
@@ -112,14 +118,14 @@ describe("MongoDb tests", () => {
 
     test("List Specs", async () => {
         expect.assertions(1);
-        const specDb: Spec_DB = await connection.get_spec_db();
+        const specDb: Spec_DB = await connection.get_spec_db(logger);
         const res = await specDb.list_specs({ metadata: { "kind": "test" } });
         expect(res.length).toBeGreaterThanOrEqual(1);
     });
 
     test("List Specs - check spec data", async () => {
         expect.assertions(4);
-        const specDb: Spec_DB = await connection.get_spec_db();
+        const specDb: Spec_DB = await connection.get_spec_db(logger);
         const res = await specDb.list_specs({ metadata: { "kind": "test" }, spec: { "a": "A1" } });
         expect(res).not.toBeNull();
         expect(res[0]).not.toBeNull();
@@ -129,14 +135,14 @@ describe("MongoDb tests", () => {
     });
 
     test("Insert Status", async () => {
-        const statusDb: Status_DB = await connection.get_status_db();
+        const statusDb: Status_DB = await connection.get_status_db(logger);
         const entity_ref: Entity_Reference = { uuid: entityA_uuid, kind: "test" };
         const status: Status = { a: "A" };
         await statusDb.replace_status(entity_ref, status);
     });
 
     test("Update Status", async () => {
-        const statusDb: Status_DB = await connection.get_status_db();
+        const statusDb: Status_DB = await connection.get_status_db(logger);
         const entity_ref: Entity_Reference = { uuid: entityA_uuid, kind: "test" };
         const status: Status = { a: "A1" };
         await statusDb.replace_status(entity_ref, status);
@@ -144,7 +150,7 @@ describe("MongoDb tests", () => {
 
     test("Get Status", async () => {
         expect.assertions(3);
-        const statusDb: Status_DB = await connection.get_status_db();
+        const statusDb: Status_DB = await connection.get_status_db(logger);
         const entity_ref: Entity_Reference = { uuid: entityA_uuid, kind: "test" };
         const res = await statusDb.get_status(entity_ref);
         expect(res).not.toBeNull();
@@ -158,7 +164,7 @@ describe("MongoDb tests", () => {
 
     test("Partially update Status", async () => {
         expect.assertions(4);
-        const statusDb: Status_DB = await connection.get_status_db();
+        const statusDb: Status_DB = await connection.get_status_db(logger);
         const entity_ref: Entity_Reference = { uuid: entityA_uuid, kind: "test" };
         const initial_status: Status = { b: "A3" };
         await statusDb.update_status(entity_ref, initial_status);
@@ -175,7 +181,7 @@ describe("MongoDb tests", () => {
 
     test("Get Status for non existing entity should fail", async () => {
         expect.assertions(1);
-        const statusDb: Status_DB = await connection.get_status_db();
+        const statusDb: Status_DB = await connection.get_status_db(logger);
         const entity_ref: Entity_Reference = { uuid: uuid4(), kind: "test" };
         try {
             await statusDb.get_status(entity_ref);
@@ -186,14 +192,14 @@ describe("MongoDb tests", () => {
 
     test("List Statuses", async () => {
         expect.assertions(1);
-        const statusDb: Status_DB = await connection.get_status_db();
+        const statusDb: Status_DB = await connection.get_status_db(logger);
         const res = await statusDb.list_status({ metadata: { "kind": "test" } });
         expect(res.length).toBeGreaterThanOrEqual(1);
     });
 
     test("List Statuses - check status data", async () => {
         expect.assertions(3);
-        const statusDb: Status_DB = await connection.get_status_db();
+        const statusDb: Status_DB = await connection.get_status_db(logger);
         const res = await statusDb.list_status({ metadata: { "kind": "test" }, status: { a: "A1" } });
         expect(res.length).toBeGreaterThanOrEqual(1);
         expect(res[0]).not.toBeNull();
@@ -202,7 +208,7 @@ describe("MongoDb tests", () => {
     });
 
     test("Register Provider", async () => {
-        const providerDb: Provider_DB = await connection.get_provider_db();
+        const providerDb: Provider_DB = await connection.get_provider_db(logger);
         const test_kind = {} as Kind;
         const provider: Provider = { prefix: "test", version: "0.1.0", kinds: [test_kind], procedures: {}, extension_structure: {}, allowExtraProps: false };
         await providerDb.save_provider(provider);
@@ -210,7 +216,7 @@ describe("MongoDb tests", () => {
 
     test("Get provider", async () => {
         expect.assertions(2);
-        const providerDb: Provider_DB = await connection.get_provider_db();
+        const providerDb: Provider_DB = await connection.get_provider_db(logger);
         const prefix_string: string = "test";
         const version: string = "0.1.0";
         const res = await providerDb.get_provider(prefix_string, version);
@@ -220,7 +226,7 @@ describe("MongoDb tests", () => {
 
     test("Get provider using his prefix", async () => {
         expect.assertions(2);
-        const providerDb: Provider_DB = await connection.get_provider_db();
+        const providerDb: Provider_DB = await connection.get_provider_db(logger);
         const prefix_string: string = "test";
         const version: string = "0.1.0";
         const res = await providerDb.get_provider(prefix_string, version);
@@ -230,7 +236,7 @@ describe("MongoDb tests", () => {
 
     test("Get non-existing provider fail", async () => {
         expect.assertions(1);
-        const providerDb: Provider_DB = await connection.get_provider_db();
+        const providerDb: Provider_DB = await connection.get_provider_db(logger);
         const prefix_string: string = "testFail";
         const version: string = "0.1.0";
         try {
@@ -242,7 +248,7 @@ describe("MongoDb tests", () => {
 
     test("List Providers", async () => {
         expect.assertions(3);
-        const providerDb: Provider_DB = await connection.get_provider_db();
+        const providerDb: Provider_DB = await connection.get_provider_db(logger);
         const res = await providerDb.list_providers();
         expect(res).not.toBeNull();
         expect(res).not.toBeUndefined();
@@ -250,14 +256,14 @@ describe("MongoDb tests", () => {
     });
 
     test("Delete provider", async () => {
-        const providerDb: Provider_DB = await connection.get_provider_db();
+        const providerDb: Provider_DB = await connection.get_provider_db(logger);
         const prefix_string: string = "test";
         const version: string = "0.1.0";
         await providerDb.delete_provider(prefix_string, version);
     });
 
     test("Create and get s2s key", async () => {
-        const s2skeyDb: S2S_Key_DB = await connection.get_s2skey_db();
+        const s2skeyDb: S2S_Key_DB = await connection.get_s2skey_db(logger);
         const s2skey: S2S_Key = {
             name: uuid4(),
             owner: uuid4(),
@@ -279,7 +285,7 @@ describe("MongoDb tests", () => {
 
     test("Duplicate s2s key shoud throw an error", async () => {
         expect.assertions(1);
-        const s2skeyDb: S2S_Key_DB = await connection.get_s2skey_db();
+        const s2skeyDb: S2S_Key_DB = await connection.get_s2skey_db(logger);
         const s2skey: S2S_Key = {
             name: uuid4(),
             owner: uuid4(),
@@ -300,7 +306,7 @@ describe("MongoDb tests", () => {
 
     test("List s2s keys", async () => {
         expect.hasAssertions();
-        const s2skeyDb: S2S_Key_DB = await connection.get_s2skey_db();
+        const s2skeyDb: S2S_Key_DB = await connection.get_s2skey_db(logger);
         const s2skey: S2S_Key = {
             name: uuid4(),
             owner: uuid4(),
@@ -325,7 +331,7 @@ describe("MongoDb tests", () => {
 
     test("Inactivate s2s key", async () => {
         expect.assertions(1);
-        const s2skeyDb: S2S_Key_DB = await connection.get_s2skey_db();
+        const s2skeyDb: S2S_Key_DB = await connection.get_s2skey_db(logger);
         const s2skey: S2S_Key = {
             name: uuid4(),
             owner: uuid4(),
@@ -342,6 +348,61 @@ describe("MongoDb tests", () => {
             await s2skeyDb.get_key(s2skey.uuid);
         } catch(e) {
             expect(e).toBeDefined();
+        }
+    });
+
+    test("Create and get session key", async () => {
+        const sessionKeyDb: SessionKeyDb = await connection.get_session_key_db(logger);
+        const sessionKey: SessionKey = {
+            key: uuid(),
+            user_info: {
+                owner: "test"
+            },
+            expireAt: new Date(),
+            idpToken: {}
+        };
+        await sessionKeyDb.create_key(sessionKey);
+        const res: SessionKey = await sessionKeyDb.get_key(sessionKey.key);
+        expect(res.user_info.owner).toEqual(sessionKey.user_info.owner);
+        expect(res.expireAt).toBeDefined()
+    });
+
+    test("Duplicate s2s key shoud throw an error", async () => {
+        expect.assertions(1);
+        const sessionKeyDb: SessionKeyDb = await connection.get_session_key_db(logger);
+        const sessionKey: SessionKey = {
+            key: uuid(),
+            user_info: {
+                owner: "test"
+            },
+            expireAt: new Date(),
+            idpToken: {}
+        };
+        await sessionKeyDb.create_key(sessionKey);
+        try {
+            await sessionKeyDb.create_key(sessionKey);
+        } catch (e) {
+            expect(e).toBeDefined()
+        }
+    });
+
+    test("Inactivate s2s key", async () => {
+        expect.assertions(1);
+        const sessionKeyDb: SessionKeyDb = await connection.get_session_key_db(logger);
+        const sessionKey: SessionKey = {
+            key: uuid(),
+            user_info: {
+                owner: "test"
+            },
+            expireAt: new Date(),
+            idpToken: {}
+        };
+        await sessionKeyDb.create_key(sessionKey);
+        await sessionKeyDb.inactivate_key(sessionKey.key);
+        try {
+            await sessionKeyDb.get_key(sessionKey.key)
+        } catch (e) {
+            expect(e).toBeDefined()
         }
     });
 });

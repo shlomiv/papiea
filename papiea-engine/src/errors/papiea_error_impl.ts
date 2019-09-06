@@ -1,8 +1,10 @@
 import { PapieaError } from "papiea-core";
-import { EntityNotFoundError } from "../databases/utils/errors";
+import { EntityNotFoundError, ConflictingEntityError } from "../databases/utils/errors";
 import { ValidationError } from "./validation_error";
 import { ProcedureInvocationError } from "./procedure_invocation_error";
 import { PermissionDeniedError, UnauthorizedError } from "./permission_error";
+import { BadRequestError } from "./bad_request_error";
+
 
 export class PapieaErrorImpl implements PapieaError {
     error: {
@@ -41,6 +43,9 @@ export class PapieaErrorImpl implements PapieaError {
     static create(err: Error) {
         let errorPayload: { message: string }[];
         switch (err.constructor) {
+            case BadRequestError:
+                return new PapieaErrorImpl(400, "Bad Request",
+                    [{ message: err.message }])
             case ValidationError:
                 errorPayload = (err as ValidationError).errors.map(description => {
                     return { message: description }
@@ -57,8 +62,14 @@ export class PapieaErrorImpl implements PapieaError {
             case UnauthorizedError:
                 return new PapieaErrorImpl(401, "Unauthorized.")
             case PermissionDeniedError:
-                return new PapieaErrorImpl(403, "Unauthorized.")
+                return new PapieaErrorImpl(403, "Permission denied.")
+            case ConflictingEntityError:
+                let conflictingError = err as ConflictingEntityError
+                let metadata = conflictingError.existing_metadata
+
+                return new PapieaErrorImpl(409, `Conflicting Entity: ${metadata.uuid} has version ${metadata.spec_version}`)
             default:
+                console.log(`Default handle got error: ${err}`)
                 return new PapieaErrorImpl(500, `${err}.`)
         }
     }

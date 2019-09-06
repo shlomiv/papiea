@@ -5,15 +5,21 @@ import createProviderAPIRouter from "./provider/provider_routes";
 import { Provider_API_Impl } from "./provider/provider_api_impl";
 import { MongoConnection } from "./databases/mongo";
 import { createEntityAPIRouter } from "./entity/entity_routes";
-import { Entity_API_Impl} from "./entity/entity_api_impl";
+import { Entity_API_Impl } from "./entity/entity_api_impl";
+import {
+    createAuthnRouter, CompositeUserAuthInfoExtractor, AdminUserAuthInfoExtractor
+} from "./auth/authn";
+import { createOAuth2Router} from "./auth/oauth2";
+import { S2SKeyUserAuthInfoExtractor } from "./auth/s2s";
+import { Authorizer, AdminAuthorizer, PerProviderAuthorizer } from "./auth/authz";
 import { ValidatorImpl } from "./validator";
-import { createAuthnRouter } from "./auth/authn";
-import { createOAuth2Router } from "./auth/oauth2";
-import { Authorizer, AdminAuthorizer, PerProviderAuthorizer} from "./auth/authz";
 import { ProviderCasbinAuthorizerFactory } from "./auth/casbin";
-import morgan = require("morgan");
 import { PapieaErrorImpl } from "./errors/papiea_error_impl";
-import { SecretImpl } from "./auth/crypto";
+import { WinstonLogger, getLoggingMiddleware } from './logger';
+import { SessionKeyAPI, SessionKeyUserAuthInfoExtractor } from "./auth/session_key"
+import { IntentfulContext } from "./intentful_core/intentful_context"
+const cookieParser = require('cookie-parser');
+
 
 declare var process: {
     env: {
@@ -21,40 +27,54 @@ declare var process: {
         MONGO_DB: string,
         MONGO_HOST: string,
         MONGO_PORT: string
-        PAPIEA_PUBLIC_ADDR: string,
+        PAPIEA_PUBLIC_URL: string,
         DEBUG_LEVEL: string,
-        ADMIN_S2S_KEY: string,
-        DISALLOW_EXTRA_PROPERTIES: string
+        MONGO_USER: string,
+        MONGO_PASSWORD: string,
+        PAPIEA_ADMIN_S2S_KEY: string,
+        LOGGING_LEVEL: string
     },
     title: string;
 };
 process.title = "papiea";
 const serverPort = parseInt(process.env.SERVER_PORT || "3000");
-const debugLevel = process.env.DEBUG_LEVEL || "common";
-const publicAddr: string = process.env.PAPIEA_PUBLIC_ADDR || "http://localhost:3000";
+const publicAddr: string = process.env.PAPIEA_PUBLIC_URL || "http://localhost:3000";
 const oauth2RedirectUri: string = publicAddr + "/provider/auth/callback";
 const mongoHost = process.env.MONGO_HOST || 'mongo';
 const mongoPort = process.env.MONGO_PORT || '27017';
-const adminKey = process.env.ADMIN_S2S_KEY || '';
-const disallowExtraProps = process.env.DISALLOW_EXTRA_PROPERTIES !== "false";
+const mongoUser = process.env.MONGO_USER;
+const mongoPassword = process.env.MONGO_PASSWORD;
+const adminKey = process.env.PAPIEA_ADMIN_S2S_KEY || '';
+const loggingLevel = process.env.LOGGING_LEVEL || 'info';
 
 async function setUpApplication(): Promise<express.Express> {
+    const logger = new WinstonLogger(loggingLevel);
     const app = express();
+    app.use(cookieParser());
     app.use(express.json());
-    app.use(morgan(debugLevel));
-    const mongoConnection: MongoConnection = new MongoConnection(`mongodb://${mongoHost}:${mongoPort}`, process.env.MONGO_DB || 'papiea');
+    app.use(getLoggingMiddleware(logger));
+    const mongoAuth = (mongoPassword && mongoUser) ? `${mongoUser}:${mongoPassword}@` : '';
+    const mongoConnection: MongoConnection = new MongoConnection(`mongodb://${mongoAuth}${mongoHost}:${mongoPort}`, process.env.MONGO_DB || 'papiea');
     await mongoConnection.connect();
-    const providerDb = await mongoConnection.get_provider_db();
-    const specDb = await mongoConnection.get_spec_db();
-    const statusDb = await mongoConnection.get_status_db();
-    const s2skeyDb = await mongoConnection.get_s2skey_db();
+    const providerDb = await mongoConnection.get_provider_db(logger);
+    const specDb = await mongoConnection.get_spec_db(logger);
+    const statusDb = await mongoConnection.get_status_db(logger);
+    const s2skeyDb = await mongoConnection.get_s2skey_db(logger);
     const validator = new ValidatorImpl()
-    const providerApi = new Provider_API_Impl(providerDb, statusDb, s2skeyDb, new AdminAuthorizer(), validator);
-    app.use(createAuthnRouter(new SecretImpl(adminKey), s2skeyDb, providerDb));
-    app.use(createOAuth2Router(oauth2RedirectUri, providerDb));
-    const entityApiAuthorizer: Authorizer = new PerProviderAuthorizer(providerApi, new ProviderCasbinAuthorizerFactory());
+    const providerApi = new Provider_API_Impl(logger, providerDb, statusDb, s2skeyDb, new AdminAuthorizer(), validator);
+    const sessionKeyDb = await mongoConnection.get_session_key_db(logger)
+    const sessionKeyApi = new SessionKeyAPI(sessionKeyDb)
+    const userAuthInfoExtractor = new CompositeUserAuthInfoExtractor([
+        new AdminUserAuthInfoExtractor(adminKey),
+        new S2SKeyUserAuthInfoExtractor(s2skeyDb),
+        new SessionKeyUserAuthInfoExtractor(sessionKeyApi, providerDb)
+    ]);
+    const intentfulContext = new IntentfulContext(specDb, statusDb)
+    app.use(createAuthnRouter(logger, userAuthInfoExtractor));
+    app.use(createOAuth2Router(logger, oauth2RedirectUri, providerDb, sessionKeyApi));
+    const entityApiAuthorizer: Authorizer = new PerProviderAuthorizer(logger, providerApi, new ProviderCasbinAuthorizerFactory(logger));
     app.use('/provider', createProviderAPIRouter(providerApi));
-    app.use('/services', createEntityAPIRouter(new Entity_API_Impl(statusDb, specDb, providerApi, entityApiAuthorizer, validator)));
+    app.use('/services', createEntityAPIRouter(new Entity_API_Impl(logger, statusDb, specDb, providerApi, entityApiAuthorizer, validator, intentfulContext)));
     app.use('/api-docs', createAPIDocsRouter('/api-docs', new ApiDocsGenerator(providerDb)));
     app.use(function (err: any, req: any, res: any, next: any) {
         if (res.headersSent) {
@@ -69,6 +89,6 @@ async function setUpApplication(): Promise<express.Express> {
 
 setUpApplication().then(app => {
     app.listen(serverPort, function () {
-        console.log(`Papiea app listening on port ${serverPort}!`);
+        console.info(`Papiea app listening on port ${serverPort}!`);
     });
 }).catch(console.error);

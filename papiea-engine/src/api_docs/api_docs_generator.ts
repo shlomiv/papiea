@@ -36,10 +36,10 @@ export default class ApiDocsGenerator {
                                         "$ref": `#/components/schemas/Metadata`
                                     },
                                     "spec": {
-                                        "$ref": `#/components/schemas/${ kind.name }`
+                                        "$ref": `#/components/schemas/${ kind.name }-Spec`
                                     },
                                     "status": {
-                                        "type": "object"
+                                        "type": `#/components/schemas/${ kind.name }-Status`
                                     }
                                 }
                             }
@@ -69,10 +69,10 @@ export default class ApiDocsGenerator {
                                                 "$ref": `#/components/schemas/Metadata`
                                             },
                                             "spec": {
-                                                "$ref": `#/components/schemas/${ kind.name }`
+                                                "$ref": `#/components/schemas/${ kind.name }-Spec`
                                             },
                                             "status": {
-                                                "type": "object"
+                                                "$ref": `#/components/schemas/${ kind.name }-Status`
                                             }
                                         }
                                     }
@@ -103,10 +103,10 @@ export default class ApiDocsGenerator {
                                     "$ref": `#/components/schemas/Metadata`
                                 },
                                 "spec": {
-                                    "$ref": `#/components/schemas/${ kind.name }`
+                                    "$ref": `#/components/schemas/${ kind.name }-Spec`
                                 },
                                 "status": {
-                                    "type": "object"
+                                    "$ref": `#/components/schemas/${ kind.name }-Status`
                                 }
                             }
                         }
@@ -185,14 +185,14 @@ export default class ApiDocsGenerator {
                 }
             ],
             "requestBody": {
-                "description": `${ kind.name } to add`,
+                "description": `${ kind.name } to retrieve`,
                 "required": false,
                 "content": {
                     "application/json": {
                         "schema": {
                             "properties": {
                                 "spec": {
-                                    "$ref": `#/components/schemas/${ kind.name }`
+                                    "$ref": `#/components/schemas/${ kind.name }-Spec`
                                 }
                             }
                         }
@@ -209,14 +209,14 @@ export default class ApiDocsGenerator {
             "operationId": `add${ provider.prefix }${ kind.name }`,
             "tags": [`${ provider.prefix }/${ provider.version }/${ kind.name }`],
             "requestBody": {
-                "description": `${ kind.name } to add`,
+                "description": `${ kind.name } to create`,
                 "required": true,
                 "content": {
                     "application/json": {
                         "schema": {
                             "properties": {
                                 "spec": {
-                                    "$ref": `#/components/schemas/${ kind.name }`
+                                    "$ref": `#/components/schemas/${ kind.name }-Spec`
                                 },
                                 "metadata": {
                                     "$ref": `#/components/schemas/Metadata`
@@ -302,7 +302,7 @@ export default class ApiDocsGenerator {
                         "schema": {
                             "properties": {
                                 "spec": {
-                                    "$ref": `#/components/schemas/${ kind.name }`
+                                    "$ref": `#/components/schemas/${ kind.name }-Spec`
                                 },
                                 "metadata": {
                                     "properties": {
@@ -487,16 +487,6 @@ export default class ApiDocsGenerator {
         return this.processEmptyValidation(procedural_def, procedure)
     }
 
-    removeStatusFields(schema: any) {
-        for (let prop in schema) {
-            if (typeof schema[prop] === 'object' && "x-papiea" in schema[prop] && schema[prop]["x-papiea"] === "status-only") {
-                delete schema[prop];
-            }
-            else if (typeof schema[prop] === 'object')
-                this.removeStatusFields(schema[prop]);
-        }
-    }
-
     setSecurityScheme() {
         return {
             "securitySchemes": {
@@ -517,6 +507,31 @@ export default class ApiDocsGenerator {
                 }
             ]
         }
+    }
+
+    removeSchemaField(schema: any, fieldName: string) {
+        for (let prop in schema) {
+            if (typeof schema[prop] === 'object' && "x-papiea" in schema[prop] && schema[prop]["x-papiea"] === fieldName) {
+                delete schema[prop];
+            }
+            else if (typeof schema[prop] === 'object')
+                this.removeSchemaField(schema[prop], fieldName);
+        }
+    }
+
+    createSchema(schemas: any, kindStructure: any, type: string) {
+        const kindSchema: any = JSON.parse(JSON.stringify(kindStructure))
+        const schemaName = Object.keys(kindSchema)[0]
+        if (type === "spec") {
+            kindSchema[`${schemaName}-Spec`] = kindSchema[schemaName]
+            delete kindSchema[schemaName]
+            this.removeSchemaField(kindSchema, "status-only")
+        } else {
+            kindSchema[`${schemaName}-Status`] = kindSchema[schemaName]
+            delete kindSchema[schemaName]
+            this.removeSchemaField(kindSchema, "spec-only")
+        }
+        Object.assign(schemas, kindSchema)
     }
 
     async getApiDocs(): Promise<any> {
@@ -541,16 +556,30 @@ export default class ApiDocsGenerator {
                 "schemas": {
                     "Error": {
                         "required": [
-                            "code",
-                            "message"
+                            "error",
                         ],
                         "properties": {
-                            "code": {
-                                "type": "integer",
-                                "format": "int32"
-                            },
-                            "message": {
-                                "type": "string"
+                            "error": {
+                                "type": "object",
+                                "required": [
+                                    "errors",
+                                    "code",
+                                    "message"
+                                ],
+                                "properties": {
+                                    "errors": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "code": {
+                                        "type": "integer"
+                                    },
+                                    "message": {
+                                        "type": "string"
+                                    }
+                                }
                             }
                         }
                     },
@@ -673,8 +702,8 @@ export default class ApiDocsGenerator {
                         Object.assign(schemas, procedure.result);
                     });
                 }
-                this.removeStatusFields(kind.kind_structure[Object.keys(kind.kind_structure)[0]]);
-                Object.assign(schemas, kind.kind_structure);
+                this.createSchema(schemas, kind.kind_structure, "spec")
+                this.createSchema(schemas, kind.kind_structure, "status")
             });
         });
 

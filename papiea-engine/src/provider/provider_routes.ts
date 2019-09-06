@@ -104,8 +104,8 @@ export default function createProviderAPIRouter(providerApi: Provider_API) {
         const filter: any = {};
         for (let property of Object.keys(req.body)) {
             filter[property] = req.body[property];
-        };
-        const result = await providerApi.filter_keys(req.user, filter);
+        }
+        const result = await providerApi.list_keys(req.user, filter);
         res.json({ results: result, entity_count: result.length })
     }));
 

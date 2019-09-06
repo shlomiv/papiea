@@ -33,6 +33,7 @@ export class AdminUserAuthInfoExtractor implements UserAuthInfoExtractor {
     }
 
     async getUserAuthInfo(token: string, provider_prefix?: string, provider_version?: string): Promise<UserAuthInfo | null> {
+        console.log("ADMIN TOKEN", token)
         if (token === this.adminKey) {
             return { is_admin: true }
         } else {
@@ -84,6 +85,8 @@ export function createAuthnRouter(logger: Logger, userAuthInfoExtractor: UserAut
         const urlParts = req.originalUrl.split('/');
         const provider_prefix: string | undefined = urlParts[2];
         const provider_version: string | undefined = urlParts[3];
+        console.log("PREFIX", provider_prefix)
+        console.log("VERSION", provider_version)
 
         const user_info = await userAuthInfoExtractor.getUserAuthInfo(token, provider_prefix, provider_version);
         if (user_info === null) {

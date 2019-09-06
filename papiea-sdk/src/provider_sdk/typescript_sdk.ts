@@ -15,8 +15,7 @@ import { ProceduralCtx } from "./typescript_sdk_context_impl";
 
 import { Version, Kind, Procedural_Signature, Provider, Data_Description, SpecOnlyEntityKind, Procedural_Execution_Strategy, Entity, S2S_Key, UserInfo, IntentfulBehaviour } from "papiea-core";
 import { InvocationError } from "./typescript_sdk_exceptions";
-import { SecretImpl } from "./typescript_sdk_crypto";
-import { Secret } from "papiea-core";
+import { Secret, SHA256Secret } from "papiea-core";
 
 
 class SecurityApiImpl implements SecurityApi {
@@ -282,7 +281,9 @@ export class ProviderSdk implements ProviderImpl {
 
     static create_provider(papiea_url: string, secret: any, public_host?: string, public_port?: number, allowExtraProps: boolean = false): ProviderSdk {
         const server_manager = new Provider_Server_Manager(public_host, public_port);
-        return new ProviderSdk(papiea_url, new SecretImpl(secret), server_manager, allowExtraProps)
+        const provider_secret = new SHA256Secret()
+        provider_secret.setSecret(secret)
+        return new ProviderSdk(papiea_url, provider_secret, server_manager, allowExtraProps)
     }
 
     public secure_with(oauth_config: any, casbin_model: string, casbin_initial_policy: string) : ProviderSdk {

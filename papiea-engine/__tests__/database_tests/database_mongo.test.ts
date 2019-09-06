@@ -8,9 +8,8 @@ import { WinstonLogger } from "../../src/logger";
 import Logger from "../../src/logger_interface";
 import { v4 as uuid4 } from 'uuid';
 import { ConflictingEntityError } from "../../src/databases/utils/errors";
-import { Metadata, Spec, Entity_Reference, Status, Kind, Provider, S2S_Key } from "papiea-core";
+import { Metadata, Spec, Entity_Reference, Status, Kind, Provider, S2S_Key, SessionKey, SHA256Secret } from "papiea-core";
 import { SessionKeyDb } from "../../src/databases/session_key_db_interface"
-import { SessionKey } from "papiea-core/build/core"
 import uuid = require("uuid")
 
 declare var process: {
@@ -269,7 +268,7 @@ describe("MongoDb tests", () => {
             owner: uuid4(),
             uuid: uuid4(),
             provider_prefix: "test_provider",
-            secret: uuid4(),
+            secret: new SHA256Secret(uuid4()),
             created_at: new Date(),
             deleted_at: undefined,
             user_info: {}
@@ -291,7 +290,7 @@ describe("MongoDb tests", () => {
             owner: uuid4(),
             uuid: uuid4(),
             provider_prefix: "test_provider",
-            secret: uuid4(),
+            secret: new SHA256Secret(uuid4()),
             created_at: new Date(),
             deleted_at: undefined,
             user_info: {}
@@ -312,7 +311,7 @@ describe("MongoDb tests", () => {
             owner: uuid4(),
             uuid: uuid4(),
             provider_prefix: "test_provider",
-            secret: uuid4(),
+            secret: new SHA256Secret(uuid4()),
             created_at: new Date(),
             deleted_at: undefined,
             user_info: {}
@@ -337,7 +336,7 @@ describe("MongoDb tests", () => {
             owner: uuid4(),
             uuid: uuid4(),
             provider_prefix: "test_provider",
-            secret: uuid4(),
+            secret: new SHA256Secret(),
             created_at: new Date(),
             deleted_at: undefined,
             user_info: {}

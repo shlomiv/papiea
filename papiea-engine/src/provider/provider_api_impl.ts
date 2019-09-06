@@ -5,9 +5,8 @@ import { S2S_Key_DB } from "../databases/s2skey_db_interface";
 import { Validator } from "../validator";
 import { Authorizer } from "../auth/authz";
 import { UserAuthInfo } from "../auth/authn";
-import { createHash } from "../auth/crypto";
 import { EventEmitter } from "events";
-import { Entity_Reference, Version, Status, Provider, Kind, S2S_Key, Action } from "papiea-core";
+import { Entity_Reference, Version, Status, Provider, Kind, S2S_Key, Action, SHA256Secret } from "papiea-core";
 import uuid = require("uuid");
 import Logger from "../logger_interface";
 
@@ -146,17 +145,33 @@ export class Provider_API_Impl implements Provider_API {
         // A.extension.provider_prefix, A.extension.tenant, etc.
         // In other words user with s2skey A talks on behalf of user in A.extension
         // All rules who can talk on behalf of whom are defined in AdminAuthorizer
-        const s2skey: S2S_Key = {
-            name: name,
-            uuid: uuid(),
-            owner: owner,
-            provider_prefix: provider_prefix,
-            key: "",
-            created_at: new Date(),
-            deleted_at: undefined,
-            user_info: Object.assign({}, user_info ? user_info : user)
-        };
-        s2skey.key = key ? key : createHash(s2skey);
+        let s2skey: S2S_Key
+        if (key) {
+            const secret = new SHA256Secret()
+            secret.setSecret(key)
+            s2skey = {
+                name: name,
+                uuid: uuid(),
+                owner: owner,
+                provider_prefix: provider_prefix,
+                secret: secret,
+                created_at: new Date(),
+                deleted_at: undefined,
+                user_info: Object.assign({}, user_info ? user_info : user)
+            }
+        } else {
+            s2skey = {
+                name: name,
+                uuid: uuid(),
+                owner: owner,
+                provider_prefix: provider_prefix,
+                secret: new SHA256Secret(""),
+                created_at: new Date(),
+                deleted_at: undefined,
+                user_info: Object.assign({}, user_info ? user_info : user)
+            }
+            s2skey.secret.setSecret(SHA256Secret.createHash(s2skey))
+        }
         await this.authorizer.checkPermission(user, s2skey, Action.CreateS2SKey);
         await this.s2skeyDb.create_key(s2skey);
         return this.s2skeyDb.get_key(s2skey.uuid);
@@ -170,10 +185,11 @@ export class Provider_API_Impl implements Provider_API {
 
     async list_keys(user: UserAuthInfo, fields_map: any): Promise<S2S_Key[]> {
         const res = await this.s2skeyDb.list_keys(fields_map);
-        let secret;
+        let secret: string
         for (let s2s_key of res) {
-            secret = s2s_key.key;
-            s2s_key.key = secret.slice(0, 2) + "*****" + secret.slice(-2);
+            Object.setPrototypeOf(s2s_key.secret, SHA256Secret.prototype)
+            secret = s2s_key.secret.getSecret();
+            s2s_key.secret.setSecret(secret.slice(0, 2) + "*****" + secret.slice(-2));
         }
         return this.authorizer.filter(user, res, Action.ReadS2SKey);
     }
@@ -182,15 +198,5 @@ export class Provider_API_Impl implements Provider_API {
         const s2skey: S2S_Key = await this.s2skeyDb.get_key(uuid);
         await this.authorizer.checkPermission(user, s2skey, Action.InactivateS2SKey);
         await this.s2skeyDb.inactivate_key(s2skey.uuid);
-    }
-
-    async filter_keys(user: UserAuthInfo, fields: any): Promise<S2S_Key[]> {
-        const res = await this.s2skeyDb.list_keys(fields);
-        let secret;
-        for (let s2s_key of res) {
-            secret = s2s_key.key;
-            s2s_key.key = secret.slice(0, 2) + "*****" + secret.slice(-2);
-        }
-        return this.authorizer.filter(user, res, Action.ReadS2SKey);
     }
 }

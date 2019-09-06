@@ -1,3 +1,5 @@
+import * as crypto from "crypto"
+import * as uuid from "uuid"
 // [[file:~/work/papiea-js/Papiea-design.org::*/src/core.ts][/src/core.ts:1]]
 // This should probably be imported from some library
 export type uuid4 = string;
@@ -192,9 +194,35 @@ export interface Provider {
 }
 
 export interface Secret {
+    key: any
+
     getSecret(): any
 
     setSecret(secret: any): void
+}
+
+export class SHA256Secret implements Secret {
+    key: string
+
+    static createHash(key: any): string {
+        return crypto.createHash('sha256').update(JSON.stringify(key)).digest('base64')
+    }
+
+    constructor(secret?: any) {
+        if (secret) {
+            this.key = SHA256Secret.createHash(secret)
+        } else {
+            this.key = SHA256Secret.createHash(uuid.v4())
+        }
+    }
+
+    getSecret() {
+        return this.key
+    }
+
+    setSecret(key: string) {
+        this.key = key
+    }
 }
 
 // Add support for partial types where relevant
@@ -210,7 +238,7 @@ export interface S2S_Key {
     name?: string
     owner: string
     provider_prefix: string
-    secret: any
+    secret: Secret
     uuid: string;
 
     // Additional fields

@@ -339,9 +339,9 @@ describe("Entity API auth tests", () => {
             { headers: { 'Authorization': 'Bearer ' + token } }
         );
         expect(s2skeys.length).toEqual(1);
-        expect(s2skeys[0].secret).toEqual(s2skey.secret.slice(0, 2) + "*****" + s2skey.secret.slice(-2));
+        expect(s2skeys[0].secret.key).toEqual(s2skey.secret.key.slice(0, 2) + "*****" + s2skey.secret.key.slice(-2));
         const { data } = await providerApi.get(`/${ provider.prefix }/${ provider.version }/auth/user_info`,
-            { headers: { 'Authorization': 'Bearer ' + s2skey.secret } }
+            { headers: { 'Authorization': 'Bearer ' + s2skey.secret.key } }
         );
         expect(data.owner).toEqual("alice");
         expect(data.tenant).toEqual(tenant_uuid);
@@ -355,7 +355,7 @@ describe("Entity API auth tests", () => {
         );
         try {
             await providerApi.get(`/${ provider.prefix }/${ provider.version }/auth/user_info`,
-                { headers: { 'Authorization': 'Bearer ' + s2skey.secret } }
+                { headers: { 'Authorization': 'Bearer ' + s2skey.secret.key } }
             );
             throw new Error("Key hasn't been inactivated");
         } catch (e) {
@@ -379,7 +379,7 @@ describe("Entity API auth tests", () => {
             { headers: { 'Authorization': 'Bearer ' + token } }
         );
         const { data: { metadata, spec } } = await entityApi.get(`/${ provider.prefix }/${ provider.version }/${ kind_name }/${ entity_metadata.uuid }`,
-            { headers: { 'Authorization': 'Bearer ' + s2skey.secret } }
+            { headers: { 'Authorization': 'Bearer ' + s2skey.secret.key } }
         );
         expect(metadata).toEqual(entity_metadata);
         expect(spec).toEqual(entity_spec);
@@ -421,9 +421,9 @@ describe("Entity API auth tests", () => {
         );
 
         await entityApi.post(`/${ provider.prefix }/${ provider.version }/${ kind_name }/${ entity_metadata.uuid }/procedure/moveX`, { input: 5 },
-            { headers: { 'Authorization': 'Bearer ' + s2skey.secret } }
+            { headers: { 'Authorization': 'Bearer ' + s2skey.secret.key } }
         );
-        expect(headers['authorization']).toBe(`Bearer ${s2skey.secret}`);
+        expect(headers['authorization']).toBe(`Bearer ${s2skey.secret.key}`);
     });
 
     test("Create s2s key with another owner should fail", async () => {
@@ -572,7 +572,7 @@ describe("Entity API auth tests", () => {
             }
         );
         await entityApi.post(`/${ provider.prefix }/${ provider.version }/${ kind_name }/procedure/computeGeolocation`, { input: "2" },
-            { headers: { 'Authorization': 'Bearer ' + s2skey.secret } }
+            { headers: { 'Authorization': 'Bearer ' + s2skey.secret.key } }
         );
     });
 
@@ -647,7 +647,7 @@ describe("Entity API auth tests", () => {
                     "b": 5
                 }
             },
-            { headers: { 'Authorization': 'Bearer ' + s2skey.secret } }
+            { headers: { 'Authorization': 'Bearer ' + s2skey.secret.key } }
         );
     });
 
@@ -666,7 +666,7 @@ describe("Entity API auth tests", () => {
                 }
             );
             await entityApi.post(`/${provider.prefix}/${provider.version}/${kind_name}/procedure/computeGeolocation`, { input: "5" },
-                { headers: { 'Authorization': 'Bearer ' + s2skey.secret } }
+                { headers: { 'Authorization': 'Bearer ' + s2skey.secret.key } }
             );
             throw new Error("Call procedure without permission should fail");
         } catch (e) {

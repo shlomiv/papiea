@@ -55,7 +55,7 @@ describe("Provider API auth tests", () => {
             }
         );
         const { data: user_info } = await providerApi.get(`/${ provider.prefix }/${ provider.version }/auth/user_info`,
-            { headers: { 'Authorization': `Bearer ${ s2skey.secret }` } }
+            { headers: { 'Authorization': `Bearer ${ s2skey.secret.key }` } }
         );
         expect(user_info.provider_prefix).toEqual(provider.prefix);
         expect(user_info.is_provider_admin).toBeTruthy();
@@ -64,18 +64,18 @@ describe("Provider API auth tests", () => {
     test("Admin should create s2s key for provider-admin with key provided", async () => {
         jest.setTimeout(5000);
         expect.hasAssertions();
-        const secret = uuid();
+        const key = uuid();
         const { data: s2skey } = await providerApiAdmin.post(`/${ provider.prefix }/${ provider.version }/s2skey`,
             {
-                secret: secret,
+                key: key,
                 user_info: {
                     is_provider_admin: true
                 }
             }
         );
-        expect(s2skey.secret).toEqual(secret);
+        expect(s2skey.secret.key).toEqual(key);
         const { data: user_info } = await providerApi.get(`/${ provider.prefix }/${ provider.version }/auth/user_info`,
-            { headers: { 'Authorization': `Bearer ${ s2skey.secret }` } }
+            { headers: { 'Authorization': `Bearer ${ s2skey.secret.key }` } }
         );
         expect(user_info.provider_prefix).toEqual(provider.prefix);
         expect(user_info.is_provider_admin).toBeTruthy();
@@ -90,10 +90,10 @@ describe("Provider API auth tests", () => {
             }
         );
         await providerApi.post('/', provider, {
-            headers: { 'Authorization': `Bearer ${ s2skey.secret }` }
+            headers: { 'Authorization': `Bearer ${ s2skey.secret.key }` }
         });
         await providerApi.delete(`/${ provider.prefix }/${ provider.version }`, {
-            headers: { 'Authorization': `Bearer ${ s2skey.secret }` }
+            headers: { 'Authorization': `Bearer ${ s2skey.secret.key }` }
         });
     });
 
@@ -109,7 +109,7 @@ describe("Provider API auth tests", () => {
                 }
             );
             await providerApi.post('/', provider, {
-                headers: { 'Authorization': `Bearer ${s2skey.secret}` }
+                headers: { 'Authorization': `Bearer ${s2skey.secret.key}` }
             });
             throw new Error("Provider-admin should not register provider with another prefix");
         } catch (e) {
@@ -126,7 +126,7 @@ describe("Provider API auth tests", () => {
             }
         );
         await providerApi.post('/', provider, {
-            headers: { 'Authorization': `Bearer ${ s2skey.secret }` }
+            headers: { 'Authorization': `Bearer ${ s2skey.secret.key }` }
         });
         const { data: { metadata, spec } } = await entityApi.post(`/${ provider.prefix }/${ provider.version }/${ kind_name }`, {
             metadata: {
@@ -140,7 +140,7 @@ describe("Provider API auth tests", () => {
                 ip: "0.0.0.0"
             }
         }, {
-            headers: { 'Authorization': `Bearer ${ s2skey.secret }` }
+            headers: { 'Authorization': `Bearer ${ s2skey.secret.key }` }
         });
         const newStatus = Object.assign({}, spec, { ip: "1.1.1.1" })
         await providerApi.post('/update_status', {
@@ -151,10 +151,10 @@ describe("Provider API auth tests", () => {
             },
             status: newStatus
         }, {
-            headers: { 'Authorization': `Bearer ${ s2skey.secret }` }
+            headers: { 'Authorization': `Bearer ${ s2skey.secret.key }` }
         });
         await providerApi.delete(`/${ provider.prefix }/${ provider.version }`, {
-            headers: { 'Authorization': `Bearer ${ s2skey.secret }` }
+            headers: { 'Authorization': `Bearer ${ s2skey.secret.key }` }
         });
     });
 
@@ -170,7 +170,7 @@ describe("Provider API auth tests", () => {
                 }
             );
             await providerApi.post('/', provider, {
-                headers: { 'Authorization': `Bearer ${s2skey.secret}` }
+                headers: { 'Authorization': `Bearer ${s2skey.secret.key}` }
             });
             const { data: { metadata, spec } } = await entityApi.post(`/${provider.prefix}/${provider.version}/${kind_name}`, {
                 metadata: {
@@ -184,7 +184,7 @@ describe("Provider API auth tests", () => {
                     ip: "0.0.0.0"
                 }
             }, {
-                    headers: { 'Authorization': `Bearer ${s2skey.secret}` }
+                    headers: { 'Authorization': `Bearer ${s2skey.secret.key}` }
                 });
             const newStatus = Object.assign({}, spec, { ip: "1.1.1.1" })
             const { data } = await providerApiAdmin.post(`/${uuid()}/${provider.version}/s2skey`,
@@ -229,7 +229,7 @@ describe("Provider API auth tests", () => {
                         is_admin: true
                     }
                 }, {
-                    headers: { 'Authorization': `Bearer ${s2skey.secret}` }
+                    headers: { 'Authorization': `Bearer ${s2skey.secret.key}` }
                 }
             );
             throw new Error("Provider-admin should not create s2s key for admin");
@@ -257,7 +257,7 @@ describe("Provider API auth tests", () => {
                         provider_prefix: provider.prefix + "1"
                     }
                 }, {
-                    headers: { 'Authorization': `Bearer ${s2skey.secret}` }
+                    headers: { 'Authorization': `Bearer ${s2skey.secret.key}` }
                 }
             );
             throw new Error("Provider-admin should not create s2s key for provider-admin");
@@ -283,7 +283,7 @@ describe("Provider API auth tests", () => {
                     is_provider_admin: true
                 }
             }, {
-                headers: { 'Authorization': `Bearer ${ s2skey.secret }` }
+                headers: { 'Authorization': `Bearer ${ s2skey.secret.key }` }
             }
         );
     });
@@ -304,7 +304,7 @@ describe("Provider API auth tests", () => {
                     owner: "user@provider",
                 }
             }, {
-                headers: { 'Authorization': `Bearer ${ s2skey.secret }` }
+                headers: { 'Authorization': `Bearer ${ s2skey.secret.key }` }
             }
         );
     });
@@ -327,7 +327,7 @@ describe("Provider API auth tests", () => {
                         owner: "user@provider"
                     }
                 }, {
-                    headers: { 'Authorization': `Bearer ${s2skey.secret}` }
+                    headers: { 'Authorization': `Bearer ${s2skey.secret.key}` }
                 }
             );
             throw new Error("Provider-admin should not create s2s key for provider-user with provider-user owner");
@@ -356,7 +356,7 @@ describe("Provider API auth tests", () => {
         );
         const { data } = await providerApi.get(`/${ provider.prefix }/${ provider.version }/s2skey`,
             {
-                headers: { 'Authorization': `Bearer ${ s2skey.secret }` }
+                headers: { 'Authorization': `Bearer ${ s2skey.secret.key }` }
             }
         );
         expect(data.length).toEqual(1);
@@ -384,7 +384,7 @@ describe("Provider API auth tests", () => {
         );
         const { data } = await providerApi.get(`/${ provider.prefix }/${ provider.version }/s2skey`,
             {
-                headers: { 'Authorization': `Bearer ${ s2skey.secret }` }
+                headers: { 'Authorization': `Bearer ${ s2skey.secret.key }` }
             }
         );
         expect(data.length).toEqual(1);

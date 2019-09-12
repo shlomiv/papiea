@@ -31,7 +31,7 @@ interface IKindImpl {
               strategy: Procedural_Execution_Strategy,
               input_desc: string,
               output_desc: string,
-              handler: (ctx:ProceduralCtx_Interface, input:any)=>any):void;
+              handler: (ctx:ProceduralCtx_Interface, input:any, loggerFactory: LoggerFactory)=>any):void;
 
 
     // Visualize all the intentful handlers and their priority
@@ -70,3 +70,26 @@ export interface IntentfulCtx_Interface {
 export type ProceduralCtx_Interface=IntentfulCtx_Interface;
 // provider_sdk_ts_intentful_ctx_interface ends here
 // Typescript: /src/provider_sdk/typescript_sdk_interface:1 ends here
+
+export interface LoggerFactory {
+    createLogger(logPath?: string, logLevel?: string): Logger
+}
+
+export default interface Logger {
+
+    emerg(msg: any, ...messages: any[]): void
+
+    alert(msg: any, ...messages: any[]): void
+
+    crit(msg: any, ...messages: any[]): void
+
+    error(msg: any, ...messages: any[]): void
+
+    warning(msg: any, ...messages: any[]): void
+
+    notice(msg: any, ...messages: any[]): void
+
+    info(msg: any, ...messages: any[]): void
+
+    debug(msg: any, ...messages: any[]): void
+}

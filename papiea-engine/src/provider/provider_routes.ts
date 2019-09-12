@@ -12,6 +12,11 @@ export default function createProviderAPIRouter(providerApi: Provider_API) {
         res.json(result);
     }));
 
+    providerApiRouter.get('/', CheckNoQueryParams, asyncHandler(async (req, res) => {
+        const result = await providerApi.list_providers(req.user);
+        res.json(result);
+    }))
+
     providerApiRouter.get('/:prefix/:version', CheckNoQueryParams, asyncHandler(async (req, res) => {
         const provider = await providerApi.get_provider(req.user, req.params.prefix, req.params.version);
         res.json(provider)

@@ -275,7 +275,7 @@ describe("Provider Sdk tests", () => {
             "computeGeolocation",
             {}, Procedural_Execution_Strategy.Halt_Intentful,
             loadYaml("./test_data/procedure_geolocation_compute_input.yml"),
-            loadYaml("./test_data/procedure_geolocation_compute_input.yml"), async (ctx, input, loggerFactory) => {
+            loadYaml("./test_data/procedure_geolocation_compute_input.yml"), async (ctx, input) => {
                 let cluster_location = "us.west.";
                 cluster_location += input;
                 return cluster_location
@@ -307,7 +307,7 @@ describe("Provider Sdk tests", () => {
             "computeGeolocation",
             {}, Procedural_Execution_Strategy.Halt_Intentful,
             loadYaml("./test_data/procedure_geolocation_compute_input.yml"),
-            loadYaml("./test_data/procedure_geolocation_compute_input.yml"), async (ctx, input, loggerFactory) => {
+            loadYaml("./test_data/procedure_geolocation_compute_input.yml"), async (ctx, input) => {
                 let cluster_location = "us.west.";
                 cluster_location += input;
                 return cluster_location
@@ -341,7 +341,7 @@ describe("Provider Sdk tests", () => {
             Procedural_Execution_Strategy.Halt_Intentful,
             loadYaml("./test_data/procedure_sum_input.yml"),
             loadYaml("./test_data/procedure_sum_output.yml"),
-            async (ctx, input, loggerFactory) => {
+            async (ctx, input) => {
                 return input.a + input.b;
             }
         );
@@ -371,7 +371,7 @@ describe("Provider Sdk tests", () => {
             Procedural_Execution_Strategy.Halt_Intentful,
             loadYaml("./test_data/procedure_sum_input.yml"),
             loadYaml("./test_data/procedure_sum_output.yml"),
-            async (ctx, input, loggerFactory) => {
+            async (ctx, input) => {
                 return input.a + input.b;
             }
         );
@@ -403,7 +403,7 @@ describe("Provider Sdk tests", () => {
             Procedural_Execution_Strategy.Halt_Intentful,
             loadYaml("./test_data/procedure_sum_input.yml"),
             loadYaml("./test_data/procedure_sum_output.yml"),
-            async (ctx, input, loggerFactory) => {
+            async (ctx, input) => {
                 return "Totally not a number should fail provider-level validation";
             }
         );
@@ -427,7 +427,7 @@ describe("Provider Sdk tests", () => {
             Procedural_Execution_Strategy.Halt_Intentful,
             {},
             {},
-            async (ctx, input, loggerFactory) => {
+            async (ctx, input) => {
             }
         );
         try {
@@ -449,7 +449,7 @@ describe("Provider Sdk tests", () => {
             Procedural_Execution_Strategy.Halt_Intentful,
             {},
             {},
-            async (ctx, input, loggerFactory) => {
+            async (ctx, input) => {
                 return "Totally not a void type"
             }
         );
@@ -474,7 +474,7 @@ describe("Provider Sdk tests", () => {
             Procedural_Execution_Strategy.Halt_Intentful,
             loadYaml("./test_data/procedure_sum_input.yml"),
             loadYaml("./test_data/procedure_sum_output.yml"),
-            async (ctx, input, loggerFactory) => {
+            async (ctx, input) => {
                 throw new Error("My custom error")
             }
         );
@@ -550,7 +550,7 @@ describe("SDK security tests", () => {
             Procedural_Execution_Strategy.Halt_Intentful,
             loadYaml("./test_data/procedure_sum_input.yml"),
             {},
-            async (ctx, input, loggerFactory) => {
+            async (ctx, input) => {
                 const allowed = await ctx.check_permission([[Action.Read, { uuid: entity_metadata.uuid, kind: kind_name }]], provider.prefix, provider.version);
                 expect(allowed).toBeFalsy();
             }
@@ -583,7 +583,7 @@ describe("SDK security tests", () => {
             Procedural_Execution_Strategy.Halt_Intentful,
             loadYaml("./test_data/procedure_sum_input.yml"),
             {},
-            async (ctx, input, loggerFactory) => {
+            async (ctx, input) => {
                 const allowed = await ctx.check_permission([[Action.Read, { uuid: entity_metadata.uuid, kind: kind_name }]], provider.prefix, provider.version);
                 expect(allowed).toBeTruthy();
             }
@@ -616,7 +616,7 @@ describe("SDK security tests", () => {
             Procedural_Execution_Strategy.Halt_Intentful,
             loadYaml("./test_data/procedure_sum_input.yml"),
             {},
-            async (ctx, input, loggerFactory) => {
+            async (ctx, input) => {
                 const allowed = await ctx.check_permission([[Action.Create, { uuid: entity_metadata.uuid, kind: kind_name, spec_version: 1, extension: { owner: "alice" }, created_at: {} as Date } as Metadata]], provider.prefix, provider.version);
                 expect(allowed).toBeTruthy();
             }
@@ -649,7 +649,7 @@ describe("SDK security tests", () => {
             Procedural_Execution_Strategy.Halt_Intentful,
             loadYaml("./test_data/procedure_sum_input.yml"),
             {},
-            async (ctx, input, loggerFactory) => {
+            async (ctx, input) => {
                 const allowed = await ctx.check_permission([[Action.Create, { uuid: entity_metadata.uuid, kind: kind_name, spec_version: 1, extension: { owner: "alice" }, created_at: {} as Date } as Metadata]], provider.prefix, provider.version);
                 expect(allowed).toBeFalsy();
             }
@@ -682,7 +682,7 @@ describe("SDK security tests", () => {
             Procedural_Execution_Strategy.Halt_Intentful,
             loadYaml("./test_data/procedure_sum_input.yml"),
             {},
-            async (ctx, input, loggerFactory) => {
+            async (ctx, input) => {
                 const allowed = await ctx.check_permission([[Action.Create, { uuid: entity_metadata.uuid, kind: kind_name, spec_version: 1, extension: { owner: "alice" }, created_at: {} as Date } as Metadata]], provider.prefix, provider.version);
                 expect(allowed).toBeFalsy();
             }
@@ -715,7 +715,7 @@ describe("SDK security tests", () => {
             Procedural_Execution_Strategy.Halt_Intentful,
             loadYaml("./test_data/procedure_sum_input.yml"),
             {},
-            async (ctx, input, loggerFactory) => {
+            async (ctx, input) => {
                 const allowed = await ctx.check_permission([
                     [Action.Create, { uuid: entity_metadata.uuid, kind: kind_name, spec_version: 1, extension: { owner: "alice" }, created_at: {} as Date } as Metadata],
                     [Action.Create, { uuid: entity_metadata.uuid, kind: kind_name, spec_version: 1, extension: { owner: "jane" }, created_at: {} as Date } as Metadata]
@@ -751,7 +751,7 @@ describe("SDK security tests", () => {
             Procedural_Execution_Strategy.Halt_Intentful,
             loadYaml("./test_data/procedure_sum_input.yml"),
             {},
-            async (ctx, input, loggerFactory) => {
+            async (ctx, input) => {
                 const allowed = await ctx.check_permission([
                     [Action.Create, { uuid: entity_metadata.uuid, kind: kind_name, spec_version: 1, extension: { owner: "alice" }, created_at: {} as Date } as Metadata],
                     [Action.Create, { uuid: entity_metadata.uuid, kind: kind_name, spec_version: 1, extension: { owner: "alice" }, created_at: {} as Date } as Metadata]
@@ -787,7 +787,7 @@ describe("SDK security tests", () => {
             Procedural_Execution_Strategy.Halt_Intentful,
             loadYaml("./test_data/procedure_sum_input.yml"),
             {},
-            async (ctx, input, loggerFactory) => {
+            async (ctx, input) => {
                 const allowed = await ctx.check_permission([
                     [Action.Read, { uuid: entity_metadata.uuid, kind: kind_name }],
                     [Action.Create, { uuid: entity_metadata.uuid, kind: kind_name, spec_version: 1, extension: { owner: "alice" }, created_at: {} as Date } as Metadata]
@@ -823,7 +823,7 @@ describe("SDK security tests", () => {
             Procedural_Execution_Strategy.Halt_Intentful,
             loadYaml("./test_data/procedure_sum_input.yml"),
             {},
-            async (ctx, input, loggerFactory) => {
+            async (ctx, input) => {
                 const allowed = await ctx.check_permission([
                     [Action.Read, { uuid: entity_metadata.uuid, kind: kind_name }],
                     [Action.Create, { uuid: entity_metadata.uuid, kind: kind_name, spec_version: 1, extension: { owner: "alice" }, created_at: {} as Date } as Metadata]

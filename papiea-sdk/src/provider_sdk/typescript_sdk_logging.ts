@@ -13,7 +13,7 @@ export class WinstonLoggerFactory implements LoggerFactory {
         this.procedureName = procedureName
     }
 
-    createLogger(logPath?: string, logLevel?: string, filename?: string): winston.Logger {
+    createLogger(logPath?: string, logLevel?: string): winston.Logger {
         let winstonFormat: any
         // Check if the module is used in import, then log the importer filename
         if (require.main) {

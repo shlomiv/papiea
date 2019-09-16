@@ -214,7 +214,7 @@ export class ProviderSdk implements ProviderImpl {
                        strategy: Procedural_Execution_Strategy,
                        input_desc: any,
                        output_desc: any,
-                       handler: (ctx: ProceduralCtx_Interface, input: any, loggerFactory: LoggerFactory) => Promise<any>): ProviderSdk {
+                       handler: (ctx: ProceduralCtx_Interface, input: any) => Promise<any>): ProviderSdk {
         const callback_url = this._server_manager.callback_url(name);
         const procedural_signature: Procedural_Signature = {
             name,
@@ -228,7 +228,7 @@ export class ProviderSdk implements ProviderImpl {
         const version = this.get_version();
         this._server_manager.register_handler("/" + name, async (req, res) => {
             try {
-                const result = await handler(new ProceduralCtx(this, prefix, version, req.headers), req.body.input, makeLoggerFactory(name));
+                const result = await handler(new ProceduralCtx(this, prefix, version, req.headers, makeLoggerFactory(name)), req.body.input);
                 res.json(result);
             } catch (e) {
                 if (e instanceof InvocationError) {
@@ -383,7 +383,7 @@ export class Kind_Builder {
                      strategy: Procedural_Execution_Strategy,
                      input_desc: any,
                      output_desc: any,
-                     handler: (ctx: ProceduralCtx_Interface, entity: Entity, input: any, loggerFactory: LoggerFactory) => Promise<any>): Kind_Builder {
+                     handler: (ctx: ProceduralCtx_Interface, entity: Entity, input: any) => Promise<any>): Kind_Builder {
         const callback_url = this.server_manager.callback_url(name, this.kind.name);
         const procedural_signature: Procedural_Signature = {
             name,
@@ -397,11 +397,11 @@ export class Kind_Builder {
         const version = this.get_version();
         this.server_manager.register_handler(`/${this.kind.name}/${name}`, async (req, res) => {
             try {
-                const result = await handler(new ProceduralCtx(this.provider, prefix, version, req.headers), {
+                const result = await handler(new ProceduralCtx(this.provider, prefix, version, req.headers, makeLoggerFactory(name)), {
                     metadata: req.body.metadata,
                     spec: req.body.spec,
                     status: req.body.status
-                }, req.body.input, makeLoggerFactory(name));
+                }, req.body.input);
                 res.json(result);
             } catch (e) {
                 if (e instanceof InvocationError) {
@@ -418,7 +418,7 @@ export class Kind_Builder {
                    strategy: Procedural_Execution_Strategy,
                    input_desc: any,
                    output_desc: any,
-                   handler: (ctx: ProceduralCtx_Interface, input: any, loggerFactory: LoggerFactory) => Promise<any>): Kind_Builder {
+                   handler: (ctx: ProceduralCtx_Interface, input: any) => Promise<any>): Kind_Builder {
         const callback_url = this.server_manager.callback_url(name, this.kind.name);
         const procedural_signature: Procedural_Signature = {
             name,
@@ -432,7 +432,7 @@ export class Kind_Builder {
         const version = this.get_version();
         this.server_manager.register_handler(`/${this.kind.name}/${name}`, async (req, res) => {
             try {
-                const result = await handler(new ProceduralCtx(this.provider, prefix, version, req.headers), req.body.input, makeLoggerFactory(name));
+                const result = await handler(new ProceduralCtx(this.provider, prefix, version, req.headers, makeLoggerFactory(name)), req.body.input);
                 res.json(result);
             } catch (e) {
                 if (e instanceof InvocationError) {

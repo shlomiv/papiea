@@ -44,8 +44,8 @@ describe("Provider Sdk logging tests", () => {
             Procedural_Execution_Strategy.Halt_Intentful,
             loadYaml("./test_data/procedure_sum_input.yml"),
             loadYaml("./test_data/procedure_sum_output.yml"),
-            async (ctx, input, loggerFactory) => {
-                const logger = loggerFactory.createLogger()
+            async (ctx, input) => {
+                const logger = ctx.get_logger()
                 logger.info(`Sum result ${ input.a + input.b }`)
                 return input.a + input.b
             }
@@ -64,6 +64,7 @@ describe("Provider Sdk logging tests", () => {
             await msleep(1500)
             const content = fs.readFileSync(path.resolve(__dirname, "../../logs/computeSum.log"), "utf-8")
             expect(content).toContain("message: 'Sum result 10'")
+            expect(content).not.toContain("label: '/code/papiea-engine/node_modules/papiea-sdk/src/provider_sdk/typescript_sdk.ts - computeSum'")
         } finally {
             sdk.server.close()
         }

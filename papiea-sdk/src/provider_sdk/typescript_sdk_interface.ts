@@ -64,6 +64,7 @@ export interface IntentfulCtx_Interface {
     get_headers(): IncomingHttpHeaders
     get_invoking_token(): string
     check_permission(entityAction: [Action, Entity_Reference][], provider_prefix: string, provider_version: Version): Promise<boolean>
+    get_logger(log_path?: string, log_level?: string): Logger
 }
 
 // For the time being these are equal. Later they may differ

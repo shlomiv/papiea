@@ -98,7 +98,7 @@ export default function createProviderAPIRouter(providerApi: Provider_API) {
     }));
 
     providerApiRouter.delete('/:prefix/:version/s2skey/:uuid', CheckNoQueryParams, asyncHandler(async (req, res) => {
-        await providerApi.inactivate_key(req.user, req.body.uuid);
+        await providerApi.inactivate_key(req.user, req.params.uuid);
         res.json("OK");
     }));
 

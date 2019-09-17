@@ -46,7 +46,7 @@ describe("Pagination tests", () => {
 
     let uuids: string[] = [];
     const entityPromises: Promise<any>[] = [];
-    const sortingTestLogger: Logger = new WinstonLogger("info", "sorting_test.log");
+    const sortingTestLogger: Logger = new WinstonLogger("info");
 
     beforeAll(async () => {
         const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);

@@ -1,8 +1,8 @@
 import * as winston from 'winston'
-import { resolve } from "path"
 import { NextFunction, Request } from "express"
 import Logger from './logger_interface'
 import { safeJSONParse } from "./utils/utils"
+import { Format } from 'logform';
 
 export function getLoggingMiddleware(logger: Logger) {
     return async (req: Request, res: any, next: NextFunction): Promise<void> => {
@@ -36,27 +36,29 @@ export function getLoggingMiddleware(logger: Logger) {
 
 export class WinstonLogger implements Logger {
     private logger: winston.Logger;
-    private readonly logLevels = ["emerg", "alert", "crit", "error", "warning", "notice", "info", "debug"];
+    private readonly logLevels = new Map<string[], string>()
+        .set(["emerg", "alert", "crit", "error", "warning", "notice", "info"], "Audit")
+        .set(["debug"], "Debug")
 
-    constructor(logLevel: string, logFile?: string) {
+    constructor(logLevel: string, prettyPrint?: boolean) {
+        let formatArgs: Format[] = [winston.format.json()]
         if (!this.isValidLevel(logLevel)) {
             this.error(`Unsupported logging level: ${logLevel}`)
             // convert message to "warning", for lack of better knowledge
             logLevel = "warning"
         }
-        let winstonFormat = winston.format.combine(winston.format.json(), winston.format.prettyPrint());
+        if (prettyPrint) {
+            formatArgs.push(winston.format.prettyPrint())
+        }
+        const securityLevel = this.getSecurityLevel(logLevel)
+        formatArgs.push(winston.format.label({ label: `Security level: ${securityLevel}` }))
+        let winstonFormat = winston.format.combine(...formatArgs);
         this.logger = winston.createLogger({
             levels: winston.config.syslog.levels,
             level: logLevel,
             exitOnError: false,
             format: winstonFormat,
             transports: [
-                new winston.transports.File({
-                    filename: logFile ?
-                        resolve(__dirname, `./logs/${ logFile }`) :
-                        resolve(__dirname, `./logs/papiea_${ logLevel }.log`),
-                    format: winstonFormat
-                }),
                 new winston.transports.Console({
                     format: winstonFormat
                 })
@@ -64,8 +66,22 @@ export class WinstonLogger implements Logger {
         });
     }
 
-    private isValidLevel(logLevel: string) {
-        return this.logLevels.includes(logLevel)
+    private getSecurityLevel(logLevel: string): string {
+        for (let [levelSet, securityLevel] of this.logLevels.entries()) {
+            if (levelSet.includes(logLevel)) {
+                return securityLevel
+            }
+        }
+        throw new Error("Encountered log level that is not assigned to any security level")
+    }
+
+    private isValidLevel(logLevel: string): boolean {
+        for (let levelSet of this.logLevels.keys()) {
+            if (levelSet.includes(logLevel)) {
+                return true
+            }
+        }
+        return false
     }
 
     public setLoggingLevel(logLevel: string) {

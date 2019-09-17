@@ -42,7 +42,7 @@ describe("Procedures tests", () => {
         .withProviderProcedures()
         .build();
     const kind_name = provider.kinds[0].name;
-    const providerApiTestLogger: Logger = new WinstonLogger("info", "provider_api_test.log");
+    const providerApiTestLogger: Logger = new WinstonLogger("info");
 
     beforeAll(async () => {
         await providerApi.post('/', provider);

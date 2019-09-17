@@ -73,7 +73,7 @@ export type ProceduralCtx_Interface=IntentfulCtx_Interface;
 // Typescript: /src/provider_sdk/typescript_sdk_interface:1 ends here
 
 export interface LoggerFactory {
-    createLogger(logPath?: string, logLevel?: string): Logger
+    createLogger(logLevel?: string, prettyPrint?: boolean): Logger
 }
 
 export default interface Logger {

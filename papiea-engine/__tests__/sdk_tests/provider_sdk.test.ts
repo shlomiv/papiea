@@ -509,7 +509,7 @@ describe("SDK security tests", () => {
     const kind_name = provider.kinds[0].name;
     let entity_metadata: Metadata, entity_spec: Spec;
     const oauth2Server = OAuth2Server.createServer();
-    const providerSDKTestLogger: Logger = new WinstonLogger("info", "provider_sdk_test.log");
+    const providerSDKTestLogger: Logger = new WinstonLogger("info");
 
     beforeAll(async () => {
         await providerApiAdmin.post('/', provider);

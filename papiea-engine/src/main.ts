@@ -30,6 +30,7 @@ declare var process: {
         DEBUG_LEVEL: string,
         PAPIEA_ADMIN_S2S_KEY: string,
         LOGGING_LEVEL: string
+        PAPIEA_DEBUG: string
     },
     title: string;
 };
@@ -41,9 +42,10 @@ const mongoUrl = process.env.MONGO_URL || 'mongodb://mongo:27017';
 const mongoDb = process.env.MONGO_DB || 'papiea';
 const adminKey = process.env.PAPIEA_ADMIN_S2S_KEY || '';
 const loggingLevel = process.env.LOGGING_LEVEL || 'info';
+const papieaDebug = process.env.PAPIEA_DEBUG === "true"
 
 async function setUpApplication(): Promise<express.Express> {
-    const logger = new WinstonLogger(loggingLevel);
+    const logger = new WinstonLogger(loggingLevel, papieaDebug);
     const app = express();
     app.use(cookieParser());
     app.use(express.json());

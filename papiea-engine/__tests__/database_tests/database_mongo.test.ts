@@ -25,7 +25,7 @@ const mongoPort = process.env.MONGO_PORT || '27017';
 
 describe("MongoDb tests", () => {
     const connection: MongoConnection = new MongoConnection(`mongodb://${mongoHost}:${mongoPort}`, process.env.MONGO_DB || 'papiea');
-    const logger: Logger = new WinstonLogger("info", "database_mongo_test.log");
+    const logger: Logger = new WinstonLogger("info");
 
     beforeEach(() => {
         jest.setTimeout(50000);

@@ -3,7 +3,7 @@ import {
     Provider as ProviderImpl,
     Provider_Power,
     IntentfulCtx_Interface,
-    SecurityApi, LoggerFactory
+    SecurityApi
 } from "./typescript_sdk_interface"
 import axios, { AxiosInstance } from "axios"
 import { plural } from "pluralize"

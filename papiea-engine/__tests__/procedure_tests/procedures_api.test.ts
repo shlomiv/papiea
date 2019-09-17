@@ -4,7 +4,7 @@ import axios from "axios"
 import { ProviderBuilder } from "../test_data_factory"
 import { Provider } from "papiea-core"
 import { WinstonLogger } from "../../src/logger";
-import Logger from "../../src/logger_interface";
+import { Logger } from "../../src/logger_interface";
 
 declare var process: {
     env: {

@@ -6,8 +6,7 @@ import { readFileSync } from "fs";
 import { Action } from "papiea-core";
 import { PermissionDeniedError } from "../../src/errors/permission_error";
 import { WinstonLogger } from "../../src/logger";
-import Logger from "../../src/logger_interface";
-
+import { Logger } from "../../src/logger_interface"
 
 
 describe("Casbin authorizer tests", () => {

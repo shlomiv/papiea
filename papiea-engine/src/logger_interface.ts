@@ -1,4 +1,18 @@
-export default interface Logger {
+import { AbstractConfigSetLevels } from "winston/lib/winston/config"
+
+export interface PapieaLogLevels extends AbstractConfigSetLevels {
+    emerg: number;
+    alert: number;
+    crit: number;
+    error: number;
+    audit: number
+    warning: number;
+    notice: number;
+    info: number;
+    debug: number;
+}
+
+export interface Logger {
 
     setLoggingLevel(logLevel: string): void
 
@@ -17,4 +31,6 @@ export default interface Logger {
     info(msg: any, ...messages: any[]): void
 
     debug(msg: any, ...messages: any[]): void
+
+    audit(msg: any, ...messages: any[]): void
 }

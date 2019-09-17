@@ -4,8 +4,8 @@ import { Spec_DB_Mongo } from "./spec_db_mongo";
 import { Status_DB_Mongo } from "./status_db_mongo";
 import { Provider_DB_Mongo } from "./provider_db_mongo";
 import { S2S_Key_DB_Mongo } from "./s2skey_db_mongo";
-import Logger from "../logger_interface";
 import { SessionKeyDbMongo } from "./session_key_db_mongo"
+import { Logger } from "../logger_interface"
 const fs = require('fs'),
     url = require('url');
 

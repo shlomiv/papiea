@@ -9,7 +9,7 @@ import { readFileSync } from "fs";
 import { Metadata, Procedural_Execution_Strategy, Provider, Spec, Action } from "papiea-core";
 import uuid = require("uuid");
 import { WinstonLogger } from "../../src/logger";
-import Logger from "../../src/logger_interface";
+import { Logger } from "../../src/logger_interface";
 
 
 declare var process: {

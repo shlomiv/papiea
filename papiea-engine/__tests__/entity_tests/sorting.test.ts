@@ -5,7 +5,7 @@ import { Authorizer } from "../../src/auth/authz";
 import { ProviderSdk } from "papiea-sdk";
 import { Action } from "papiea-core";
 import { WinstonLogger } from "../../src/logger";
-import Logger from "../../src/logger_interface";
+import { Logger } from "../../src/logger_interface";
 
 
 declare var process: {

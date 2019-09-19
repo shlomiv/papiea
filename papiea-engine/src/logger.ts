@@ -1,8 +1,8 @@
 import * as winston from 'winston'
 import { NextFunction, Request } from "express"
 import { safeJSONParse } from "./utils/utils"
-import { Format } from 'logform';
-import { Logger, PapieaLogLevels } from "./logger_interface"
+import { Format } from 'logform'
+import { AuditLogger, AuditLogMessage, Logger, PapieaLogLevels } from "./logger_interface"
 import { UserAuthInfoRequest } from "./auth/authn"
 
 const papieaLogLevels: PapieaLogLevels = {
@@ -17,53 +17,39 @@ const papieaLogLevels: PapieaLogLevels = {
     debug: 8
 }
 
-export function getLoggingMiddleware(logger: Logger) {
+export function getLoggingMiddleware(auditLogger: AuditLogger) {
     return async (req: Request, res: any, next: NextFunction): Promise<void> => {
         let end = res.end;
         (<any>res).end = (chunk: any, encoding?: string) => {
-            res.end = end;
-            res.end(chunk, encoding);
+            res.end = end
+            res.end(chunk, encoding)
             if (chunk) {
-                const stringChunk = chunk && chunk.toString();
-                res.body = (safeJSONParse(chunk) || stringChunk);
+                const stringChunk = chunk && chunk.toString()
+                res.body = (safeJSONParse(chunk) || stringChunk)
             }
-        };
+        }
         res.on("finish", () => {
-            const logmsg: { [key: string]: any }  = {
-                'Request_IP': req.ip,
-                'Method': req.method,
-                'URL': req.originalUrl,
-                'Headers': req.headers,
-                'Status_code': res.statusCode,
-                'Response_body': res.body,
-            };
-            if (req.method !== "GET") {
-                logmsg["Request_body"] = req.body;
-            }
-            if ((req as UserAuthInfoRequest).user) {
-                logmsg["User"] = (req as UserAuthInfoRequest).user
-            }
-            logger.audit(logmsg);
-        });
-        next();
+            auditLogger.log(req, res)
+        })
+        next()
     }
 }
 
 export class WinstonLogger implements Logger {
-    private logger: winston.Logger;
+    private logger: winston.Logger
     private readonly logLevels = ["emerg", "alert", "crit", "error", "warning", "notice", "info", "debug", "audit"]
 
     constructor(logLevel: string, prettyPrint?: boolean) {
         let formatArgs: Format[] = [winston.format.json(), winston.format.timestamp()]
         if (!this.isValidLevel(logLevel)) {
-            this.error(`Unsupported logging level: ${logLevel}`)
+            this.error(`Unsupported logging level: ${ logLevel }`)
             // convert message to "warning", for lack of better knowledge
             logLevel = "warning"
         }
         if (prettyPrint) {
             formatArgs.push(winston.format.prettyPrint())
         }
-        let winstonFormat = winston.format.combine(...formatArgs);
+        let winstonFormat = winston.format.combine(...formatArgs)
         this.logger = winston.createLogger({
             levels: papieaLogLevels,
             level: logLevel,
@@ -74,7 +60,7 @@ export class WinstonLogger implements Logger {
                     format: winstonFormat
                 })
             ],
-        });
+        })
     }
 
     private isValidLevel(logLevel: string): boolean {
@@ -83,44 +69,68 @@ export class WinstonLogger implements Logger {
 
     public setLoggingLevel(logLevel: string) {
         if (!this.isValidLevel(logLevel)) {
-            throw new Error("Unsupported logging level");
+            throw new Error("Unsupported logging level")
         }
-        this.logger.level = logLevel;
+        this.logger.level = logLevel
     }
 
     public emerg(msg: any, ...messages: any[]): void {
-        this.logger.emerg(msg, messages);
+        this.logger.emerg(msg, messages)
     }
 
     public alert(msg: any, ...messages: any[]): void {
-        this.logger.alert(msg, messages);
+        this.logger.alert(msg, messages)
     }
 
     public crit(msg: any, ...messages: any[]): void {
-        this.logger.crit(msg, messages);
+        this.logger.crit(msg, messages)
     }
 
     public error(msg: any, ...messages: any[]): void {
-        this.logger.error(msg, messages);
+        this.logger.error(msg, messages)
     }
 
     public warning(msg: any, ...messages: any[]): void {
-        this.logger.warning(msg, messages);
+        this.logger.warning(msg, messages)
     }
 
     public notice(msg: any, ...messages: any[]): void {
-        this.logger.notice(msg, messages);
+        this.logger.notice(msg, messages)
     }
 
     public info(msg: any, ...messages: any[]): void {
-        this.logger.info(msg, messages);
+        this.logger.info(msg, messages)
     }
 
     public debug(msg: any, ...messages: any[]): void {
-        this.logger.debug(msg, messages);
+        this.logger.debug(msg, messages)
     }
 
     public audit(msg: any, ...messages: any[]): void {
-        this.logger.log("audit", msg, messages);
+        this.logger.log("audit", msg, messages)
+    }
+}
+
+export class WinstonAuditLogger extends WinstonLogger implements AuditLogger {
+    constructor(papieaDebug?: boolean) {
+        super("audit", papieaDebug || false)
+    }
+
+    log(req: Request, res: any) {
+        const logmsg: AuditLogMessage = {
+            request_ip: req.ip,
+            method: req.method,
+            url: req.originalUrl,
+            headers: req.headers,
+            status_code: res.statusCode,
+            response_body: res.body,
+        }
+        if (req.method !== "GET") {
+            logmsg.request_body = req.body
+        }
+        if ((req as UserAuthInfoRequest).user) {
+            logmsg.user = (req as UserAuthInfoRequest).user
+        }
+        this.audit(logmsg)
     }
 }

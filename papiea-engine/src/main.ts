@@ -15,9 +15,10 @@ import { Authorizer, AdminAuthorizer, PerProviderAuthorizer } from "./auth/authz
 import { ValidatorImpl } from "./validator";
 import { ProviderCasbinAuthorizerFactory } from "./auth/casbin";
 import { PapieaErrorImpl } from "./errors/papiea_error_impl";
-import { WinstonLogger, getLoggingMiddleware } from './logger';
+import { WinstonLogger, getLoggingMiddleware, WinstonAuditLogger } from './logger'
 import { SessionKeyAPI, SessionKeyUserAuthInfoExtractor } from "./auth/session_key"
 import { IntentfulContext } from "./intentful_core/intentful_context"
+import { AuditLogger } from "./logger_interface"
 const cookieParser = require('cookie-parser');
 
 
@@ -45,11 +46,12 @@ const loggingLevel = process.env.LOGGING_LEVEL || 'info';
 const papieaDebug = process.env.PAPIEA_DEBUG === "true"
 
 async function setUpApplication(): Promise<express.Express> {
-    const logger = new WinstonLogger(loggingLevel, papieaDebug);
+    const logger = new WinstonLogger(loggingLevel);
+    const auditLogger: AuditLogger = new WinstonAuditLogger(papieaDebug)
     const app = express();
     app.use(cookieParser());
     app.use(express.json());
-    app.use(getLoggingMiddleware(logger));
+    app.use(getLoggingMiddleware(auditLogger));
     const mongoConnection: MongoConnection = new MongoConnection(mongoUrl, mongoDb);
     await mongoConnection.connect();
     const providerDb = await mongoConnection.get_provider_db(logger);

@@ -1,4 +1,4 @@
-import { ProceduralCtx_Interface, SecurityApi } from "./typescript_sdk_interface";
+import Logger, { LoggerFactory, ProceduralCtx_Interface, SecurityApi } from "./typescript_sdk_interface"
 import { Entity, Status, Entity_Reference, Action, Version, Secret } from "papiea-core";
 import axios, { AxiosInstance } from "axios";
 import { ProviderSdk } from "./typescript_sdk";
@@ -12,9 +12,9 @@ export class ProceduralCtx implements ProceduralCtx_Interface {
     private readonly providerApiAxios: AxiosInstance;
     provider: ProviderSdk;
     headers: IncomingHttpHeaders;
+    loggerFactory: LoggerFactory
 
-    constructor(provider:ProviderSdk, provider_prefix: string, provider_version: string, headers: IncomingHttpHeaders) {
-
+    constructor(provider:ProviderSdk, provider_prefix: string, provider_version: string, headers: IncomingHttpHeaders, loggerFactory: LoggerFactory) {
         this.provider_url = provider.provider_url;
         this.base_url = provider.entity_url;
         this.provider_prefix = provider_prefix;
@@ -22,6 +22,7 @@ export class ProceduralCtx implements ProceduralCtx_Interface {
         this.providerApiAxios = provider.provider_api_axios;
         this.provider = provider;
         this.headers = headers
+        this.loggerFactory = loggerFactory
     }
 
     url_for(entity: Entity): string {
@@ -75,5 +76,9 @@ export class ProceduralCtx implements ProceduralCtx_Interface {
                 return parts[1]
         }
         throw new Error("No invoking user")
+    }
+
+    get_logger(log_level?: string, pretty_print?: boolean): Logger {
+        return this.loggerFactory.createLogger(log_level, pretty_print)
     }
 }

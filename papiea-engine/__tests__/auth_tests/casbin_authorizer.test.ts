@@ -6,8 +6,7 @@ import { readFileSync } from "fs";
 import { Action } from "papiea-core";
 import { PermissionDeniedError } from "../../src/errors/permission_error";
 import { WinstonLogger } from "../../src/logger";
-import Logger from "../../src/logger_interface";
-
+import { Logger } from "../../src/logger_interface"
 
 
 describe("Casbin authorizer tests", () => {
@@ -15,7 +14,7 @@ describe("Casbin authorizer tests", () => {
     const modelText: string = readFileSync(pathToModel).toString();
     const pathToPolicy: string = resolve(__dirname, "../../src/auth/provider_policy_example.txt");
     const policyText: string = readFileSync(pathToPolicy).toString();
-    const logger: Logger = new WinstonLogger("info", "casbin_authorizer_test.log");
+    const logger: Logger = new WinstonLogger("info");
     const authorizer: CasbinAuthorizer = new CasbinAuthorizer(logger, modelText, policyText);
 
     beforeAll(async () => {
@@ -177,7 +176,7 @@ describe("Casbin authorizer tests for default provider policy", () => {
     const modelText: string = readFileSync(pathToModel).toString();
     const pathToPolicy: string = resolve(__dirname, "../../src/auth/provider_policy_example.txt");
     const policyText: string = readFileSync(pathToPolicy).toString();
-    const logger: Logger = new WinstonLogger("info", "casbin_authorizer_test_default_policy.log");
+    const logger: Logger = new WinstonLogger("info");
     const authorizer: CasbinAuthorizer = new CasbinAuthorizer(logger, modelText, policyText);
     
     beforeAll(async () => {

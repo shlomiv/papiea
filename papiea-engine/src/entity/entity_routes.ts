@@ -141,7 +141,9 @@ export function createEntityAPIRouter(entity_api: Entity_API): Router {
     }));
 
     router.post("/:prefix/:version/procedure/:procedure_name", CheckProcedureCallParams, asyncHandler(async (req, res) => {
+        console.log("Got inside procedure router")
         const result: any = await entity_api.call_provider_procedure(req.user, req.params.prefix, req.params.version, req.params.procedure_name, req.body.input);
+        console.log("Before api endpoint return")
         res.json(result);
     }));
 

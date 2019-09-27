@@ -170,6 +170,7 @@ export class Entity_API_Impl implements Entity_API {
     }
 
     async call_provider_procedure(user: UserAuthInfo, prefix: string, version: Version, procedure_name: string, input: any): Promise<any> {
+        console.log("Got inside procedure")
         const provider = await this.provider_api.get_provider(user, prefix, version);
         if (provider.procedures === undefined) {
             throw new Error(`Procedure ${procedure_name} not found for provider ${prefix}`);
@@ -182,14 +183,18 @@ export class Entity_API_Impl implements Entity_API {
         Object.assign(schemas, procedure.argument);
         Object.assign(schemas, procedure.result);
         try {
+            console.log("Before validation")
             this.validator.validate(input, Object.values(procedure.argument)[0], schemas, provider.allowExtraProps);
+            console.log("Before request")
             const { data } = await axios.post(procedure.procedure_callback,
                 {
                     input: input
                 }, {
                     headers: user
                 });
+            console.log("After request")
             this.validator.validate(data, Object.values(procedure.result)[0], schemas, provider.allowExtraProps);
+            console.log("After validation")
             return data;
         } catch (err) {
             if (err instanceof ValidationError) {

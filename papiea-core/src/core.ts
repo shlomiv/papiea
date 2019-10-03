@@ -60,7 +60,7 @@ export type SFS = string;
 export interface Intentful_Signature {
     signature: SFS;
     compiled_signature: any
-    function_callback: Provider_Callback_URL;
+    procedural_signature: Procedural_Signature;
 }
 // SFS-interfaces ends here
 
@@ -114,7 +114,7 @@ export interface Kind {
 
     intentful_behaviour: IntentfulBehaviour;
     //// Intentful behavior
-    intentful_signatures: Map<SFS, Intentful_Signature>;
+    intentful_signatures: Intentful_Signature[];
 
     // Every sfs lists the sfs's it has to execute before
     dependency_tree: Map<SFS, SFS[]>;

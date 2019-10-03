@@ -159,7 +159,7 @@ export class ProviderSdk implements ProviderImpl {
                 name,
                 name_plural: plural(name),
                 kind_structure: entity_description,
-                intentful_signatures: new Map(),
+                intentful_signatures: [],
                 dependency_tree: new Map(),
                 kind_procedures: {},
                 entity_procedures: {},
@@ -411,6 +411,15 @@ export class Kind_Builder {
                 res.status(500).json(error.toResponse())
             }
         });
+        return this
+    }
+
+    sfs_signature(sfs_signature: string, rbac: any, procedural_signature: Procedural_Signature): Kind_Builder {
+        this.kind.intentful_signatures.push({
+            signature: sfs_signature,
+            compiled_signature: null,
+            procedural_signature: procedural_signature
+        })
         return this
     }
 

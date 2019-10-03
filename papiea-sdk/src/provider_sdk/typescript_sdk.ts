@@ -4,7 +4,7 @@ import {
     Provider_Power,
     IntentfulCtx_Interface,
     SecurityApi
-} from "./typescript_sdk_interface";
+} from "./typescript_sdk_interface"
 import axios, { AxiosInstance } from "axios"
 import { plural } from "pluralize"
 import * as express from "express";
@@ -14,6 +14,7 @@ import { Server } from "http";
 import { ProceduralCtx } from "./typescript_sdk_context_impl";
 import { Version, Kind, Procedural_Signature, Provider, Data_Description, SpecOnlyEntityKind, Procedural_Execution_Strategy, Entity, S2S_Key, UserInfo, IntentfulBehaviour, Secret } from "papiea-core";
 import { InvocationError } from "./typescript_sdk_exceptions";
+import { makeLoggerFactory } from "./typescript_sdk_logging"
 
 class SecurityApiImpl implements SecurityApi {
     readonly provider: ProviderSdk;
@@ -227,7 +228,7 @@ export class ProviderSdk implements ProviderImpl {
         const version = this.get_version();
         this._server_manager.register_handler("/" + name, async (req, res) => {
             try {
-                const result = await handler(new ProceduralCtx(this, prefix, version, req.headers), req.body.input);
+                const result = await handler(new ProceduralCtx(this, prefix, version, req.headers, makeLoggerFactory(name)), req.body.input);
                 res.json(result);
             } catch (e) {
                 if (e instanceof InvocationError) {
@@ -396,7 +397,7 @@ export class Kind_Builder {
         const version = this.get_version();
         this.server_manager.register_handler(`/${this.kind.name}/${name}`, async (req, res) => {
             try {
-                const result = await handler(new ProceduralCtx(this.provider, prefix, version, req.headers), {
+                const result = await handler(new ProceduralCtx(this.provider, prefix, version, req.headers, makeLoggerFactory(name)), {
                     metadata: req.body.metadata,
                     spec: req.body.spec,
                     status: req.body.status
@@ -431,7 +432,7 @@ export class Kind_Builder {
         const version = this.get_version();
         this.server_manager.register_handler(`/${this.kind.name}/${name}`, async (req, res) => {
             try {
-                const result = await handler(new ProceduralCtx(this.provider, prefix, version, req.headers), req.body.input);
+                const result = await handler(new ProceduralCtx(this.provider, prefix, version, req.headers, makeLoggerFactory(name)), req.body.input);
                 res.json(result);
             } catch (e) {
                 if (e instanceof InvocationError) {

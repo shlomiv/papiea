@@ -2,7 +2,7 @@ import { UserAuthInfo } from "./authn";
 import { Provider_API } from "../provider/provider_api_interface";
 import { Provider, Action } from "papiea-core";
 import { PermissionDeniedError, UnauthorizedError } from "../errors/permission_error";
-import Logger from "../logger_interface";
+import { Logger } from "../logger_interface"
 
 function mapAsync<T, U>(array: T[], callbackfn: (value: T, index: number, array: T[]) => Promise<U>): Promise<U[]> {
     return Promise.all(array.map(callbackfn));
@@ -127,9 +127,6 @@ export class PerProviderAuthorizer extends Authorizer {
 
 export class AdminAuthorizer extends Authorizer {
     async checkPermission(user: UserAuthInfo, object: any, action: Action): Promise<void> {
-        if (action === Action.ReadProvider) {
-            return;
-        }
         if (!user) {
             throw new UnauthorizedError();
         }

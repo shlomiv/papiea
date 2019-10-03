@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response, Router } from "express";
 import { UnauthorizedError } from "../errors/permission_error";
-import Logger from "../logger_interface";
 import { Secret } from "papiea-core"
+import { Logger } from "../logger_interface"
 
 export interface UserAuthInfoExtractor {
     getUserAuthInfo(token: Secret, provider_prefix?: string, provider_version?: string): Promise<UserAuthInfo | null>

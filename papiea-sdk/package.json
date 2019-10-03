@@ -19,7 +19,8 @@
     "papiea-core": "file:../papiea-core",
     "pluralize": "^7.0.0",
     "swagger-model-validator": "^3.0.6",
-    "wait-port": "^0.2.2"
+    "wait-port": "^0.2.2",
+    "winston": "^3.2.1"
   },
   "description": "",
   "devDependencies": {

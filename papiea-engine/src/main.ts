@@ -15,9 +15,10 @@ import { Authorizer, AdminAuthorizer, PerProviderAuthorizer } from "./auth/authz
 import { ValidatorImpl } from "./validator";
 import { ProviderCasbinAuthorizerFactory } from "./auth/casbin";
 import { PapieaErrorImpl } from "./errors/papiea_error_impl";
-import { WinstonLogger, getLoggingMiddleware } from './logger';
+import { WinstonLogger, getLoggingMiddleware, WinstonAuditLogger } from './logger'
 import { SessionKeyAPI, SessionKeyUserAuthInfoExtractor } from "./auth/session_key"
 import { IntentfulContext } from "./intentful_core/intentful_context"
+import { AuditLogger } from "./logger_interface"
 const cookieParser = require('cookie-parser');
 
 
@@ -30,6 +31,7 @@ declare var process: {
         DEBUG_LEVEL: string,
         PAPIEA_ADMIN_S2S_KEY: string,
         LOGGING_LEVEL: string
+        PAPIEA_DEBUG: string
     },
     title: string;
 };
@@ -41,13 +43,15 @@ const mongoUrl = process.env.MONGO_URL || 'mongodb://mongo:27017';
 const mongoDb = process.env.MONGO_DB || 'papiea';
 const adminKey = process.env.PAPIEA_ADMIN_S2S_KEY || '';
 const loggingLevel = process.env.LOGGING_LEVEL || 'info';
+const papieaDebug = process.env.PAPIEA_DEBUG === "true"
 
 async function setUpApplication(): Promise<express.Express> {
     const logger = new WinstonLogger(loggingLevel);
+    const auditLogger: AuditLogger = new WinstonAuditLogger(papieaDebug)
     const app = express();
     app.use(cookieParser());
     app.use(express.json());
-    app.use(getLoggingMiddleware(logger));
+    app.use(getLoggingMiddleware(auditLogger));
     const mongoConnection: MongoConnection = new MongoConnection(mongoUrl, mongoDb);
     await mongoConnection.connect();
     const providerDb = await mongoConnection.get_provider_db(logger);
@@ -68,7 +72,7 @@ async function setUpApplication(): Promise<express.Express> {
     app.use(createOAuth2Router(logger, oauth2RedirectUri, providerDb, sessionKeyApi));
     const entityApiAuthorizer: Authorizer = new PerProviderAuthorizer(logger, providerApi, new ProviderCasbinAuthorizerFactory(logger));
     app.use('/provider', createProviderAPIRouter(providerApi));
-    app.use('/services', createEntityAPIRouter(new Entity_API_Impl(logger, statusDb, specDb, providerApi, entityApiAuthorizer, validator, intentfulContext)));
+    app.use('/services', createEntityAPIRouter(new Entity_API_Impl(logger, statusDb, specDb, providerDb, entityApiAuthorizer, validator, intentfulContext)));
     app.use('/api-docs', createAPIDocsRouter('/api-docs', new ApiDocsGenerator(providerDb), providerDb));
     app.use(function (err: any, req: any, res: any, next: any) {
         if (res.headersSent) {
@@ -77,6 +81,7 @@ async function setUpApplication(): Promise<express.Express> {
         const papieaError = PapieaErrorImpl.create(err);
         res.status(papieaError.status)
         res.json(papieaError.toResponse())
+        logger.error(papieaError, err.stack)
     });
     return app;
 }

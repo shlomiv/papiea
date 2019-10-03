@@ -9,7 +9,7 @@ import { readFileSync } from "fs";
 import { Metadata, Procedural_Execution_Strategy, Provider, Spec, Action } from "papiea-core";
 import uuid = require("uuid");
 import { WinstonLogger } from "../../src/logger";
-import Logger from "../../src/logger_interface";
+import { Logger } from "../../src/logger_interface";
 
 
 declare var process: {
@@ -509,7 +509,7 @@ describe("SDK security tests", () => {
     const kind_name = provider.kinds[0].name;
     let entity_metadata: Metadata, entity_spec: Spec;
     const oauth2Server = OAuth2Server.createServer();
-    const providerSDKTestLogger: Logger = new WinstonLogger("info", "provider_sdk_test.log");
+    const providerSDKTestLogger: Logger = new WinstonLogger("info");
 
     beforeAll(async () => {
         await providerApiAdmin.post('/', provider);

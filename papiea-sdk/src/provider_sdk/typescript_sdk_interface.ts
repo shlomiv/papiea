@@ -31,7 +31,7 @@ interface IKindImpl {
               strategy: Procedural_Execution_Strategy,
               input_desc: string,
               output_desc: string,
-              handler: (ctx:ProceduralCtx_Interface, input:any)=>any):void;
+              handler: (ctx:ProceduralCtx_Interface, input:any, loggerFactory: LoggerFactory)=>any):void;
 
 
     // Visualize all the intentful handlers and their priority
@@ -64,9 +64,33 @@ export interface IntentfulCtx_Interface {
     get_headers(): IncomingHttpHeaders
     get_invoking_token(): string
     check_permission(entityAction: [Action, Entity_Reference][], provider_prefix: string, provider_version: Version): Promise<boolean>
+    get_logger(log_level?: string, pretty_print?: boolean): Logger
 }
 
 // For the time being these are equal. Later they may differ
 export type ProceduralCtx_Interface=IntentfulCtx_Interface;
 // provider_sdk_ts_intentful_ctx_interface ends here
 // Typescript: /src/provider_sdk/typescript_sdk_interface:1 ends here
+
+export interface LoggerFactory {
+    createLogger(logLevel?: string, prettyPrint?: boolean): Logger
+}
+
+export default interface Logger {
+
+    emerg(msg: any, ...messages: any[]): void
+
+    alert(msg: any, ...messages: any[]): void
+
+    crit(msg: any, ...messages: any[]): void
+
+    error(msg: any, ...messages: any[]): void
+
+    warning(msg: any, ...messages: any[]): void
+
+    notice(msg: any, ...messages: any[]): void
+
+    info(msg: any, ...messages: any[]): void
+
+    debug(msg: any, ...messages: any[]): void
+}

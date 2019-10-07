@@ -2,7 +2,7 @@ import { Spec_DB } from "../databases/spec_db_interface"
 import { Status_DB } from "../databases/status_db_interface"
 import { IntentfulStrategy } from "./intentful_strategy_interface"
 import { BasicIntentfulStrategy } from "./basic_intentful_strategy"
-import { IntentfulBehaviour } from "papiea-core"
+import { IntentfulBehaviour, Kind } from "papiea-core"
 import { SpecOnlyIntentfulStrategy } from "./spec_only_intentful_strategy"
 
 export type BehaviourStrategyMap = Map<IntentfulBehaviour, IntentfulStrategy>
@@ -20,11 +20,12 @@ export class IntentfulContext {
         this.behaviourStrategy.set(IntentfulBehaviour.SpecOnly, new SpecOnlyIntentfulStrategy(specDb, statusDb))
     }
 
-    getIntentfulStrategy(behaviour: IntentfulBehaviour): IntentfulStrategy {
-        const strategy = this.behaviourStrategy.get(behaviour)
+    getIntentfulStrategy(kind: Kind): IntentfulStrategy {
+        const strategy = this.behaviourStrategy.get(kind.intentful_behaviour)
         if (strategy === undefined) {
-            throw new Error(`Strategy associated with behaviour: ${behaviour} not found`)
+            throw new Error(`Strategy associated with behaviour: ${kind.intentful_behaviour} not found`)
         }
+        strategy.setKind(kind)
         return strategy
     }
 }

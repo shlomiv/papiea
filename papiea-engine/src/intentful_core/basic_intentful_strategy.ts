@@ -1,11 +1,12 @@
 import { Spec_DB } from "../databases/spec_db_interface"
 import { Status_DB } from "../databases/status_db_interface"
 import { IntentfulStrategy } from "./intentful_strategy_interface"
-import { Metadata, Spec } from "papiea-core"
+import { Metadata, Spec, Kind } from "papiea-core"
 
 export class BasicIntentfulStrategy implements IntentfulStrategy {
     private readonly specDb: Spec_DB
     private readonly statusDb: Status_DB
+    private kind?: Kind
 
     constructor(specDb: Spec_DB, statusDb: Status_DB) {
         this.specDb = specDb
@@ -22,6 +23,10 @@ export class BasicIntentfulStrategy implements IntentfulStrategy {
             await this.statusDb.replace_status(metadata, spec)
         }
         return [updatedMetadata, updatedSpec]
+    }
+
+    setKind(kind: Kind): void {
+        this.kind = kind
     }
 
     // Simply delete from DB both spec and status

@@ -3,7 +3,7 @@ import { Status_DB } from "../databases/status_db_interface"
 import { IntentfulStrategy } from "./intentful_strategy_interface"
 import { Metadata, Spec, Kind } from "papiea-core"
 
-export class SpecOnlyIntentfulStrategy implements IntentfulStrategy {
+export class DifferIntentfulStrategy implements IntentfulStrategy {
     private readonly specDb: Spec_DB
     private readonly statusDb: Status_DB
     private kind?: Kind
@@ -13,15 +13,20 @@ export class SpecOnlyIntentfulStrategy implements IntentfulStrategy {
         this.statusDb = statusDb
     }
 
-    setKind(kind: Kind): void {
-        this.kind = kind
-    }
-
-    // Replace spec and status with spec changes received
+    // Update spec and status with spec changes received
     async update(metadata: Metadata, spec: Spec): Promise<Spec> {
         const [updatedMetadata, updatedSpec] = await this.specDb.update_spec(metadata, spec);
-        await this.statusDb.replace_status(metadata, spec)
+        const [_, existingStatus] = await this.statusDb.get_status(metadata)
+        if (existingStatus) {
+            await this.statusDb.update_status(metadata, spec)
+        } else {
+            await this.statusDb.replace_status(metadata, spec)
+        }
         return [updatedMetadata, updatedSpec]
+    }
+
+    setKind(kind: Kind): void {
+        this.kind = kind
     }
 
     // Simply delete from DB both spec and status

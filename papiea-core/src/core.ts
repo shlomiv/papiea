@@ -76,15 +76,6 @@ export interface Entity_Reference  {
 // entity-reference-struct ends here
 // /src/core.ts:1 ends here
 
-// [[file:~/work/papiea-js/Papiea-design.org::#h-Differ-118][Differ-interface]]
-export interface Kind_Compiler {
-    // The sfss compiler function. 
-    compile_kind_explicit(sfss: SFS[], dep_tree: Map<SFS, SFS[]>): Differ;
-
-    // More concisely this could simply be:
-    compile_kind(kind: Kind): Differ;
-}
-
 export enum IntentfulBehaviour {
     Basic = "basic",
     SpecOnly = "spec_only"
@@ -95,11 +86,11 @@ export enum IntentfulBehaviour {
 export interface Differ {
 
     // Get the next diff from an entity based on the 
-    next_diff(entity:Entity_Reference, spec: Spec, status: Status):Diff;
+    diffs(kind: Kind, spec: Spec, status: Status): Iterator<Diff>;
 
     // We could also get the entire list of diffs, ordered by the
     // original dependency tree
-    all_diffs(entity:Entity_Reference, spec: Spec, status: Status):Diff[];
+    all_diffs(kind: Kind, spec: Spec, status: Status): Diff[];
 }
 
 // [[file:~/work/papiea-js/Papiea-design.org::#h-Kind-241][kind-struct]]

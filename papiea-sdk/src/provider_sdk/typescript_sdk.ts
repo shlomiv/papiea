@@ -414,12 +414,36 @@ export class Kind_Builder {
         return this
     }
 
-    sfs_signature(sfs_signature: string, rbac: any, procedural_signature: Procedural_Signature): Kind_Builder {
+    on(sfs_signature: string, rbac: any, strategy: Procedural_Execution_Strategy,
+       input_desc: any,
+       output_desc: any,
+       handler: (ctx: IntentfulCtx_Interface, input: any) => Promise<any>, name?: string): Kind_Builder {
+        const callback_url = this.server_manager.callback_url(name || sfs_signature, this.kind.name);
         this.kind.intentful_signatures.push({
             signature: sfs_signature,
             compiled_signature: null,
-            procedural_signature: procedural_signature
+            procedural_signature: {
+                name: name || sfs_signature,
+                argument: input_desc,
+                result: output_desc,
+                execution_strategy: strategy,
+                procedure_callback: callback_url
+            }
         })
+        const prefix = this.get_prefix();
+        const version = this.get_version();
+        this.server_manager.register_handler(`/${this.kind.name}/${name}`, async (req, res) => {
+            try {
+                const result = await handler(new ProceduralCtx(this.provider, prefix, version, req.headers, makeLoggerFactory(name || sfs_signature)), req.body.input);
+                res.json(result);
+            } catch (e) {
+                if (e instanceof InvocationError) {
+                    return res.status(e.status_code).json(e.toResponse())
+                }
+                const error = InvocationError.fromError(500, e);
+                res.status(500).json(error.toResponse())
+            }
+        });
         return this
     }
 
@@ -451,6 +475,26 @@ export class Kind_Builder {
                 res.status(500).json(error.toResponse())
             }
         });
+        return this
+    }
+
+    on_create(rbac: any,
+              strategy: Procedural_Execution_Strategy,
+              input_desc: any,
+              output_desc: any,
+              handler: (ctx: ProceduralCtx_Interface, input: any) => Promise<any>): Kind_Builder {
+        const name = "__create"
+        this.kind_procedure(name, rbac, strategy, input_desc, output_desc, handler)
+        return this
+    }
+
+    on_delete(rbac: any,
+              strategy: Procedural_Execution_Strategy,
+              input_desc: any,
+              output_desc: any,
+              handler: (ctx: ProceduralCtx_Interface, input: any) => Promise<any>): Kind_Builder {
+        const name = "__delete"
+        this.kind_procedure(name, rbac, strategy, input_desc, output_desc, handler)
         return this
     }
 }

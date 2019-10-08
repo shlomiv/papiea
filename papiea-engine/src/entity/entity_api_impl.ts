@@ -77,8 +77,8 @@ export class Entity_API_Impl implements Entity_API {
         }
         request_metadata.kind = kind.name;
         await this.authorizer.checkPermission(user, { "metadata": request_metadata }, Action.Create);
-        const strategy = this.intentfulCtx.getIntentfulStrategy(kind.intentful_behaviour)
-        const [metadata, spec] = await strategy.update(request_metadata, spec_description)
+        const strategy = this.intentfulCtx.getIntentfulStrategy(kind, user)
+        const [metadata, spec] = await strategy.create(request_metadata, spec_description)
         return [metadata, spec];
     }
 
@@ -116,7 +116,7 @@ export class Entity_API_Impl implements Entity_API {
         this.validate_spec(spec_description, kind, provider.allowExtraProps);
         const metadata: Metadata = { uuid: uuid, kind: kind.name, spec_version: spec_version, extension: extension } as Metadata;
         await this.authorizer.checkPermission(user, { "metadata": metadata }, Action.Update);
-        const strategy = this.intentfulCtx.getIntentfulStrategy(kind.intentful_behaviour)
+        const strategy = this.intentfulCtx.getIntentfulStrategy(kind, user)
         const [_, spec] = await strategy.update(metadata, spec_description)
         return [metadata, spec];
     }
@@ -127,7 +127,7 @@ export class Entity_API_Impl implements Entity_API {
         const entity_ref: Entity_Reference = { kind: kind_name, uuid: entity_uuid };
         const [metadata, _] = await this.spec_db.get_spec(entity_ref);
         await this.authorizer.checkPermission(user, { "metadata": metadata }, Action.Delete);
-        const strategy = this.intentfulCtx.getIntentfulStrategy(kind.intentful_behaviour)
+        const strategy = this.intentfulCtx.getIntentfulStrategy(kind, user)
         await strategy.delete(metadata)
     }
 

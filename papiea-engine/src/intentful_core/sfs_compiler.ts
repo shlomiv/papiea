@@ -1,4 +1,4 @@
-import { SFS, Entity_Reference, Spec, Status, Provider_Callback_URL, Kind_Compiler, Kind, Differ, Diff, Provider } from "papiea-core";
+import { SFS, Entity_Reference, Spec, Status, Provider_Callback_URL, Kind, Differ, Diff, Provider } from "papiea-core";
 
 // TODO: add d.ts for type annotations
 const papi_clj = require("../papiea-lib-clj/papiea-lib-clj.js").papiea_lib_clj;

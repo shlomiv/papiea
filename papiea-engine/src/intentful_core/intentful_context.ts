@@ -4,6 +4,7 @@ import { IntentfulStrategy } from "./intentful_strategy_interface"
 import { BasicIntentfulStrategy } from "./basic_intentful_strategy"
 import { IntentfulBehaviour, Kind } from "papiea-core"
 import { SpecOnlyIntentfulStrategy } from "./spec_only_intentful_strategy"
+import { UserAuthInfo } from "../auth/authn"
 
 export type BehaviourStrategyMap = Map<IntentfulBehaviour, IntentfulStrategy>
 
@@ -20,12 +21,13 @@ export class IntentfulContext {
         this.behaviourStrategy.set(IntentfulBehaviour.SpecOnly, new SpecOnlyIntentfulStrategy(specDb, statusDb))
     }
 
-    getIntentfulStrategy(kind: Kind): IntentfulStrategy {
+    getIntentfulStrategy(kind: Kind, user: UserAuthInfo): IntentfulStrategy {
         const strategy = this.behaviourStrategy.get(kind.intentful_behaviour)
         if (strategy === undefined) {
             throw new Error(`Strategy associated with behaviour: ${kind.intentful_behaviour} not found`)
         }
         strategy.setKind(kind)
+        strategy.setUser(user)
         return strategy
     }
 }

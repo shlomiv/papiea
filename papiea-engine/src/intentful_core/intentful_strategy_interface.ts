@@ -32,12 +32,10 @@ export abstract class IntentfulStrategy {
         await this.statusDb.delete_status(metadata);
     }
 
-    // Update spec and status with spec changes received
     async update(metadata: Metadata, spec: Spec): Promise<[Metadata, Spec]> {
         return this.update_entity(metadata, spec)
     }
 
-    // Create status with spec
     async create(metadata: Metadata, spec: Spec): Promise<[Metadata, Spec]> {
         await this.dispatch("__create", { metadata, spec })
         return this.create_entity(metadata, spec)
@@ -61,7 +59,6 @@ export abstract class IntentfulStrategy {
         this.user = user
     }
 
-    // Simply delete from DB both spec and status
     async delete(metadata: Metadata): Promise<void> {
         await this.dispatch("__delete", { metadata })
         return this.delete_entity(metadata)

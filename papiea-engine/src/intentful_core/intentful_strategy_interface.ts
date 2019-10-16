@@ -41,13 +41,14 @@ export abstract class IntentfulStrategy {
         return this.create_entity(metadata, spec)
     }
 
-    protected async dispatch(procedure_name: string, entity: Partial<Entity>) {
+    protected async dispatch(procedure_name: string, entity: Partial<Entity>): Promise<any> {
         if (this.user && this.kind) {
             if (this.kind.kind_procedures[procedure_name]) {
                 try {
-                    await axios.post(this.kind.kind_procedures[procedure_name].procedure_callback, {
+                    const { data } =  await axios.post(this.kind.kind_procedures[procedure_name].procedure_callback, {
                         input: entity
                     }, { headers: this.user })
+                    return data
                 } catch (e) {
                     throw new Error(`Dispatch couldn't be called, Error occurred`)
                 }

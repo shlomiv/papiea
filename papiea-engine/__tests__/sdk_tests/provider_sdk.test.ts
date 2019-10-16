@@ -848,3 +848,141 @@ describe("SDK security tests", () => {
         }
     });
 });
+
+describe("SDK callback tests", () => {
+    let provider: Provider
+    const provider_version = "0.1.0";
+    const location_yaml = load(readFileSync(resolve(__dirname, "../test_data/location_kind_test_data_callback.yml"), "utf-8"));
+    let kind_name: string
+
+    afterAll(async () => {
+        await providerApiAdmin.delete(`/${provider.prefix}/${provider.version}`);
+    });
+
+    test("On delete callback should be called", async () => {
+        expect.hasAssertions();
+        const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
+        const location = sdk.new_kind(location_yaml);
+        const prefix = "provider_on_delete_callback"
+        sdk.version(provider_version);
+        sdk.prefix(prefix);
+        sdk.provider_procedure("computeWithDeleteCallback",
+            {},
+            Procedural_Execution_Strategy.Halt_Intentful,
+            loadYaml("./test_data/procedure_sum_input.yml"),
+            {},
+            async (ctx, input) => {
+            }
+        );
+        location.on_delete({}, Procedural_Execution_Strategy.Halt_Intentful, {}, {}, async (ctx, input) => {
+            expect(input).toBeDefined()
+        })
+        try {
+            await sdk.register()
+            kind_name = sdk.provider.kinds[0].name
+            const { data: { metadata } } = await entityApi.post(`/${ prefix }/${ provider_version }/${ kind_name }`, {
+                spec: {
+                    x: 10,
+                    y: 11
+                }
+            }, {
+                headers: {
+                    'Authorization': `Bearer ${ adminKey }`
+                }
+            })
+            await entityApi.delete(`/${ prefix }/${ provider_version }/${ kind_name }/${ metadata.uuid }`, {
+                headers: {
+                    'Authorization': `Bearer ${ adminKey }`
+                }
+            })
+        } finally {
+            sdk.server.close();
+        }
+    });
+
+    test("On create callback should be called", async () => {
+        expect.hasAssertions();
+        const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
+        const location = sdk.new_kind(location_yaml);
+        const prefix = "provider_on_create_callback"
+        sdk.version(provider_version);
+        sdk.prefix(prefix);
+        sdk.provider_procedure("computeWithCreateCallback",
+            {},
+            Procedural_Execution_Strategy.Halt_Intentful,
+            loadYaml("./test_data/procedure_sum_input.yml"),
+            {},
+            async (ctx, input) => {
+            }
+        );
+        location.on_create({}, Procedural_Execution_Strategy.Halt_Intentful, {}, {}, async (ctx, input) => {
+            expect(input).toBeDefined()
+        })
+        try {
+            await sdk.register()
+            kind_name = sdk.provider.kinds[0].name
+            const { data: { metadata } } = await entityApi.post(`/${ prefix }/${ provider_version }/${ kind_name }`, {
+                spec: {
+                    x: 10,
+                    y: 11
+                }
+            }, {
+                headers: {
+                    'Authorization': `Bearer ${ adminKey }`
+                }
+            })
+            await entityApi.delete(`/${ prefix }/${ provider_version }/${ kind_name }/${ metadata.uuid }`, {
+                headers: {
+                    'Authorization': `Bearer ${ adminKey }`
+                }
+            })
+        } finally {
+            sdk.server.close();
+        }
+    });
+
+    test("On delete and on create callbacks should be called", async () => {
+        expect.assertions(2);
+        const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
+        const location = sdk.new_kind(location_yaml);
+        const prefix = "provider_on_delete_on_create_callback"
+        sdk.version(provider_version);
+        sdk.prefix(prefix);
+        sdk.provider_procedure("computeWithDeleteCreateCallbacks",
+            {},
+            Procedural_Execution_Strategy.Halt_Intentful,
+            loadYaml("./test_data/procedure_sum_input.yml"),
+            {},
+            async (ctx, input) => {
+            }
+        );
+        location.on_delete({}, Procedural_Execution_Strategy.Halt_Intentful, {}, {}, async (ctx, input) => {
+            expect(input).toBeDefined()
+        })
+
+        location.on_create({}, Procedural_Execution_Strategy.Halt_Intentful, {}, {}, async (ctx, input) => {
+            expect(input).toBeDefined()
+        })
+        try {
+            await sdk.register()
+            kind_name = sdk.provider.kinds[0].name
+            const { data: { metadata } } = await entityApi.post(`/${ prefix }/${ provider_version }/${ kind_name }`, {
+                spec: {
+                    x: 10,
+                    y: 11
+                }
+            }, {
+                headers: {
+                    'Authorization': `Bearer ${ adminKey }`
+                }
+            })
+            await entityApi.delete(`/${ prefix }/${ provider_version }/${ kind_name }/${ metadata.uuid }`, {
+                headers: {
+                    'Authorization': `Bearer ${ adminKey }`
+                }
+            })
+        } finally {
+            sdk.server.close();
+        }
+    });
+});

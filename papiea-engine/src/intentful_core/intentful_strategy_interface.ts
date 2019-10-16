@@ -1,4 +1,4 @@
-import { Metadata, Spec, Kind, Entity } from "papiea-core"
+import { Metadata, Spec, Kind, Entity, Version } from "papiea-core"
 import { Spec_DB } from "../databases/spec_db_interface"
 import { Status_DB } from "../databases/status_db_interface"
 import { UserAuthInfo } from "../auth/authn"
@@ -44,7 +44,13 @@ export abstract class IntentfulStrategy {
     protected async dispatch(procedure_name: string, entity: Partial<Entity>) {
         if (this.user && this.kind) {
             if (this.kind.kind_procedures[procedure_name]) {
-                await axios.post(this.kind.kind_procedures[procedure_name].procedure_callback, entity, { headers: this.user })
+                try {
+                    await axios.post(this.kind.kind_procedures[procedure_name].procedure_callback, {
+                        input: entity
+                    }, { headers: this.user })
+                } catch (e) {
+                    throw new Error(`Dispatch couldn't be called, Error occurred`)
+                }
             }
         } else {
             throw new Error("Dispatch couldn't be called, insufficient params specified")

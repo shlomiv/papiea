@@ -78,7 +78,8 @@ export interface Entity_Reference  {
 
 export enum IntentfulBehaviour {
     Basic = "basic",
-    SpecOnly = "spec_only"
+    SpecOnly = "spec-only",
+    Differ = "differ"
 }
 
 // The differ is used to locate a diff in an entity between the

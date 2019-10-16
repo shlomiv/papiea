@@ -163,7 +163,7 @@ export class ProviderSdk implements ProviderImpl {
                 dependency_tree: new Map(),
                 kind_procedures: {},
                 entity_procedures: {},
-                intentful_behaviour: (entity_description[name]["x-papiea-entity"] === "spec-only") ? IntentfulBehaviour.SpecOnly : IntentfulBehaviour.Basic,
+                intentful_behaviour: entity_description[name]["x-papiea-entity"],
                 differ: undefined,
             };
 

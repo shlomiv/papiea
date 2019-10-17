@@ -123,7 +123,7 @@ export interface Kind {
 // The Diff structure captures a discovered diff in an entity as well
 // as the intentful action that may resolve such diff
 export interface Diff {
-    kind: Kind
+    kind: string
 
     intentful_signature: Intentful_Signature,
 

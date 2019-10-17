@@ -4,7 +4,7 @@ import { Provider, Kind } from "papiea-core"
 
 export interface Task_DB {
 
-    create_task(task: Task): Promise<Task>
+    create_task(task: Task): Promise<void>
 
     list_tasks(fields_map: any, sortParams?: SortParams): Promise<Task[]>
 
@@ -14,7 +14,7 @@ export interface Task_DB {
 
     get_task(uuid: string): Promise<Task>
 
-    update_task(uuid: string, delta: Partial<Task>): Promise<Task>
+    update_task(uuid: string, delta: Partial<Task>): Promise<void>
 
     delete_task(uuid: string): Promise<void>
 

@@ -4,7 +4,7 @@ import { uuid4, Diff } from "papiea-core"
 export interface Task {
 
     // Identifier by which provider can change status of the task & user can monitor the execution
-    id: uuid4
+    uuid: uuid4
 
     // Diff resolved by this task
     diff: Diff

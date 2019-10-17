@@ -123,17 +123,12 @@ export interface Kind {
 // The Diff structure captures a discovered diff in an entity as well
 // as the intentful action that may resolve such diff
 export interface Diff {
-    // The uri exposed by the provider which may handle this diff
-    intentful_fn_uri: Provider_Callback_URL
+    kind: Kind
 
-    // If this intent handler has a name, we could use it
-    name?: string;
+    intentful_signature: Intentful_Signature,
 
-    // The fields identified by this differ, their path and value.
-    diff_fields: Map<SFS, any>;
-
-    // Actually invokes the intentful function
-    invoke(): any;
+    // Field diff found by the Differ
+    diff_fields: any
 }
 // Diff-interface ends here
 // /src/intentful_core/differ_interface.ts:1 ends here

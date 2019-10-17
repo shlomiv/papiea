@@ -1,4 +1,4 @@
-import { Metadata, Spec, Kind, Entity, Version } from "papiea-core"
+import { Metadata, Spec, Kind, Entity } from "papiea-core"
 import { Spec_DB } from "../databases/spec_db_interface"
 import { Status_DB } from "../databases/status_db_interface"
 import { UserAuthInfo } from "../auth/authn"

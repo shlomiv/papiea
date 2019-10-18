@@ -5,6 +5,13 @@ import { Task_DB } from "./task_db_interface"
 import { Task } from "../tasks/task_interface"
 import { Provider, Kind } from "papiea-core"
 
+type KindTaskAggregationResult = KindTaskAggregation[]
+
+interface KindTaskAggregation {
+    _id: string,
+    tasks: Task[]
+}
+
 export class Task_DB_Mongo implements Task_DB {
     collection: Collection;
     logger: Logger;
@@ -22,7 +29,7 @@ export class Task_DB_Mongo implements Task_DB {
             );
             await this.collection.createIndex(
                 { "uuid": 1 },
-                { name: "uuid", unique: true },
+                { unique: true },
             )
         } catch (err) {
             throw err
@@ -44,9 +51,29 @@ export class Task_DB_Mongo implements Task_DB {
         return result;
     }
 
-    async list_provider_tasks(provider: Provider): Promise<[Kind, Task[]][]> {
-        // TODO: Need to add a JOIN analogue to match Provider kinds & Tasks
-        return []
+    async list_provider_tasks(provider: Provider): Promise<[string, Task[]][]> {
+        const result = await this.collection.aggregate([
+            {
+                $match:
+                    {
+                        $expr:
+                            {
+                                $in: ["$diff.kind", provider.kinds.map(kind => kind.name)]
+                            }
+                    }
+            },
+            {
+                $group:
+                    {
+                        _id: "$diff.kind", tasks: { $push: "$$ROOT" }
+                    }
+            }
+        ]).toArray()
+        const kind_tasks = result as KindTaskAggregationResult
+        return kind_tasks.reduce((acc: [string, Task[]][], curr) => {
+            acc.push([curr._id, curr.tasks])
+            return acc
+        }, [])
     }
 
     async list_kind_tasks(kind: Kind): Promise<Task[]> {

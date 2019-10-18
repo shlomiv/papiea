@@ -8,7 +8,7 @@ export interface Task_DB {
 
     list_tasks(fields_map: any, sortParams?: SortParams): Promise<Task[]>
 
-    list_provider_tasks(provider: Provider): Promise<[Kind, Task[]][]>
+    list_provider_tasks(provider: Provider): Promise<[string, Task[]][]>
 
     list_kind_tasks(kind: Kind): Promise<Task[]>
 

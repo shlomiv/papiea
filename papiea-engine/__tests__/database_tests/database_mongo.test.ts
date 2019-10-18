@@ -567,8 +567,11 @@ describe("MongoDb tests", () => {
         await taskDb.create_task(idleTask)
         await taskDb.create_task(runningTask)
         const tasks = await taskDb.list_kind_tasks({ name: "test" } as Kind)
-        expect(tasks[0].status).toEqual("idle")
-        expect(tasks[1].status).toEqual("running")
+        const statuses = []
+        statuses.push(tasks[0].status)
+        statuses.push(tasks[1].status)
+        expect(statuses).toContain("idle")
+        expect(statuses).toContain("running")
     });
 
     test("Get tasks by provider", async () => {
@@ -597,8 +600,11 @@ describe("MongoDb tests", () => {
         };
         await taskDb.create_task(providerATask)
         await taskDb.create_task(providerBTask)
-        const tasks = await taskDb.list_provider_tasks({kinds: [{name: "A"} as Kind, {name: "B"} as Kind]} as Provider)
-        expect(tasks[0][1][0].status).toEqual("idle")
-        expect(tasks[1][1][0].status).toEqual("running")
+        const tasks = await taskDb.list_provider_tasks({ kinds: [{ name: "A" } as Kind, { name: "B" } as Kind] } as Provider)
+        const statuses = []
+        statuses.push(tasks[0][1][0].status)
+        statuses.push(tasks[1][1][0].status)
+        expect(statuses).toContain("idle")
+        expect(statuses).toContain("running")
     });
 });

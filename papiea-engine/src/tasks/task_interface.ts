@@ -15,9 +15,6 @@ export interface Task {
     // Running, Idle, Error, etc.
     status: string
 
-    // Field diff found by the Differ
-    diff_fields: any
-
     // A uri for a URL which specifically identifies the currently running process.
     // If the URL returns 404 we know that the task was dropped (say, provider crashed).
     // It will use the specific node's IP and not a load balancer IP.

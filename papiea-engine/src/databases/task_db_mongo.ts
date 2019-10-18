@@ -17,7 +17,7 @@ export class Task_DB_Mongo implements Task_DB {
     logger: Logger;
 
     constructor(logger: Logger, db: Db) {
-        this.collection = db.collection("entity");
+        this.collection = db.collection("task");
         this.logger = logger;
     }
 

@@ -10,8 +10,10 @@ import { v4 as uuid4 } from 'uuid';
 import { ConflictingEntityError } from "../../src/databases/utils/errors";
 import { Metadata, Spec, Entity_Reference, Status, Kind, Provider, S2S_Key } from "papiea-core";
 import { SessionKeyDb } from "../../src/databases/session_key_db_interface"
-import { SessionKey } from "papiea-core/build/core"
+import { Intentful_Signature, SessionKey } from "papiea-core/build/core"
 import uuid = require("uuid")
+import { Task_DB } from "../../src/databases/task_db_interface"
+import { Task } from "../../src/tasks/task_interface"
 
 declare var process: {
     env: {
@@ -386,7 +388,7 @@ describe("MongoDb tests", () => {
         }
     });
 
-    test("Inactivate s2s key", async () => {
+    test("Inactivate session key", async () => {
         expect.assertions(1);
         const sessionKeyDb: SessionKeyDb = await connection.get_session_key_db(logger);
         const sessionKey: SessionKey = {
@@ -404,5 +406,199 @@ describe("MongoDb tests", () => {
         } catch (e) {
             expect(e).toBeDefined()
         }
+    });
+
+    test("Create and get task", async () => {
+        const taskDb: Task_DB = await connection.get_task_db(logger);
+        const task: Task = {
+            uuid: uuid4(),
+            diff: {
+                kind: "dummy",
+                intentful_signature: {} as Intentful_Signature,
+                diff_fields: {}
+            },
+            handler_url: uuid4(),
+            status: "idle"
+        };
+        await taskDb.create_task(task);
+        const res: Task = await taskDb.get_task(task.uuid);
+        expect(res.status).toEqual(task.status);
+        expect(res.handler_url).toEqual(task.handler_url);
+        expect(res.diff).toEqual(task.diff);
+        expect(res.uuid).toEqual(task.uuid);
+    });
+
+    test("Duplicate task should throw an error", async () => {
+        expect.assertions(1);
+        const taskDb: Task_DB = await connection.get_task_db(logger);
+        const task: Task = {
+            uuid: uuid4(),
+            diff: {
+                kind: "dummy",
+                intentful_signature: {} as Intentful_Signature,
+                diff_fields: {}
+            },
+            handler_url: uuid4(),
+            status: "idle"
+        };
+        await taskDb.create_task(task);
+        try {
+            await taskDb.create_task(task);
+        } catch(e) {
+            expect(e).toBeDefined();
+        }
+    });
+
+    test("Task with same handler url should throw error", async () => {
+        expect.assertions(1);
+        const taskDb: Task_DB = await connection.get_task_db(logger);
+        const handler_url = uuid4()
+        const task: Task = {
+            uuid: uuid4(),
+            diff: {
+                kind: "dummy",
+                intentful_signature: {} as Intentful_Signature,
+                diff_fields: {}
+            },
+            handler_url,
+            status: "idle"
+        };
+        const taskWithSameUrl: Task = {
+            uuid: uuid4(),
+            diff: {
+                kind: "dummy",
+                intentful_signature: {} as Intentful_Signature,
+                diff_fields: {}
+            },
+            handler_url,
+            status: "idle"
+        };
+        await taskDb.create_task(task);
+        try {
+            await taskDb.create_task(taskWithSameUrl);
+        } catch(e) {
+            expect(e).toBeDefined();
+        }
+    });
+
+    test("List tasks", async () => {
+        expect.hasAssertions();
+        const taskDb: Task_DB = await connection.get_task_db(logger);
+        const task: Task = {
+            uuid: uuid4(),
+            diff: {
+                kind: "dummy",
+                intentful_signature: {} as Intentful_Signature,
+                diff_fields: {}
+            },
+            handler_url: uuid4(),
+            status: "idle"
+        };
+        await taskDb.create_task(task);
+        const res = (await taskDb.list_tasks({ uuid: task.uuid }) as Task[])[0]
+        expect(res.uuid).toEqual(task.uuid);
+    });
+
+    test("Delete task", async () => {
+        expect.assertions(1);
+        const taskDb: Task_DB = await connection.get_task_db(logger);
+        const task: Task = {
+            uuid: uuid4(),
+            diff: {
+                kind: "dummy",
+                intentful_signature: {} as Intentful_Signature,
+                diff_fields: {}
+            },
+            handler_url: uuid4(),
+            status: "idle"
+        };
+        await taskDb.create_task(task)
+        await taskDb.delete_task(task.uuid)
+        try {
+            await taskDb.get_task(task.uuid);
+        } catch(e) {
+            expect(e).toBeDefined();
+        }
+    });
+
+    test("Update task", async () => {
+        expect.assertions(1);
+        const taskDb: Task_DB = await connection.get_task_db(logger);
+        const task: Task = {
+            uuid: uuid4(),
+            diff: {
+                kind: "dummy",
+                intentful_signature: {} as Intentful_Signature,
+                diff_fields: {}
+            },
+            handler_url: uuid4(),
+            status: "idle"
+        };
+        await taskDb.create_task(task)
+        await taskDb.update_task(task.uuid, { status: "running" })
+        const updatedTask = await taskDb.get_task(task.uuid);
+        expect(updatedTask.status).toEqual("running")
+    });
+
+    test("Get tasks by kind", async () => {
+        expect.assertions(2);
+        const taskDb: Task_DB = await connection.get_task_db(logger);
+        const idleTask: Task = {
+            uuid: uuid4(),
+            diff: {
+                kind: "test",
+                intentful_signature: {} as Intentful_Signature,
+                diff_fields: {}
+            },
+            handler_url: uuid4(),
+            status: "idle"
+        };
+
+        const runningTask: Task = {
+            uuid: uuid4(),
+            diff: {
+                kind: "test",
+                intentful_signature: {} as Intentful_Signature,
+                diff_fields: {}
+            },
+            handler_url: uuid4(),
+            status: "running"
+        };
+        await taskDb.create_task(idleTask)
+        await taskDb.create_task(runningTask)
+        const tasks = await taskDb.list_kind_tasks({ name: "test" } as Kind)
+        expect(tasks[0].status).toEqual("idle")
+        expect(tasks[1].status).toEqual("running")
+    });
+
+    test("Get tasks by provider", async () => {
+        expect.assertions(2);
+        const taskDb: Task_DB = await connection.get_task_db(logger);
+        const providerATask: Task = {
+            uuid: uuid4(),
+            diff: {
+                kind: "A",
+                intentful_signature: {} as Intentful_Signature,
+                diff_fields: {}
+            },
+            handler_url: uuid4(),
+            status: "idle"
+        };
+
+        const providerBTask: Task = {
+            uuid: uuid4(),
+            diff: {
+                kind: "B",
+                intentful_signature: {} as Intentful_Signature,
+                diff_fields: {}
+            },
+            handler_url: uuid4(),
+            status: "running"
+        };
+        await taskDb.create_task(providerATask)
+        await taskDb.create_task(providerBTask)
+        const tasks = await taskDb.list_provider_tasks({kinds: [{name: "A"} as Kind, {name: "B"} as Kind]} as Provider)
+        expect(tasks[0][1][0].status).toEqual("idle")
+        expect(tasks[1][1][0].status).toEqual("running")
     });
 });

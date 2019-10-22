@@ -80,3 +80,7 @@ export function safeJSONParse(chunk: string): Object | null {
         return null
     }
 }
+
+export function timeout(ms: number) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}

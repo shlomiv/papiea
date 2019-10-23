@@ -7,5 +7,5 @@ export interface Policy_DB {
 
     list_policies(fields_map: any): Promise<Policy[]>;
 
-    inactivate_policy(uuid: string): Promise<void>;
+    delete_policy(uuid: string): Promise<void>;
 }

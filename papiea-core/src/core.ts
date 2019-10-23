@@ -249,11 +249,9 @@ export enum Action {
 }
 
 export interface Policy {
-    type: string,
-    user: string,
-    owner: string,
-    entity_type: string,
-    operation: string,
-    permission: string,
+    line: number,
+    rule_kind: string,
+    rule: string,
+    effect: string,
     uuid: string
 }

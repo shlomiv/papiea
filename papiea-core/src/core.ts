@@ -254,5 +254,6 @@ export interface Policy {
     owner: string,
     entity_type: string,
     operation: string,
-    permission: string
+    permission: string,
+    uuid: string
 }

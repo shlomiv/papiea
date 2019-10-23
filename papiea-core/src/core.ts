@@ -253,5 +253,6 @@ export interface Policy {
     rule_kind: string,
     rule: string,
     effect: string,
+    comment: string,
     uuid: string
 }

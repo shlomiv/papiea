@@ -1,54 +1,53 @@
 // [[file:~/work/papiea-js/Papiea-design.org::*/src/tasks/task_manager_interface.ts][/src/tasks/task_manager_interface.ts:1]]
 import { Diff, Entity_Reference, Kind, Spec } from "papiea-core";
 import { Papiea } from "../papiea";
-import { Task_DB_Mongo } from "../databases/task_db_mongo"
-import { Task } from "./task_interface"
+import { IntentfulTask } from "./task_interface"
 import { timeout } from "../utils/utils"
+import { IntentfulTask_DB_Mongo } from "../databases/intentful_task_db_mongo"
+import { Entity } from "papiea-core"
+import Queue from "mnemonist/queue"
+import { Task } from "../../build/tasks/task_interface"
+import axios from "axios"
 
-class TaskSet {
-    taskMap: Map<string, Task>
-    taskSet: Set<Task>
-
-    constructor() {
-        this.taskMap = new Map()
-        this.taskSet = new Set()
+class IntentfulTaskSet extends Set<IntentfulTask> {
+    get(task: Task): IntentfulTask | null {
+        for (let item of this) {
+            if (item.uuid === task.uuid) {
+                return item
+            }
+        }
+        return null
     }
+}
 
-    [Symbol.iterator]() {
-        return this.values
-    }
 
-    add(task: Task) {
-        this.taskMap.set(task.uuid, task)
-        this.taskSet.add(task)
-    }
-
-    has(task: Task) {
-        return this.taskMap.has(task.uuid)
-    }
-
-    values() {
-        return this.taskSet.values()
-    }
-
-    delete(task: Task) {
-        this.taskMap.delete(task.uuid)
-        this.taskSet.delete(task)
+class IntentfulTaskQueue extends Queue<IntentfulTask> {
+    get(task: Task): IntentfulTask | null {
+        for (let item of this) {
+            if (item.uuid === task.uuid) {
+                return item
+            }
+        }
+        return null
     }
 }
 
 // This should be run in a different process
+// TODO: provide optimized Data Structures
 export class TaskManager {
     // This should be a separate connection from main Papiea functions
-    protected taskDb: Task_DB_Mongo
+    protected readonly intentfulTaskDb: IntentfulTask_DB_Mongo
 
-    protected _running: TaskSet
-    protected _waiting: TaskSet
+    protected _entitiesInProgress: Map<string, Entity>
 
-    constructor(taskDb: Task_DB_Mongo) {
-        this.taskDb = taskDb
-        this._running = new TaskSet()
-        this._waiting = new TaskSet()
+    protected _running: IntentfulTaskSet
+    protected _waiting: IntentfulTaskQueue
+
+    constructor(taskDb: IntentfulTask_DB_Mongo) {
+        this.intentfulTaskDb = taskDb
+        this._running = new IntentfulTaskSet()
+        this._waiting = new IntentfulTaskQueue()
+        this._entitiesInProgress = new Map<string, Entity>()
     }
 
     public async run(delay: number) {
@@ -63,37 +62,65 @@ export class TaskManager {
         while (true) {
             await timeout(delay)
             this.gatherTasks()
-            this.sortTasks()
+            this.launchTasks()
+            this.clearFinishedTasks()
         }
     }
 
-    protected sortTasks() {
-
+    public clearFinishedTasks() {
+        for (let task of this._running) {
+            if (task.status === "Finished") {
+                this._running.delete(task)
+                this._entitiesInProgress.delete(task.entity.metadata.uuid)
+            }
+        }
     }
 
-    public launchTask() {
-
+    public async launchTasks() {
+        const task: IntentfulTask | undefined = this._waiting.dequeue()
+        if (task) {
+            if (!this._entitiesInProgress.has(task.entity.metadata.uuid)) {
+                this._running.add(task)
+                await axios.post(task.handler_url, {
+                    metadata: task.entity.metadata,
+                    spec: task.entity.spec,
+                    status: task.entity.status,
+                    input: task.diff.diff_fields
+                })
+                this._entitiesInProgress.set(task.entity.metadata.uuid, task.entity)
+            } else {
+                this._waiting.enqueue(task)
+            }
+        }
     }
 
     protected async gatherTasks() {
-        const tasks = await this.taskDb.list_tasks({})
+        let tasks = await this.intentfulTaskDb.list_tasks({})
         tasks.forEach((task) => {
-            if (!this._waiting.has(task) && !this._running.has(task)) {
-                this._waiting.add(task)
+            const waiting = this._waiting.get(task)
+            const running = this._running.get(task)
+            if (waiting === null && running === null && task.status !== "Finished") {
+                this._waiting.enqueue(task)
+            }
+            if (waiting !== null) {
+                waiting.status = task.status
+            }
+            if (running !== null) {
+                running.status = task.status
             }
         })
     }
 }
 
 // [[file:~/work/papiea-js/Papiea-design.org::#h-Interface-766][task-manager-interface]]
-// export interface Task {
+// export interface IntentfulTask {
 //     wait():any;
 //     register_delta(diffs: Diff[]):boolean;
 // }
 //
 // export interface Task_Creator {
-//     new_task (): Task;
-//     new_intentful_task (papiea: Papiea, entity: Entity_Reference, kind: Kind, spec: Spec): Task;
+//     new_task (): IntentfulTask;
+//     new_intentful_task (papiea: Papiea, entity: Entity_Reference, kind: Kind, spec: Spec): IntentfulTask;
 // }
 //
 // export interface Task_Manager {

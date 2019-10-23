@@ -10,10 +10,10 @@ import { v4 as uuid4 } from 'uuid';
 import { ConflictingEntityError } from "../../src/databases/utils/errors";
 import { Metadata, Spec, Entity_Reference, Status, Kind, Provider, S2S_Key } from "papiea-core";
 import { SessionKeyDb } from "../../src/databases/session_key_db_interface"
-import { Intentful_Signature, SessionKey } from "papiea-core/build/core"
+import { Entity, Intentful_Signature, SessionKey } from "papiea-core"
 import uuid = require("uuid")
-import { Task_DB } from "../../src/databases/task_db_interface"
-import { Task } from "../../src/tasks/task_interface"
+import { IntentfulTask } from "../../src/tasks/task_interface"
+import { IntentfulTask_DB } from "../../src/databases/intentful_task_db_interface"
 
 declare var process: {
     env: {
@@ -409,8 +409,8 @@ describe("MongoDb tests", () => {
     });
 
     test("Create and get task", async () => {
-        const taskDb: Task_DB = await connection.get_task_db(logger);
-        const task: Task = {
+        const taskDb: IntentfulTask_DB = await connection.get_intentful_task_db(logger);
+        const task: IntentfulTask = {
             uuid: uuid4(),
             diff: {
                 kind: "dummy",
@@ -418,10 +418,11 @@ describe("MongoDb tests", () => {
                 diff_fields: {}
             },
             handler_url: uuid4(),
-            status: "idle"
+            status: "idle",
+            entity: {} as Entity
         };
         await taskDb.create_task(task);
-        const res: Task = await taskDb.get_task(task.uuid);
+        const res: IntentfulTask = await taskDb.get_task(task.uuid);
         expect(res.status).toEqual(task.status);
         expect(res.handler_url).toEqual(task.handler_url);
         expect(res.diff).toEqual(task.diff);
@@ -430,8 +431,8 @@ describe("MongoDb tests", () => {
 
     test("Duplicate task should throw an error", async () => {
         expect.assertions(1);
-        const taskDb: Task_DB = await connection.get_task_db(logger);
-        const task: Task = {
+        const taskDb: IntentfulTask_DB = await connection.get_intentful_task_db(logger);
+        const task: IntentfulTask = {
             uuid: uuid4(),
             diff: {
                 kind: "dummy",
@@ -439,7 +440,8 @@ describe("MongoDb tests", () => {
                 diff_fields: {}
             },
             handler_url: uuid4(),
-            status: "idle"
+            status: "idle",
+            entity: {} as Entity
         };
         await taskDb.create_task(task);
         try {
@@ -449,11 +451,11 @@ describe("MongoDb tests", () => {
         }
     });
 
-    test("Task with same handler url should throw error", async () => {
+    test("IntentfulTask with same handler url should throw error", async () => {
         expect.assertions(1);
-        const taskDb: Task_DB = await connection.get_task_db(logger);
+        const taskDb: IntentfulTask_DB = await connection.get_intentful_task_db(logger);
         const handler_url = uuid4()
-        const task: Task = {
+        const task: IntentfulTask = {
             uuid: uuid4(),
             diff: {
                 kind: "dummy",
@@ -461,9 +463,10 @@ describe("MongoDb tests", () => {
                 diff_fields: {}
             },
             handler_url,
-            status: "idle"
+            status: "idle",
+            entity: {} as Entity
         };
-        const taskWithSameUrl: Task = {
+        const taskWithSameUrl: IntentfulTask = {
             uuid: uuid4(),
             diff: {
                 kind: "dummy",
@@ -471,7 +474,8 @@ describe("MongoDb tests", () => {
                 diff_fields: {}
             },
             handler_url,
-            status: "idle"
+            status: "idle",
+            entity: {} as Entity
         };
         await taskDb.create_task(task);
         try {
@@ -483,8 +487,8 @@ describe("MongoDb tests", () => {
 
     test("List tasks", async () => {
         expect.hasAssertions();
-        const taskDb: Task_DB = await connection.get_task_db(logger);
-        const task: Task = {
+        const taskDb: IntentfulTask_DB = await connection.get_intentful_task_db(logger);
+        const task: IntentfulTask = {
             uuid: uuid4(),
             diff: {
                 kind: "dummy",
@@ -492,17 +496,18 @@ describe("MongoDb tests", () => {
                 diff_fields: {}
             },
             handler_url: uuid4(),
-            status: "idle"
+            status: "idle",
+            entity: {} as Entity
         };
         await taskDb.create_task(task);
-        const res = (await taskDb.list_tasks({ uuid: task.uuid }) as Task[])[0]
+        const res = (await taskDb.list_tasks({ uuid: task.uuid }) as IntentfulTask[])[0]
         expect(res.uuid).toEqual(task.uuid);
     });
 
     test("Delete task", async () => {
         expect.assertions(1);
-        const taskDb: Task_DB = await connection.get_task_db(logger);
-        const task: Task = {
+        const taskDb: IntentfulTask_DB = await connection.get_intentful_task_db(logger);
+        const task: IntentfulTask = {
             uuid: uuid4(),
             diff: {
                 kind: "dummy",
@@ -510,7 +515,8 @@ describe("MongoDb tests", () => {
                 diff_fields: {}
             },
             handler_url: uuid4(),
-            status: "idle"
+            status: "idle",
+            entity: {} as Entity
         };
         await taskDb.create_task(task)
         await taskDb.delete_task(task.uuid)
@@ -523,8 +529,8 @@ describe("MongoDb tests", () => {
 
     test("Update task", async () => {
         expect.assertions(1);
-        const taskDb: Task_DB = await connection.get_task_db(logger);
-        const task: Task = {
+        const taskDb: IntentfulTask_DB = await connection.get_intentful_task_db(logger);
+        const task: IntentfulTask = {
             uuid: uuid4(),
             diff: {
                 kind: "dummy",
@@ -532,7 +538,8 @@ describe("MongoDb tests", () => {
                 diff_fields: {}
             },
             handler_url: uuid4(),
-            status: "idle"
+            status: "idle",
+            entity: {} as Entity
         };
         await taskDb.create_task(task)
         await taskDb.update_task(task.uuid, { status: "running" })
@@ -542,8 +549,8 @@ describe("MongoDb tests", () => {
 
     test("Get tasks by kind", async () => {
         expect.assertions(2);
-        const taskDb: Task_DB = await connection.get_task_db(logger);
-        const idleTask: Task = {
+        const taskDb: IntentfulTask_DB = await connection.get_intentful_task_db(logger);
+        const idleTask: IntentfulTask = {
             uuid: uuid4(),
             diff: {
                 kind: "test",
@@ -551,10 +558,11 @@ describe("MongoDb tests", () => {
                 diff_fields: {}
             },
             handler_url: uuid4(),
-            status: "idle"
+            status: "idle",
+            entity: {} as Entity
         };
 
-        const runningTask: Task = {
+        const runningTask: IntentfulTask = {
             uuid: uuid4(),
             diff: {
                 kind: "test",
@@ -562,7 +570,8 @@ describe("MongoDb tests", () => {
                 diff_fields: {}
             },
             handler_url: uuid4(),
-            status: "running"
+            status: "running",
+            entity: {} as Entity
         };
         await taskDb.create_task(idleTask)
         await taskDb.create_task(runningTask)
@@ -576,8 +585,8 @@ describe("MongoDb tests", () => {
 
     test("Get tasks by provider", async () => {
         expect.assertions(2);
-        const taskDb: Task_DB = await connection.get_task_db(logger);
-        const providerATask: Task = {
+        const taskDb: IntentfulTask_DB = await connection.get_intentful_task_db(logger);
+        const providerATask: IntentfulTask = {
             uuid: uuid4(),
             diff: {
                 kind: "A",
@@ -585,10 +594,11 @@ describe("MongoDb tests", () => {
                 diff_fields: {}
             },
             handler_url: uuid4(),
-            status: "idle"
+            status: "idle",
+            entity: {} as Entity
         };
 
-        const providerBTask: Task = {
+        const providerBTask: IntentfulTask = {
             uuid: uuid4(),
             diff: {
                 kind: "B",
@@ -596,7 +606,8 @@ describe("MongoDb tests", () => {
                 diff_fields: {}
             },
             handler_url: uuid4(),
-            status: "running"
+            status: "running",
+            entity: {} as Entity
         };
         await taskDb.create_task(providerATask)
         await taskDb.create_task(providerBTask)

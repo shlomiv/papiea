@@ -1,18 +1,18 @@
 import { Collection, Db } from "mongodb"
 import { SortParams } from "../entity/entity_api_impl"
 import { Logger } from "../logger_interface"
-import { Task_DB } from "./task_db_interface"
-import { Task } from "../tasks/task_interface"
+import { IntentfulTask_DB } from "./intentful_task_db_interface"
+import { IntentfulTask } from "../tasks/task_interface"
 import { Provider, Kind } from "papiea-core"
 
 type KindTaskAggregationResult = KindTaskAggregation[]
 
 interface KindTaskAggregation {
     _id: string,
-    tasks: Task[]
+    tasks: IntentfulTask[]
 }
 
-export class Task_DB_Mongo implements Task_DB {
+export class IntentfulTask_DB_Mongo implements IntentfulTask_DB {
     collection: Collection;
     logger: Logger;
 
@@ -36,12 +36,13 @@ export class Task_DB_Mongo implements Task_DB {
         }
     }
 
-    async create_task(task: Task): Promise<void> {
+    async create_task(task: IntentfulTask): Promise<void> {
+        task.created_at = new Date()
         await this.collection.insertOne(task);
     }
 
-    async get_task(uuid: string): Promise<Task> {
-        const result: Task | null = await this.collection.findOne({
+    async get_task(uuid: string): Promise<IntentfulTask> {
+        const result: IntentfulTask | null = await this.collection.findOne({
             "uuid": uuid,
             "deleted_at": null
         });
@@ -51,7 +52,7 @@ export class Task_DB_Mongo implements Task_DB {
         return result;
     }
 
-    async list_provider_tasks(provider: Provider): Promise<[string, Task[]][]> {
+    async list_provider_tasks(provider: Provider): Promise<[string, IntentfulTask[]][]> {
         const result = await this.collection.aggregate([
             {
                 $match:
@@ -70,20 +71,20 @@ export class Task_DB_Mongo implements Task_DB {
             }
         ]).toArray()
         const kind_tasks = result as KindTaskAggregationResult
-        return kind_tasks.reduce((acc: [string, Task[]][], curr) => {
+        return kind_tasks.reduce((acc: [string, IntentfulTask[]][], curr) => {
             acc.push([curr._id, curr.tasks])
             return acc
         }, [])
     }
 
-    async list_kind_tasks(kind: Kind): Promise<Task[]> {
+    async list_kind_tasks(kind: Kind): Promise<IntentfulTask[]> {
         const result = await this.collection.find({
             "diff.kind": kind.name
         })
         return result.toArray()
     }
 
-    async update_task(uuid: string, delta: Partial<Task>): Promise<void> {
+    async update_task(uuid: string, delta: Partial<IntentfulTask>): Promise<void> {
         const result = await this.collection.updateOne({
             uuid
         }, {
@@ -98,9 +99,13 @@ export class Task_DB_Mongo implements Task_DB {
     }
 
 
-    async list_tasks(fields_map: any, sortParams?: SortParams): Promise<Task[]> {
+    async list_tasks(fields_map: any, sortParams?: SortParams): Promise<IntentfulTask[]> {
         const filter: any = Object.assign({}, fields_map);
-        return await this.collection.find(filter).toArray();
+        if (sortParams) {
+            return await this.collection.find(filter).sort(sortParams).toArray();
+        } else {
+            return await this.collection.find(filter).toArray();
+        }
     }
 
     async delete_task(uuid: string): Promise<void> {

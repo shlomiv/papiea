@@ -9,7 +9,7 @@ export interface Provider_DB {
     save_provider(provider: Provider): Promise<void>;
 
     //Upgrade a provider - This should be in the admin?
-    //upgrade_provider(from_provider: uuid4, to: providerDescription): Task;
+    //upgrade_provider(from_provider: uuid4, to: providerDescription): IntentfulTask;
 
     // get a provider
     get_provider(provider_prefix: string, version: Version): Promise<Provider>

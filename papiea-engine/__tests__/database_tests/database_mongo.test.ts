@@ -10,7 +10,7 @@ import { v4 as uuid4 } from 'uuid';
 import { ConflictingEntityError } from "../../src/databases/utils/errors";
 import { Metadata, Spec, Entity_Reference, Status, Kind, Provider, S2S_Key } from "papiea-core";
 import { SessionKeyDb } from "../../src/databases/session_key_db_interface"
-import { Entity, Intentful_Signature, SessionKey } from "papiea-core"
+import { Entity, Intentful_Signature, SessionKey, IntentfulStatus } from "papiea-core"
 import uuid = require("uuid")
 import { IntentfulTask } from "../../src/tasks/task_interface"
 import { IntentfulTask_DB } from "../../src/databases/intentful_task_db_interface"
@@ -418,10 +418,10 @@ describe("MongoDb tests", () => {
                 diff_fields: {}
             },
             handler_url: uuid4(),
-            status: "idle",
+            status: IntentfulStatus.Pending,
             entity: {} as Entity
         };
-        await taskDb.create_task(task);
+        await taskDb.save_task(task);
         const res: IntentfulTask = await taskDb.get_task(task.uuid);
         expect(res.status).toEqual(task.status);
         expect(res.handler_url).toEqual(task.handler_url);
@@ -440,12 +440,12 @@ describe("MongoDb tests", () => {
                 diff_fields: {}
             },
             handler_url: uuid4(),
-            status: "idle",
+            status: IntentfulStatus.Pending,
             entity: {} as Entity
         };
-        await taskDb.create_task(task);
+        await taskDb.save_task(task);
         try {
-            await taskDb.create_task(task);
+            await taskDb.save_task(task);
         } catch(e) {
             expect(e).toBeDefined();
         }
@@ -463,7 +463,7 @@ describe("MongoDb tests", () => {
                 diff_fields: {}
             },
             handler_url,
-            status: "idle",
+            status: IntentfulStatus.Pending,
             entity: {} as Entity
         };
         const taskWithSameUrl: IntentfulTask = {
@@ -474,12 +474,12 @@ describe("MongoDb tests", () => {
                 diff_fields: {}
             },
             handler_url,
-            status: "idle",
+            status: IntentfulStatus.Pending,
             entity: {} as Entity
         };
-        await taskDb.create_task(task);
+        await taskDb.save_task(task);
         try {
-            await taskDb.create_task(taskWithSameUrl);
+            await taskDb.save_task(taskWithSameUrl);
         } catch(e) {
             expect(e).toBeDefined();
         }
@@ -496,10 +496,10 @@ describe("MongoDb tests", () => {
                 diff_fields: {}
             },
             handler_url: uuid4(),
-            status: "idle",
+            status: IntentfulStatus.Pending,
             entity: {} as Entity
         };
-        await taskDb.create_task(task);
+        await taskDb.save_task(task);
         const res = (await taskDb.list_tasks({ uuid: task.uuid }) as IntentfulTask[])[0]
         expect(res.uuid).toEqual(task.uuid);
     });
@@ -515,10 +515,10 @@ describe("MongoDb tests", () => {
                 diff_fields: {}
             },
             handler_url: uuid4(),
-            status: "idle",
+            status: IntentfulStatus.Pending,
             entity: {} as Entity
         };
-        await taskDb.create_task(task)
+        await taskDb.save_task(task)
         await taskDb.delete_task(task.uuid)
         try {
             await taskDb.get_task(task.uuid);
@@ -538,13 +538,13 @@ describe("MongoDb tests", () => {
                 diff_fields: {}
             },
             handler_url: uuid4(),
-            status: "idle",
+            status: IntentfulStatus.Pending,
             entity: {} as Entity
         };
-        await taskDb.create_task(task)
-        await taskDb.update_task(task.uuid, { status: "running" })
+        await taskDb.save_task(task)
+        await taskDb.update_task(task.uuid, { status: IntentfulStatus.Completed_Successfully })
         const updatedTask = await taskDb.get_task(task.uuid);
-        expect(updatedTask.status).toEqual("running")
+        expect(updatedTask.status).toEqual(IntentfulStatus.Completed_Successfully)
     });
 
     test("Get tasks by kind", async () => {
@@ -558,7 +558,7 @@ describe("MongoDb tests", () => {
                 diff_fields: {}
             },
             handler_url: uuid4(),
-            status: "idle",
+            status: IntentfulStatus.Pending,
             entity: {} as Entity
         };
 
@@ -570,17 +570,17 @@ describe("MongoDb tests", () => {
                 diff_fields: {}
             },
             handler_url: uuid4(),
-            status: "running",
+            status: IntentfulStatus.Completed_Successfully,
             entity: {} as Entity
         };
-        await taskDb.create_task(idleTask)
-        await taskDb.create_task(runningTask)
+        await taskDb.save_task(idleTask)
+        await taskDb.save_task(runningTask)
         const tasks = await taskDb.list_kind_tasks({ name: "test" } as Kind)
         const statuses = []
         statuses.push(tasks[0].status)
         statuses.push(tasks[1].status)
-        expect(statuses).toContain("idle")
-        expect(statuses).toContain("running")
+        expect(statuses).toContain(IntentfulStatus.Pending)
+        expect(statuses).toContain(IntentfulStatus.Completed_Successfully)
     });
 
     test("Get tasks by provider", async () => {
@@ -594,7 +594,7 @@ describe("MongoDb tests", () => {
                 diff_fields: {}
             },
             handler_url: uuid4(),
-            status: "idle",
+            status: IntentfulStatus.Pending,
             entity: {} as Entity
         };
 
@@ -606,16 +606,16 @@ describe("MongoDb tests", () => {
                 diff_fields: {}
             },
             handler_url: uuid4(),
-            status: "running",
+            status: IntentfulStatus.Completed_Successfully,
             entity: {} as Entity
         };
-        await taskDb.create_task(providerATask)
-        await taskDb.create_task(providerBTask)
+        await taskDb.save_task(providerATask)
+        await taskDb.save_task(providerBTask)
         const tasks = await taskDb.list_provider_tasks({ kinds: [{ name: "A" } as Kind, { name: "B" } as Kind] } as Provider)
         const statuses = []
         statuses.push(tasks[0][1][0].status)
         statuses.push(tasks[1][1][0].status)
-        expect(statuses).toContain("idle")
-        expect(statuses).toContain("running")
+        expect(statuses).toContain(IntentfulStatus.Pending)
+        expect(statuses).toContain(IntentfulStatus.Completed_Successfully)
     });
 });

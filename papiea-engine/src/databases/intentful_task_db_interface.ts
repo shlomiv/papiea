@@ -4,7 +4,7 @@ import { Provider, Kind } from "papiea-core"
 
 export interface IntentfulTask_DB {
 
-    create_task(task: IntentfulTask): Promise<void>
+    save_task(task: IntentfulTask): Promise<void>
 
     list_tasks(fields_map: any, sortParams?: SortParams): Promise<IntentfulTask[]>
 

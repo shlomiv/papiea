@@ -1,4 +1,5 @@
 import axios from "axios";
+import { promisify } from "util"
 import { MongoClient, Db } from "mongodb";
 import { Spec_DB_Mongo } from "./spec_db_mongo";
 import { Status_DB_Mongo } from "./status_db_mongo";
@@ -9,6 +10,8 @@ import { Logger } from "../logger_interface"
 import { IntentfulTask_DB_Mongo } from "./intentful_task_db_mongo"
 const fs = require('fs'),
     url = require('url');
+
+const exists = promisify(fs.access);
 
 export class MongoConnection {
     url: string;
@@ -40,17 +43,22 @@ export class MongoConnection {
     }
 
     async download_rds_cert(): Promise<void> {
-        const writer = fs.createWriteStream('rds-combined-ca-bundle.pem');
-        const response = await axios({
-            url: 'https://s3.amazonaws.com/rds-downloads/rds-combined-ca-bundle.pem',
-            method: 'GET',
-            responseType: 'stream'
-        })
-        response.data.pipe(writer);
-        return new Promise((resolve, reject) => {
-            writer.on('finish', resolve);
-            writer.on('error', reject);
-        });
+        try {
+            await exists('rds-combined-ca-bundle.pem');
+            return;
+        } catch {
+            const writer = fs.createWriteStream('rds-combined-ca-bundle.pem');
+            const response = await axios({
+                url: 'https://s3.amazonaws.com/rds-downloads/rds-combined-ca-bundle.pem',
+                method: 'GET',
+                responseType: 'stream'
+            })
+            response.data.pipe(writer);
+            return new Promise((resolve, reject) => {
+                writer.on('finish', resolve);
+                writer.on('error', reject);
+            });   
+        }
     }
 
     async connect(): Promise<void> {

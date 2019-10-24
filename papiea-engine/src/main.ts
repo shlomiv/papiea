@@ -19,6 +19,7 @@ import { WinstonLogger, getLoggingMiddleware, WinstonAuditLogger } from './logge
 import { SessionKeyAPI, SessionKeyUserAuthInfoExtractor } from "./auth/session_key"
 import { IntentfulContext } from "./intentful_core/intentful_context"
 import { AuditLogger } from "./logger_interface"
+import { BasicDiffer } from "./intentful_core/differ_impl"
 const cookieParser = require('cookie-parser');
 
 
@@ -54,6 +55,7 @@ async function setUpApplication(): Promise<express.Express> {
     app.use(getLoggingMiddleware(auditLogger));
     const mongoConnection: MongoConnection = new MongoConnection(mongoUrl, mongoDb);
     await mongoConnection.connect();
+    const differ = new BasicDiffer()
     const providerDb = await mongoConnection.get_provider_db(logger);
     const specDb = await mongoConnection.get_spec_db(logger);
     const statusDb = await mongoConnection.get_status_db(logger);
@@ -68,7 +70,7 @@ async function setUpApplication(): Promise<express.Express> {
         new S2SKeyUserAuthInfoExtractor(s2skeyDb),
         new SessionKeyUserAuthInfoExtractor(sessionKeyApi, providerDb)
     ]);
-    const intentfulContext = new IntentfulContext(specDb, statusDb)
+    const intentfulContext = new IntentfulContext(specDb, statusDb, differ, intentfulTaskDb)
     app.use(createAuthnRouter(logger, userAuthInfoExtractor));
     app.use(createOAuth2Router(logger, oauth2RedirectUri, providerDb, sessionKeyApi));
     const entityApiAuthorizer: Authorizer = new PerProviderAuthorizer(logger, providerApi, new ProviderCasbinAuthorizerFactory(logger));

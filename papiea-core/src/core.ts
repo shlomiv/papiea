@@ -107,7 +107,7 @@ export enum IntentfulBehaviour {
 export interface Differ {
 
     // Get the next diff from an entity based on the 
-    diffs(kind: Kind, spec: Spec, status: Status): Iterator<Diff>;
+    diffs(kind: Kind, spec: Spec, status: Status): Generator<Diff, any, undefined>;
 
     // We could also get the entire list of diffs, ordered by the
     // original dependency tree

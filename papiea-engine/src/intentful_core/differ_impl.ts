@@ -2,7 +2,7 @@ import { Spec, Status, Kind, Differ, Diff } from "papiea-core";
 
 export class BasicDiffer implements Differ {
     // Get the diff iterator from an entity based on the
-    public *diffs(kind: Kind, spec: Spec, status: Status): Iterator<Diff> {
+    public *diffs(kind: Kind, spec: Spec, status: Status): Generator<Diff, any, undefined> {
         let diff = null;
         let i = 0;
         while (diff === null) {

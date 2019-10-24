@@ -4,13 +4,12 @@ import { Papiea } from "../papiea";
 import { IntentfulTask } from "./task_interface"
 import { timeout } from "../utils/utils"
 import { IntentfulTask_DB_Mongo } from "../databases/intentful_task_db_mongo"
-import { Entity } from "papiea-core"
+import { Entity, IntentfulStatus } from "papiea-core"
 import Queue from "mnemonist/queue"
-import { Task } from "../../build/tasks/task_interface"
 import axios from "axios"
 
 class IntentfulTaskSet extends Set<IntentfulTask> {
-    get(task: Task): IntentfulTask | null {
+    get(task: IntentfulTask): IntentfulTask | null {
         for (let item of this) {
             if (item.uuid === task.uuid) {
                 return item
@@ -22,7 +21,7 @@ class IntentfulTaskSet extends Set<IntentfulTask> {
 
 
 class IntentfulTaskQueue extends Queue<IntentfulTask> {
-    get(task: Task): IntentfulTask | null {
+    get(task: IntentfulTask): IntentfulTask | null {
         for (let item of this) {
             if (item.uuid === task.uuid) {
                 return item
@@ -69,7 +68,7 @@ export class TaskManager {
 
     public clearFinishedTasks() {
         for (let task of this._running) {
-            if (task.status === "Finished") {
+            if (task.status === IntentfulStatus.Completed_Successfully || task.status === IntentfulStatus.Failed) {
                 this._running.delete(task)
                 this._entitiesInProgress.delete(task.entity.metadata.uuid)
             }
@@ -99,7 +98,7 @@ export class TaskManager {
         tasks.forEach((task) => {
             const waiting = this._waiting.get(task)
             const running = this._running.get(task)
-            if (waiting === null && running === null && task.status !== "Finished") {
+            if (waiting === null && running === null && (task.status === IntentfulStatus.Completed_Successfully || task.status === IntentfulStatus.Failed)) {
                 this._waiting.enqueue(task)
             }
             if (waiting !== null) {

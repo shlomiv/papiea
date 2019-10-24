@@ -1,4 +1,4 @@
-import { uuid4, Diff, Entity } from "papiea-core"
+import { uuid4, Diff, Entity, IntentfulStatus } from "papiea-core"
 
 // The task is started by a dedicated scheduler
 export interface IntentfulTask {
@@ -15,9 +15,7 @@ export interface IntentfulTask {
     // provider handler url, serves as an identifier for a type of task being executed
     handler_url: string
 
-    // Running, Idle, Error, etc.
-    // TODO: Shlomi please design a state machine for this
-    status: string
+    status: IntentfulStatus
 
     // A uri for a URL which specifically identifies the currently running process.
     // If the URL returns 404 we know that the task was dropped (say, provider crashed).

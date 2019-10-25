@@ -23,9 +23,8 @@ export class DifferIntentfulStrategy extends IntentfulStrategy {
             const task: IntentfulTask = {
                 uuid: uuid(),
                 entity_ref: {
-                    metadata,
-                    spec,
-                    status
+                    uuid: metadata.uuid,
+                    kind: metadata.kind
                 },
                 diff,
                 handler_url: diff.intentful_signature.procedural_signature.procedure_callback,

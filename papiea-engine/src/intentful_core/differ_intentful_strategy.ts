@@ -22,7 +22,7 @@ export class DifferIntentfulStrategy extends IntentfulStrategy {
         for (let diff of this.differ.diffs(this.kind!, spec, status)) {
             const task: IntentfulTask = {
                 uuid: uuid(),
-                entity: {
+                entity_ref: {
                     metadata,
                     spec,
                     status

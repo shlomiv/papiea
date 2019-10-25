@@ -7,6 +7,8 @@ import { IntentfulTask_DB_Mongo } from "../databases/intentful_task_db_mongo"
 import { Entity, IntentfulStatus } from "papiea-core"
 import Queue from "mnemonist/queue"
 import axios from "axios"
+import { Spec_DB } from "../databases/spec_db_interface"
+import { Status_DB } from "../databases/status_db_interface"
 
 class IntentfulTaskSet extends Set<IntentfulTask> {
     get(task: IntentfulTask): IntentfulTask | null {
@@ -36,17 +38,21 @@ class IntentfulTaskQueue extends Queue<IntentfulTask> {
 export class TaskManager {
     // This should be a separate connection from main Papiea functions
     protected readonly intentfulTaskDb: IntentfulTask_DB_Mongo
+    protected readonly specDb: Spec_DB
+    protected readonly statusDb: Status_DB
 
-    protected _entitiesInProgress: Map<string, Entity>
+    protected _entitiesInProgress: Map<string, Entity_Reference>
 
     protected _running: IntentfulTaskSet
     protected _waiting: IntentfulTaskQueue
 
-    constructor(taskDb: IntentfulTask_DB_Mongo) {
+    constructor(taskDb: IntentfulTask_DB_Mongo, specDb: Spec_DB, statusDb: Status_DB) {
         this.intentfulTaskDb = taskDb
+        this.specDb = specDb
+        this.statusDb = statusDb
         this._running = new IntentfulTaskSet()
         this._waiting = new IntentfulTaskQueue()
-        this._entitiesInProgress = new Map<string, Entity>()
+        this._entitiesInProgress = new Map<string, Entity_Reference>()
     }
 
     public async run(delay: number) {
@@ -70,7 +76,7 @@ export class TaskManager {
         for (let task of this._running) {
             if (task.status === IntentfulStatus.Completed_Successfully || task.status === IntentfulStatus.Failed) {
                 this._running.delete(task)
-                this._entitiesInProgress.delete(task.entity.metadata.uuid)
+                this._entitiesInProgress.delete(task.entity_ref.uuid)
             }
         }
     }
@@ -78,15 +84,17 @@ export class TaskManager {
     public async launchTasks() {
         const task: IntentfulTask | undefined = this._waiting.dequeue()
         if (task) {
-            if (!this._entitiesInProgress.has(task.entity.metadata.uuid)) {
+            if (!this._entitiesInProgress.has(task.entity_ref.uuid)) {
                 this._running.add(task)
+                const [metadata, spec] = await this.specDb.get_spec(task.entity_ref)
+                const status = await this.statusDb.get_status(task.entity_ref)
                 await axios.post(task.handler_url, {
-                    metadata: task.entity.metadata,
-                    spec: task.entity.spec,
-                    status: task.entity.status,
+                    metadata: metadata,
+                    spec: spec,
+                    status: status,
                     input: task.diff.diff_fields
                 })
-                this._entitiesInProgress.set(task.entity.metadata.uuid, task.entity)
+                this._entitiesInProgress.set(task.entity_ref.uuid, task.entity_ref)
             } else {
                 this._waiting.enqueue(task)
             }

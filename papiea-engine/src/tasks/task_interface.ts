@@ -1,4 +1,4 @@
-import { uuid4, Diff, Entity, IntentfulStatus } from "papiea-core"
+import { uuid4, Diff, Entity_Reference, IntentfulStatus } from "papiea-core"
 
 // The task is started by a dedicated scheduler
 export interface IntentfulTask {
@@ -7,7 +7,7 @@ export interface IntentfulTask {
     uuid: uuid4
 
     // Entity being modified by a task
-    entity: Entity
+    entity_ref: Entity_Reference
 
     // Diff resolved by this task
     diff: Diff

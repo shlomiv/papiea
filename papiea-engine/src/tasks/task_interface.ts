@@ -9,19 +9,19 @@ export interface IntentfulTask {
     // Entity being modified by a task
     entity_ref: Entity_Reference
 
+    spec_version: number
+
     // Diff resolved by this task
-    diff: Diff
-
-    // provider handler url, serves as an identifier for a type of task being executed
-    handler_url: string
-
-    status: IntentfulStatus
+    diff: Diff[]
 
     // A uri for a URL which specifically identifies the currently running process.
     // If the URL returns 404 we know that the task was dropped (say, provider crashed).
     // It will use the specific node's IP and not a load balancer IP.
     // This will direct us to the exact location where the task is running.
-    executor_uri?: string
+    // provider handler url with an id to cache the task it is assigned to, serves as an identifier for a type of task being executed
+    handler_id?: string[]
+
+    status: IntentfulStatus
 
     created_at?: Date
 }

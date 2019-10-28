@@ -35,6 +35,7 @@ class IntentfulTaskQueue extends Queue<IntentfulTask> {
 
 // This should be run in a different process
 // TODO: provide optimized Data Structures
+// TODO: change it to something more 'intentful'
 export class TaskManager {
     // This should be a separate connection from main Papiea functions
     protected readonly intentfulTaskDb: IntentfulTask_DB_Mongo
@@ -118,6 +119,9 @@ export class TaskManager {
         })
     }
 }
+// Successful
+// U
+
 
 // [[file:~/work/papiea-js/Papiea-design.org::#h-Interface-766][task-manager-interface]]
 // export interface IntentfulTask {

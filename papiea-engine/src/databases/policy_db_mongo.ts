@@ -12,6 +12,16 @@ export class Policy_DB_Mongo implements Policy_DB {
         this.logger = logger;
     }
 
+    async init(): Promise<void> {
+        try {
+            await this.collection.createIndex({
+                "uuid": 1,
+            }, { unique: true });
+        } catch (err) {
+            throw err;
+        }
+    }
+
     async create_policy(policy: Policy): Promise<void> {
         await this.collection.insertOne(policy);
         return;

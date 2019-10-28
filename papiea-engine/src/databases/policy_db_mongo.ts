@@ -47,4 +47,9 @@ export class Policy_DB_Mongo implements Policy_DB {
         await this.collection.deleteOne({uuid: uuid});
         return;
     };
+
+    async update_policy(filter: any, update: any): Promise<void> {
+        await this.collection.updateOne(filter, update);
+        return; 
+    }
 }

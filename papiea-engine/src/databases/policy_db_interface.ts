@@ -8,4 +8,6 @@ export interface Policy_DB {
     list_policies(fields_map: any): Promise<Policy[]>;
 
     delete_policy(uuid: string): Promise<void>;
+
+    update_policy(filter: any, update: any): Promise<void>;
 }

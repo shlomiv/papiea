@@ -412,7 +412,7 @@ describe("MongoDb tests", () => {
         const taskDb: IntentfulTask_DB = await connection.get_intentful_task_db(logger);
         const task: IntentfulTask = {
             uuid: uuid4(),
-            diff: {
+            diffs: {
                 kind: "dummy",
                 intentful_signature: {} as Intentful_Signature,
                 diff_fields: {}
@@ -425,7 +425,7 @@ describe("MongoDb tests", () => {
         const res: IntentfulTask = await taskDb.get_task(task.uuid);
         expect(res.status).toEqual(task.status);
         expect(res.handler_url).toEqual(task.handler_url);
-        expect(res.diff).toEqual(task.diff);
+        expect(res.diffs).toEqual(task.diffs);
         expect(res.uuid).toEqual(task.uuid);
     });
 
@@ -434,7 +434,7 @@ describe("MongoDb tests", () => {
         const taskDb: IntentfulTask_DB = await connection.get_intentful_task_db(logger);
         const task: IntentfulTask = {
             uuid: uuid4(),
-            diff: {
+            diffs: {
                 kind: "dummy",
                 intentful_signature: {} as Intentful_Signature,
                 diff_fields: {}
@@ -457,7 +457,7 @@ describe("MongoDb tests", () => {
         const handler_url = uuid4()
         const task: IntentfulTask = {
             uuid: uuid4(),
-            diff: {
+            diffs: {
                 kind: "dummy",
                 intentful_signature: {} as Intentful_Signature,
                 diff_fields: {}
@@ -468,7 +468,7 @@ describe("MongoDb tests", () => {
         };
         const taskWithSameUrl: IntentfulTask = {
             uuid: uuid4(),
-            diff: {
+            diffs: {
                 kind: "dummy",
                 intentful_signature: {} as Intentful_Signature,
                 diff_fields: {}
@@ -490,7 +490,7 @@ describe("MongoDb tests", () => {
         const taskDb: IntentfulTask_DB = await connection.get_intentful_task_db(logger);
         const task: IntentfulTask = {
             uuid: uuid4(),
-            diff: {
+            diffs: {
                 kind: "dummy",
                 intentful_signature: {} as Intentful_Signature,
                 diff_fields: {}
@@ -509,7 +509,7 @@ describe("MongoDb tests", () => {
         const taskDb: IntentfulTask_DB = await connection.get_intentful_task_db(logger);
         const task: IntentfulTask = {
             uuid: uuid4(),
-            diff: {
+            diffs: {
                 kind: "dummy",
                 intentful_signature: {} as Intentful_Signature,
                 diff_fields: {}
@@ -532,7 +532,7 @@ describe("MongoDb tests", () => {
         const taskDb: IntentfulTask_DB = await connection.get_intentful_task_db(logger);
         const task: IntentfulTask = {
             uuid: uuid4(),
-            diff: {
+            diffs: {
                 kind: "dummy",
                 intentful_signature: {} as Intentful_Signature,
                 diff_fields: {}
@@ -552,7 +552,7 @@ describe("MongoDb tests", () => {
         const taskDb: IntentfulTask_DB = await connection.get_intentful_task_db(logger);
         const idleTask: IntentfulTask = {
             uuid: uuid4(),
-            diff: {
+            diffs: {
                 kind: "test",
                 intentful_signature: {} as Intentful_Signature,
                 diff_fields: {}
@@ -564,7 +564,7 @@ describe("MongoDb tests", () => {
 
         const runningTask: IntentfulTask = {
             uuid: uuid4(),
-            diff: {
+            diffs: {
                 kind: "test",
                 intentful_signature: {} as Intentful_Signature,
                 diff_fields: {}
@@ -588,7 +588,7 @@ describe("MongoDb tests", () => {
         const taskDb: IntentfulTask_DB = await connection.get_intentful_task_db(logger);
         const providerATask: IntentfulTask = {
             uuid: uuid4(),
-            diff: {
+            diffs: {
                 kind: "A",
                 intentful_signature: {} as Intentful_Signature,
                 diff_fields: {}
@@ -600,7 +600,7 @@ describe("MongoDb tests", () => {
 
         const providerBTask: IntentfulTask = {
             uuid: uuid4(),
-            diff: {
+            diffs: {
                 kind: "B",
                 intentful_signature: {} as Intentful_Signature,
                 diff_fields: {}

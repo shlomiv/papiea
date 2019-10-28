@@ -20,6 +20,7 @@ import { SessionKeyAPI, SessionKeyUserAuthInfoExtractor } from "./auth/session_k
 import { IntentfulContext } from "./intentful_core/intentful_context"
 import { AuditLogger } from "./logger_interface"
 import { BasicDiffer } from "./intentful_core/differ_impl"
+import * as redis from "redis"
 const cookieParser = require('cookie-parser');
 
 
@@ -32,7 +33,8 @@ declare var process: {
         DEBUG_LEVEL: string,
         PAPIEA_ADMIN_S2S_KEY: string,
         LOGGING_LEVEL: string
-        PAPIEA_DEBUG: string
+        PAPIEA_DEBUG: string,
+        REDIS_URL: string
     },
     title: string;
 };
@@ -45,6 +47,8 @@ const mongoDb = process.env.MONGO_DB || 'papiea';
 const adminKey = process.env.PAPIEA_ADMIN_S2S_KEY || '';
 const loggingLevel = process.env.LOGGING_LEVEL || 'info';
 const papieaDebug = process.env.PAPIEA_DEBUG === "true"
+const redisUrl = process.env.REDIS_URL || ''
+
 
 async function setUpApplication(): Promise<express.Express> {
     const logger = new WinstonLogger(loggingLevel);
@@ -53,6 +57,7 @@ async function setUpApplication(): Promise<express.Express> {
     app.use(cookieParser());
     app.use(express.json());
     app.use(getLoggingMiddleware(auditLogger));
+    const redisClient = redis.createClient(redisUrl)
     const mongoConnection: MongoConnection = new MongoConnection(mongoUrl, mongoDb);
     await mongoConnection.connect();
     const differ = new BasicDiffer()

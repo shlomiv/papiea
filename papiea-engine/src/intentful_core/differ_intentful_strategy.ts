@@ -26,7 +26,7 @@ export class DifferIntentfulStrategy extends IntentfulStrategy {
                     uuid: metadata.uuid,
                     kind: metadata.kind
                 },
-                diff,
+                diffs: diff,
                 handler_url: diff.intentful_signature.procedural_signature.procedure_callback,
                 status: IntentfulStatus.Pending
             }

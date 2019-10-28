@@ -12,7 +12,7 @@ export interface IntentfulTask {
     spec_version: number
 
     // Diff resolved by this task
-    diff: Diff[]
+    diffs: Diff[]
 
     // A uri for a URL which specifically identifies the currently running process.
     // If the URL returns 404 we know that the task was dropped (say, provider crashed).

@@ -3,11 +3,11 @@ import { SortParams } from "../entity/entity_api_impl"
 import { Logger } from "../logger_interface"
 import { IntentfulTask_DB } from "./intentful_task_db_interface"
 import { IntentfulTask } from "../tasks/task_interface"
-import { Provider, Kind } from "papiea-core"
+import { Watchlist } from "../tasks/watchlist"
 
-type KindTaskAggregationResult = KindTaskAggregation[]
+type TaskAggregationResult = TaskAggregation[]
 
-interface KindTaskAggregation {
+interface TaskAggregation {
     _id: string,
     tasks: IntentfulTask[]
 }
@@ -51,37 +51,22 @@ export class IntentfulTask_DB_Mongo implements IntentfulTask_DB {
         }
         return result;
     }
-
-    async list_provider_tasks(provider: Provider): Promise<[string, IntentfulTask[]][]> {
+    async get_watchlist(): Promise<Watchlist> {
         const result = await this.collection.aggregate([
             {
-                $match:
-                    {
-                        $expr:
-                            {
-                                $in: ["$diff.kind", provider.kinds.map(kind => kind.name)]
-                            }
-                    }
-            },
-            {
-                $group:
-                    {
-                        _id: "$diff.kind", tasks: { $push: "$$ROOT" }
-                    }
+                $group: {
+                    _id: "$entity_ref.uuid", tasks: { $push: "$$ROOT" }
+                }
             }
         ]).toArray()
-        const kind_tasks = result as KindTaskAggregationResult
-        return kind_tasks.reduce((acc: [string, IntentfulTask[]][], curr) => {
-            acc.push([curr._id, curr.tasks])
+        const tasks = result as TaskAggregationResult
+        return tasks.reduce((acc: Watchlist, curr) => {
+            acc.push({
+                entity_id: curr._id,
+                tasks: curr.tasks
+            })
             return acc
         }, [])
-    }
-
-    async list_kind_tasks(kind: Kind): Promise<IntentfulTask[]> {
-        const result = await this.collection.find({
-            "diff.kind": kind.name
-        })
-        return result.toArray()
     }
 
     async update_task(uuid: string, delta: Partial<IntentfulTask>): Promise<void> {

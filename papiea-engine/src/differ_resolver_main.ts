@@ -1,6 +1,9 @@
 import { WinstonLogger } from "./logger"
 import { MongoConnection } from "./databases/mongo"
 import * as redis from "redis"
+import { Watchlist } from "./tasks/watchlist"
+import { IntentfulListenerMongo } from "./tasks/intentful_listener_mongo"
+import { DifferResolver } from "./tasks/differ_resolver"
 
 declare var process: {
     env: {
@@ -12,26 +15,26 @@ declare var process: {
         PAPIEA_ADMIN_S2S_KEY: string,
         LOGGING_LEVEL: string
         PAPIEA_DEBUG: string,
-        REDIS_URL: string
     },
     title: string;
 };
 
 const mongoUrl = process.env.MONGO_URL || 'mongodb://mongo:27017';
 const mongoDb = process.env.MONGO_DB || 'papiea';
-const adminKey = process.env.PAPIEA_ADMIN_S2S_KEY || '';
 const loggingLevel = process.env.LOGGING_LEVEL || 'info';
-const redisUrl = process.env.REDIS_URL || ''
 
-async function setUpTaskManager() {
+async function setUpDiffResolver() {
     const logger = new WinstonLogger(loggingLevel);
     const mongoConnection: MongoConnection = new MongoConnection(mongoUrl, mongoDb);
     await mongoConnection.connect();
 
-    const providerDb = await mongoConnection.get_provider_db(logger);
     const specDb = await mongoConnection.get_spec_db(logger);
     const statusDb = await mongoConnection.get_status_db(logger);
     const intentfulTaskDb = await mongoConnection.get_intentful_task_db(logger)
 
-    const redisClient = redis.createClient(redisUrl)
+    const watchlist: Watchlist = await intentfulTaskDb.get_watchlist()
+    const intentfulListener = await IntentfulListenerMongo.create(intentfulTaskDb, statusDb, watchlist)
+
+    const diffResolver = new DifferResolver(intentfulTaskDb, specDb, statusDb, intentfulListener, watchlist)
+    await diffResolver.run(5000)
 }

@@ -8,6 +8,7 @@ import { Status_DB } from "../databases/status_db_interface"
 import { Watchlist } from "./watchlist"
 import { Handler, IntentfulListener } from "./intentful_listener_interface"
 import { IntentfulStatus } from "papiea-core/build/core"
+import { SFSCompiler } from "../intentful_core/sfs_compiler"
 
 // This should be run in a different process
 export class DifferResolver {
@@ -39,7 +40,6 @@ export class DifferResolver {
     private async _run(delay: number) {
         while (true) {
             await timeout(delay)
-            this.launchTasks()
             this.clearFinishedTasks()
         }
     }
@@ -48,11 +48,7 @@ export class DifferResolver {
 
     }
 
-    public async launchTasks() {
-
-    }
-
-    public onTask(task: IntentfulTask) {
+    public async onTask(task: IntentfulTask) {
         const tasks = this.watchlist.filter(entityTasks => entityTasks.entity_id === task.entity_ref.uuid)
         if (tasks.length === 0) {
             this.watchlist.push({
@@ -60,6 +56,8 @@ export class DifferResolver {
                 tasks: [task]
             })
             task.status = IntentfulStatus.Active
+            await this.intentfulTaskDb.update_task(task.uuid, task)
+            // TODO: start the handler and assign
         } else {
             this.watchlist.push({
                 entity_id: task.entity_ref.uuid,
@@ -68,7 +66,30 @@ export class DifferResolver {
         }
     }
 
-    protected onStatus(entity: Entity_Reference, specVersion: number, status: Status) {
-
+    protected async onStatus(entity: Entity_Reference, specVersion: number, status: Status) {
+        const [metadata, spec] = await this.specDb.get_spec(entity)
+        const tasks = this.watchlist.filter(entityTasks => entityTasks.entity_id === entity.uuid)
+        if (tasks.length !== 0) {
+            const activeTasks = tasks[0].tasks.filter(task => task.status === IntentfulStatus.Active)
+            if (activeTasks.length === 0) {
+                return
+            } else if (activeTasks.length > 1) {
+                // TODO: This should be configurable via strategy
+                throw new Error(`There can not be more than one task running for entity with uuid: ${entity.uuid}`)
+            }
+            const activeTask = activeTasks[0]
+            if (metadata.spec_version >= activeTask.spec_version) {
+                activeTask.status = IntentfulStatus.Outdated
+                await this.intentfulTaskDb.update_task(activeTask.uuid, activeTask)
+            } else {
+                const diffs = activeTask.diffs.filter(diff => {
+                    return SFSCompiler.run_sfs(diff.intentful_signature.compiled_signature, spec, status).length !== 0;
+                })
+                if (diffs.length === 0) {
+                    activeTask.status = IntentfulStatus.Completed_Successfully
+                    await this.intentfulTaskDb.update_task(activeTask.uuid, activeTask)
+                }
+            }
+        }
     }
 }

@@ -13,8 +13,8 @@ export class IntentfulListenerMongo implements IntentfulListener {
     private watchlist: Watchlist
     private statuses: MultiMap<Metadata, Status>
     private statusDb: Status_DB
-    onTask: Handler<(task: IntentfulTask) => void>
-    onStatus: Handler<(entity: Entity_Reference, specVersion: number, status: Status) => void>
+    onTask: Handler<(task: IntentfulTask) => Promise<void>>
+    onStatus: Handler<(entity: Entity_Reference, specVersion: number, status: Status) => Promise<void>>
 
     static async create(intentfulTaskDb: IntentfulTask_DB, statusDb: Status_DB, watchlist: Watchlist): Promise<IntentfulListener> {
         const statuses = await statusDb.list_status({})
@@ -46,7 +46,6 @@ export class IntentfulListenerMongo implements IntentfulListener {
         let watchlistTasks: Set<IntentfulTask>
         let currStatuses: [Metadata, Status][]
         while (true) {
-
             currTasks = await this.intentfulTaskDb.list_tasks({})
             watchlistTasks = this.tasks
             this.checkTasks(currTasks, watchlistTasks)
@@ -57,32 +56,31 @@ export class IntentfulListenerMongo implements IntentfulListener {
         }
     }
 
-    checkTasks(currTasks: IntentfulTask[], watchlistTasks: Set<IntentfulTask>) {
-        watchlistTasks = this.tasks
-        currTasks.forEach(task => {
+    async checkTasks(currTasks: IntentfulTask[], watchlistTasks: Set<IntentfulTask>) {
+        for (let task of currTasks) {
             if (!watchlistTasks.has(task)) {
-                this.onTask.call(task)
+                await this.onTask.call(task)
             }
-        })
+        }
     }
 
-    checkStatuses(currStatuses: [Metadata, Status][]) {
-        currStatuses.forEach(entityStatus => {
+    async checkStatuses(currStatuses: [Metadata, Status][]) {
+        for (let entityStatus of currStatuses) {
             let statuses = this.statuses.get(entityStatus[0])
             if (statuses === undefined) {
-                this.onStatus.call({
+                await this.onStatus.call({
                     kind: entityStatus[0].kind,
                     uuid: entityStatus[0].uuid
                 } as Entity_Reference, entityStatus[0].spec_version, entityStatus[1])
             } else {
                 if (!(statuses as Set<Status>).has(entityStatus[1])) {
-                    this.onStatus.call({
+                    await this.onStatus.call({
                         kind: entityStatus[0].kind,
                         uuid: entityStatus[0].uuid
                     } as Entity_Reference, entityStatus[0].spec_version, entityStatus[1])
                 }
             }
-        })
+        }
         // TODO: this might not be working as expected
         this.statuses = MultiMap.from(currStatuses)
     }

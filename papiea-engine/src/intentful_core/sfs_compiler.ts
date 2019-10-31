@@ -14,6 +14,10 @@ export class SFSCompiler {
         return sfs_compiler(signature)
     }
 
+    static run_sfs(compiled_sfs: any, spec: any, status: any): any[] {
+        return run_compiled_sfs(compiled_sfs, spec, status)
+    }
+
     static compile_kind(kind: Kind): void {
         for (let i in kind.intentful_signatures) {
             kind.intentful_signatures[i].compiled_signature = SFSCompiler.compile_sfs(kind.intentful_signatures[i].signature).toString()

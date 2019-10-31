@@ -19,17 +19,18 @@ export class DifferIntentfulStrategy extends IntentfulStrategy {
 
     async update_entity(metadata: Metadata, spec: Spec): Promise<[Metadata, Spec]> {
         const status = await this.statusDb.get_status(metadata)
+        const task: IntentfulTask = {
+            uuid: uuid(),
+            entity_ref: {
+                uuid: metadata.uuid,
+                kind: metadata.kind
+            },
+            diffs: [],
+            spec_version: metadata.spec_version,
+            status: IntentfulStatus.Pending
+        }
         for (let diff of this.differ.diffs(this.kind!, spec, status)) {
-            const task: IntentfulTask = {
-                uuid: uuid(),
-                entity_ref: {
-                    uuid: metadata.uuid,
-                    kind: metadata.kind
-                },
-                diffs: diff,
-                handler_url: diff.intentful_signature.procedural_signature.procedure_callback,
-                status: IntentfulStatus.Pending
-            }
+            task.diffs.push(diff)
         }
         const [updatedMetadata, updatedSpec] = await this.specDb.update_spec(metadata, spec);
         return [updatedMetadata, updatedSpec]

@@ -33,7 +33,9 @@ export enum IntentfulStatus {
 
     // None of the fields was changed to the given spec values,
     // and there is already a newer spec version
-    Failed = 4
+    Failed = 4,
+
+    Outdated = 5,
 }
 
 // [[file:~/work/papiea-js/Papiea-design.org::#h-Metadata-350][metadata-struct]]

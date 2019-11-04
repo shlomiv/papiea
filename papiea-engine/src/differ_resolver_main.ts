@@ -1,6 +1,5 @@
 import { WinstonLogger } from "./logger"
 import { MongoConnection } from "./databases/mongo"
-import * as redis from "redis"
 import { Watchlist } from "./tasks/watchlist"
 import { IntentfulListenerMongo } from "./tasks/intentful_listener_mongo"
 import { DifferResolver } from "./tasks/differ_resolver"

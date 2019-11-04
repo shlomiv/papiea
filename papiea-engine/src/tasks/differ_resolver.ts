@@ -1,5 +1,5 @@
 // [[file:~/work/papiea-js/Papiea-design.org::*/src/tasks/task_manager_interface.ts][/src/tasks/task_manager_interface.ts:1]]
-import { Entity_Reference, Status } from "papiea-core";
+import { Entity_Reference, Status, IntentfulStatus } from "papiea-core";
 import { IntentfulTask } from "./task_interface"
 import { timeout } from "../utils/utils"
 import { IntentfulTask_DB_Mongo } from "../databases/intentful_task_db_mongo"
@@ -7,8 +7,8 @@ import { Spec_DB } from "../databases/spec_db_interface"
 import { Status_DB } from "../databases/status_db_interface"
 import { Watchlist } from "./watchlist"
 import { Handler, IntentfulListener } from "./intentful_listener_interface"
-import { IntentfulStatus } from "papiea-core/build/core"
 import { SFSCompiler } from "../intentful_core/sfs_compiler"
+import axios from "axios"
 
 // This should be run in a different process
 export class DifferResolver {
@@ -39,31 +39,65 @@ export class DifferResolver {
 
     private async _run(delay: number) {
         while (true) {
+            await this.clearFinishedTasks()
             await timeout(delay)
-            this.clearFinishedTasks()
+            await this.activateTask()
         }
     }
 
-    public clearFinishedTasks() {
+    public async activateTask(): Promise<void> {
+        for (let entityTask of this.watchlist) {
+            let activeTasks = entityTask.tasks.filter(task => task.status === IntentfulStatus.Active)
+            if (activeTasks.length === 0 && entityTask.tasks.length > 0) {
+                let activeTask = entityTask.tasks[0]
+                activeTask.status = IntentfulStatus.Active
+                await this.intentfulTaskDb.update_task(activeTask.uuid, activeTask)
+                const [metadata, entitySpec] = await this.specDb.get_spec(activeTask.entity_ref)
+                const [_, entityStatus] = await this.statusDb.get_status(activeTask.entity_ref)
+                for (let diff of activeTask.diffs) {
+                    // TODO: diff fields should go into the context
+                    await axios.post(diff.intentful_signature.procedural_signature.procedure_callback, {
+                        metadata: metadata,
+                        spec: entitySpec,
+                        status: entityStatus,
+                        input: diff.diff_fields
+                    })
+                    // TODO: find the handler id that is executing the procedure
+                }
+            }
+        }
+    }
 
+    public async clearFinishedTasks(): Promise<void> {
+        const tasks = this.watchlist.reduce((acc: IntentfulTask[], entityTask) => {
+            entityTask.tasks.forEach(task => {
+                acc.push(task)
+            })
+            return acc
+        }, [])
+        for (let task of tasks) {
+            if (task.status !== IntentfulStatus.Active && task.status !== IntentfulStatus.Pending) {
+                await this.removeTask(task)
+            }
+        }
+    }
+
+    private async removeTask(task: IntentfulTask): Promise<void> {
+        for (let entityTasks of this.watchlist) {
+            for (let i in entityTasks.tasks) {
+                if (entityTasks.tasks[i] === task) {
+                    await this.intentfulTaskDb.delete_task(entityTasks.tasks[i].uuid)
+                    entityTasks.tasks.splice(Number(i), 1)
+                }
+            }
+        }
     }
 
     public async onTask(task: IntentfulTask) {
-        const tasks = this.watchlist.filter(entityTasks => entityTasks.entity_id === task.entity_ref.uuid)
-        if (tasks.length === 0) {
-            this.watchlist.push({
-                entity_id: task.entity_ref.uuid,
-                tasks: [task]
-            })
-            task.status = IntentfulStatus.Active
-            await this.intentfulTaskDb.update_task(task.uuid, task)
-            // TODO: start the handler and assign
-        } else {
-            this.watchlist.push({
-                entity_id: task.entity_ref.uuid,
-                tasks: [task]
-            })
-        }
+        this.watchlist.push({
+            entity_id: task.entity_ref.uuid,
+            tasks: [task]
+        })
     }
 
     protected async onStatus(entity: Entity_Reference, specVersion: number, status: Status) {
@@ -78,13 +112,19 @@ export class DifferResolver {
                 throw new Error(`There can not be more than one task running for entity with uuid: ${entity.uuid}`)
             }
             const activeTask = activeTasks[0]
+            const diffs = activeTask.diffs.filter(diff => {
+                return SFSCompiler.run_sfs(diff.intentful_signature.compiled_signature, spec, status).length !== 0
+            })
             if (metadata.spec_version >= activeTask.spec_version) {
-                activeTask.status = IntentfulStatus.Outdated
+                if (diffs.length === 0) {
+                    activeTask.status = IntentfulStatus.Outdated
+                } else if (diffs.length === activeTask.diffs.length) {
+                    activeTask.status = IntentfulStatus.Failed
+                } else {
+                    activeTask.status = IntentfulStatus.Completed_Partially
+                }
                 await this.intentfulTaskDb.update_task(activeTask.uuid, activeTask)
             } else {
-                const diffs = activeTask.diffs.filter(diff => {
-                    return SFSCompiler.run_sfs(diff.intentful_signature.compiled_signature, spec, status).length !== 0;
-                })
                 if (diffs.length === 0) {
                     activeTask.status = IntentfulStatus.Completed_Successfully
                     await this.intentfulTaskDb.update_task(activeTask.uuid, activeTask)

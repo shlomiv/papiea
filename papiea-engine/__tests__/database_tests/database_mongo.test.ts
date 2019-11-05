@@ -412,19 +412,18 @@ describe("MongoDb tests", () => {
         const taskDb: IntentfulTask_DB = await connection.get_intentful_task_db(logger);
         const task: IntentfulTask = {
             uuid: uuid4(),
-            diffs: {
+            diffs: [{
                 kind: "dummy",
                 intentful_signature: {} as Intentful_Signature,
                 diff_fields: {}
-            },
-            handler_url: uuid4(),
+            }],
+            spec_version: 1,
             status: IntentfulStatus.Pending,
             entity_ref: {} as Entity_Reference
         };
         await taskDb.save_task(task);
         const res: IntentfulTask = await taskDb.get_task(task.uuid);
         expect(res.status).toEqual(task.status);
-        expect(res.handler_url).toEqual(task.handler_url);
         expect(res.diffs).toEqual(task.diffs);
         expect(res.uuid).toEqual(task.uuid);
     });
@@ -434,12 +433,12 @@ describe("MongoDb tests", () => {
         const taskDb: IntentfulTask_DB = await connection.get_intentful_task_db(logger);
         const task: IntentfulTask = {
             uuid: uuid4(),
-            diffs: {
+            diffs: [{
                 kind: "dummy",
                 intentful_signature: {} as Intentful_Signature,
                 diff_fields: {}
-            },
-            handler_url: uuid4(),
+            }],
+            spec_version: 1,
             status: IntentfulStatus.Pending,
             entity_ref: {} as Entity_Reference
         };
@@ -451,51 +450,17 @@ describe("MongoDb tests", () => {
         }
     });
 
-    test("IntentfulTask with same handler url should throw error", async () => {
-        expect.assertions(1);
-        const taskDb: IntentfulTask_DB = await connection.get_intentful_task_db(logger);
-        const handler_url = uuid4()
-        const task: IntentfulTask = {
-            uuid: uuid4(),
-            diffs: {
-                kind: "dummy",
-                intentful_signature: {} as Intentful_Signature,
-                diff_fields: {}
-            },
-            handler_url,
-            status: IntentfulStatus.Pending,
-            entity_ref: {} as Entity_Reference
-        };
-        const taskWithSameUrl: IntentfulTask = {
-            uuid: uuid4(),
-            diffs: {
-                kind: "dummy",
-                intentful_signature: {} as Intentful_Signature,
-                diff_fields: {}
-            },
-            handler_url,
-            status: IntentfulStatus.Pending,
-            entity_ref: {} as Entity_Reference
-        };
-        await taskDb.save_task(task);
-        try {
-            await taskDb.save_task(taskWithSameUrl);
-        } catch(e) {
-            expect(e).toBeDefined();
-        }
-    });
-
     test("List tasks", async () => {
         expect.hasAssertions();
         const taskDb: IntentfulTask_DB = await connection.get_intentful_task_db(logger);
         const task: IntentfulTask = {
             uuid: uuid4(),
-            diffs: {
+            diffs: [{
                 kind: "dummy",
                 intentful_signature: {} as Intentful_Signature,
                 diff_fields: {}
-            },
-            handler_url: uuid4(),
+            }],
+            spec_version: 1,
             status: IntentfulStatus.Pending,
             entity_ref: {} as Entity_Reference
         };
@@ -509,12 +474,12 @@ describe("MongoDb tests", () => {
         const taskDb: IntentfulTask_DB = await connection.get_intentful_task_db(logger);
         const task: IntentfulTask = {
             uuid: uuid4(),
-            diffs: {
+            diffs: [{
                 kind: "dummy",
                 intentful_signature: {} as Intentful_Signature,
                 diff_fields: {}
-            },
-            handler_url: uuid4(),
+            }],
+            spec_version: 1,
             status: IntentfulStatus.Pending,
             entity_ref: {} as Entity_Reference
         };
@@ -532,12 +497,12 @@ describe("MongoDb tests", () => {
         const taskDb: IntentfulTask_DB = await connection.get_intentful_task_db(logger);
         const task: IntentfulTask = {
             uuid: uuid4(),
-            diffs: {
+            diffs: [{
                 kind: "dummy",
                 intentful_signature: {} as Intentful_Signature,
                 diff_fields: {}
-            },
-            handler_url: uuid4(),
+            }],
+            spec_version: 1,
             status: IntentfulStatus.Pending,
             entity_ref: {} as Entity_Reference
         };
@@ -546,76 +511,26 @@ describe("MongoDb tests", () => {
         const updatedTask = await taskDb.get_task(task.uuid);
         expect(updatedTask.status).toEqual(IntentfulStatus.Completed_Successfully)
     });
-
-    test("Get tasks by kind", async () => {
-        expect.assertions(2);
+    test("Get watchlist", async () => {
+        expect.assertions(1);
         const taskDb: IntentfulTask_DB = await connection.get_intentful_task_db(logger);
-        const idleTask: IntentfulTask = {
+        const task: IntentfulTask = {
             uuid: uuid4(),
-            diffs: {
-                kind: "test",
+            diffs: [{
+                kind: "dummy",
                 intentful_signature: {} as Intentful_Signature,
                 diff_fields: {}
-            },
-            handler_url: uuid4(),
-            status: IntentfulStatus.Pending,
-            entity_ref: {} as Entity_Reference
+            }],
+            spec_version: 1,
+            status: IntentfulStatus.Active,
+            entity_ref: { uuid: "entity_id_watchlist" } as Entity_Reference
         };
-
-        const runningTask: IntentfulTask = {
-            uuid: uuid4(),
-            diffs: {
-                kind: "test",
-                intentful_signature: {} as Intentful_Signature,
-                diff_fields: {}
-            },
-            handler_url: uuid4(),
-            status: IntentfulStatus.Completed_Successfully,
-            entity_ref: {} as Entity_Reference
-        };
-        await taskDb.save_task(idleTask)
-        await taskDb.save_task(runningTask)
-        const tasks = await taskDb.list_kind_tasks({ name: "test" } as Kind)
-        const statuses = []
-        statuses.push(tasks[0].status)
-        statuses.push(tasks[1].status)
-        expect(statuses).toContain(IntentfulStatus.Pending)
-        expect(statuses).toContain(IntentfulStatus.Completed_Successfully)
-    });
-
-    test("Get tasks by provider", async () => {
-        expect.assertions(2);
-        const taskDb: IntentfulTask_DB = await connection.get_intentful_task_db(logger);
-        const providerATask: IntentfulTask = {
-            uuid: uuid4(),
-            diffs: {
-                kind: "A",
-                intentful_signature: {} as Intentful_Signature,
-                diff_fields: {}
-            },
-            handler_url: uuid4(),
-            status: IntentfulStatus.Pending,
-            entity_ref: {} as Entity_Reference
-        };
-
-        const providerBTask: IntentfulTask = {
-            uuid: uuid4(),
-            diffs: {
-                kind: "B",
-                intentful_signature: {} as Intentful_Signature,
-                diff_fields: {}
-            },
-            handler_url: uuid4(),
-            status: IntentfulStatus.Completed_Successfully,
-            entity_ref: {} as Entity_Reference
-        };
-        await taskDb.save_task(providerATask)
-        await taskDb.save_task(providerBTask)
-        const tasks = await taskDb.list_provider_tasks({ kinds: [{ name: "A" } as Kind, { name: "B" } as Kind] } as Provider)
-        const statuses = []
-        statuses.push(tasks[0][1][0].status)
-        statuses.push(tasks[1][1][0].status)
-        expect(statuses).toContain(IntentfulStatus.Pending)
-        expect(statuses).toContain(IntentfulStatus.Completed_Successfully)
-    });
+        await taskDb.save_task(task)
+        const watchlist = await taskDb.get_watchlist()
+        watchlist.forEach(entityTask => {
+            if (entityTask.entity_id === task.entity_ref.uuid) {
+                expect(entityTask.tasks.length).toEqual(1)
+            }
+        })
+    })
 });

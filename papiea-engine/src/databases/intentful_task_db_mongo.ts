@@ -24,10 +24,6 @@ export class IntentfulTask_DB_Mongo implements IntentfulTask_DB {
         async init(): Promise<void> {
         try {
             await this.collection.createIndex(
-                { "handler_url": 1 },
-                { unique: true },
-            );
-            await this.collection.createIndex(
                 { "uuid": 1 },
                 { unique: true },
             )

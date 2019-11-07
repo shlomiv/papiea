@@ -89,6 +89,9 @@
     "collectCoverageFrom": [
       "src/**"
     ],
+    "coveragePathIgnorePatterns": [
+      "papiea-lib-clj"
+    ],
     "testEnvironment": "node"
   }
 }

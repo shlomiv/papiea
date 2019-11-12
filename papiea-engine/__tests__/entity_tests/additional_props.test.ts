@@ -1,7 +1,7 @@
 import { getLocationDataDescription } from "../test_data_factory";
 import axios from "axios";
-import { ProviderSdk } from "papiea-sdk/build/provider_sdk/typescript_sdk";
-import { Metadata, Spec } from "papiea-core/build/core";
+import { ProviderSdk } from "papiea-sdk";
+import { Metadata, Spec } from "papiea-core";
 
 const serverPort = parseInt(process.env.SERVER_PORT || '3000');
 const adminKey = process.env.PAPIEA_ADMIN_S2S_KEY || '';

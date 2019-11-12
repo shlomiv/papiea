@@ -1,12 +1,10 @@
 import { SFSCompiler } from "../../src/intentful_core/sfs_compiler"
-import { getLocationDataDescription, ProviderBuilder } from "../test_data_factory"
-import { Provider, IntentfulBehaviour, Procedural_Signature } from "papiea-core"
+import { getLocationDataDescription } from "../test_data_factory"
+import { IntentfulBehaviour, Procedural_Signature } from "papiea-core"
 import { plural } from "pluralize"
 import { BasicDiffer } from "../../src/intentful_core/differ_impl"
 
-describe("SFS Compiler Tests", () => {
-    const hostname = '127.0.0.1'
-    const port = 9001
+describe("Differ tests", () => {
 
     const locationDataDescription = getLocationDataDescription()
     const name = Object.keys(locationDataDescription)[0]

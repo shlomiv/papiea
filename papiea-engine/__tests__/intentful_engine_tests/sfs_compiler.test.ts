@@ -1,7 +1,5 @@
 import { SFSCompiler } from "../../src/intentful_core/sfs_compiler"
-import { getLocationDataDescription, ProviderBuilder } from "../test_data_factory"
-import { Provider, IntentfulBehaviour, Procedural_Signature } from "papiea-core"
-import { plural } from "pluralize"
+import { getLocationDataDescription } from "../test_data_factory"
 
 describe("SFS Compiler Tests", () => {
     const locationDataDescription = getLocationDataDescription()

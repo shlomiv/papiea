@@ -81,7 +81,6 @@ export type SFS = string;
 
 export interface Intentful_Signature {
     signature: SFS;
-    compiled_signature: any
     procedural_signature: Procedural_Signature;
 }
 // SFS-interfaces ends here

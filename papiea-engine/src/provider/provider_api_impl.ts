@@ -10,7 +10,6 @@ import { EventEmitter } from "events";
 import { Entity_Reference, Version, Status, Provider, Kind, S2S_Key, Action, Secret } from "papiea-core";
 import uuid = require("uuid");
 import { Logger } from "../logger_interface";
-import { SFSCompiler } from "../intentful_core/sfs_compiler"
 
 export class Provider_API_Impl implements Provider_API {
     private providerDb: Provider_DB;
@@ -33,7 +32,6 @@ export class Provider_API_Impl implements Provider_API {
 
     async register_provider(user: UserAuthInfo, provider: Provider): Promise<void> {
         await this.authorizer.checkPermission(user, provider, Action.RegisterProvider);
-        SFSCompiler.compile_provider_sfs(provider)
         return this.providerDb.save_provider(provider);
     }
 

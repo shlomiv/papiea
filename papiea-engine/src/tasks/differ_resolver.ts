@@ -113,7 +113,8 @@ export class DifferResolver {
             }
             const activeTask = activeTasks[0]
             const diffs = activeTask.diffs.filter(diff => {
-                return SFSCompiler.run_sfs(diff.intentful_signature.compiled_signature, spec, status).length !== 0
+                const compiledSignature = SFSCompiler.compile_sfs(diff.intentful_signature.signature)
+                return SFSCompiler.run_sfs(compiledSignature, spec, status).length !== 0
             })
             if (metadata.spec_version >= activeTask.spec_version) {
                 if (diffs.length === 0) {

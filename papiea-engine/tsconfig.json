@@ -5,6 +5,7 @@
     "module": "commonjs",
     "declaration": true,
     "outDir": "./build",
+    "downlevelIteration": true,
     "strict": true,
     "sourceMap": true,
     "baseUrl": ".",
@@ -14,5 +15,5 @@
       ]
     }
   },
-  "exclude": ["node_modules", "**/__tests__/*", "build"]
+  "exclude": ["node_modules", "build"]
 }

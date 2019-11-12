@@ -417,7 +417,6 @@ export class Kind_Builder {
         const callback_url = this.server_manager.callback_url(name || sfs_signature, this.kind.name);
         this.kind.intentful_signatures.push({
             signature: sfs_signature,
-            compiled_signature: null,
             procedural_signature: {
                 name: name || sfs_signature,
                 argument: input_desc,

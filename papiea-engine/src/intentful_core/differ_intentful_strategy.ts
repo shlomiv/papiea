@@ -18,7 +18,7 @@ export class DifferIntentfulStrategy extends IntentfulStrategy {
     }
 
     async update(metadata: Metadata, spec: Spec): Promise<IntentfulTask | null> {
-        const status = await this.statusDb.get_status(metadata)
+        const [_, status] = await this.statusDb.get_status(metadata)
         const task: IntentfulTask = {
             uuid: uuid(),
             entity_ref: {
@@ -27,6 +27,7 @@ export class DifferIntentfulStrategy extends IntentfulStrategy {
             },
             diffs: [],
             spec_version: metadata.spec_version,
+            user: this.user,
             status: IntentfulStatus.Pending
         }
         for (let diff of this.differ.diffs(this.kind!, spec, status)) {

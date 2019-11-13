@@ -44,8 +44,11 @@ export abstract class IntentfulStrategy {
     }
 
     protected async dispatch(procedure_name: string, entity: Partial<Entity>): Promise<any> {
-        if (this.user && this.kind) {
+        if (this.kind) {
             if (this.kind.kind_procedures[procedure_name]) {
+                if (this.user === undefined) {
+                    throw new Error("Dispatch couldn't be called, user not specified")
+                }
                 try {
                     const { data } =  await axios.post(this.kind.kind_procedures[procedure_name].procedure_callback, {
                         input: entity

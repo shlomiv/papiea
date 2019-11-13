@@ -1,4 +1,5 @@
 import { uuid4, Diff, Entity_Reference, IntentfulStatus } from "papiea-core"
+import { UserAuthInfo } from "../auth/authn"
 
 // The task is started by a dedicated scheduler
 export interface IntentfulTask {
@@ -9,7 +10,11 @@ export interface IntentfulTask {
     // Entity being modified by a task
     entity_ref: Entity_Reference
 
+    // Spec version at the time of a spec change
     spec_version: number
+
+    // User who triggered a spec change
+    user?: UserAuthInfo
 
     // Diff resolved by this task
     diffs: Diff[]
@@ -21,7 +26,9 @@ export interface IntentfulTask {
     // provider handler url with an id to cache the task it is assigned to, serves as an identifier for a type of task being executed
     handler_id?: string[]
 
+    // Current status of the entity
     status: IntentfulStatus
 
+    // Date of creation
     created_at?: Date
 }

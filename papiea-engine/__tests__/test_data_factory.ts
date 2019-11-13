@@ -39,6 +39,14 @@ export function getLocationDataDescription(): Data_Description {
     return randomizedLocationDataDescription;
 }
 
+export function getDifferLocationDataDescription(): Data_Description {
+    let locationDataDescription = loadYaml("./test_data/location_kind_test_data.yml");
+    locationDataDescription["Location"]["x-papiea-entity"] = IntentfulBehaviour.Differ
+    let randomizedLocationDataDescription: any = {};
+    randomizedLocationDataDescription["Location" + randomString(5)] = locationDataDescription["Location"];
+    return randomizedLocationDataDescription;
+}
+
 export function getClusterDataDescription(): Data_Description {
     let locationDataDescription = loadYaml("./test_data/cluster_kind_test_data.yml");
     let randomizedLocationDataDescription: any = {};

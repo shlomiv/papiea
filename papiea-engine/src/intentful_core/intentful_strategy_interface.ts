@@ -3,6 +3,7 @@ import { Spec_DB } from "../databases/spec_db_interface"
 import { Status_DB } from "../databases/status_db_interface"
 import { UserAuthInfo } from "../auth/authn"
 import axios from "axios"
+import { IntentfulTask } from "../tasks/task_interface"
 
 export abstract class IntentfulStrategy {
     protected readonly specDb: Spec_DB
@@ -32,8 +33,9 @@ export abstract class IntentfulStrategy {
         await this.statusDb.delete_status(metadata);
     }
 
-    async update(metadata: Metadata, spec: Spec): Promise<[Metadata, Spec]> {
-        return this.update_entity(metadata, spec)
+    async update(metadata: Metadata, spec: Spec): Promise<IntentfulTask | null> {
+        await this.update_entity(metadata, spec)
+        return null
     }
 
     async create(metadata: Metadata, spec: Spec): Promise<[Metadata, Spec]> {

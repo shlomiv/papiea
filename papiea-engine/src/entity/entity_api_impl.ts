@@ -27,6 +27,7 @@ import { PermissionDeniedError } from "../errors/permission_error";
 import { Logger } from "../logger_interface";
 import { IntentfulContext } from "../intentful_core/intentful_context"
 import { Provider_DB } from "../databases/provider_db_interface"
+import { IntentfulTask } from "../tasks/task_interface"
 
 export type SortParams = { [key: string]: number };
 
@@ -110,15 +111,15 @@ export class Entity_API_Impl implements Entity_API {
         return filteredRes;
     }
 
-    async update_entity_spec(user: UserAuthInfo, uuid: uuid4, prefix: string, spec_version: number, extension: {[key: string]: any}, kind_name: string, version: Version, spec_description: Spec): Promise<[Metadata, Spec]> {
+    async update_entity_spec(user: UserAuthInfo, uuid: uuid4, prefix: string, spec_version: number, extension: {[key: string]: any}, kind_name: string, version: Version, spec_description: Spec): Promise<IntentfulTask | null> {
         const provider = await this.get_provider(prefix, version);
         const kind = this.find_kind(provider, kind_name);
         this.validate_spec(spec_description, kind, provider.allowExtraProps);
         const metadata: Metadata = { uuid: uuid, kind: kind.name, spec_version: spec_version, extension: extension } as Metadata;
         await this.authorizer.checkPermission(user, { "metadata": metadata }, Action.Update);
         const strategy = this.intentfulCtx.getIntentfulStrategy(kind, user)
-        const [_, spec] = await strategy.update(metadata, spec_description)
-        return [metadata, spec];
+        const task = await strategy.update(metadata, spec_description)
+        return task;
     }
 
     async delete_entity_spec(user: UserAuthInfo, prefix: string, version: Version, kind_name: string, entity_uuid: uuid4): Promise<void> {

@@ -186,11 +186,11 @@ describe("Provider Sdk tests", () => {
             sdk.prefix("location_provider");
             location.entity_procedure("moveX", {}, Procedural_Execution_Strategy.Halt_Intentful, loadYaml("./test_data/procedure_move_input.yml"), loadYaml("./test_data/location_kind_test_data.yml"), async (ctx, entity, input) => {
                 entity.spec.x += input;
-                const res = await axios.put(ctx.url_for(entity), {
+                await axios.put(ctx.url_for(entity), {
                     spec: entity.spec,
                     metadata: entity.metadata
                 });
-                return res.data.spec;
+                return entity.spec;
             });
             await sdk.register();
             const kind_name = sdk.provider.kinds[0].name;

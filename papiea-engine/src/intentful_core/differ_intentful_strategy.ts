@@ -33,6 +33,7 @@ export class DifferIntentfulStrategy extends IntentfulStrategy {
         for (let diff of this.differ.diffs(this.kind!, spec, status)) {
             task.diffs.push(diff)
         }
+        await this.intentfulTaskDb.save_task(task)
         await this.update_entity(metadata, spec)
         return task
     }

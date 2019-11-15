@@ -254,4 +254,5 @@ export enum Action {
     ReadS2SKey = "read_key",
     InactivateS2SKey = "inactive_key",
     UpdateStatus = "update_status",
+    ReadIntentfulTask = "read_intentful_task"
 }

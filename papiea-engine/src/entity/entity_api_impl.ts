@@ -27,20 +27,22 @@ import { PermissionDeniedError } from "../errors/permission_error";
 import { Logger } from "../logger_interface";
 import { IntentfulContext } from "../intentful_core/intentful_context"
 import { Provider_DB } from "../databases/provider_db_interface"
-import { IntentfulTask } from "../tasks/task_interface"
+import { IntentfulTask, IntentfulTaskMapper } from "../tasks/task_interface"
+import { IntentfulTask_DB } from "../databases/intentful_task_db_interface"
 
 export type SortParams = { [key: string]: number };
 
 export class Entity_API_Impl implements Entity_API {
     private status_db: Status_DB;
     private spec_db: Spec_DB;
+    private intentful_task_db: IntentfulTask_DB
     private authorizer: Authorizer;
     private logger: Logger;
     private validator: Validator
     private readonly intentfulCtx: IntentfulContext
     private providerDb: Provider_DB
 
-    constructor(logger: Logger, status_db: Status_DB, spec_db: Spec_DB, provider_db: Provider_DB, authorizer: Authorizer, validator: Validator, intentfulCtx: IntentfulContext) {
+    constructor(logger: Logger, status_db: Status_DB, spec_db: Spec_DB, provider_db: Provider_DB, intentful_task_db: IntentfulTask_DB, authorizer: Authorizer, validator: Validator, intentfulCtx: IntentfulContext) {
         this.status_db = status_db;
         this.spec_db = spec_db;
         this.providerDb = provider_db;
@@ -48,6 +50,7 @@ export class Entity_API_Impl implements Entity_API {
         this.logger = logger;
         this.validator = validator;
         this.intentfulCtx = intentfulCtx
+        this.intentful_task_db = intentful_task_db
     }
 
     private async get_provider(prefix: string, version: Version): Promise<Provider> {
@@ -60,6 +63,20 @@ export class Entity_API_Impl implements Entity_API {
             throw new Error(`Kind: ${kind_name} not found`);
         }
         return found_kind;
+    }
+
+    async get_intentful_task(user: UserAuthInfo, id: string): Promise<Partial<IntentfulTask>> {
+        const intentful_task = await this.intentful_task_db.get_task(id)
+        // TODO: Shlomi does the intentful task have its owner? Is it a person who invoked a spec change?
+        // await this.authorizer.checkPermission(user, intentful_task, Action.ReadIntentfulTask)
+        return IntentfulTaskMapper.toResponse(intentful_task)
+    }
+
+    async filter_intentful_task(user: UserAuthInfo, fields: any, sortParams?: SortParams): Promise<Partial<IntentfulTask>[]> {
+        const intentful_tasks = await this.intentful_task_db.list_tasks(fields, sortParams)
+        // TODO: Secure this with RBAC
+        // const filteredRes = await this.authorizer.filter(user, res, Action.ReadIntentfulTask });
+        return IntentfulTaskMapper.toResponses(intentful_tasks)
     }
 
     async save_entity(user: UserAuthInfo, prefix: string, kind_name: string, version: Version, spec_description: Spec, request_metadata: Metadata = {} as Metadata): Promise<[Metadata, Spec]> {

@@ -32,3 +32,27 @@ export interface IntentfulTask {
     // Date of creation
     created_at?: Date
 }
+
+export class IntentfulTaskMapper {
+    public static toResponse(intentfulTask: IntentfulTask): Partial<IntentfulTask> {
+        return {
+            uuid: intentfulTask.uuid,
+            entity_ref: intentfulTask.entity_ref,
+            spec_version: intentfulTask.spec_version,
+            status: intentfulTask.status,
+            created_at: intentfulTask.created_at
+        }
+    }
+
+    public static toResponses(intentfulTasks: IntentfulTask[]): Partial<IntentfulTask>[] {
+        return intentfulTasks.map(task => {
+            return {
+                uuid: task.uuid,
+                entity_ref: task.entity_ref,
+                spec_version: task.spec_version,
+                status: task.status,
+                created_at: task.created_at
+            }
+        })
+    }
+}

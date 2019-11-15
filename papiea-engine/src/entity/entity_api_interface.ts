@@ -8,7 +8,11 @@ export interface Entity_API {
 
     get_entity_spec(user: UserAuthInfo, kind_name: string, entity_uuid: uuid4): Promise<[Metadata, Spec]>
 
+    get_intentful_task(user: UserAuthInfo, id: string): Promise<Partial<IntentfulTask>>
+
     get_entity_status(user: UserAuthInfo, kind_name: string, entity_uuid: uuid4): Promise<[Metadata, Status]>
+
+    filter_intentful_task(user: UserAuthInfo, fields: any, sortParams?: SortParams): Promise<Partial<IntentfulTask>[]>
 
     filter_entity_spec(user: UserAuthInfo, kind_name: string, fields: any, sortParams?: SortParams): Promise<[Metadata, Spec][]>
 

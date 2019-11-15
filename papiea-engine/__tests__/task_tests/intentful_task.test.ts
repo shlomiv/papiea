@@ -27,7 +27,7 @@ const providerApiAdmin = axios.create({
     }
 });
 
-describe("Differ tests", () => {
+describe("Intentful Task tests", () => {
 
     const locationDataDescription = getDifferLocationDataDescription()
     const name = Object.keys(locationDataDescription)[0]
@@ -120,5 +120,33 @@ describe("Differ tests", () => {
         expect(task.diffs[1].diff_fields[0]["spec-val"][0]).toEqual(110)
         expect(task.diffs[0].diff_fields[0]["status-val"][0]).toEqual(10)
         expect(task.diffs[1].diff_fields[0]["status-val"][0]).toEqual(11)
+    })
+
+    test("Intentful task created through updating the spec and queried via API", async () => {
+        expect.hasAssertions()
+        const provider = new ProviderBuilder()
+            .withVersion("0.1.0")
+            .withKinds([locationDifferKind])
+            .build()
+        await providerApiAdmin.post('/', provider);
+        const { data: { metadata, spec } } = await entityApi.post(`/${ provider.prefix }/${ provider.version }/${ locationDifferKind.name }`, {
+            spec: {
+                x: 10,
+                y: 11
+            }
+        });
+        const { data: { task } } = await entityApi.put(`/${ provider.prefix }/${ provider.version }/${ locationDifferKind.name }/${ metadata.uuid }`, {
+            spec: {
+                x: 20,
+                y: 11
+            },
+            metadata: {
+                spec_version: 1
+            }
+        })
+
+        const result = await entityApi.get(`/intentful_task/${ task.uuid }`)
+        expect(result.data.status).toEqual(IntentfulStatus.Pending)
+        expect(result.data.diffs).toBeUndefined()
     })
 })

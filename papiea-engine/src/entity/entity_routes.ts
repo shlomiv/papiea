@@ -53,15 +53,49 @@ export function createEntityAPIRouter(entity_api: Entity_API): Router {
         res.json(await entity_api.get_intentful_task(req.user, req.params.id))
     }))
 
-    router.get("/intentful_task", CheckNoQueryParams, asyncHandler(async (req, res) => {
+    router.get("/intentful_task", check_request({
+        allowed_query_params: ['offset', 'limit', 'sort', 'entity_ref', 'created_at', 'status']
+    }), asyncHandler(async (req, res) => {
         const filter: any = {};
         const offset: undefined | number = req.query.offset;
         const limit: undefined | number = req.query.limit;
         const rawSortQuery: undefined | string = req.query.sort;
         const sortParams = processSortQuery(rawSortQuery);
         const [skip, size] = processPaginationParams(offset, limit);
+        if (req.query.entity_ref) {
+            filter.entity_ref = JSON.parse(req.query.entity_ref)
+        }
+        if (req.query.created_at) {
+            filter.created_at = req.query.created_at
+        }
+        if (req.query.status) {
+            filter.status = req.query.status
+        }
         const intentful_tasks = await entity_api.filter_intentful_task(req.user, filter, sortParams)
-        return paginateEntities(intentful_tasks, skip, size)
+        res.json(await paginateEntities(intentful_tasks, skip, size))
+    }))
+
+    router.post("/intentful_task/filter", check_request({
+        allowed_query_params: ['offset', 'limit', 'sort'],
+        allowed_body_params: ['entity_ref', 'created_at', 'status']
+    }), asyncHandler(async (req, res) => {
+        const filter: any = {};
+        const offset: undefined | number = req.query.offset;
+        const limit: undefined | number = req.query.limit;
+        const rawSortQuery: undefined | string = req.query.sort;
+        const sortParams = processSortQuery(rawSortQuery);
+        const [skip, size] = processPaginationParams(offset, limit);
+        if (req.body.entity_ref) {
+            filter.entity_ref = req.body.entity_ref
+        }
+        if (req.body.created_at) {
+            filter.created_at = req.body.created_at
+        }
+        if (req.body.status) {
+            filter.status = req.body.status
+        }
+        const intentful_tasks = await entity_api.filter_intentful_task(req.user, filter, sortParams)
+        res.json(await paginateEntities(intentful_tasks, skip, size))
     }))
 
     router.get("/:prefix/:version/:kind", check_request({

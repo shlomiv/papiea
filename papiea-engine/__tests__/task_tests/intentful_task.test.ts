@@ -149,4 +149,86 @@ describe("Intentful Task tests", () => {
         expect(result.data.status).toEqual(IntentfulStatus.Pending)
         expect(result.data.diffs).toBeUndefined()
     })
+
+    test("Intentful task created through updating the spec and queried via API", async () => {
+        expect.hasAssertions()
+        const provider = new ProviderBuilder()
+            .withVersion("0.1.0")
+            .withKinds([locationDifferKind])
+            .build()
+        await providerApiAdmin.post('/', provider);
+        const { data: { metadata, spec } } = await entityApi.post(`/${ provider.prefix }/${ provider.version }/${ locationDifferKind.name }`, {
+            spec: {
+                x: 10,
+                y: 11
+            }
+        });
+        const { data: { task } } = await entityApi.put(`/${ provider.prefix }/${ provider.version }/${ locationDifferKind.name }/${ metadata.uuid }`, {
+            spec: {
+                x: 20,
+                y: 11
+            },
+            metadata: {
+                spec_version: 1
+            }
+        })
+
+        const result = await entityApi.get(`/intentful_task/${ task.uuid }`)
+        expect(result.data.status).toEqual(IntentfulStatus.Pending)
+        expect(result.data.diffs).toBeUndefined()
+    })
+
+    test("Intentful task created through updating the spec and queried as list via API", async () => {
+        expect.hasAssertions()
+        const provider = new ProviderBuilder()
+            .withVersion("0.1.0")
+            .withKinds([locationDifferKind])
+            .build()
+        await providerApiAdmin.post('/', provider);
+        const { data: { metadata, spec } } = await entityApi.post(`/${ provider.prefix }/${ provider.version }/${ locationDifferKind.name }`, {
+            spec: {
+                x: 10,
+                y: 11
+            }
+        });
+        const { data: { task } } = await entityApi.put(`/${ provider.prefix }/${ provider.version }/${ locationDifferKind.name }/${ metadata.uuid }`, {
+            spec: {
+                x: 20,
+                y: 11
+            },
+            metadata: {
+                spec_version: 1
+            }
+        })
+
+        const result = await entityApi.get(`/intentful_task`)
+        expect(result.data.results.length).toBeGreaterThan(1)
+    })
+
+    test("Intentful task created through updating the spec and queried as list  via POST API", async () => {
+        expect.hasAssertions()
+        const provider = new ProviderBuilder()
+            .withVersion("0.1.0")
+            .withKinds([locationDifferKind])
+            .build()
+        await providerApiAdmin.post('/', provider);
+        const { data: { metadata, spec } } = await entityApi.post(`/${ provider.prefix }/${ provider.version }/${ locationDifferKind.name }`, {
+            spec: {
+                x: 10,
+                y: 11
+            }
+        });
+        const { data: { task } } = await entityApi.put(`/${ provider.prefix }/${ provider.version }/${ locationDifferKind.name }/${ metadata.uuid }`, {
+            spec: {
+                x: 20,
+                y: 11
+            },
+            metadata: {
+                spec_version: 1
+            }
+        })
+
+        const result = await entityApi.post(`/intentful_task/filter`)
+        expect(result.data.results.length).toBeGreaterThan(1)
+    })
 })

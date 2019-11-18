@@ -67,7 +67,9 @@ export class Status_DB_Mongo implements Status_DB {
 
     async list_status(fields_map: any, sortParams?: SortParams): Promise<([Metadata, Status])[]> {
         const filter: any = {};
-        filter["metadata.deleted_at"] = datestringToFilter(fields_map.metadata.deleted_at);
+        if (fields_map.metadata && fields_map.metadata.deleted_at) {
+            filter["metadata.deleted_at"] = datestringToFilter(fields_map.metadata.deleted_at);
+        }
         for (let key in fields_map.metadata) {
             if (key === "deleted_at")
                 continue;

@@ -5,7 +5,9 @@ import { IntentfulTask_DB } from "../databases/intentful_task_db_interface"
 import { Watchlist } from "./watchlist"
 import { Metadata } from "papiea-core/build/core"
 import { Status_DB } from "../databases/status_db_interface"
+// @ts-ignore
 import MultiMap from "mnemonist/multi-map"
+var MultiMap = require('mnemonist/multi-map');
 import { timeout } from "../utils/utils"
 
 export class IntentfulListenerMongo implements IntentfulListener {
@@ -23,7 +25,7 @@ export class IntentfulListenerMongo implements IntentfulListener {
         return listener
     }
 
-    get tasks(): Set<IntentfulTask> {
+    get_watchlist_tasks(): Set<IntentfulTask> {
         return this.watchlist.reduce((acc: Set<IntentfulTask>, entityTask) => {
             entityTask.tasks.forEach(task => {
                 acc.add(task)
@@ -47,7 +49,7 @@ export class IntentfulListenerMongo implements IntentfulListener {
         let currStatuses: [Metadata, Status][]
         while (true) {
             currTasks = await this.intentfulTaskDb.list_tasks({})
-            watchlistTasks = this.tasks
+            watchlistTasks = this.get_watchlist_tasks()
             this.checkTasks(currTasks, watchlistTasks)
 
             currStatuses = await this.statusDb.list_status({})

@@ -35,5 +35,8 @@ async function setUpDiffResolver() {
     const intentfulListener = await IntentfulListenerMongo.create(intentfulTaskDb, statusDb, watchlist)
 
     const diffResolver = new DifferResolver(intentfulTaskDb, specDb, statusDb, intentfulListener, watchlist)
+    console.log("Running differ resolver")
     await diffResolver.run(5000)
 }
+
+setUpDiffResolver().then().catch(console.error)

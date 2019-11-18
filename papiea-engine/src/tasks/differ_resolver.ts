@@ -25,6 +25,8 @@ export class DifferResolver {
         this.statusDb = statusDb
         this.watchlist = watchlist
         this.intentfulListener = intentfulListener
+        this.onTask = this.onTask.bind(this)
+        this.onStatus = this.onStatus.bind(this)
         this.intentfulListener.onTask = new Handler(this.onTask)
         this.intentfulListener.onStatus = new Handler(this.onStatus)
     }
@@ -33,6 +35,7 @@ export class DifferResolver {
         try {
             await this._run(delay)
         } catch (e) {
+            console.error(e)
             throw e
         }
     }

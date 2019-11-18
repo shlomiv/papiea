@@ -16,6 +16,7 @@
     "test-ci": "jest --runInBand --coverage --ci --reporters=default --reporters=jest-junit",
     "dev": "./node_modules/nodemon/bin/nodemon.js",
     "debug": "./node_modules/nodemon/bin/nodemon.js --config nodemon_debug.json",
+    "debug_differ": "./node_modules/nodemon/bin/nodemon.js --config nodemon_debug_differ.json",
     "test-watch": "jest --watchAll",
     "build-clj": "cd papiea-lib-clj && lein cljsbuild once",
     "build-clj-auto": "cd papiea-lib-clj && lein cljsbuild auto",

@@ -413,12 +413,12 @@ export class Kind_Builder {
     on(sfs_signature: string, rbac: any, strategy: Procedural_Execution_Strategy,
        input_desc: any,
        output_desc: any,
-       handler: (ctx: IntentfulCtx_Interface, input: any) => Promise<any>, name?: string): Kind_Builder {
-        const callback_url = this.server_manager.callback_url(name || sfs_signature, this.kind.name);
+       handler: (ctx: IntentfulCtx_Interface, entity: Entity, input: any) => Promise<any>, name: string): Kind_Builder {
+        const callback_url = this.server_manager.callback_url(name, this.kind.name);
         this.kind.intentful_signatures.push({
             signature: sfs_signature,
             procedural_signature: {
-                name: name || sfs_signature,
+                name: name,
                 argument: input_desc,
                 result: output_desc,
                 execution_strategy: strategy,
@@ -429,7 +429,11 @@ export class Kind_Builder {
         const version = this.get_version();
         this.server_manager.register_handler(`/${this.kind.name}/${name}`, async (req, res) => {
             try {
-                const result = await handler(new ProceduralCtx(this.provider, prefix, version, req.headers, makeLoggerFactory(name || sfs_signature)), req.body.input);
+                const result = await handler(new ProceduralCtx(this.provider, prefix, version, req.headers, makeLoggerFactory(name || sfs_signature)), {
+                    metadata: req.body.metadata,
+                    spec: req.body.spec,
+                    status: req.body.status
+                }, req.body.input);
                 res.json(result);
             } catch (e) {
                 if (e instanceof InvocationError) {

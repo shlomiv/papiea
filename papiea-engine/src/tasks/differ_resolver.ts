@@ -42,9 +42,9 @@ export class DifferResolver {
 
     private async _run(delay: number) {
         while (true) {
-            await this.clearFinishedTasks()
-            await timeout(delay)
             await this.activateTask()
+            await timeout(delay)
+            await this.clearFinishedTasks()
         }
     }
 
@@ -104,10 +104,12 @@ export class DifferResolver {
     }
 
     protected async onStatus(entity: Entity_Reference, specVersion: number, status: Status) {
+        this.activateTask()
         const [metadata, spec] = await this.specDb.get_spec(entity)
         const tasks = this.watchlist.filter(entityTasks => entityTasks.entity_id === entity.uuid)
         if (tasks.length !== 0) {
             const activeTasks = tasks[0].tasks.filter(task => task.status === IntentfulStatus.Active)
+            console.log(activeTasks)
             if (activeTasks.length === 0) {
                 return
             } else if (activeTasks.length > 1) {
@@ -117,9 +119,10 @@ export class DifferResolver {
             const activeTask = activeTasks[0]
             const diffs = activeTask.diffs.filter(diff => {
                 const compiledSignature = SFSCompiler.compile_sfs(diff.intentful_signature.signature)
-                return SFSCompiler.run_sfs(compiledSignature, spec, status).length !== 0
+                return SFSCompiler.run_sfs(compiledSignature, spec, status) !== null
             })
-            if (metadata.spec_version >= activeTask.spec_version) {
+            console.log(JSON.stringify(diffs))
+            if (metadata.spec_version > activeTask.spec_version + 1) {
                 if (diffs.length === 0) {
                     activeTask.status = IntentfulStatus.Outdated
                 } else if (diffs.length === activeTask.diffs.length) {

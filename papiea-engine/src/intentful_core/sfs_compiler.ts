@@ -14,7 +14,7 @@ export class SFSCompiler {
         return sfs_compiler(signature)
     }
 
-    static run_sfs(compiled_sfs: any, spec: any, status: any): any[] {
+    static run_sfs(compiled_sfs: any, spec: any, status: any): any[] | null {
         return run_compiled_sfs(compiled_sfs, spec, status)
     }
 }

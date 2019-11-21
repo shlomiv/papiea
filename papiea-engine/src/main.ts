@@ -59,7 +59,7 @@ async function setUpApplication(): Promise<express.Express> {
     const statusDb = await mongoConnection.get_status_db(logger);
     const s2skeyDb = await mongoConnection.get_s2skey_db(logger);
     const validator = new ValidatorImpl()
-    const providerApi = new Provider_API_Impl(logger, providerDb, statusDb, s2skeyDb, new AdminAuthorizer(), validator);
+    const providerApi = new Provider_API_Impl(logger, providerDb, statusDb, specDb, s2skeyDb, new AdminAuthorizer(), validator);
     const sessionKeyDb = await mongoConnection.get_session_key_db(logger)
     const sessionKeyApi = new SessionKeyAPI(sessionKeyDb)
     const userAuthInfoExtractor = new CompositeUserAuthInfoExtractor([

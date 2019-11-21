@@ -1,5 +1,6 @@
 import { UserAuthInfo } from "../auth/authn";
 import { Provider, Version, Entity_Reference, Status, S2S_Key } from "papiea-core";
+import {Metadata, Spec} from "papiea-core/build/core";
 
 
 // This will be provided using REST APIs. 
@@ -42,6 +43,8 @@ export interface Provider_API {
     // Updating status
     // POST "/provider/update_status"
     update_status(user: UserAuthInfo, context: any, entity_ref: Entity_Reference, status: Status): Promise<void>;
+
+    update_spec(user: UserAuthInfo, context: any, entity_metadata: Metadata, spec: Spec): Promise<[Metadata, Spec]>;
 
     create_key(user: UserAuthInfo, name: string, owner: string, provider_prefix: string, extension?: any, key?: string): Promise<S2S_Key>;
 

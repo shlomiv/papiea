@@ -1,6 +1,6 @@
 // [[file:~/work/papiea-js/Papiea-design.org::*Typescript:%20/src/provider_sdk/typescript_sdk_interface][Typescript: /src/provider_sdk/typescript_sdk_interface:1]]
 import { Kind_Builder } from "./typescript_sdk";
-import { Data_Description, Version, Status, Entity, Entity_Reference, S2S_Key, UserInfo, Action, Secret } from "papiea-core";
+import { Data_Description, Version, Status, Spec, Entity, Entity_Reference, S2S_Key, UserInfo, Action, Secret } from "papiea-core";
 import { IncomingHttpHeaders } from "http";
 
 // [[file:~/work/papiea-js/Papiea-design.org::#h-Providers-SDK-518][provider_sdk_ts_provider_interface]]
@@ -57,6 +57,7 @@ export interface SecurityApi {
 // [[file:~/work/papiea-js/Papiea-design.org::#h-Providers-SDK-518][provider_sdk_ts_intentful_ctx_interface]]
 export interface IntentfulCtx_Interface {
     update_status(entity_reference: Entity_Reference, status: Status):Promise<boolean>
+    update_spec(entity_reference: Entity_Reference, spec: Spec):Promise<boolean>
     update_progress(message:string, done_percent:number):boolean
     url_for(entity: Entity): string
     get_provider_security_api(): SecurityApi

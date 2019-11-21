@@ -10,19 +10,23 @@ import { EventEmitter } from "events";
 import { Entity_Reference, Version, Status, Provider, Kind, S2S_Key, Action, Secret } from "papiea-core";
 import uuid = require("uuid");
 import { Logger } from "../logger_interface";
+import {Spec_DB} from "../databases/spec_db_interface";
+import {Metadata, Spec} from "papiea-core/build/core";
 
 export class Provider_API_Impl implements Provider_API {
     private providerDb: Provider_DB;
     private statusDb: Status_DB;
+    private specDb: Spec_DB;
     private s2skeyDb: S2S_Key_DB;
     private authorizer: Authorizer;
     private eventEmitter: EventEmitter;
     private logger: Logger;
     private validator: Validator
 
-    constructor(logger: Logger, providerDb: Provider_DB, statusDb: Status_DB, s2skeyDb: S2S_Key_DB, authorizer: Authorizer, validator: Validator) {
+    constructor(logger: Logger, providerDb: Provider_DB, statusDb: Status_DB, specDb: Spec_DB, s2skeyDb: S2S_Key_DB, authorizer: Authorizer, validator: Validator) {
         this.providerDb = providerDb;
         this.statusDb = statusDb;
+        this.specDb = specDb;
         this.s2skeyDb = s2skeyDb;
         this.authorizer = authorizer;
         this.eventEmitter = new EventEmitter();
@@ -76,6 +80,12 @@ export class Provider_API_Impl implements Provider_API {
         }
         await this.authorizer.checkPermission(user, provider, Action.UpdateStatus);
         return this.statusDb.update_status(entity_ref, status);
+    }
+
+    async update_spec(user: UserAuthInfo, context: any, entity_metadata: Metadata, spec: Spec): Promise<[Metadata, Spec]> {
+        const provider: Provider = await this.get_latest_provider_by_kind(user, entity_metadata.kind);
+        await this.authorizer.checkPermission(user, provider, Action.UpdateSpec);
+        return this.specDb.update_spec(entity_metadata, spec);
     }
 
     async update_progress(user: UserAuthInfo, context: any, message: string, done_percent: number): Promise<void> {

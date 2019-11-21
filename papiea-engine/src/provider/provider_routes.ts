@@ -48,6 +48,14 @@ export default function createProviderAPIRouter(providerApi: Provider_API) {
         res.json("OK")
     }));
 
+    providerApiRouter.patch('/update_spec', check_request({
+        allowed_query_params: [],
+        allowed_body_params: ['context', 'entity_ref', 'spec']
+    }), asyncHandler(async (req, res) => {
+        await providerApi.update_spec(req.user, req.body.context, req.body.entity_ref, req.body.spec);
+        res.json("OK")
+    }));
+
     providerApiRouter.post('/update_progress', check_request({
         allowed_query_params: [],
         allowed_body_params: ['context', 'message', 'done_percent']

@@ -1,5 +1,5 @@
 import Logger, { LoggerFactory, ProceduralCtx_Interface, SecurityApi } from "./typescript_sdk_interface"
-import { Entity, Status, Entity_Reference, Action, Version, Secret } from "papiea-core";
+import { Entity, Status, Spec, Entity_Reference, Action, Version, Secret } from "papiea-core";
 import axios, { AxiosInstance } from "axios";
 import { ProviderSdk } from "./typescript_sdk";
 import { IncomingHttpHeaders } from "http";
@@ -51,6 +51,19 @@ export class ProceduralCtx implements ProceduralCtx_Interface {
         });
         if (res.status != 200) {
             console.error("Could not update status:", entity_reference, status, res.status, res.data);
+            return false
+        }
+        return true
+    }
+
+
+    async update_spec(entity_reference: Entity_Reference, spec: Spec): Promise<boolean> {
+        const res = await this.providerApiAxios.patch(`${this.provider_url}/update_spec`,{
+            entity_ref: entity_reference,
+            spec: spec
+        });
+        if (res.status != 200) {
+            console.error("Could not update spec:", entity_reference, spec, res.status, res.data);
             return false
         }
         return true

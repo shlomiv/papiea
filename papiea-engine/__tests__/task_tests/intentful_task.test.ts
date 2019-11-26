@@ -2,11 +2,18 @@ import { getDifferLocationDataDescription, ProviderBuilder } from "../test_data_
 import { IntentfulBehaviour, Procedural_Signature, IntentfulStatus } from "papiea-core"
 import { plural } from "pluralize"
 import axios from "axios"
+import { MongoConnection } from "../../src/databases/mongo"
+import { Logger } from "../../src/logger_interface"
+import { WinstonLogger } from "../../src/logger"
+import { IntentfulTask_DB } from "../../src/databases/intentful_task_db_interface"
+import { IntentfulTask } from "../../src/tasks/task_interface"
 
 declare var process: {
     env: {
         SERVER_PORT: string,
-        PAPIEA_ADMIN_S2S_KEY: string
+        PAPIEA_ADMIN_S2S_KEY: string,
+        MONGO_DB: string,
+        MONGO_URL: string,
     }
 };
 const serverPort = parseInt(process.env.SERVER_PORT || '3000');
@@ -63,6 +70,25 @@ describe("Intentful Task tests", () => {
         differ: undefined,
         intentful_behaviour: IntentfulBehaviour.Differ
     }
+    const mongoUrl = process.env.MONGO_URL || 'mongodb://mongo:27017';
+    const mongoDb = process.env.MONGO_DB || 'papiea';
+    const mongoConnection: MongoConnection = new MongoConnection(mongoUrl, mongoDb);
+    const intentfulWorkflowTestLogger: Logger = new WinstonLogger("info");
+    let intentfulTaskDb: IntentfulTask_DB
+    let createdTask: IntentfulTask
+
+    beforeAll(async () => {
+        await mongoConnection.connect();
+        intentfulTaskDb = await mongoConnection.get_intentful_task_db(intentfulWorkflowTestLogger)
+    });
+
+    afterAll(async () => {
+        await mongoConnection.close()
+    });
+
+    afterEach(async () => {
+        await intentfulTaskDb.delete_task(createdTask.uuid)
+    })
 
     test("Intentful task created through updating the spec", async () => {
         expect.hasAssertions()
@@ -89,6 +115,7 @@ describe("Intentful Task tests", () => {
         expect(task.status).toEqual(IntentfulStatus.Pending)
         expect(task.diffs[0].diff_fields[0]["spec-val"][0]).toEqual(20)
         expect(task.diffs[0].diff_fields[0]["status-val"][0]).toEqual(10)
+        createdTask = task
     })
 
     test("Intentful task created through updating the spec with multiple diffs", async () => {
@@ -104,8 +131,7 @@ describe("Intentful Task tests", () => {
                 y: 11
             }
         });
-        const res = await entityApi.get(`/${ provider.prefix }/${ provider.version }/${ locationDifferKind.name }/${ metadata.uuid }`)
-        console.log(res.data)
+        await entityApi.get(`/${ provider.prefix }/${ provider.version }/${ locationDifferKind.name }/${ metadata.uuid }`)
         const { data: { task } } = await entityApi.put(`/${ provider.prefix }/${ provider.version }/${ locationDifferKind.name }/${ metadata.uuid }`, {
             spec: {
                 x: 20,
@@ -120,6 +146,7 @@ describe("Intentful Task tests", () => {
         expect(task.diffs[1].diff_fields[0]["spec-val"][0]).toEqual(110)
         expect(task.diffs[0].diff_fields[0]["status-val"][0]).toEqual(10)
         expect(task.diffs[1].diff_fields[0]["status-val"][0]).toEqual(11)
+        createdTask = task
     })
 
     test("Intentful task created through updating the spec and queried via API", async () => {
@@ -148,34 +175,7 @@ describe("Intentful Task tests", () => {
         const result = await entityApi.get(`/intentful_task/${ task.uuid }`)
         expect(result.data.status).toEqual(IntentfulStatus.Pending)
         expect(result.data.diffs).toBeUndefined()
-    })
-
-    test("Intentful task created through updating the spec and queried via API", async () => {
-        expect.hasAssertions()
-        const provider = new ProviderBuilder()
-            .withVersion("0.1.0")
-            .withKinds([locationDifferKind])
-            .build()
-        await providerApiAdmin.post('/', provider);
-        const { data: { metadata, spec } } = await entityApi.post(`/${ provider.prefix }/${ provider.version }/${ locationDifferKind.name }`, {
-            spec: {
-                x: 10,
-                y: 11
-            }
-        });
-        const { data: { task } } = await entityApi.put(`/${ provider.prefix }/${ provider.version }/${ locationDifferKind.name }/${ metadata.uuid }`, {
-            spec: {
-                x: 20,
-                y: 11
-            },
-            metadata: {
-                spec_version: 1
-            }
-        })
-
-        const result = await entityApi.get(`/intentful_task/${ task.uuid }`)
-        expect(result.data.status).toEqual(IntentfulStatus.Pending)
-        expect(result.data.diffs).toBeUndefined()
+        createdTask = task
     })
 
     test("Intentful task created through updating the spec and queried as list via API", async () => {
@@ -202,10 +202,11 @@ describe("Intentful Task tests", () => {
         })
 
         const result = await entityApi.get(`/intentful_task`)
-        expect(result.data.results.length).toBeGreaterThan(1)
+        expect(result.data.results.length).toBeGreaterThanOrEqual(1)
+        createdTask = task
     })
 
-    test("Intentful task created through updating the spec and queried as list  via POST API", async () => {
+    test("Intentful task created through updating the spec and queried as list via POST API", async () => {
         expect.hasAssertions()
         const provider = new ProviderBuilder()
             .withVersion("0.1.0")
@@ -229,6 +230,7 @@ describe("Intentful Task tests", () => {
         })
 
         const result = await entityApi.post(`/intentful_task/filter`)
-        expect(result.data.results.length).toBeGreaterThan(1)
+        expect(result.data.results.length).toBeGreaterThanOrEqual(1)
+        createdTask = task
     })
 })

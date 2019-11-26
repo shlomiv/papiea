@@ -67,16 +67,17 @@ export class Entity_API_Impl implements Entity_API {
 
     async get_intentful_task(user: UserAuthInfo, id: string): Promise<Partial<IntentfulTask>> {
         const intentful_task = await this.intentful_task_db.get_task(id)
-        // TODO: Shlomi does the intentful task have its owner? Is it a person who invoked a spec change?
-        // await this.authorizer.checkPermission(user, intentful_task, Action.ReadIntentfulTask)
+        const [metadata, _] = await this.spec_db.get_spec(intentful_task.entity_ref)
+        await this.authorizer.checkPermission(user, { "metadata": metadata }, Action.Update);
         return IntentfulTaskMapper.toResponse(intentful_task)
     }
 
     async filter_intentful_task(user: UserAuthInfo, fields: any, sortParams?: SortParams): Promise<Partial<IntentfulTask>[]> {
         const intentful_tasks = await this.intentful_task_db.list_tasks(fields, sortParams)
-        // TODO: Secure this with RBAC
-        // const filteredRes = await this.authorizer.filter(user, res, Action.ReadIntentfulTask });
-        return IntentfulTaskMapper.toResponses(intentful_tasks)
+        const entities = await this.spec_db.get_specs_by_ref(intentful_tasks.map(task => task.entity_ref))
+        const filteredRes = await this.authorizer.filter(user, entities, Action.Update, x => { return { "metadata": x[0] } });
+        const filteredTasks = IntentfulTaskMapper.filter(intentful_tasks, filteredRes)
+        return IntentfulTaskMapper.toResponses(filteredTasks)
     }
 
     async save_entity(user: UserAuthInfo, prefix: string, kind_name: string, version: Version, spec_description: Spec, request_metadata: Metadata = {} as Metadata): Promise<[Metadata, Spec]> {

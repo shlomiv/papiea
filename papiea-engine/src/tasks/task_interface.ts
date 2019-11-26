@@ -1,4 +1,4 @@
-import { uuid4, Diff, Entity_Reference, IntentfulStatus } from "papiea-core"
+import { uuid4, Diff, Entity_Reference, IntentfulStatus, Metadata, Spec } from "papiea-core"
 import { UserAuthInfo } from "../auth/authn"
 
 // The task is started by a dedicated scheduler
@@ -42,6 +42,18 @@ export class IntentfulTaskMapper {
             status: intentfulTask.status,
             created_at: intentfulTask.created_at
         }
+    }
+
+    public static filter(intentfulTasks: IntentfulTask[], entities: [Metadata, Spec][]): IntentfulTask[] {
+        const tasks: IntentfulTask[] = []
+        entities.forEach(entity => {
+            intentfulTasks.forEach(task => {
+                if (entity[0].uuid === task.entity_ref.uuid && !tasks.includes(task)) {
+                    tasks.push(task)
+                }
+            })
+        })
+        return tasks
     }
 
     public static toResponses(intentfulTasks: IntentfulTask[]): Partial<IntentfulTask>[] {

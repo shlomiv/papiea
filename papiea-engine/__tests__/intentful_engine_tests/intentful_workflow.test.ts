@@ -1,14 +1,13 @@
-import { getDifferLocationDataDescription, loadYaml } from "../test_data_factory"
-import { IntentfulStatus } from "papiea-core"
+import { getDifferLocationDataDescription } from "../test_data_factory"
 import axios from "axios"
 import { ProviderSdk } from "papiea-sdk"
-import { Procedural_Execution_Strategy } from "papiea-core"
 import { timeout } from "../../src/utils/utils"
+import { IntentfulStatus } from "papiea-core"
 
 declare var process: {
     env: {
         SERVER_PORT: string,
-        PAPIEA_ADMIN_S2S_KEY: string
+        PAPIEA_ADMIN_S2S_KEY: string,
     }
 };
 const serverPort = parseInt(process.env.SERVER_PORT || '3000');
@@ -35,10 +34,9 @@ const providerApiAdmin = axios.create({
     }
 });
 
-describe("Intentful Task tests", () => {
+describe("Intentful Workflow tests", () => {
 
     const locationDataDescription = getDifferLocationDataDescription()
-    const name = Object.keys(locationDataDescription)[0]
     const provider_version = "0.1.0";
 
     test("Change single field intentful workflow should pass", async () => {
@@ -48,8 +46,7 @@ describe("Intentful Task tests", () => {
             const location = sdk.new_kind(locationDataDescription);
             sdk.version(provider_version);
             sdk.prefix("location_provider_intentful");
-            location.on("x", {}, Procedural_Execution_Strategy.Halt_Intentful, loadYaml("./test_data/intentful_handler_input.yml"), {}, async (ctx, entity, input) => {
-                entity.spec.x = input[0]['spec-val'][0]
+            location.on("x", {}, async (ctx, entity, input) => {
                 await providerApiAdmin.patch('/update_status', {
                     context: "some context",
                     entity_ref: {
@@ -58,7 +55,7 @@ describe("Intentful Task tests", () => {
                     },
                     status: { x: entity.spec.x }
                 })
-            }, "x_handler")
+            })
             await sdk.register();
             const kind_name = sdk.provider.kinds[0].name;
             const { data: { metadata, spec } } = await axios.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }`, {
@@ -67,7 +64,6 @@ describe("Intentful Task tests", () => {
                     y: 11
                 }
             })
-            await timeout(5000)
             const { data: { task } } = await entityApi.put(`/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`, {
                 spec: {
                     x: 20,
@@ -77,7 +73,15 @@ describe("Intentful Task tests", () => {
                     spec_version: 1
                 }
             })
-            await timeout(10000)
+            let retries = 4
+            for (let i = 1; i <= retries; i++) {
+                const result = await entityApi.get(`/intentful_task/${ task.uuid }`)
+                if (result.data.status === IntentfulStatus.Completed_Successfully) {
+                    expect(result.data.status).toEqual(IntentfulStatus.Completed_Successfully)
+                    return
+                }
+                await timeout(7000)
+            }
             const result = await entityApi.get(`/intentful_task/${ task.uuid }`)
             expect(result.data.status).toEqual(IntentfulStatus.Completed_Successfully)
         } finally {

@@ -20,6 +20,9 @@ export interface Spec_DB {
     // current metadata and the spec of that entity.
     get_spec(entity_ref: Entity_Reference): Promise<[Metadata, Spec]>;
 
+    // Get specs by their entity references
+    get_specs_by_ref(entity_refs: Entity_Reference[]): Promise<[Metadata, Spec][]>
+
     // List all specs that have their fields match the ones given in
     // fields_map. E.g. we could look for all specs for `vm` kind that
     // have a certain ip:

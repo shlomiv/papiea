@@ -165,6 +165,7 @@ export interface SpecOnlyEntityKind extends Kind {
 // can only halt intentful execution for the duration of the
 // procedural call
 export enum Procedural_Execution_Strategy {Halt_Intentful};
+export enum Intentful_Execution_Strategy {Basic};
 
 export interface Procedural_Signature {
     // The name of the entity_procedure to be exported by the engine.
@@ -178,7 +179,7 @@ export interface Procedural_Signature {
 
     // Does the engine pauses all intentful operation invocations for
     // the duration of the procedural call
-    execution_strategy: Procedural_Execution_Strategy;
+    execution_strategy: Procedural_Execution_Strategy | Intentful_Execution_Strategy;
 
     // Actions url into the provider
     procedure_callback: Provider_Callback_URL;
@@ -254,5 +255,4 @@ export enum Action {
     ReadS2SKey = "read_key",
     InactivateS2SKey = "inactive_key",
     UpdateStatus = "update_status",
-    ReadIntentfulTask = "read_intentful_task"
 }

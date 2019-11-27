@@ -56,7 +56,7 @@ export class IntentfulListenerMongo implements IntentfulListener {
             watchlistTasks = this.get_watchlist_tasks()
             this.checkTasks(currTasks, watchlistTasks)
 
-            currStatuses = await this.statusDb.list_status({})
+            currStatuses = await this.statusDb.get_statuses_by_ref(currTasks.map(task => task.entity_ref))
             this.checkStatuses(currStatuses)
             await timeout(5000)
         }

@@ -42,7 +42,6 @@ export class DifferResolver {
 
     private async _run(delay: number) {
         while (true) {
-            await this.activateTask()
             await timeout(delay)
             await this.clearFinishedTasks()
         }
@@ -51,14 +50,14 @@ export class DifferResolver {
     public async activateTask(): Promise<void> {
         for (let entityTask of this.watchlist) {
             let activeTasks = entityTask.tasks.filter(task => task.status === IntentfulStatus.Active)
-            if (activeTasks.length === 0 && entityTask.tasks.length > 0) {
-                let activeTask = entityTask.tasks[0]
+            let pendingTasks = entityTask.tasks.filter(task => task.status === IntentfulStatus.Pending)
+            if (activeTasks.length === 0 && pendingTasks.length > 0) {
+                let activeTask = pendingTasks[0]
                 activeTask.status = IntentfulStatus.Active
                 await this.intentfulTaskDb.update_task(activeTask.uuid, activeTask)
                 const [metadata, entitySpec] = await this.specDb.get_spec(activeTask.entity_ref)
                 const [_, entityStatus] = await this.statusDb.get_status(activeTask.entity_ref)
                 for (let diff of activeTask.diffs) {
-                    // TODO: diff fields should go into the context
                     await axios.post(diff.intentful_signature.procedural_signature.procedure_callback, {
                         metadata: metadata,
                         spec: entitySpec,
@@ -104,7 +103,7 @@ export class DifferResolver {
     }
 
     protected async onStatus(entity: Entity_Reference, specVersion: number, status: Status) {
-        this.activateTask()
+        await this.activateTask()
         const [metadata, spec] = await this.specDb.get_spec(entity)
         const tasks = this.watchlist.filter(entityTasks => entityTasks.entity_id === entity.uuid)
         if (tasks.length !== 0) {

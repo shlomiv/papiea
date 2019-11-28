@@ -408,67 +408,6 @@ describe("MongoDb tests", () => {
         }
     });
 
-    test("Create and get task", async () => {
-        const taskDb: IntentfulTask_DB = await connection.get_intentful_task_db(logger);
-        const task: IntentfulTask = {
-            uuid: uuid4(),
-            diffs: [{
-                kind: "dummy",
-                intentful_signature: {} as Intentful_Signature,
-                diff_fields: {}
-            }],
-            spec_version: 1,
-            status: IntentfulStatus.Pending,
-            entity_ref: {} as Entity_Reference
-        };
-        await taskDb.save_task(task);
-        const res: IntentfulTask = await taskDb.get_task(task.uuid);
-        expect(res.status).toEqual(task.status);
-        expect(res.diffs).toEqual(task.diffs);
-        expect(res.uuid).toEqual(task.uuid);
-    });
-
-    test("Duplicate task should throw an error", async () => {
-        expect.assertions(1);
-        const taskDb: IntentfulTask_DB = await connection.get_intentful_task_db(logger);
-        const task: IntentfulTask = {
-            uuid: uuid4(),
-            diffs: [{
-                kind: "dummy",
-                intentful_signature: {} as Intentful_Signature,
-                diff_fields: {}
-            }],
-            spec_version: 1,
-            status: IntentfulStatus.Pending,
-            entity_ref: {} as Entity_Reference
-        };
-        await taskDb.save_task(task);
-        try {
-            await taskDb.save_task(task);
-        } catch(e) {
-            expect(e).toBeDefined();
-        }
-    });
-
-    test("List tasks", async () => {
-        expect.hasAssertions();
-        const taskDb: IntentfulTask_DB = await connection.get_intentful_task_db(logger);
-        const task: IntentfulTask = {
-            uuid: uuid4(),
-            diffs: [{
-                kind: "dummy",
-                intentful_signature: {} as Intentful_Signature,
-                diff_fields: {}
-            }],
-            spec_version: 1,
-            status: IntentfulStatus.Pending,
-            entity_ref: {} as Entity_Reference
-        };
-        await taskDb.save_task(task);
-        const res = (await taskDb.list_tasks({ uuid: task.uuid }) as IntentfulTask[])[0]
-        expect(res.uuid).toEqual(task.uuid);
-    });
-
     test("Delete task", async () => {
         expect.assertions(1);
         const taskDb: IntentfulTask_DB = await connection.get_intentful_task_db(logger);
@@ -492,6 +431,71 @@ describe("MongoDb tests", () => {
         }
     });
 
+    test("Create and get task", async () => {
+        expect.hasAssertions()
+        const taskDb: IntentfulTask_DB = await connection.get_intentful_task_db(logger);
+        const task: IntentfulTask = {
+            uuid: uuid4(),
+            diffs: [{
+                kind: "dummy",
+                intentful_signature: {} as Intentful_Signature,
+                diff_fields: {}
+            }],
+            spec_version: 1,
+            status: IntentfulStatus.Pending,
+            entity_ref: {} as Entity_Reference
+        };
+        await taskDb.save_task(task);
+        const res: IntentfulTask = await taskDb.get_task(task.uuid);
+        expect(res.status).toEqual(task.status);
+        expect(res.diffs).toEqual(task.diffs);
+        expect(res.uuid).toEqual(task.uuid);
+        await taskDb.delete_task(task.uuid)
+    });
+
+    test("Duplicate task should throw an error", async () => {
+        expect.assertions(1);
+        const taskDb: IntentfulTask_DB = await connection.get_intentful_task_db(logger);
+        const task: IntentfulTask = {
+            uuid: uuid4(),
+            diffs: [{
+                kind: "dummy",
+                intentful_signature: {} as Intentful_Signature,
+                diff_fields: {}
+            }],
+            spec_version: 1,
+            status: IntentfulStatus.Pending,
+            entity_ref: {} as Entity_Reference
+        };
+        await taskDb.save_task(task);
+        try {
+            await taskDb.save_task(task);
+        } catch(e) {
+            expect(e).toBeDefined();
+        }
+        await taskDb.delete_task(task.uuid)
+    });
+
+    test("List tasks", async () => {
+        expect.hasAssertions();
+        const taskDb: IntentfulTask_DB = await connection.get_intentful_task_db(logger);
+        const task: IntentfulTask = {
+            uuid: uuid4(),
+            diffs: [{
+                kind: "dummy",
+                intentful_signature: {} as Intentful_Signature,
+                diff_fields: {}
+            }],
+            spec_version: 1,
+            status: IntentfulStatus.Pending,
+            entity_ref: {} as Entity_Reference
+        };
+        await taskDb.save_task(task);
+        const res = (await taskDb.list_tasks({ uuid: task.uuid }) as IntentfulTask[])[0]
+        expect(res.uuid).toEqual(task.uuid);
+        await taskDb.delete_task(task.uuid)
+    });
+
     test("Update task", async () => {
         expect.assertions(1);
         const taskDb: IntentfulTask_DB = await connection.get_intentful_task_db(logger);
@@ -510,6 +514,7 @@ describe("MongoDb tests", () => {
         await taskDb.update_task(task.uuid, { status: IntentfulStatus.Completed_Successfully })
         const updatedTask = await taskDb.get_task(task.uuid);
         expect(updatedTask.status).toEqual(IntentfulStatus.Completed_Successfully)
+        await taskDb.delete_task(task.uuid)
     });
     test("Get watchlist", async () => {
         expect.assertions(1);
@@ -532,5 +537,6 @@ describe("MongoDb tests", () => {
                 expect(entityTask.tasks.length).toEqual(1)
             }
         })
+        await taskDb.delete_task(task.uuid)
     })
 });

@@ -55,6 +55,7 @@ export class DifferResolver {
                 let activeTask = pendingTasks[0]
                 activeTask.status = IntentfulStatus.Active
                 await this.intentfulTaskDb.update_task(activeTask.uuid, activeTask)
+                console.dir(activeTask)
                 const [metadata, entitySpec] = await this.specDb.get_spec(activeTask.entity_ref)
                 const [_, entityStatus] = await this.statusDb.get_status(activeTask.entity_ref)
                 for (let diff of activeTask.diffs) {

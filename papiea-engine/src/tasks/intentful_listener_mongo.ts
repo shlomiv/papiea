@@ -1,9 +1,8 @@
-import { Entity_Reference, Status } from "papiea-core"
+import { Entity_Reference, Status, Metadata } from "papiea-core"
 import { IntentfulTask } from "./task_interface"
 import { Handler, IntentfulListener } from "./intentful_listener_interface"
 import { IntentfulTask_DB } from "../databases/intentful_task_db_interface"
 import { Watchlist } from "./watchlist"
-import { Metadata } from "papiea-core/build/core"
 import { Status_DB } from "../databases/status_db_interface"
 // @ts-ignore
 import MultiMap from "mnemonist/multi-map"

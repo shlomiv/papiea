@@ -133,8 +133,10 @@ export class Entity_API_Impl implements Entity_API {
         const provider = await this.get_provider(prefix, version);
         const kind = this.find_kind(provider, kind_name);
         this.validate_spec(spec_description, kind, provider.allowExtraProps);
-        const metadata: Metadata = { uuid: uuid, kind: kind.name, spec_version: spec_version, extension: extension } as Metadata;
+        const entity_ref: Entity_Reference = { kind: kind_name, uuid: uuid };
+        const metadata: Metadata = (await this.spec_db.get_spec(entity_ref))[0];
         await this.authorizer.checkPermission(user, { "metadata": metadata }, Action.Update);
+        metadata.spec_version = spec_version;
         const strategy = this.intentfulCtx.getIntentfulStrategy(kind, user)
         const task = await strategy.update(metadata, spec_description)
         return task;

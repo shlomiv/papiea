@@ -9,4 +9,4 @@ RUN cd /code \
     && npm --prefix papiea-engine run build-clj \
     && npm run build-all 
 
-CMD ./start.sh
+CMD ./run.sh

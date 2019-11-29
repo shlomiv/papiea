@@ -12,6 +12,7 @@
     "build": "tsc",
     "build!": "npm run clean && npm run build",
     "start": "ts-node src/main.ts",
+    "start_differ": "ts-node src/differ_resolver_main.ts",
     "test": "jest --runInBand --coverage",
     "test-ci": "jest --runInBand --coverage --ci --reporters=default --reporters=jest-junit",
     "dev": "./node_modules/nodemon/bin/nodemon.js",

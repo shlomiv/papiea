@@ -18,7 +18,6 @@ jobs:
           command: |
             cp .circleci/docker-compose.yml .
             cp .circleci/Dockerfile .
-            cp .circleci/run.sh .
             docker-compose build
             docker-compose up -d
 

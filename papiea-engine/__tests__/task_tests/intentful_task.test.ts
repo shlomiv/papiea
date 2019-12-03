@@ -7,6 +7,7 @@ import { Logger } from "../../src/logger_interface"
 import { WinstonLogger } from "../../src/logger"
 import { IntentfulTask_DB } from "../../src/databases/intentful_task_db_interface"
 import { IntentfulTask } from "../../src/tasks/task_interface"
+import { Intentful_Execution_Strategy } from "papiea-core"
 
 declare var process: {
     env: {
@@ -44,7 +45,12 @@ describe("Intentful Task tests", () => {
         kind_structure: locationDataDescription,
         intentful_signatures: [{
             signature: "x",
-            procedural_signature: {} as Procedural_Signature
+            name: "test",
+            argument: {},
+            result: {},
+            execution_strategy: Intentful_Execution_Strategy.Basic,
+            procedure_callback: "",
+            base_callback: ""
         }],
         dependency_tree: new Map(),
         kind_procedures: {},
@@ -59,10 +65,20 @@ describe("Intentful Task tests", () => {
         kind_structure: locationDataDescription,
         intentful_signatures: [{
             signature: "x",
-            procedural_signature: {} as Procedural_Signature
+            name: "test",
+            argument: {},
+            result: {},
+            execution_strategy: Intentful_Execution_Strategy.Basic,
+            procedure_callback: "",
+            base_callback: ""
         }, {
             signature: "y",
-            procedural_signature: {} as Procedural_Signature
+            name: "test",
+            argument: {},
+            result: {},
+            execution_strategy: Intentful_Execution_Strategy.Basic,
+            procedure_callback: "",
+            base_callback: ""
         }],
         dependency_tree: new Map(),
         kind_procedures: {},

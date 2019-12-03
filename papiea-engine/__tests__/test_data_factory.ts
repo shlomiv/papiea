@@ -214,7 +214,8 @@ export class ProviderBuilder {
                 argument: loadYaml("./test_data/procedure_sum_input.yml"),
                 result: loadYaml("./test_data/procedure_sum_output.yml"),
                 execution_strategy: Procedural_Execution_Strategy.Halt_Intentful,
-                procedure_callback: this._callback
+                procedure_callback: this._callback,
+                base_callback: this._callback
             };
             this._procedures[proceduralSignatureForProvider.name] = proceduralSignatureForProvider;
         } else {
@@ -238,7 +239,8 @@ export class ProviderBuilder {
                 argument: loadYaml("./test_data/procedure_geolocation_compute_input.yml"),
                 result: loadYaml("./test_data/procedure_geolocation_compute_input.yml"),
                 execution_strategy: Procedural_Execution_Strategy.Halt_Intentful,
-                procedure_callback: this._callback
+                procedure_callback: this._callback,
+                base_callback: this._callback
             };
             if (this._kinds.length >= 1) {
                 this._kinds[0].kind_procedures[geolocationComputeProceduralSignature.name] = geolocationComputeProceduralSignature
@@ -266,7 +268,8 @@ export class ProviderBuilder {
                 argument: loadYaml("./test_data/procedure_move_input.yml"),
                 result: loadYaml("./test_data/location_kind_test_data.yml"),
                 execution_strategy: Procedural_Execution_Strategy.Halt_Intentful,
-                procedure_callback: this._callback
+                procedure_callback: this._callback,
+                base_callback: this._callback
             };
             if (this._kinds.length >= 1) {
                 this._kinds[0].entity_procedures[proceduralSignatureForKind.name] = proceduralSignatureForKind

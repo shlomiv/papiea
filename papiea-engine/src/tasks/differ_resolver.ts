@@ -43,29 +43,58 @@ export class DifferResolver {
     private async _run(delay: number) {
         while (true) {
             await timeout(delay)
+            await this.checkActiveTasksHealth()
+            await this.retryTasks()
             await this.clearFinishedTasks()
         }
     }
 
     public async activateTask(): Promise<void> {
+        // TODO: maybe introduce watchlist as a DAO
         for (let entityTask of this.watchlist) {
-            let activeTasks = entityTask.tasks.filter(task => task.status === IntentfulStatus.Active)
+            let activeTasks = entityTask.tasks.filter(task => task.status === IntentfulStatus.Active || task.status === IntentfulStatus.Failed)
             let pendingTasks = entityTask.tasks.filter(task => task.status === IntentfulStatus.Pending)
             if (activeTasks.length === 0 && pendingTasks.length > 0) {
                 let activeTask = pendingTasks[0]
                 activeTask.status = IntentfulStatus.Active
-                await this.intentfulTaskDb.update_task(activeTask.uuid, activeTask)
-                console.dir(activeTask)
                 const [metadata, entitySpec] = await this.specDb.get_spec(activeTask.entity_ref)
                 const [_, entityStatus] = await this.statusDb.get_status(activeTask.entity_ref)
+                await this.intentfulTaskDb.update_task(activeTask.uuid, activeTask)
                 for (let diff of activeTask.diffs) {
-                    await axios.post(diff.intentful_signature.procedural_signature.procedure_callback, {
+                    await axios.post(diff.intentful_signature.procedure_callback, {
                         metadata: metadata,
                         spec: entitySpec,
                         status: entityStatus,
                         input: diff.diff_fields
                     })
-                    // TODO: find the handler id that is executing the procedure
+                    // This should be a concrete address of a handling process
+                    diff.handler_url = `${diff.intentful_signature.base_callback}/healthcheck`
+                }
+                await this.intentfulTaskDb.update_task(activeTask.uuid, activeTask)
+            }
+        }
+    }
+
+    private async retryTasks(): Promise<void> {
+        for (let entityTask of this.watchlist) {
+            let failedTasks = entityTask.tasks.filter(task => task.status === IntentfulStatus.Failed)
+            if (failedTasks.length !== 0) {
+                if (failedTasks.length > 2) {
+                    // TODO: should be a custom error
+                    throw new Error("There cannot be more than one failed task on an entity")
+                }
+                const failedTask = failedTasks[0]
+                failedTask.status = IntentfulStatus.Active
+                const [metadata, entitySpec] = await this.specDb.get_spec(failedTask.entity_ref)
+                const [_, entityStatus] = await this.statusDb.get_status(failedTask.entity_ref)
+                await this.intentfulTaskDb.update_task(failedTask.uuid, failedTask)
+                for (let diff of failedTask.diffs) {
+                    await axios.post(diff.intentful_signature.procedure_callback, {
+                        metadata: metadata,
+                        spec: entitySpec,
+                        status: entityStatus,
+                        input: diff.diff_fields
+                    })
                 }
             }
         }
@@ -79,7 +108,7 @@ export class DifferResolver {
             return acc
         }, [])
         for (let task of tasks) {
-            if (task.status !== IntentfulStatus.Active && task.status !== IntentfulStatus.Pending) {
+            if (task.status !== IntentfulStatus.Active && task.status !== IntentfulStatus.Pending && task.status !== IntentfulStatus.Failed) {
                 await this.removeTask(task)
             }
         }
@@ -114,14 +143,13 @@ export class DifferResolver {
                 return
             } else if (activeTasks.length > 1) {
                 // TODO: This should be configurable via strategy
-                throw new Error(`There can not be more than one task running for entity with uuid: ${entity.uuid}`)
+                throw new Error(`There cannot be more than one task running for entity with uuid: ${entity.uuid}`)
             }
             const activeTask = activeTasks[0]
             const diffs = activeTask.diffs.filter(diff => {
                 const compiledSignature = SFSCompiler.compile_sfs(diff.intentful_signature.signature)
                 return SFSCompiler.run_sfs(compiledSignature, spec, status) !== null
             })
-            console.log(JSON.stringify(diffs))
             if (metadata.spec_version > activeTask.spec_version + 1) {
                 if (diffs.length === 0) {
                     activeTask.status = IntentfulStatus.Outdated
@@ -134,6 +162,23 @@ export class DifferResolver {
             } else {
                 if (diffs.length === 0) {
                     activeTask.status = IntentfulStatus.Completed_Successfully
+                    await this.intentfulTaskDb.update_task(activeTask.uuid, activeTask)
+                }
+            }
+        }
+    }
+
+    private async checkActiveTasksHealth() {
+        for (let entityTask of this.watchlist) {
+            let activeTasks = entityTask.tasks.filter(task => task.status === IntentfulStatus.Active)
+            if (activeTasks.length === 1) {
+                let activeTask = activeTasks[0]
+                try {
+                    for (let diff of activeTask.diffs) {
+                        await axios.get(`${ diff.intentful_signature.base_callback }/healthcheck`)
+                    }
+                } catch (e) {
+                    activeTask.status = IntentfulStatus.Failed
                     await this.intentfulTaskDb.update_task(activeTask.uuid, activeTask)
                 }
             }

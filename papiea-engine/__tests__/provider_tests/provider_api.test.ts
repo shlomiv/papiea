@@ -166,11 +166,11 @@ describe("Provider API tests", () => {
         expect(res.data.status.name).toEqual("test_cluster");
     });
 
-    test("Register provider with extension structure", done => {
+    test("Register provider with extension structure", async () => {
         const extension_desc = loadYaml("./test_data/metadata_extension.yml");
         const provider: Provider = { prefix: providerPrefix, version: providerVersion, kinds: [], procedures: {}, extension_structure: extension_desc, allowExtraProps: false };
-        providerApi.post('/', provider).then().catch(done.fail);
-        providerApi.delete(`/${ providerPrefix }/${ providerVersion }`).then(() => done()).catch(done.fail);
+        await providerApi.post('/', provider);
+        await providerApi.delete(`/${ providerPrefix }/${ providerVersion }`);
     });
 
     test("Update status of spec-only entity should fail", async () => {

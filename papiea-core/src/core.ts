@@ -79,9 +79,8 @@ export interface EntitySpec {
 // Intentful signature
 export type SFS = string;
 
-export interface Intentful_Signature {
-    signature: SFS;
-    procedural_signature: Procedural_Signature;
+export interface Intentful_Signature extends Procedural_Signature {
+    signature: SFS
 }
 // SFS-interfaces ends here
 
@@ -150,6 +149,13 @@ export interface Diff {
 
     // Field diff found by the Differ
     diff_fields: any
+
+    // A uri for a URL which specifically identifies the currently running process.
+    // If the URL returns 404 we know that the task was dropped (say, provider crashed).
+    // It will use the specific node's IP and not a load balancer IP.
+    // This will direct us to the exact location where the task is running.
+    // provider handler url with an id to cache the task it is assigned to, serves as an identifier for a type of task being executed
+    handler_url?: string
 }
 // Diff-interface ends here
 // /src/intentful_core/differ_interface.ts:1 ends here
@@ -183,6 +189,9 @@ export interface Procedural_Signature {
 
     // Actions url into the provider
     procedure_callback: Provider_Callback_URL;
+
+    // Base callback used for service discovery, health checks
+    base_callback: Provider_Callback_URL
 }
 
 // entity_procedure-signature ends here

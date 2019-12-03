@@ -224,13 +224,15 @@ export class ProviderSdk implements ProviderImpl {
                        input_desc: any,
                        output_desc: any,
                        handler: (ctx: ProceduralCtx_Interface, input: any) => Promise<any>): ProviderSdk {
-        const callback_url = this._server_manager.callback_url(name);
+        const procedure_callback_url = this._server_manager.procedure_callback_url(name);
+        const callback_url = this._server_manager.callback_url();
         const procedural_signature: Procedural_Signature = {
             name,
             argument: input_desc,
             result: output_desc,
             execution_strategy: strategy,
-            procedure_callback: callback_url
+            procedure_callback: procedure_callback_url,
+            base_callback: callback_url
         };
         this._procedures[name] = procedural_signature;
         const prefix = this.get_prefix();
@@ -342,6 +344,15 @@ class Provider_Server_Manager {
         this.app.post(route, asyncHandler(handler))
     }
 
+    register_healthcheck() {
+        if (!this.should_run) {
+            this.should_run = true;
+        }
+        this.app.get("healthcheck", asyncHandler(async (req, res) => {
+            res.status(200).json({ status: "Available" })
+        }))
+    }
+
     startServer() {
         if (this.should_run) {
             this.raw_http_server = this.app.listen(this.public_port, () => {
@@ -358,11 +369,19 @@ class Provider_Server_Manager {
         }
     }
 
-    callback_url(procedure_name: string, kind?: string): string {
+    callback_url(kind?: string) {
         if (kind !== undefined) {
-            return `http://${ this.public_host }:${ this.public_port }${ "/" + kind + "/" + procedure_name }`
+            return `http://${ this.public_host }:${ this.public_port }/${ kind }`
         } else {
-            return `http://${ this.public_host }:${ this.public_port }${ "/" + procedure_name }`
+            return `http://${ this.public_host }:${ this.public_port }/`
+        }
+    }
+
+    procedure_callback_url(procedure_name: string, kind?: string): string {
+        if (kind !== undefined) {
+            return `http://${ this.public_host }:${ this.public_port }/${ kind }/${ procedure_name }`
+        } else {
+            return `http://${ this.public_host }:${ this.public_port }/${ procedure_name }`
         }
     }
 }
@@ -393,13 +412,15 @@ export class Kind_Builder {
                      input_desc: any,
                      output_desc: any,
                      handler: (ctx: ProceduralCtx_Interface, entity: Entity, input: any) => Promise<any>): Kind_Builder {
-        const callback_url = this.server_manager.callback_url(name, this.kind.name);
+        const procedure_callback_url = this.server_manager.procedure_callback_url(name, this.kind.name);
+        const callback_url = this.server_manager.callback_url(this.kind.name);
         const procedural_signature: Procedural_Signature = {
             name,
             argument: input_desc,
             result: output_desc,
             execution_strategy: strategy,
-            procedure_callback: callback_url
+            procedure_callback: procedure_callback_url,
+            base_callback: callback_url
         };
         this.kind.entity_procedures[name] = procedural_signature;
         const prefix = this.get_prefix();
@@ -425,37 +446,37 @@ export class Kind_Builder {
 
     on(sfs_signature: string, rbac: any,
        handler: (ctx: IntentfulCtx_Interface, entity: Entity, input: any) => Promise<any>): Kind_Builder {
-        const callback_url = this.server_manager.callback_url(sfs_signature, this.kind.name);
+        const procedure_callback_url = this.server_manager.procedure_callback_url(sfs_signature, this.kind.name);
+        const callback_url = this.server_manager.callback_url(this.kind.name);
         this.kind.intentful_signatures.push({
             signature: sfs_signature,
-            procedural_signature: {
-                name: sfs_signature,
-                argument: {
-                    IntentfulInput: {
-                        type: 'array',
-                        items: {
-                            type: 'object',
-                            properties: {
-                                keys: {
-                                    type: 'object'
-                                },
-                                key: {
-                                    type: 'string'
-                                },
-                                "spec-val": {
-                                    type: 'array'
-                                },
-                                "status-val": {
-                                    type: 'array'
-                                }
+            name: sfs_signature,
+            argument: {
+                IntentfulInput: {
+                    type: 'array',
+                    items: {
+                        type: 'object',
+                        properties: {
+                            keys: {
+                                type: 'object'
+                            },
+                            key: {
+                                type: 'string'
+                            },
+                            "spec-val": {
+                                type: 'array'
+                            },
+                            "status-val": {
+                                type: 'array'
                             }
                         }
                     }
-                },
-                result: {},
-                execution_strategy: Intentful_Execution_Strategy.Basic,
-                procedure_callback: callback_url
-            }
+                }
+            },
+            result: {},
+            execution_strategy: Intentful_Execution_Strategy.Basic,
+            procedure_callback: procedure_callback_url,
+            base_callback: callback_url
         })
         const prefix = this.get_prefix();
         const version = this.get_version();
@@ -475,6 +496,7 @@ export class Kind_Builder {
                 res.status(500).json(error.toResponse())
             }
         });
+        this.server_manager.register_healthcheck()
         return this
     }
 
@@ -483,13 +505,15 @@ export class Kind_Builder {
                    input_desc: any,
                    output_desc: any,
                    handler: (ctx: ProceduralCtx_Interface, input: any) => Promise<any>): Kind_Builder {
-        const callback_url = this.server_manager.callback_url(name, this.kind.name);
+        const procedure_callback_url = this.server_manager.procedure_callback_url(name, this.kind.name);
+        const callback_url = this.server_manager.callback_url(this.kind.name);
         const procedural_signature: Procedural_Signature = {
             name,
             argument: input_desc,
             result: output_desc,
             execution_strategy: strategy,
-            procedure_callback: callback_url
+            procedure_callback: procedure_callback_url,
+            base_callback: callback_url
         };
         this.kind.kind_procedures[name] = procedural_signature;
         const prefix = this.get_prefix();

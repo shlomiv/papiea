@@ -1,8 +1,11 @@
 import { SFSCompiler } from "../../src/intentful_core/sfs_compiler"
 import { getLocationDataDescription } from "../test_data_factory"
-import { IntentfulBehaviour, Procedural_Signature } from "papiea-core"
+import { IntentfulBehaviour } from "papiea-core"
 import { plural } from "pluralize"
 import { BasicDiffer } from "../../src/intentful_core/differ_impl"
+import {
+    Intentful_Execution_Strategy,
+} from "papiea-core"
 
 describe("Differ tests", () => {
 
@@ -14,13 +17,28 @@ describe("Differ tests", () => {
         kind_structure: locationDataDescription,
         intentful_signatures: [{
             signature: "a.{id}.[a,d]",
-            procedural_signature: {} as Procedural_Signature
+            name: "test",
+            argument: {},
+            result: {},
+            execution_strategy: Intentful_Execution_Strategy.Basic,
+            procedure_callback: "",
+            base_callback: ""
         }, {
             signature: "x",
-            procedural_signature: {} as Procedural_Signature
+            name: "test",
+            argument: {},
+            result: {},
+            execution_strategy: Intentful_Execution_Strategy.Basic,
+            procedure_callback: "",
+            base_callback: ""
         }, {
             signature: "y",
-            procedural_signature: {} as Procedural_Signature
+            name: "test",
+            argument: {},
+            result: {},
+            execution_strategy: Intentful_Execution_Strategy.Basic,
+            procedure_callback: "",
+            base_callback: ""
         }],
         dependency_tree: new Map(),
         kind_procedures: {},

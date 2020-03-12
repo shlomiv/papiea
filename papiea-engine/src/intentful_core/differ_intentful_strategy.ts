@@ -4,7 +4,7 @@ import { Status_DB } from "../databases/status_db_interface"
 import { Differ, Metadata, Spec } from "papiea-core"
 import { IntentfulTask_DB } from "../databases/intentful_task_db_interface"
 import { IntentfulTask } from "../tasks/task_interface"
-import { IntentfulStatus } from "papiea-core/build/core"
+import { IntentfulStatus } from "papiea-core"
 import uuid = require("uuid")
 
 export class DifferIntentfulStrategy extends IntentfulStrategy {
@@ -15,6 +15,11 @@ export class DifferIntentfulStrategy extends IntentfulStrategy {
         super(specDb, statusDb)
         this.differ = differ
         this.intentfulTaskDb = intentfulTaskDb
+    }
+
+    async update_entity(metadata: Metadata, spec: Spec): Promise<[Metadata, Spec]> {
+        const [updatedMetadata, updatedSpec] = await this.specDb.update_spec(metadata, spec);
+        return [updatedMetadata, updatedSpec]
     }
 
     async update(metadata: Metadata, spec: Spec): Promise<IntentfulTask | null> {

@@ -5,7 +5,7 @@ import { timeout } from "../utils/utils"
 import { IntentfulTask_DB_Mongo } from "../databases/intentful_task_db_mongo"
 import { Spec_DB } from "../databases/spec_db_interface"
 import { Status_DB } from "../databases/status_db_interface"
-import { Watchlist } from "./watchlist"
+import { Watchlist, EntityTasks } from "./watchlist"
 import { Handler, IntentfulListener } from "./intentful_listener_interface"
 import { SFSCompiler } from "../intentful_core/sfs_compiler"
 import axios from "axios"
@@ -126,11 +126,13 @@ export class DifferResolver {
     }
 
     public async onTask(task: IntentfulTask) {
+        if (this.watchlist.find((item: EntityTasks) => item.entity_id == task.entity_ref.uuid) == undefined) {
         this.watchlist.push({
             entity_id: task.entity_ref.uuid,
             tasks: [task]
         })
     }
+     }
 
     protected async onStatus(entity: Entity_Reference, specVersion: number, status: Status) {
         await this.activateTask()

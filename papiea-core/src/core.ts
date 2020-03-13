@@ -20,22 +20,22 @@ export enum IntentfulStatus {
 
     // A spec change or a scheduled diffing created this intentful Task,
     // it is not yet active
-    Pending = 0,
+    Pending = "Pending",
 
     // Intentful Task is currently waiting for a diff to be resolved
-    Active = 1,
+    Active = "Active",
 
     // All fields were set to the spec value at some point after the spec change was issued
-    Completed_Successfully = 2,
+    Completed_Successfully = "Completed Successfully",
 
     // Some fields were set to the spec value, and some were not due to a newer spec version
-    Completed_Partially = 3,
+    Completed_Partially = "Completed Partially",
 
     // None of the fields was changed to the given spec values,
     // and there is already a newer spec version
-    Failed = 4,
+    Failed = "Failed",
 
-    Outdated = 5,
+    Outdated = "Outdated",
 }
 
 // [[file:~/work/papiea-js/Papiea-design.org::#h-Metadata-350][metadata-struct]]

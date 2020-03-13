@@ -14,7 +14,7 @@ if [ $HOT_RELOAD == 'true' ]
 then
     if [ $PAPIEA_DEBUG == 'true' ]; then
         npm run debug &
-        npm run start_differ
+        npm run debug_differ
     else
         npm run dev &
         npm run start_differ

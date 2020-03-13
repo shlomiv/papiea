@@ -36,7 +36,7 @@ async function setUpDiffResolver() {
 
     const diffResolver = new DifferResolver(intentfulTaskDb, specDb, statusDb, intentfulListener, watchlist)
     console.log("Running differ resolver")
-    await diffResolver.run(500000)
+    await diffResolver.run(5000)
 }
 
-setUpDiffResolver().then().catch(console.error)
+setUpDiffResolver().then(()=>console.debug("Exiting differ resolver")).catch(console.error)

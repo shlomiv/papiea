@@ -127,12 +127,12 @@ export class DifferResolver {
 
     public async onTask(task: IntentfulTask) {
         if (this.watchlist.find((item: EntityTasks) => item.entity_id == task.entity_ref.uuid) == undefined) {
-        this.watchlist.push({
-            entity_id: task.entity_ref.uuid,
-            tasks: [task]
-        })
+            this.watchlist.push({
+                entity_id: task.entity_ref.uuid,
+                tasks: [task]
+            })
+        }
     }
-     }
 
     protected async onStatus(entity: Entity_Reference, specVersion: number, status: Status) {
         await this.activateTask()

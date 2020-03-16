@@ -182,9 +182,10 @@ export class DifferResolver {
                 try {
                     for (let diff of activeTask.diffs) {
                         const compiledSignature = SFSCompiler.compile_sfs(diff.intentful_signature.signature)
-                        const spec = this.specDb.get_spec(activeTask.entity_ref)
-                        const status = this.statusDb.get_status(activeTask.entity_ref)
+                        const [,spec] = await this.specDb.get_spec(activeTask.entity_ref)
+                        const [,status] = await this.statusDb.get_status(activeTask.entity_ref)
                         if (SFSCompiler.run_sfs(compiledSignature, spec, status) !== null) {
+                            // Shlomi.v
                             // No need to healthcheck a diff which may already be resolved,
                             // the handler may have already terminated
                         await axios.get(`${ diff.intentful_signature.base_callback }/healthcheck`)
@@ -193,6 +194,7 @@ export class DifferResolver {
                         }
                     }
                     if (doneDiff == activeTask.diffs.length) {
+                        // Shlomi.v
                         // if all diffs were resolved - this task must be completed. 
                         // TODO: What about Completed_Partially? Make sure we are not missing anything
                         activeTask.status = IntentfulStatus.Completed_Successfully

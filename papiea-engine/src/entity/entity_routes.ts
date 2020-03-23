@@ -10,8 +10,20 @@ const CheckProcedureCallParams = check_request({
     allowed_body_params: ['input']
 });
 
+interface PaginatedResult {
+    results: any[],
+    entity_count: number
+}
+
 export function createEntityAPIRouter(entity_api: Entity_API): Router {
     const router = Router();
+
+    const paginateEntities = async function(entities: any, skip: number, size: number): Promise<PaginatedResult> {
+        const totalEntities: number = entities.length;
+        const pageEntities = entities.slice(skip, skip + size);
+
+        return { results: pageEntities, entity_count: totalEntities };
+    }
 
     const filterEntities = async function (user: UserAuthInfo, kind_name: string, filter: any, skip: number, size: number, sortParams?: SortParams): Promise<any> {
         const resultSpecs: any[] = await entity_api.filter_entity_spec(user, kind_name, filter, sortParams);
@@ -30,15 +42,61 @@ export function createEntityAPIRouter(entity_api: Entity_API): Router {
         });
 
         const entities = Object.values(uuidToEntity);
-        const totalEntities: number = entities.length;
-        const pageEntities = entities.slice(skip, skip + size);
-
-        return { results: pageEntities, entity_count: totalEntities };
+        return paginateEntities(entities, skip, size)
     };
 
     router.post("/:prefix/:version/check_permission", CheckNoQueryParams, asyncHandler(async (req, res) => {
         res.json(await entity_api.check_permission(req.user, req.params.prefix, req.params.version, req.body))
     }));
+
+    router.get("/intentful_task/:id", CheckNoQueryParams, asyncHandler(async (req, res) => {
+        res.json(await entity_api.get_intentful_task(req.user, req.params.id))
+    }))
+
+    router.get("/intentful_task", check_request({
+        allowed_query_params: ['offset', 'limit', 'sort', 'entity_ref', 'created_at', 'status']
+    }), asyncHandler(async (req, res) => {
+        const filter: any = {};
+        const offset: undefined | number = req.query.offset;
+        const limit: undefined | number = req.query.limit;
+        const rawSortQuery: undefined | string = req.query.sort;
+        const sortParams = processSortQuery(rawSortQuery);
+        const [skip, size] = processPaginationParams(offset, limit);
+        if (req.query.entity_ref) {
+            filter.entity_ref = JSON.parse(req.query.entity_ref)
+        }
+        if (req.query.created_at) {
+            filter.created_at = req.query.created_at
+        }
+        if (req.query.status) {
+            filter.status = req.query.status
+        }
+        const intentful_tasks = await entity_api.filter_intentful_task(req.user, filter, sortParams)
+        res.json(await paginateEntities(intentful_tasks, skip, size))
+    }))
+
+    router.post("/intentful_task/filter", check_request({
+        allowed_query_params: ['offset', 'limit', 'sort'],
+        allowed_body_params: ['entity_ref', 'created_at', 'status']
+    }), asyncHandler(async (req, res) => {
+        const filter: any = {};
+        const offset: undefined | number = req.query.offset;
+        const limit: undefined | number = req.query.limit;
+        const rawSortQuery: undefined | string = req.query.sort;
+        const sortParams = processSortQuery(rawSortQuery);
+        const [skip, size] = processPaginationParams(offset, limit);
+        if (req.body.entity_ref) {
+            filter.entity_ref = req.body.entity_ref
+        }
+        if (req.body.created_at) {
+            filter.created_at = req.body.created_at
+        }
+        if (req.body.status) {
+            filter.status = req.body.status
+        }
+        const intentful_tasks = await entity_api.filter_intentful_task(req.user, filter, sortParams)
+        res.json(await paginateEntities(intentful_tasks, skip, size))
+    }))
 
     router.get("/:prefix/:version/:kind", check_request({
         allowed_query_params: ['offset', 'limit', 'sort', 'spec', 'status', 'metadata']
@@ -107,8 +165,8 @@ export function createEntityAPIRouter(entity_api: Entity_API): Router {
         allowed_body_params: ['metadata', 'spec']
     }), asyncHandler(async (req, res) => {
         const request_metadata = req.body.metadata;
-        const [metadata, spec] = await entity_api.update_entity_spec(req.user, req.params.uuid, req.params.prefix, request_metadata.spec_version, request_metadata.extension, req.params.kind, req.params.version, req.body.spec);
-        res.json({ "metadata": metadata, "spec": spec });
+        const task = await entity_api.update_entity_spec(req.user, req.params.uuid, req.params.prefix, request_metadata.spec_version, request_metadata.extension, req.params.kind, req.params.version, req.body.spec);
+        res.json({ "task": task });
     }));
 
     router.post("/:prefix/:version/:kind", check_request({

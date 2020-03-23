@@ -14,6 +14,9 @@ export interface Status_DB {
     // both current metadata and status of the entity.
     get_status(entity_ref: Entity_Reference): Promise<[Metadata, Status]>;
 
+    // Get statuses by their entity references
+    get_statuses_by_ref(entity_refs: Entity_Reference[]): Promise<[Metadata, Status][]>
+
     // List all status that have their fields match the ones given in
     // fields_map. E.g. we could look for all statuses for `vm` kind that
     // have a certain ip:

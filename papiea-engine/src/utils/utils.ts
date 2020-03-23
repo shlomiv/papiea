@@ -82,6 +82,10 @@ export function safeJSONParse(chunk: string): Object | null {
     }
 }
 
+export function timeout(ms: number) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 export function isAxiosError(e: Error): e is AxiosError {
     return e.hasOwnProperty("response");
 }

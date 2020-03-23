@@ -10,8 +10,10 @@ import { v4 as uuid4 } from 'uuid';
 import { ConflictingEntityError } from "../../src/databases/utils/errors";
 import { Metadata, Spec, Entity_Reference, Status, Kind, Provider, S2S_Key } from "papiea-core";
 import { SessionKeyDb } from "../../src/databases/session_key_db_interface"
-import { SessionKey } from "papiea-core/build/core"
+import { Entity, Intentful_Signature, SessionKey, IntentfulStatus } from "papiea-core"
 import uuid = require("uuid")
+import { IntentfulTask } from "../../src/tasks/task_interface"
+import { IntentfulTask_DB } from "../../src/databases/intentful_task_db_interface"
 
 declare var process: {
     env: {
@@ -386,7 +388,7 @@ describe("MongoDb tests", () => {
         }
     });
 
-    test("Inactivate s2s key", async () => {
+    test("Inactivate session key", async () => {
         expect.assertions(1);
         const sessionKeyDb: SessionKeyDb = await connection.get_session_key_db(logger);
         const sessionKey: SessionKey = {
@@ -405,4 +407,136 @@ describe("MongoDb tests", () => {
             expect(e).toBeDefined()
         }
     });
+
+    test("Delete task", async () => {
+        expect.assertions(1);
+        const taskDb: IntentfulTask_DB = await connection.get_intentful_task_db(logger);
+        const task: IntentfulTask = {
+            uuid: uuid4(),
+            diffs: [{
+                kind: "dummy",
+                intentful_signature: {} as Intentful_Signature,
+                diff_fields: {}
+            }],
+            spec_version: 1,
+            status: IntentfulStatus.Pending,
+            entity_ref: {} as Entity_Reference
+        };
+        await taskDb.save_task(task)
+        await taskDb.delete_task(task.uuid)
+        try {
+            await taskDb.get_task(task.uuid);
+        } catch(e) {
+            expect(e).toBeDefined();
+        }
+    });
+
+    test("Create and get task", async () => {
+        expect.hasAssertions()
+        const taskDb: IntentfulTask_DB = await connection.get_intentful_task_db(logger);
+        const task: IntentfulTask = {
+            uuid: uuid4(),
+            diffs: [{
+                kind: "dummy",
+                intentful_signature: {} as Intentful_Signature,
+                diff_fields: {}
+            }],
+            spec_version: 1,
+            status: IntentfulStatus.Pending,
+            entity_ref: {} as Entity_Reference
+        };
+        await taskDb.save_task(task);
+        const res: IntentfulTask = await taskDb.get_task(task.uuid);
+        expect(res.status).toEqual(task.status);
+        expect(res.diffs).toEqual(task.diffs);
+        expect(res.uuid).toEqual(task.uuid);
+        await taskDb.delete_task(task.uuid)
+    });
+
+    test("Duplicate task should throw an error", async () => {
+        expect.assertions(1);
+        const taskDb: IntentfulTask_DB = await connection.get_intentful_task_db(logger);
+        const task: IntentfulTask = {
+            uuid: uuid4(),
+            diffs: [{
+                kind: "dummy",
+                intentful_signature: {} as Intentful_Signature,
+                diff_fields: {}
+            }],
+            spec_version: 1,
+            status: IntentfulStatus.Pending,
+            entity_ref: {} as Entity_Reference
+        };
+        await taskDb.save_task(task);
+        try {
+            await taskDb.save_task(task);
+        } catch(e) {
+            expect(e).toBeDefined();
+        }
+        await taskDb.delete_task(task.uuid)
+    });
+
+    test("List tasks", async () => {
+        expect.hasAssertions();
+        const taskDb: IntentfulTask_DB = await connection.get_intentful_task_db(logger);
+        const task: IntentfulTask = {
+            uuid: uuid4(),
+            diffs: [{
+                kind: "dummy",
+                intentful_signature: {} as Intentful_Signature,
+                diff_fields: {}
+            }],
+            spec_version: 1,
+            status: IntentfulStatus.Pending,
+            entity_ref: {} as Entity_Reference
+        };
+        await taskDb.save_task(task);
+        const res = (await taskDb.list_tasks({ uuid: task.uuid }) as IntentfulTask[])[0]
+        expect(res.uuid).toEqual(task.uuid);
+        await taskDb.delete_task(task.uuid)
+    });
+
+    test("Update task", async () => {
+        expect.assertions(1);
+        const taskDb: IntentfulTask_DB = await connection.get_intentful_task_db(logger);
+        const task: IntentfulTask = {
+            uuid: uuid4(),
+            diffs: [{
+                kind: "dummy",
+                intentful_signature: {} as Intentful_Signature,
+                diff_fields: {}
+            }],
+            spec_version: 1,
+            status: IntentfulStatus.Pending,
+            entity_ref: {} as Entity_Reference
+        };
+        await taskDb.save_task(task)
+        await taskDb.update_task(task.uuid, { status: IntentfulStatus.Completed_Successfully })
+        const updatedTask = await taskDb.get_task(task.uuid);
+        expect(updatedTask.status).toEqual(IntentfulStatus.Completed_Successfully)
+        await taskDb.delete_task(task.uuid)
+    });
+    test("Get watchlist", async () => {
+        expect.assertions(1);
+        const taskDb: IntentfulTask_DB = await connection.get_intentful_task_db(logger);
+        const task: IntentfulTask = {
+            uuid: uuid4(),
+            diffs: [{
+                kind: "dummy",
+                intentful_signature: {} as Intentful_Signature,
+                diff_fields: {}
+            }],
+            spec_version: 1,
+            status: IntentfulStatus.Active,
+            entity_ref: { uuid: "entity_id_watchlist" } as Entity_Reference
+        };
+        await taskDb.save_task(task)
+        const watchlist = await taskDb.get_watchlist()
+        watchlist.forEach(entityTask => {
+            if (entityTask.entity_id === task.entity_ref.uuid) {
+                expect(entityTask.tasks.length).toEqual(1)
+            }
+        })
+        await taskDb.delete_task(task.uuid)
+    })
 });

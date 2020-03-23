@@ -24,6 +24,9 @@ papiea-engine/papiea-lib-clj/target/
 # vscode
 .vscode
 
+# Intellij products
+.idea
+
 # backups
 package.json.backup
 

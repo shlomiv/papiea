@@ -13,10 +13,13 @@ wait-port $DB_HOST:$DB_PORT
 if [ $HOT_RELOAD == 'true' ]
 then
     if [ $PAPIEA_DEBUG == 'true' ]; then
-        npm run debug
+        npm run debug &
+        npm run debug_differ
     else
-        npm run dev
+        npm run dev &
+        npm run start_differ
     fi
 else
+    npm run start_differ &
     npm run start
 fi

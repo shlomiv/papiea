@@ -20,7 +20,7 @@ enum Procedural_Execution_Strategy {Halt_Intentful}
 interface IKindImpl {
 
     // Adds an intentful handler. Dispatched based on the signautre passed
-    on(signature: string, name: string, rbac: any, handler: (ctx:IntentfulCtx_Interface, entity:any)=>void):Intentful_Handler;
+    on(signature: string, rbac: any, handler: (ctx:IntentfulCtx_Interface, entity:any)=>void):Intentful_Handler;
 
     // Convenient functions for constructing/destructing an entity. Could be implemented in terms of "on above"
     on_new(name: string, rbac: any, handler: (ctx:IntentfulCtx_Interface, entity:any)=>void):void;

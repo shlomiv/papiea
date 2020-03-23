@@ -1,50 +1,33 @@
-import { SFS, Entity_Reference, Spec, Status, Provider_Callback_URL, Kind_Compiler, Kind, Differ, Diff } from "papiea-core";
+import { Spec, Status, Kind, Differ, Diff } from "papiea-core"
+import { SFSCompiler } from "./sfs_compiler"
 
-
-export class Compiler implements Kind_Compiler {
-    public compile_kind_explicit(sfss: SFS[], dep_tree: Map<SFS, SFS[]>): TheDiffer {
-        return new TheDiffer();
-    }
-
-    // More concisely this could simply be:
-    public compile_kind(kind: Kind): TheDiffer {
-        return new TheDiffer();
-    }
-}
-
-export let compiler = new Compiler();
-
-export class TheDiffer implements Differ  {
-    // Get the next diff from an entity based on the 
-    public next_diff(entity:Entity_Reference, spec: Spec, status: Status):TheDiff {
-        return new TheDiff("test", new Map(), "name");
+export class BasicDiffer implements Differ {
+    // Get the diff iterator from an entity based on the
+    public* diffs(kind: Kind, spec: Spec, status: Status): Generator<Diff, any, undefined> {
+        for (let sig of kind.intentful_signatures) {
+            const compiled_signature = SFSCompiler.compile_sfs(sig.signature)
+            if (SFSCompiler.run_sfs(compiled_signature, spec, status) !== null) {
+                yield {
+                    kind: kind.name,
+                    intentful_signature: sig,
+                    diff_fields: SFSCompiler.run_sfs(compiled_signature, spec, status)
+                }
+            }
+        }
     }
 
     // We could also get the entire list of diffs, ordered by the
     // original dependency tree
-    public all_diffs(entity:Entity_Reference, spec: Spec, status: Status):TheDiff[] {
-        return [new TheDiff("testall", new Map(), "nameall")];
-    }
-}
-
-export class TheDiff implements Diff {
-
-    // The uri exposed by the provider which may handle this diff
-    intentful_fn_uri: Provider_Callback_URL
-
-    // If this intent handler has a name, we could use it
-    name?: string;
-
-    // The fields identified by this differ, their path and value.
-    diff_fields: Map<SFS, any>;
-
-    constructor(callback: Provider_Callback_URL, diff_fields: Map<SFS, any>, name?: string) {
-        this.intentful_fn_uri = callback;
-        this.name = name;
-        this.diff_fields = diff_fields;
-    }
-    
-    public invoke() {
-        return "Yes!";
+    public all_diffs(kind: Kind, spec: Spec, status: Status): Diff[] {
+        return kind.intentful_signatures.map(sig => {
+                const compiled_signature = SFSCompiler.compile_sfs(sig.signature)
+                const diff_fields = SFSCompiler.run_sfs(compiled_signature, spec, status)
+                return {
+                    kind: kind.name,
+                    intentful_signature: sig,
+                    diff_fields: diff_fields
+                }
+            }
+        ).filter(diff => diff.diff_fields !== null)
     }
 }

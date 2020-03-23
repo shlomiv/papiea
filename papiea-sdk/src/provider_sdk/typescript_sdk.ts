@@ -1,18 +1,31 @@
 import {
+    IntentfulCtx_Interface,
     ProceduralCtx_Interface,
     Provider as ProviderImpl,
     Provider_Power,
-    IntentfulCtx_Interface,
     SecurityApi
 } from "./typescript_sdk_interface"
 import axios, { AxiosInstance } from "axios"
 import { plural } from "pluralize"
-import * as express from "express";
-import * as asyncHandler from "express-async-handler";
-import { Express, RequestHandler } from "express";
-import { Server } from "http";
-import { ProceduralCtx } from "./typescript_sdk_context_impl";
-import { Version, Kind, Procedural_Signature, Provider, Data_Description, SpecOnlyEntityKind, Procedural_Execution_Strategy, Entity, S2S_Key, UserInfo, IntentfulBehaviour, Secret } from "papiea-core";
+import * as express from "express"
+import { Express, RequestHandler } from "express"
+import * as asyncHandler from "express-async-handler"
+import { Server } from "http"
+import { ProceduralCtx } from "./typescript_sdk_context_impl"
+import {
+    Data_Description,
+    Entity,
+    Intentful_Execution_Strategy,
+    Kind,
+    Procedural_Execution_Strategy,
+    Procedural_Signature,
+    Provider,
+    S2S_Key,
+    Secret,
+    SpecOnlyEntityKind,
+    UserInfo,
+    Version
+} from "papiea-core"
 import { InvocationError, SecurityApiError } from "./typescript_sdk_exceptions"
 import { makeLoggerFactory } from "./typescript_sdk_logging"
 
@@ -155,11 +168,11 @@ export class ProviderSdk implements ProviderImpl {
                 name,
                 name_plural: plural(name),
                 kind_structure: entity_description,
-                intentful_signatures: new Map(),
+                intentful_signatures: [],
                 dependency_tree: new Map(),
                 kind_procedures: {},
                 entity_procedures: {},
-                intentful_behaviour: (entity_description[name]["x-papiea-entity"] === "spec-only") ? IntentfulBehaviour.SpecOnly : IntentfulBehaviour.Basic,
+                intentful_behaviour: entity_description[name]["x-papiea-entity"],
                 differ: undefined,
             };
 
@@ -211,13 +224,15 @@ export class ProviderSdk implements ProviderImpl {
                        input_desc: any,
                        output_desc: any,
                        handler: (ctx: ProceduralCtx_Interface, input: any) => Promise<any>): ProviderSdk {
-        const callback_url = this._server_manager.callback_url(name);
+        const procedure_callback_url = this._server_manager.procedure_callback_url(name);
+        const callback_url = this._server_manager.callback_url();
         const procedural_signature: Procedural_Signature = {
             name,
             argument: input_desc,
             result: output_desc,
             execution_strategy: strategy,
-            procedure_callback: callback_url
+            procedure_callback: procedure_callback_url,
+            base_callback: callback_url
         };
         this._procedures[name] = procedural_signature;
         const prefix = this.get_prefix();
@@ -329,6 +344,15 @@ class Provider_Server_Manager {
         this.app.post(route, asyncHandler(handler))
     }
 
+    register_healthcheck() {
+        if (!this.should_run) {
+            this.should_run = true;
+        }
+        this.app.get("healthcheck", asyncHandler(async (req, res) => {
+            res.status(200).json({ status: "Available" })
+        }))
+    }
+
     startServer() {
         if (this.should_run) {
             this.raw_http_server = this.app.listen(this.public_port, () => {
@@ -345,11 +369,19 @@ class Provider_Server_Manager {
         }
     }
 
-    callback_url(procedure_name: string, kind?: string): string {
+    callback_url(kind?: string) {
         if (kind !== undefined) {
-            return `http://${ this.public_host }:${ this.public_port }${ "/" + kind + "/" + procedure_name }`
+            return `http://${ this.public_host }:${ this.public_port }/${ kind }`
         } else {
-            return `http://${ this.public_host }:${ this.public_port }${ "/" + procedure_name }`
+            return `http://${ this.public_host }:${ this.public_port }/`
+        }
+    }
+
+    procedure_callback_url(procedure_name: string, kind?: string): string {
+        if (kind !== undefined) {
+            return `http://${ this.public_host }:${ this.public_port }/${ kind }/${ procedure_name }`
+        } else {
+            return `http://${ this.public_host }:${ this.public_port }/${ procedure_name }`
         }
     }
 }
@@ -380,13 +412,15 @@ export class Kind_Builder {
                      input_desc: any,
                      output_desc: any,
                      handler: (ctx: ProceduralCtx_Interface, entity: Entity, input: any) => Promise<any>): Kind_Builder {
-        const callback_url = this.server_manager.callback_url(name, this.kind.name);
+        const procedure_callback_url = this.server_manager.procedure_callback_url(name, this.kind.name);
+        const callback_url = this.server_manager.callback_url(this.kind.name);
         const procedural_signature: Procedural_Signature = {
             name,
             argument: input_desc,
             result: output_desc,
             execution_strategy: strategy,
-            procedure_callback: callback_url
+            procedure_callback: procedure_callback_url,
+            base_callback: callback_url
         };
         this.kind.entity_procedures[name] = procedural_signature;
         const prefix = this.get_prefix();
@@ -410,18 +444,76 @@ export class Kind_Builder {
         return this
     }
 
+    on(sfs_signature: string, rbac: any,
+       handler: (ctx: IntentfulCtx_Interface, entity: Entity, input: any) => Promise<any>): Kind_Builder {
+        const procedure_callback_url = this.server_manager.procedure_callback_url(sfs_signature, this.kind.name);
+        const callback_url = this.server_manager.callback_url(this.kind.name);
+        this.kind.intentful_signatures.push({
+            signature: sfs_signature,
+            name: sfs_signature,
+            argument: {
+                IntentfulInput: {
+                    type: 'array',
+                    items: {
+                        type: 'object',
+                        properties: {
+                            keys: {
+                                type: 'object'
+                            },
+                            key: {
+                                type: 'string'
+                            },
+                            "spec-val": {
+                                type: 'array'
+                            },
+                            "status-val": {
+                                type: 'array'
+                            }
+                        }
+                    }
+                }
+            },
+            result: {},
+            execution_strategy: Intentful_Execution_Strategy.Basic,
+            procedure_callback: procedure_callback_url,
+            base_callback: callback_url
+        })
+        const prefix = this.get_prefix();
+        const version = this.get_version();
+        this.server_manager.register_handler(`/${this.kind.name}/${sfs_signature}`, async (req, res) => {
+            try {
+                const result = await handler(new ProceduralCtx(this.provider, prefix, version, req.headers, makeLoggerFactory(sfs_signature)), {
+                    metadata: req.body.metadata,
+                    spec: req.body.spec,
+                    status: req.body.status
+                }, req.body.input);
+                res.json(result);
+            } catch (e) {
+                if (e instanceof InvocationError) {
+                    return res.status(e.status_code).json(e.toResponse())
+                }
+                const error = InvocationError.fromError(500, e);
+                res.status(500).json(error.toResponse())
+            }
+        });
+        this.server_manager.register_healthcheck()
+        return this
+    }
+
     kind_procedure(name: string, rbac: any,
                    strategy: Procedural_Execution_Strategy,
                    input_desc: any,
                    output_desc: any,
                    handler: (ctx: ProceduralCtx_Interface, input: any) => Promise<any>): Kind_Builder {
-        const callback_url = this.server_manager.callback_url(name, this.kind.name);
+        const procedure_callback_url = this.server_manager.procedure_callback_url(name, this.kind.name);
+        const callback_url = this.server_manager.callback_url(this.kind.name);
         const procedural_signature: Procedural_Signature = {
             name,
             argument: input_desc,
             result: output_desc,
             execution_strategy: strategy,
-            procedure_callback: callback_url
+            procedure_callback: procedure_callback_url,
+            base_callback: callback_url
         };
         this.kind.kind_procedures[name] = procedural_signature;
         const prefix = this.get_prefix();
@@ -438,6 +530,26 @@ export class Kind_Builder {
                 res.status(error.status_code).json(error.toResponse())
             }
         });
+        return this
+    }
+
+    on_create(rbac: any,
+              strategy: Procedural_Execution_Strategy,
+              input_desc: any,
+              output_desc: any,
+              handler: (ctx: ProceduralCtx_Interface, input: any) => Promise<any>): Kind_Builder {
+        const name = "__create"
+        this.kind_procedure(name, rbac, strategy, input_desc, output_desc, handler)
+        return this
+    }
+
+    on_delete(rbac: any,
+              strategy: Procedural_Execution_Strategy,
+              input_desc: any,
+              output_desc: any,
+              handler: (ctx: ProceduralCtx_Interface, input: any) => Promise<any>): Kind_Builder {
+        const name = "__delete"
+        this.kind_procedure(name, rbac, strategy, input_desc, output_desc, handler)
         return this
     }
 }

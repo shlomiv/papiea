@@ -169,7 +169,8 @@ describe("API docs test entity", () => {
             argument: loadYaml("./test_data/procedure_sum_input.yml"),
             result: loadYaml("./test_data/procedure_sum_output.yml"),
             execution_strategy: Procedural_Execution_Strategy.Halt_Intentful,
-            procedure_callback: "127.0.0.1:9011"
+            procedure_callback: "127.0.0.1:9011",
+            base_callback: "127.0.0.1:9011"
         };
         const provider: Provider = new ProviderBuilder("provider_with_validation_scheme")
             .withVersion("0.1.0")
@@ -288,7 +289,8 @@ describe("API docs test entity", () => {
             argument: {},
             result: {},
             execution_strategy: Procedural_Execution_Strategy.Halt_Intentful,
-            procedure_callback: "127.0.0.1:9011"
+            procedure_callback: "127.0.0.1:9011",
+            base_callback: "127.0.0.1:9011"
         };
         const provider: Provider = new ProviderBuilder("provider_no_validation_scheme")
             .withVersion("0.1.0")

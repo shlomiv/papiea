@@ -9,4 +9,4 @@ RUN cd /code \
     && npm --prefix papiea-engine run build-clj \
     && npm run build-all 
 
-CMD npm run start
+CMD /bin/bash -c "npm run start_differ & npm run start"

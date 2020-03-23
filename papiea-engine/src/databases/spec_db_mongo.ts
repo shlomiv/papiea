@@ -77,6 +77,22 @@ export class Spec_DB_Mongo implements Spec_DB {
         return [result.metadata, result.spec];
     }
 
+    async get_specs_by_ref(entity_refs: Entity_Reference[]): Promise<[Metadata, Spec][]> {
+        const ids = entity_refs.map(ref => ref.uuid)
+        const result = await this.collection.find({
+            "metadata.uuid": {
+                $in: ids
+            }
+        }).toArray();
+        return result.map((x: any): [Metadata, Spec] => {
+            if (x.spec !== null) {
+                return [x.metadata, x.spec]
+            } else {
+                throw new Error("No valid entities found");
+            }
+        });
+    }
+
     async list_specs(fields_map: any, sortParams?: SortParams): Promise<([Metadata, Spec])[]> {
         const filter: any = {};
         filter["metadata.deleted_at"] = datestringToFilter(fields_map.metadata.deleted_at);

@@ -16,6 +16,28 @@ export type Version = string;
 
 export type Secret = string
 
+export enum IntentfulStatus {
+
+    // A spec change or a scheduled diffing created this intentful Task,
+    // it is not yet active
+    Pending = "Pending",
+
+    // Intentful Task is currently waiting for a diff to be resolved
+    Active = "Active",
+
+    // All fields were set to the spec value at some point after the spec change was issued
+    Completed_Successfully = "Completed Successfully",
+
+    // Some fields were set to the spec value, and some were not due to a newer spec version
+    Completed_Partially = "Completed Partially",
+
+    // None of the fields was changed to the given spec values,
+    // and there is already a newer spec version
+    Failed = "Failed",
+
+    Outdated = "Outdated",
+}
+
 // [[file:~/work/papiea-js/Papiea-design.org::#h-Metadata-350][metadata-struct]]
 export interface Metadata extends Entity_Reference {
     // Identity fields
@@ -57,10 +79,8 @@ export interface EntitySpec {
 // Intentful signature
 export type SFS = string;
 
-export interface Intentful_Signature {
-    signature: SFS;
-    compiled_signature: any
-    function_callback: Provider_Callback_URL;
+export interface Intentful_Signature extends Procedural_Signature {
+    signature: SFS
 }
 // SFS-interfaces ends here
 
@@ -76,18 +96,10 @@ export interface Entity_Reference  {
 // entity-reference-struct ends here
 // /src/core.ts:1 ends here
 
-// [[file:~/work/papiea-js/Papiea-design.org::#h-Differ-118][Differ-interface]]
-export interface Kind_Compiler {
-    // The sfss compiler function. 
-    compile_kind_explicit(sfss: SFS[], dep_tree: Map<SFS, SFS[]>): Differ;
-
-    // More concisely this could simply be:
-    compile_kind(kind: Kind): Differ;
-}
-
 export enum IntentfulBehaviour {
     Basic = "basic",
-    SpecOnly = "spec_only"
+    SpecOnly = "spec-only",
+    Differ = "differ"
 }
 
 // The differ is used to locate a diff in an entity between the
@@ -95,11 +107,11 @@ export enum IntentfulBehaviour {
 export interface Differ {
 
     // Get the next diff from an entity based on the 
-    next_diff(entity:Entity_Reference, spec: Spec, status: Status):Diff;
+    diffs(kind: Kind, spec: Spec, status: Status): Generator<Diff, any, undefined>;
 
     // We could also get the entire list of diffs, ordered by the
     // original dependency tree
-    all_diffs(entity:Entity_Reference, spec: Spec, status: Status):Diff[];
+    all_diffs(kind: Kind, spec: Spec, status: Status): Diff[];
 }
 
 // [[file:~/work/papiea-js/Papiea-design.org::#h-Kind-241][kind-struct]]
@@ -114,7 +126,7 @@ export interface Kind {
 
     intentful_behaviour: IntentfulBehaviour;
     //// Intentful behavior
-    intentful_signatures: Map<SFS, Intentful_Signature>;
+    intentful_signatures: Intentful_Signature[];
 
     // Every sfs lists the sfs's it has to execute before
     dependency_tree: Map<SFS, SFS[]>;
@@ -131,17 +143,19 @@ export interface Kind {
 // The Diff structure captures a discovered diff in an entity as well
 // as the intentful action that may resolve such diff
 export interface Diff {
-    // The uri exposed by the provider which may handle this diff
-    intentful_fn_uri: Provider_Callback_URL
+    kind: string
 
-    // If this intent handler has a name, we could use it
-    name?: string;
+    intentful_signature: Intentful_Signature,
 
-    // The fields identified by this differ, their path and value.
-    diff_fields: Map<SFS, any>;
+    // Field diff found by the Differ
+    diff_fields: any
 
-    // Actually invokes the intentful function
-    invoke(): any;
+    // A uri for a URL which specifically identifies the currently running process.
+    // If the URL returns 404 we know that the task was dropped (say, provider crashed).
+    // It will use the specific node's IP and not a load balancer IP.
+    // This will direct us to the exact location where the task is running.
+    // provider handler url with an id to cache the task it is assigned to, serves as an identifier for a type of task being executed
+    handler_url?: string
 }
 // Diff-interface ends here
 // /src/intentful_core/differ_interface.ts:1 ends here
@@ -157,6 +171,7 @@ export interface SpecOnlyEntityKind extends Kind {
 // can only halt intentful execution for the duration of the
 // procedural call
 export enum Procedural_Execution_Strategy {Halt_Intentful};
+export enum Intentful_Execution_Strategy {Basic};
 
 export interface Procedural_Signature {
     // The name of the entity_procedure to be exported by the engine.
@@ -170,10 +185,13 @@ export interface Procedural_Signature {
 
     // Does the engine pauses all intentful operation invocations for
     // the duration of the procedural call
-    execution_strategy: Procedural_Execution_Strategy;
+    execution_strategy: Procedural_Execution_Strategy | Intentful_Execution_Strategy;
 
     // Actions url into the provider
     procedure_callback: Provider_Callback_URL;
+
+    // Base callback used for service discovery, health checks
+    base_callback: Provider_Callback_URL
 }
 
 // entity_procedure-signature ends here

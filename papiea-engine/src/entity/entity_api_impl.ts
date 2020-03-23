@@ -27,19 +27,22 @@ import { PermissionDeniedError } from "../errors/permission_error";
 import { Logger } from "../logger_interface";
 import { IntentfulContext } from "../intentful_core/intentful_context"
 import { Provider_DB } from "../databases/provider_db_interface"
+import { IntentfulTask, IntentfulTaskMapper } from "../tasks/task_interface"
+import { IntentfulTask_DB } from "../databases/intentful_task_db_interface"
 
 export type SortParams = { [key: string]: number };
 
 export class Entity_API_Impl implements Entity_API {
     private status_db: Status_DB;
     private spec_db: Spec_DB;
+    private intentful_task_db: IntentfulTask_DB
     private authorizer: Authorizer;
     private logger: Logger;
     private validator: Validator
     private readonly intentfulCtx: IntentfulContext
     private providerDb: Provider_DB
 
-    constructor(logger: Logger, status_db: Status_DB, spec_db: Spec_DB, provider_db: Provider_DB, authorizer: Authorizer, validator: Validator, intentfulCtx: IntentfulContext) {
+    constructor(logger: Logger, status_db: Status_DB, spec_db: Spec_DB, provider_db: Provider_DB, intentful_task_db: IntentfulTask_DB, authorizer: Authorizer, validator: Validator, intentfulCtx: IntentfulContext) {
         this.status_db = status_db;
         this.spec_db = spec_db;
         this.providerDb = provider_db;
@@ -47,6 +50,7 @@ export class Entity_API_Impl implements Entity_API {
         this.logger = logger;
         this.validator = validator;
         this.intentfulCtx = intentfulCtx
+        this.intentful_task_db = intentful_task_db
     }
 
     private async get_provider(prefix: string, version: Version): Promise<Provider> {
@@ -59,6 +63,21 @@ export class Entity_API_Impl implements Entity_API {
             throw new Error(`Kind: ${kind_name} not found`);
         }
         return found_kind;
+    }
+
+    async get_intentful_task(user: UserAuthInfo, id: string): Promise<Partial<IntentfulTask>> {
+        const intentful_task = await this.intentful_task_db.get_task(id)
+        const [metadata, _] = await this.spec_db.get_spec(intentful_task.entity_ref)
+        await this.authorizer.checkPermission(user, { "metadata": metadata }, Action.Update);
+        return IntentfulTaskMapper.toResponse(intentful_task)
+    }
+
+    async filter_intentful_task(user: UserAuthInfo, fields: any, sortParams?: SortParams): Promise<Partial<IntentfulTask>[]> {
+        const intentful_tasks = await this.intentful_task_db.list_tasks(fields, sortParams)
+        const entities = await this.spec_db.get_specs_by_ref(intentful_tasks.map(task => task.entity_ref))
+        const filteredRes = await this.authorizer.filter(user, entities, Action.Update, x => { return { "metadata": x[0] } });
+        const filteredTasks = IntentfulTaskMapper.filter(intentful_tasks, filteredRes)
+        return IntentfulTaskMapper.toResponses(filteredTasks)
     }
 
     async save_entity(user: UserAuthInfo, prefix: string, kind_name: string, version: Version, spec_description: Spec, request_metadata: Metadata = {} as Metadata): Promise<[Metadata, Spec]> {
@@ -77,8 +96,8 @@ export class Entity_API_Impl implements Entity_API {
         }
         request_metadata.kind = kind.name;
         await this.authorizer.checkPermission(user, { "metadata": request_metadata }, Action.Create);
-        const strategy = this.intentfulCtx.getIntentfulStrategy(kind.intentful_behaviour)
-        const [metadata, spec] = await strategy.update(request_metadata, spec_description)
+        const strategy = this.intentfulCtx.getIntentfulStrategy(kind, user)
+        const [metadata, spec] = await strategy.create(request_metadata, spec_description)
         return [metadata, spec];
     }
 
@@ -110,7 +129,7 @@ export class Entity_API_Impl implements Entity_API {
         return filteredRes;
     }
 
-    async update_entity_spec(user: UserAuthInfo, uuid: uuid4, prefix: string, spec_version: number, extension: {[key: string]: any}, kind_name: string, version: Version, spec_description: Spec): Promise<[Metadata, Spec]> {
+    async update_entity_spec(user: UserAuthInfo, uuid: uuid4, prefix: string, spec_version: number, extension: {[key: string]: any}, kind_name: string, version: Version, spec_description: Spec): Promise<IntentfulTask | null> {
         const provider = await this.get_provider(prefix, version);
         const kind = this.find_kind(provider, kind_name);
         this.validate_spec(spec_description, kind, provider.allowExtraProps);
@@ -118,9 +137,9 @@ export class Entity_API_Impl implements Entity_API {
         const metadata: Metadata = (await this.spec_db.get_spec(entity_ref))[0];
         await this.authorizer.checkPermission(user, { "metadata": metadata }, Action.Update);
         metadata.spec_version = spec_version;
-        const strategy = this.intentfulCtx.getIntentfulStrategy(kind.intentful_behaviour)
-        const [res_metadata, spec] = await strategy.update(metadata, spec_description)
-        return [res_metadata, spec];
+        const strategy = this.intentfulCtx.getIntentfulStrategy(kind, user)
+        const task = await strategy.update(metadata, spec_description)
+        return task;
     }
 
     async delete_entity_spec(user: UserAuthInfo, prefix: string, version: Version, kind_name: string, entity_uuid: uuid4): Promise<void> {
@@ -129,7 +148,7 @@ export class Entity_API_Impl implements Entity_API {
         const entity_ref: Entity_Reference = { kind: kind_name, uuid: entity_uuid };
         const [metadata, _] = await this.spec_db.get_spec(entity_ref);
         await this.authorizer.checkPermission(user, { "metadata": metadata }, Action.Delete);
-        const strategy = this.intentfulCtx.getIntentfulStrategy(kind.intentful_behaviour)
+        const strategy = this.intentfulCtx.getIntentfulStrategy(kind, user)
         await strategy.delete(metadata)
     }
 

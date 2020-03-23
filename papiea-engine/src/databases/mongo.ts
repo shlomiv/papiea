@@ -7,6 +7,7 @@ import { Provider_DB_Mongo } from "./provider_db_mongo";
 import { S2S_Key_DB_Mongo } from "./s2skey_db_mongo";
 import { SessionKeyDbMongo } from "./session_key_db_mongo"
 import { Logger } from "../logger_interface"
+import { IntentfulTask_DB_Mongo } from "./intentful_task_db_mongo"
 const fs = require('fs'),
     url = require('url');
 
@@ -22,6 +23,7 @@ export class MongoConnection {
     statusDb: Status_DB_Mongo | undefined;
     s2skeyDb: S2S_Key_DB_Mongo | undefined;
     sessionKeyDb: SessionKeyDbMongo | undefined
+    intentfulTaskDb: IntentfulTask_DB_Mongo | undefined
 
     constructor(url: string, dbName: string) {
         this.url = url;
@@ -37,6 +39,7 @@ export class MongoConnection {
         this.providerDb = undefined;
         this.statusDb = undefined;
         this.s2skeyDb = undefined;
+        this.intentfulTaskDb = undefined
     }
 
     async download_rds_cert(): Promise<void> {
@@ -119,5 +122,15 @@ export class MongoConnection {
         this.sessionKeyDb = new SessionKeyDbMongo(logger, this.db);
         await this.sessionKeyDb.init();
         return this.sessionKeyDb;
+    }
+
+    async get_intentful_task_db(logger: Logger): Promise<IntentfulTask_DB_Mongo> {
+        if (this.intentfulTaskDb !== undefined)
+            return this.intentfulTaskDb;
+        if (this.db === undefined)
+            throw new Error("Not connected");
+        this.intentfulTaskDb = new IntentfulTask_DB_Mongo(logger, this.db);
+        await this.intentfulTaskDb.init();
+        return this.intentfulTaskDb;
     }
 }

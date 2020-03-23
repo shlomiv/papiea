@@ -1,6 +1,6 @@
 {
   "name": "papiea-engine",
-  "version": "1.0.82",
+  "version": "1.0.84",
   "description": "",
   "main": "build/main.js",
   "files": [
@@ -12,10 +12,12 @@
     "build": "tsc",
     "build!": "npm run clean && npm run build",
     "start": "ts-node src/main.ts",
+    "start_differ": "ts-node src/differ_resolver_main.ts",
     "test": "jest --runInBand --coverage",
     "test-ci": "jest --runInBand --coverage --ci --reporters=default --reporters=jest-junit",
     "dev": "./node_modules/nodemon/bin/nodemon.js",
     "debug": "./node_modules/nodemon/bin/nodemon.js --config nodemon_debug.json",
+    "debug_differ": "./node_modules/nodemon/bin/nodemon.js --config nodemon_debug_differ.json",
     "test-watch": "jest --watchAll",
     "build-clj": "cd papiea-lib-clj && lein cljsbuild once",
     "build-clj-auto": "cd papiea-lib-clj && lein cljsbuild auto",
@@ -37,6 +39,7 @@
     "js-yaml": "^3.12.0",
     "jsonwebtoken": "^8.5.1",
     "lodash": "^4.17.13",
+    "mnemonist": "^0.30.0",
     "mongo-dot-notation-tool": "^1.0.1",
     "mongodb": "^3.1.10",
     "morgan": "^1.9.1",
@@ -72,7 +75,7 @@
     "swagger-parser": "^6.0.2",
     "ts-jest": "^23.10.5",
     "ts-node": "^7.0.1",
-    "typescript": "^3.2.2"
+    "typescript": "^3.6.4"
   },
   "jest": {
     "transform": {
@@ -87,6 +90,9 @@
     ],
     "collectCoverageFrom": [
       "src/**"
+    ],
+    "coveragePathIgnorePatterns": [
+      "papiea-lib-clj"
     ],
     "testEnvironment": "node"
   }

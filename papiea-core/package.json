@@ -1,6 +1,6 @@
 {
   "name": "papiea-core",
-  "version": "1.0.82",
+  "version": "1.0.84",
   "description": "Core 'header' files for papiea",
   "main": "build/core.js",
   "scripts": {
@@ -10,6 +10,6 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "typescript": "^3.4.5"
+    "typescript": "^3.6.4"
   }
 }

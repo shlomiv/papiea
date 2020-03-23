@@ -5,6 +5,7 @@
     "module": "commonjs",
     "declaration": true,
     "outDir": "./build",
+    "downlevelIteration": true,
     "strict": true,
     "sourceMap": true,
     "baseUrl": ".",

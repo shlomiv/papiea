@@ -19,6 +19,7 @@ import { WinstonLogger, getLoggingMiddleware, WinstonAuditLogger } from './logge
 import { SessionKeyAPI, SessionKeyUserAuthInfoExtractor } from "./auth/session_key"
 import { IntentfulContext } from "./intentful_core/intentful_context"
 import { AuditLogger } from "./logger_interface"
+import { BasicDiffer } from "./intentful_core/differ_impl"
 const cookieParser = require('cookie-parser');
 
 
@@ -31,7 +32,7 @@ declare var process: {
         DEBUG_LEVEL: string,
         PAPIEA_ADMIN_S2S_KEY: string,
         LOGGING_LEVEL: string
-        PAPIEA_DEBUG: string
+        PAPIEA_DEBUG: string,
     },
     title: string;
 };
@@ -45,6 +46,7 @@ const adminKey = process.env.PAPIEA_ADMIN_S2S_KEY || '';
 const loggingLevel = process.env.LOGGING_LEVEL || 'info';
 const papieaDebug = process.env.PAPIEA_DEBUG === "true"
 
+
 async function setUpApplication(): Promise<express.Express> {
     const logger = new WinstonLogger(loggingLevel);
     const auditLogger: AuditLogger = new WinstonAuditLogger(papieaDebug)
@@ -54,10 +56,12 @@ async function setUpApplication(): Promise<express.Express> {
     app.use(getLoggingMiddleware(auditLogger));
     const mongoConnection: MongoConnection = new MongoConnection(mongoUrl, mongoDb);
     await mongoConnection.connect();
+    const differ = new BasicDiffer()
     const providerDb = await mongoConnection.get_provider_db(logger);
     const specDb = await mongoConnection.get_spec_db(logger);
     const statusDb = await mongoConnection.get_status_db(logger);
     const s2skeyDb = await mongoConnection.get_s2skey_db(logger);
+    const intentfulTaskDb = await mongoConnection.get_intentful_task_db(logger)
     const validator = new ValidatorImpl()
     const providerApi = new Provider_API_Impl(logger, providerDb, statusDb, s2skeyDb, new AdminAuthorizer(), validator);
     const sessionKeyDb = await mongoConnection.get_session_key_db(logger)
@@ -67,12 +71,12 @@ async function setUpApplication(): Promise<express.Express> {
         new S2SKeyUserAuthInfoExtractor(s2skeyDb),
         new SessionKeyUserAuthInfoExtractor(sessionKeyApi, providerDb)
     ]);
-    const intentfulContext = new IntentfulContext(specDb, statusDb)
+    const intentfulContext = new IntentfulContext(specDb, statusDb, differ, intentfulTaskDb)
     app.use(createAuthnRouter(logger, userAuthInfoExtractor));
     app.use(createOAuth2Router(logger, oauth2RedirectUri, providerDb, sessionKeyApi));
     const entityApiAuthorizer: Authorizer = new PerProviderAuthorizer(logger, providerApi, new ProviderCasbinAuthorizerFactory(logger));
     app.use('/provider', createProviderAPIRouter(providerApi));
-    app.use('/services', createEntityAPIRouter(new Entity_API_Impl(logger, statusDb, specDb, providerDb, entityApiAuthorizer, validator, intentfulContext)));
+    app.use('/services', createEntityAPIRouter(new Entity_API_Impl(logger, statusDb, specDb, providerDb, intentfulTaskDb, entityApiAuthorizer, validator, intentfulContext)));
     app.use('/api-docs', createAPIDocsRouter('/api-docs', new ApiDocsGenerator(providerDb), providerDb));
     app.use(function (err: any, req: any, res: any, next: any) {
         if (res.headersSent) {

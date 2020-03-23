@@ -74,7 +74,7 @@ export class Status_DB_Mongo implements Status_DB {
         }).toArray();
         return result.map((x: any): [Metadata, Status] => {
             if (x.spec !== null) {
-                return [x.metadata, x.spec]
+                return [x.metadata, x.status]
             } else {
                 throw new Error("No valid entities found");
             }

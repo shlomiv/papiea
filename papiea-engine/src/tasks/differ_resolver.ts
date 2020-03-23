@@ -5,7 +5,7 @@ import { timeout } from "../utils/utils"
 import { IntentfulTask_DB_Mongo } from "../databases/intentful_task_db_mongo"
 import { Spec_DB } from "../databases/spec_db_interface"
 import { Status_DB } from "../databases/status_db_interface"
-import { Watchlist } from "./watchlist"
+import { Watchlist, EntityTasks } from "./watchlist"
 import { Handler, IntentfulListener } from "./intentful_listener_interface"
 import { SFSCompiler } from "../intentful_core/sfs_compiler"
 import axios from "axios"
@@ -101,6 +101,9 @@ export class DifferResolver {
     }
 
     public async clearFinishedTasks(): Promise<void> {
+        // Remove all watchs on entities which have no more diffs to look
+        this.watchlist = this.watchlist.filter((entity_task:EntityTasks)=>entity_task.tasks.length>0)
+
         const tasks = this.watchlist.reduce((acc: IntentfulTask[], entityTask) => {
             entityTask.tasks.forEach(task => {
                 acc.push(task)
@@ -126,10 +129,12 @@ export class DifferResolver {
     }
 
     public async onTask(task: IntentfulTask) {
-        this.watchlist.push({
-            entity_id: task.entity_ref.uuid,
-            tasks: [task]
-        })
+        if (this.watchlist.find((item: EntityTasks) => item.entity_id == task.entity_ref.uuid) == undefined) {
+            this.watchlist.push({
+                entity_id: task.entity_ref.uuid,
+                tasks: [task]
+            })
+        }
     }
 
     protected async onStatus(entity: Entity_Reference, specVersion: number, status: Status) {
@@ -138,7 +143,7 @@ export class DifferResolver {
         const tasks = this.watchlist.filter(entityTasks => entityTasks.entity_id === entity.uuid)
         if (tasks.length !== 0) {
             const activeTasks = tasks[0].tasks.filter(task => task.status === IntentfulStatus.Active)
-            console.log(activeTasks)
+            console.log("Active Tasks: ", activeTasks)
             if (activeTasks.length === 0) {
                 return
             } else if (activeTasks.length > 1) {
@@ -173,9 +178,27 @@ export class DifferResolver {
             let activeTasks = entityTask.tasks.filter(task => task.status === IntentfulStatus.Active)
             if (activeTasks.length === 1) {
                 let activeTask = activeTasks[0]
+                let doneDiff = 0
                 try {
                     for (let diff of activeTask.diffs) {
+                        const compiledSignature = SFSCompiler.compile_sfs(diff.intentful_signature.signature)
+                        const [,spec] = await this.specDb.get_spec(activeTask.entity_ref)
+                        const [,status] = await this.statusDb.get_status(activeTask.entity_ref)
+                        if (SFSCompiler.run_sfs(compiledSignature, spec, status) !== null) {
+                            // Shlomi.v
+                            // No need to healthcheck a diff which may already be resolved,
+                            // the handler may have already terminated
                         await axios.get(`${ diff.intentful_signature.base_callback }/healthcheck`)
+                        } else {
+                            doneDiff = doneDiff+1
+                        }
+                    }
+                    if (doneDiff == activeTask.diffs.length) {
+                        // Shlomi.v
+                        // if all diffs were resolved - this task must be completed. 
+                        // TODO: What about Completed_Partially? Make sure we are not missing anything
+                        activeTask.status = IntentfulStatus.Completed_Successfully
+                        await this.intentfulTaskDb.update_task(activeTask.uuid, activeTask)    
                     }
                 } catch (e) {
                     activeTask.status = IntentfulStatus.Failed

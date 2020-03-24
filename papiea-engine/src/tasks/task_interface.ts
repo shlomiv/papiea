@@ -22,6 +22,9 @@ export interface IntentfulTask {
     // Current status of the entity
     status: IntentfulStatus
 
+    // Date when entity was marked to be removed
+    marked_for_deletion?: Date
+
     // Date of creation
     created_at?: Date
 }

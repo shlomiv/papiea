@@ -12,7 +12,7 @@ export interface IntentfulTask_DB {
 
     update_task(uuid: string, delta: Partial<IntentfulTask>): Promise<void>
 
-    delete_task(uuid: string): Promise<void>
+    mark_for_deletion(uuid: string): Promise<void>
 
     get_watchlist(): Promise<Watchlist>
 

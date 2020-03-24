@@ -423,7 +423,7 @@ describe("MongoDb tests", () => {
             entity_ref: {} as Entity_Reference
         };
         await taskDb.save_task(task)
-        await taskDb.delete_task(task.uuid)
+        await taskDb.mark_for_deletion(task.uuid)
         try {
             await taskDb.get_task(task.uuid);
         } catch(e) {
@@ -450,7 +450,7 @@ describe("MongoDb tests", () => {
         expect(res.status).toEqual(task.status);
         expect(res.diffs).toEqual(task.diffs);
         expect(res.uuid).toEqual(task.uuid);
-        await taskDb.delete_task(task.uuid)
+        await taskDb.mark_for_deletion(task.uuid)
     });
 
     test("Duplicate task should throw an error", async () => {
@@ -473,7 +473,7 @@ describe("MongoDb tests", () => {
         } catch(e) {
             expect(e).toBeDefined();
         }
-        await taskDb.delete_task(task.uuid)
+        await taskDb.mark_for_deletion(task.uuid)
     });
 
     test("List tasks", async () => {
@@ -493,7 +493,7 @@ describe("MongoDb tests", () => {
         await taskDb.save_task(task);
         const res = (await taskDb.list_tasks({ uuid: task.uuid }) as IntentfulTask[])[0]
         expect(res.uuid).toEqual(task.uuid);
-        await taskDb.delete_task(task.uuid)
+        await taskDb.mark_for_deletion(task.uuid)
     });
 
     test("Update task", async () => {
@@ -514,7 +514,7 @@ describe("MongoDb tests", () => {
         await taskDb.update_task(task.uuid, { status: IntentfulStatus.Completed_Successfully })
         const updatedTask = await taskDb.get_task(task.uuid);
         expect(updatedTask.status).toEqual(IntentfulStatus.Completed_Successfully)
-        await taskDb.delete_task(task.uuid)
+        await taskDb.mark_for_deletion(task.uuid)
     });
     test("Get watchlist", async () => {
         expect.assertions(1);
@@ -537,6 +537,6 @@ describe("MongoDb tests", () => {
                 expect(entityTask.tasks.length).toEqual(1)
             }
         })
-        await taskDb.delete_task(task.uuid)
+        await taskDb.mark_for_deletion(task.uuid)
     })
 });

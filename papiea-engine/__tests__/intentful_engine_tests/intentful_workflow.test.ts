@@ -76,25 +76,25 @@ describe("Intentful Workflow tests", () => {
             let retries = 4
             try {
             for (let i = 1; i <= retries; i++) {
-                    const result = await entityApi.get(`/intentful_task/${task.uuid}`)
-
-                    // SHLOMI: I think that the task is getting removed too quickly once it is completed
-                    // task is returning 
-                    // console.debug("WHAT IS GOING ON??!", result.data, i)
+                const result = await entityApi.get(`/intentful_task/${task.uuid}`)
                 if (result.data.status === IntentfulStatus.Completed_Successfully) {
                     expect(result.data.status).toEqual(IntentfulStatus.Completed_Successfully)
-                    return
+                    await timeout(120000)
+                    try {
+                        // Wait till task is deleted
+                        await entityApi.get(`/intentful_task/${task.uuid}`)
+                    } catch (e) {
+                        // TODO: This should be 404, I believe
+                        expect(e.response.statusCode).toBe(500)
+                        return
+                    }
                 }
                 await timeout(7000)
             }
             } catch (e) {
-                console.debug("Got some error:", e.response.status)
+                console.debug(e.response)
+                // console.debug("Got some error:", e.response.status)
             }
-
-            // Shlomi: In any case, this should succeed if the diff got resolved
-            const { data: entity } = await entityApi.get(`/${sdk.provider.prefix}/${sdk.provider.version}/${kind_name}/${metadata.uuid}`)
-            expect(entity.spec).toEqual(entity.status)
-
         } finally {
             sdk.server.close();
         }

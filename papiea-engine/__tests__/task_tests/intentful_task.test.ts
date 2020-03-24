@@ -103,7 +103,7 @@ describe("Intentful Task tests", () => {
     });
 
     afterEach(async () => {
-        await intentfulTaskDb.delete_task(createdTask.uuid)
+        await intentfulTaskDb.mark_for_deletion(createdTask.uuid)
     })
 
     test("Intentful task created through updating the spec", async () => {

@@ -16,4 +16,5 @@ export interface IntentfulTask_DB {
 
     get_watchlist(): Promise<Watchlist>
 
+    delete_task(uuid: string): Promise<void>
 }

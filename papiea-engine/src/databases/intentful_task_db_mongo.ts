@@ -108,4 +108,17 @@ export class IntentfulTask_DB_Mongo implements IntentfulTask_DB {
         }
         return;
     }
+
+    async delete_task(uuid: string): Promise<void> {
+        const result = await this.collection.deleteOne({
+            uuid
+        })
+        if (result.result.n === undefined || result.result.ok !== 1) {
+            throw new Error("Failed to delete a task");
+        }
+        if (result.result.n !== 1 && result.result.n !== 0) {
+            throw new Error(`Amount of deleted task must be 0 or 1, found: ${result.result.n}`);
+        }
+        return;
+    }
 }

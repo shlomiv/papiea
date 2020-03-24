@@ -92,8 +92,7 @@ describe("Intentful Workflow tests", () => {
                 await timeout(7000)
             }
             } catch (e) {
-                console.debug(e.response)
-                // console.debug("Got some error:", e.response.status)
+                console.log(e.response)
             }
         } finally {
             sdk.server.close();

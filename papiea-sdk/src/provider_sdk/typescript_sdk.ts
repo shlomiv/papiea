@@ -11,7 +11,12 @@ import * as express from "express"
 import { Express, RequestHandler } from "express"
 import * as asyncHandler from "express-async-handler"
 import { Server } from "http"
-import { ProceduralCtx } from "./typescript_sdk_context_impl"
+import {
+    ActionContextConstructor,
+    BaseActionContext,
+    OnCreateContext, OnDeleteContext,
+    ProceduralCtx
+} from "./typescript_sdk_context_impl"
 import {
     Data_Description,
     Entity,
@@ -533,13 +538,46 @@ export class Kind_Builder {
         return this
     }
 
+    action_procedure<T extends BaseActionContext>(c: ActionContextConstructor<T>, name: string, rbac: any,
+                   strategy: Procedural_Execution_Strategy,
+                   input_desc: any,
+                   output_desc: any,
+                   handler: (ctx: T, input: any) => Promise<any>): Kind_Builder {
+        const procedure_callback_url = this.server_manager.procedure_callback_url(name, this.kind.name);
+        const callback_url = this.server_manager.callback_url(this.kind.name);
+        const procedural_signature: Procedural_Signature = {
+            name,
+            argument: input_desc,
+            result: output_desc,
+            execution_strategy: strategy,
+            procedure_callback: procedure_callback_url,
+            base_callback: callback_url
+        };
+        this.kind.kind_procedures[name] = procedural_signature;
+        const prefix = this.get_prefix();
+        const version = this.get_version();
+        this.server_manager.register_handler(`/${this.kind.name}/${name}`, async (req, res) => {
+            try {
+                const result = await handler(new c(this.provider, prefix, version, req.headers, makeLoggerFactory(name), req.body.input), req.body.input);
+                res.json(result);
+            } catch (e) {
+                if (e instanceof InvocationError) {
+                    return res.status(e.status_code).json(e.toResponse())
+                }
+                const error = InvocationError.fromError(500, e);
+                res.status(error.status_code).json(error.toResponse())
+            }
+        });
+        return this
+    }
+
     on_create(rbac: any,
               strategy: Procedural_Execution_Strategy,
               input_desc: any,
               output_desc: any,
-              handler: (ctx: ProceduralCtx_Interface, input: any) => Promise<any>): Kind_Builder {
+              handler: (ctx: OnCreateContext, input: any) => Promise<any>): Kind_Builder {
         const name = "__create"
-        this.kind_procedure(name, rbac, strategy, input_desc, output_desc, handler)
+        this.action_procedure(OnCreateContext, name, rbac, strategy, input_desc, output_desc, handler)
         return this
     }
 
@@ -549,7 +587,7 @@ export class Kind_Builder {
               output_desc: any,
               handler: (ctx: ProceduralCtx_Interface, input: any) => Promise<any>): Kind_Builder {
         const name = "__delete"
-        this.kind_procedure(name, rbac, strategy, input_desc, output_desc, handler)
+        this.action_procedure(OnDeleteContext, name, rbac, strategy, input_desc, output_desc, handler)
         return this
     }
 }

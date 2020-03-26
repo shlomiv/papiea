@@ -124,7 +124,7 @@ export class MongoConnection {
         return this.sessionKeyDb;
     }
 
-    async get_intentful_task_db(logger: Logger, deletedTaskPersistSeconds: number): Promise<IntentfulTask_DB_Mongo> {
+    async get_intentful_task_db(logger: Logger, deletedTaskPersistSeconds: number = 60): Promise<IntentfulTask_DB_Mongo> {
         if (this.intentfulTaskDb !== undefined)
             return this.intentfulTaskDb;
         if (this.db === undefined)

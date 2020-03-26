@@ -14,6 +14,7 @@ declare var process: {
         PAPIEA_ADMIN_S2S_KEY: string,
         LOGGING_LEVEL: string
         PAPIEA_DEBUG: string,
+        DELETED_TASK_PERSIST_SECONDS: string
     },
     title: string;
 };
@@ -21,6 +22,7 @@ declare var process: {
 const mongoUrl = process.env.MONGO_URL || 'mongodb://mongo:27017';
 const mongoDb = process.env.MONGO_DB || 'papiea';
 const loggingLevel = process.env.LOGGING_LEVEL || 'info';
+const deletedTaskPersistSeconds = parseInt(process.env.DELETED_TASK_PERSIST_SECONDS || "60")
 
 async function setUpDiffResolver() {
     const logger = new WinstonLogger(loggingLevel);
@@ -29,7 +31,7 @@ async function setUpDiffResolver() {
 
     const specDb = await mongoConnection.get_spec_db(logger);
     const statusDb = await mongoConnection.get_status_db(logger);
-    const intentfulTaskDb = await mongoConnection.get_intentful_task_db(logger)
+    const intentfulTaskDb = await mongoConnection.get_intentful_task_db(logger, deletedTaskPersistSeconds)
 
     const watchlist: Watchlist = await intentfulTaskDb.get_watchlist()
     const intentfulListener = await IntentfulListenerMongo.create(intentfulTaskDb, statusDb, watchlist)

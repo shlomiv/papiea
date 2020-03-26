@@ -36,6 +36,7 @@ export class IntentfulTaskMapper {
             entity_ref: intentfulTask.entity_ref,
             spec_version: intentfulTask.spec_version,
             status: intentfulTask.status,
+            marked_for_deletion: intentfulTask.marked_for_deletion,
             created_at: intentfulTask.created_at
         }
     }

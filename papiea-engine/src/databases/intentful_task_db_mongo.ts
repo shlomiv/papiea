@@ -14,10 +14,12 @@ interface TaskAggregation {
 
 export class IntentfulTask_DB_Mongo implements IntentfulTask_DB {
     collection: Collection;
+    deletedTaskPersistSeconds: number
     logger: Logger;
 
-    constructor(logger: Logger, db: Db) {
+    constructor(logger: Logger, db: Db, deletedTaskPersistSeconds: number) {
         this.collection = db.collection("task");
+        this.deletedTaskPersistSeconds = deletedTaskPersistSeconds
         this.logger = logger;
     }
 
@@ -29,7 +31,7 @@ export class IntentfulTask_DB_Mongo implements IntentfulTask_DB {
             )
             await this.collection.createIndex(
                 { "marked_for_deletion": 1 },
-                { expireAfterSeconds: 60 }
+                { expireAfterSeconds: this.deletedTaskPersistSeconds }
             )
         } catch (err) {
             throw err

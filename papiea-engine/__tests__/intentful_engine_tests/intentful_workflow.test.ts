@@ -40,7 +40,7 @@ describe("Intentful Workflow tests", () => {
     const provider_version = "0.1.0";
 
     test("Change single field intentful workflow should pass", async () => {
-        expect.hasAssertions();
+        expect.assertions(2);
         const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
         try {
             const location = sdk.new_kind(locationDataDescription);
@@ -73,21 +73,14 @@ describe("Intentful Workflow tests", () => {
                     spec_version: 1
                 }
             })
-            let retries = 4
+            let retries = 5
             try {
             for (let i = 1; i <= retries; i++) {
                 const result = await entityApi.get(`/intentful_task/${task.uuid}`)
-                if (result.data.status === IntentfulStatus.Completed_Successfully) {
+                if (result.data.status === IntentfulStatus.Completed_Successfully && result.data.marked_for_deletion) {
                     expect(result.data.status).toEqual(IntentfulStatus.Completed_Successfully)
-                    await timeout(120000)
-                    try {
-                        // Wait till task is deleted
-                        await entityApi.get(`/intentful_task/${task.uuid}`)
-                    } catch (e) {
-                        // TODO: This should be 404, I believe
-                        expect(e.response.statusCode).toBe(500)
-                        return
-                    }
+                    expect(result.data.marked_for_deletion).toBeDefined()
+                    return
                 }
                 await timeout(7000)
             }

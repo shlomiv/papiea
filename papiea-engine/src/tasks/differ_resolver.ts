@@ -9,6 +9,7 @@ import { Watchlist, EntityTasks } from "./watchlist"
 import { Handler, IntentfulListener } from "./intentful_listener_interface"
 import { SFSCompiler } from "../intentful_core/sfs_compiler"
 import axios from "axios"
+import { Set } from "immutable";
 
 // This should be run in a different process
 export class DifferResolver {
@@ -76,7 +77,7 @@ export class DifferResolver {
     }
 
     private async retryTasks(): Promise<void> {
-        for (let entityTask of this.watchlist) {
+        for (let entityTask of this.watchlist.entity_tasks) {
             let failedTasks = entityTask.tasks.filter(task => task.status === IntentfulStatus.Failed)
             if (failedTasks.length !== 0) {
                 if (failedTasks.length > 2) {
@@ -129,12 +130,7 @@ export class DifferResolver {
     }
 
     public async onTask(task: IntentfulTask) {
-        if (this.watchlist.find((item: EntityTasks) => item.entity_id == task.entity_ref.uuid) == undefined) {
-            this.watchlist.push({
-                entity_id: task.entity_ref.uuid,
-                tasks: [task]
-            })
-        }
+        this.watchlist.insert_task(task)
     }
 
     protected async onStatus(entity: Entity_Reference, specVersion: number, status: Status) {

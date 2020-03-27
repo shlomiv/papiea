@@ -1053,7 +1053,7 @@ describe("SDK callback tests", () => {
                 })
             } catch (e) {
                 expect(e.response.data).toBeDefined()
-                expect(e.response.data.error.message).toBe("Error: On Delete couldn't be called; Cannot invoke on delete.")
+                expect(e.response.data.error.message).toBe("On Delete couldn't be called; Cannot invoke on delete")
             }
         } finally {
             sdk.server.close();
@@ -1094,7 +1094,7 @@ describe("SDK callback tests", () => {
                 })
             } catch (e) {
                 expect(e.response.data).toBeDefined()
-                expect(e.response.data.error.message).toBe("Error: On Create couldn't be called; Cannot invoke on create.")
+                expect(e.response.data.error.message).toBe("On Create couldn't be called; Cannot invoke on create")
             }
         } finally {
             sdk.server.close();

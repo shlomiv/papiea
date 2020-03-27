@@ -1022,4 +1022,82 @@ describe("SDK callback tests", () => {
             sdk.server.close();
         }
     });
+    test("On delete callback with error should interrupt execution", async () => {
+        expect.hasAssertions();
+        const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
+        const location = sdk.new_kind(location_yaml);
+        const prefix = "provider_on_delete_callback"
+        sdk.version(provider_version);
+        sdk.prefix(prefix);
+        location.on_delete({}, Procedural_Execution_Strategy.Halt_Intentful, {}, {}, async (ctx, input) => {
+            throw new Error("Cannot invoke on delete")
+        })
+        try {
+            await sdk.register()
+            kind_name = sdk.provider.kinds[0].name
+            const { data: { metadata } } = await entityApi.post(`/${ prefix }/${ provider_version }/${ kind_name }`, {
+                spec: {
+                    x: 10,
+                    y: 11
+                }
+            }, {
+                headers: {
+                    'Authorization': `Bearer ${ adminKey }`
+                }
+            })
+            try {
+                await entityApi.delete(`/${prefix}/${provider_version}/${kind_name}/${metadata.uuid}`, {
+                    headers: {
+                        'Authorization': `Bearer ${adminKey}`
+                    }
+                })
+            } catch (e) {
+                expect(e.response.data).toBeDefined()
+                expect(e.response.data.error.message).toBe("On Delete couldn't be called; Cannot invoke on delete")
+            }
+        } finally {
+            sdk.server.close();
+        }
+    });
+
+    test("On create callback with error should interrupt execution", async () => {
+        expect.hasAssertions();
+        const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
+        const location = sdk.new_kind(location_yaml);
+        const prefix = "provider_on_create_callback"
+        sdk.version(provider_version);
+        sdk.prefix(prefix);
+        sdk.provider_procedure("computeWithCreateCallback",
+            {},
+            Procedural_Execution_Strategy.Halt_Intentful,
+            loadYaml("./test_data/procedure_sum_input.yml"),
+            {},
+            async (ctx, input) => {
+            }
+        );
+        location.on_create({}, Procedural_Execution_Strategy.Halt_Intentful, {}, {}, async (ctx, input) => {
+            throw new Error("Cannot invoke on create")
+        })
+        try {
+            await sdk.register()
+            kind_name = sdk.provider.kinds[0].name
+            try {
+                const { data: { metadata } } = await entityApi.post(`/${ prefix }/${ provider_version }/${ kind_name }`, {
+                    spec: {
+                        x: 10,
+                        y: 11
+                    }
+                }, {
+                    headers: {
+                        'Authorization': `Bearer ${adminKey}`
+                    }
+                })
+            } catch (e) {
+                expect(e.response.data).toBeDefined()
+                expect(e.response.data.error.message).toBe("On Create couldn't be called; Cannot invoke on create")
+            }
+        } finally {
+            sdk.server.close();
+        }
+    });
 });

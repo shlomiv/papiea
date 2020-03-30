@@ -25,7 +25,7 @@ export class ProcedureInvocationError extends Error {
         } else if (err instanceof ValidationError) {
             return new ProcedureInvocationError(err.errors.map(e => {
                 return { message: e }
-            }), 400)
+            }), 500)
         } else {
             return new ProcedureInvocationError([{
                 message: "Unknown error during procedure invocation",

@@ -911,7 +911,7 @@ describe("SDK callback tests", () => {
             async (ctx, input) => {
             }
         );
-        location.on_delete({}, Procedural_Execution_Strategy.Halt_Intentful, {}, {}, async (ctx, input) => {
+        location.on_delete(async (ctx, input) => {
             expect(input).toBeDefined()
         })
         try {
@@ -952,7 +952,7 @@ describe("SDK callback tests", () => {
             async (ctx, input) => {
             }
         );
-        location.on_create({}, Procedural_Execution_Strategy.Halt_Intentful, {}, {}, async (ctx, input) => {
+        location.on_create(async (ctx, input) => {
             expect(input).toBeDefined()
         })
         try {
@@ -993,11 +993,11 @@ describe("SDK callback tests", () => {
             async (ctx, input) => {
             }
         );
-        location.on_delete({}, Procedural_Execution_Strategy.Halt_Intentful, {}, {}, async (ctx, input) => {
+        location.on_delete(async (ctx, input) => {
             expect(input).toBeDefined()
         })
 
-        location.on_create({}, Procedural_Execution_Strategy.Halt_Intentful, {}, {}, async (ctx, input) => {
+        location.on_create(async (ctx, input) => {
             expect(input).toBeDefined()
         })
         try {
@@ -1029,7 +1029,7 @@ describe("SDK callback tests", () => {
         const prefix = "provider_on_delete_callback"
         sdk.version(provider_version);
         sdk.prefix(prefix);
-        location.on_delete({}, Procedural_Execution_Strategy.Halt_Intentful, {}, {}, async (ctx, input) => {
+        location.on_delete(async (ctx, input) => {
             throw new Error("Cannot invoke on delete")
         })
         try {
@@ -1075,7 +1075,7 @@ describe("SDK callback tests", () => {
             async (ctx, input) => {
             }
         );
-        location.on_create({}, Procedural_Execution_Strategy.Halt_Intentful, {}, {}, async (ctx, input) => {
+        location.on_create(async (ctx, input) => {
             throw new Error("Cannot invoke on create")
         })
         try {

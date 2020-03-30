@@ -31,21 +31,21 @@ export class DifferResolver {
         this.intentfulListener.onStatus = new Handler(this.onStatus)
     }
 
-    public async run(delay: number) {
+    public async run(delay: number, taskExpirySeconds: number = 120) {
         try {
-            await this._run(delay)
+            await this._run(delay, taskExpirySeconds)
         } catch (e) {
             console.error(e)
             throw e
         }
     }
 
-    private async _run(delay: number) {
+    private async _run(delay: number, taskExpirySeconds: number) {
         while (true) {
             await timeout(delay)
             await this.checkActiveTasksHealth()
             await this.retryTasks()
-            await this.clearFinishedTasks()
+            await this.clearFinishedTasks(taskExpirySeconds)
         }
     }
 
@@ -100,7 +100,7 @@ export class DifferResolver {
         }
     }
 
-    public async clearFinishedTasks(): Promise<void> {
+    public async clearFinishedTasks(taskExpirySeconds: number): Promise<void> {
         // Remove all watches on entities which have no more diffs to look
         this.watchlist = this.watchlist.filter((entity_task: EntityTasks) => entity_task.tasks.length > 0)
 
@@ -112,7 +112,9 @@ export class DifferResolver {
         }, [])
         for (let task of tasks) {
             if (task.status !== IntentfulStatus.Active && task.status !== IntentfulStatus.Pending && task.status !== IntentfulStatus.Failed) {
-                await this.removeTask(task)
+                if (task.last_status_changed && (new Date().getTime() - task.last_status_changed.getTime()) / 1000 > taskExpirySeconds) {
+                    await this.removeTask(task)
+                }
             }
         }
     }
@@ -120,8 +122,8 @@ export class DifferResolver {
     private async removeTask(task: IntentfulTask): Promise<void> {
         for (let i in this.watchlist) {
             for (let j in this.watchlist[i].tasks) {
-                if (this.watchlist[i].tasks[j] === task && this.watchlist[i].tasks[j].marked_for_deletion === undefined) {
-                    await this.intentfulTaskDb.mark_for_deletion(this.watchlist[i].tasks[j].uuid)
+                if (this.watchlist[i].tasks[j] === task) {
+                    await this.intentfulTaskDb.delete_task(this.watchlist[i].tasks[j].uuid)
                     this.watchlist[i].tasks.splice(Number(j), 1)
                 }
             }

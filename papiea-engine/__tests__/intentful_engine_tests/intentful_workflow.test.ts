@@ -75,17 +75,18 @@ describe("Intentful Workflow tests", () => {
             })
             let retries = 5
             try {
-            for (let i = 1; i <= retries; i++) {
-                const result = await entityApi.get(`/intentful_task/${task.uuid}`)
-                if (result.data.status === IntentfulStatus.Completed_Successfully && result.data.marked_for_deletion) {
-                    expect(result.data.status).toEqual(IntentfulStatus.Completed_Successfully)
-                    expect(result.data.marked_for_deletion).toBeDefined()
-                    return
+                for (let i = 1; i <= retries; i++) {
+                    const result = await entityApi.get(`/intentful_task/${ task.uuid }`)
+                    if (result.data.status === IntentfulStatus.Completed_Successfully) {
+                        expect(result.data.status).toEqual(IntentfulStatus.Completed_Successfully)
+                        break
+                    }
+                    await timeout(7000)
                 }
-                await timeout(7000)
-            }
+                const res = await entityApi.get(`/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`)
+                expect(res.data.status.x).toEqual(20)
             } catch (e) {
-                console.log(e.response)
+                console.log(`Couldn't get intentful task: ${e.response}`)
             }
         } finally {
             sdk.server.close();

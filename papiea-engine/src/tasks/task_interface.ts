@@ -22,8 +22,7 @@ export interface IntentfulTask {
     // Current status of the entity
     status: IntentfulStatus
 
-    // Date when entity was marked to be removed
-    marked_for_deletion?: Date
+    last_status_changed?: Date
 
     // Date of creation
     created_at?: Date
@@ -36,7 +35,6 @@ export class IntentfulTaskMapper {
             entity_ref: intentfulTask.entity_ref,
             spec_version: intentfulTask.spec_version,
             status: intentfulTask.status,
-            marked_for_deletion: intentfulTask.marked_for_deletion,
             created_at: intentfulTask.created_at
         }
     }

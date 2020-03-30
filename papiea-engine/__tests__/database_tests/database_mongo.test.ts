@@ -539,23 +539,4 @@ describe("MongoDb tests", () => {
         })
         await taskDb.delete_task(task.uuid)
     })
-    test("Mark task for deletion", async () => {
-        expect.assertions(1);
-        const taskDb: IntentfulTask_DB = await connection.get_intentful_task_db(logger);
-        const task: IntentfulTask = {
-            uuid: uuid4(),
-            diffs: [{
-                kind: "dummy",
-                intentful_signature: {} as Intentful_Signature,
-                diff_fields: {}
-            }],
-            spec_version: 1,
-            status: IntentfulStatus.Pending,
-            entity_ref: {} as Entity_Reference
-        };
-        await taskDb.save_task(task)
-        await taskDb.mark_for_deletion(task.uuid)
-        const marked_task = await taskDb.get_task(task.uuid);
-        expect(marked_task.marked_for_deletion).not.toBeUndefined()
-    });
 });

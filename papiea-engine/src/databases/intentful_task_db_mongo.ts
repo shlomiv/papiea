@@ -14,12 +14,10 @@ interface TaskAggregation {
 
 export class IntentfulTask_DB_Mongo implements IntentfulTask_DB {
     collection: Collection;
-    deletedTaskPersistSeconds: number
     logger: Logger;
 
-    constructor(logger: Logger, db: Db, deletedTaskPersistSeconds: number) {
+    constructor(logger: Logger, db: Db) {
         this.collection = db.collection("task");
-        this.deletedTaskPersistSeconds = deletedTaskPersistSeconds
         this.logger = logger;
     }
 
@@ -28,10 +26,6 @@ export class IntentfulTask_DB_Mongo implements IntentfulTask_DB {
             await this.collection.createIndex(
                 { "uuid": 1 },
                 { unique: true },
-            )
-            await this.collection.createIndex(
-                { "marked_for_deletion": 1 },
-                { expireAfterSeconds: this.deletedTaskPersistSeconds }
             )
         } catch (err) {
             throw err
@@ -92,23 +86,6 @@ export class IntentfulTask_DB_Mongo implements IntentfulTask_DB {
         } else {
             return await this.collection.find(filter).toArray();
         }
-    }
-
-    async mark_for_deletion(uuid: string): Promise<void> {
-        const result = await this.collection.updateOne({
-            uuid
-        }, {
-            $set: {
-                "marked_for_deletion": new Date()
-            }
-        })
-        if (result.result.n === undefined || result.result.ok !== 1) {
-            throw new Error("Failed to delete a task");
-        }
-        if (result.result.n !== 1 && result.result.n !== 0) {
-            throw new Error(`Amount of deleted task must be 0 or 1, found: ${result.result.n}`);
-        }
-        return;
     }
 
     async delete_task(uuid: string): Promise<void> {

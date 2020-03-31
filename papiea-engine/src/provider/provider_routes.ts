@@ -36,16 +36,16 @@ export default function createProviderAPIRouter(providerApi: Provider_API) {
         allowed_query_params: [],
         allowed_body_params: ['context', 'entity_ref', 'status']
     }), asyncHandler(async (req, res) => {
-        await providerApi.replace_status(req.user, req.body.context, req.body.entity_ref, req.body.status);
-        res.json("OK")
+        const task = await providerApi.replace_status(req.user, req.body.context, req.body.entity_ref, req.body.status);
+        res.json(task !== null ? task : "OK")
     }));
 
     providerApiRouter.patch('/update_status', check_request({
         allowed_query_params: [],
         allowed_body_params: ['context', 'entity_ref', 'status']
     }), asyncHandler(async (req, res) => {
-        await providerApi.update_status(req.user, req.body.context, req.body.entity_ref, req.body.status);
-        res.json("OK")
+        const task = await providerApi.update_status(req.user, req.body.context, req.body.entity_ref, req.body.status);
+        res.json(task !== null ? task : "OK")
     }));
 
     providerApiRouter.post('/update_progress', check_request({

@@ -10,6 +10,8 @@ import { EventEmitter } from "events";
 import { Entity_Reference, Version, Status, Provider, Kind, S2S_Key, Action, Secret } from "papiea-core";
 import uuid = require("uuid");
 import { Logger } from "../logger_interface";
+import { IntentfulContext } from "../intentful_core/intentful_context";
+import { SpecOnlyUpdateStrategy } from "../intentful_core/status_update_strategy";
 
 export class Provider_API_Impl implements Provider_API {
     private providerDb: Provider_DB;
@@ -19,8 +21,9 @@ export class Provider_API_Impl implements Provider_API {
     private eventEmitter: EventEmitter;
     private logger: Logger;
     private validator: Validator
+    private intentfulContext: IntentfulContext;
 
-    constructor(logger: Logger, providerDb: Provider_DB, statusDb: Status_DB, s2skeyDb: S2S_Key_DB, authorizer: Authorizer, validator: Validator) {
+    constructor(logger: Logger, providerDb: Provider_DB, statusDb: Status_DB, s2skeyDb: S2S_Key_DB, authorizer: Authorizer, validator: Validator, intentfulContext: IntentfulContext) {
         this.providerDb = providerDb;
         this.statusDb = statusDb;
         this.s2skeyDb = s2skeyDb;
@@ -28,6 +31,7 @@ export class Provider_API_Impl implements Provider_API {
         this.eventEmitter = new EventEmitter();
         this.logger = logger;
         this.validator = validator
+        this.intentfulContext = intentfulContext
     }
 
     async register_provider(user: UserAuthInfo, provider: Provider): Promise<void> {
@@ -53,29 +57,31 @@ export class Provider_API_Impl implements Provider_API {
         return foundKind
     }
 
-    private isSpecOnly(kind: Kind) {
-        return kind.kind_structure[kind.name]['x-papiea-entity'] === 'spec-only'
-    }
-
     async replace_status(user: UserAuthInfo, context: any, entity_ref: Entity_Reference, status: Status): Promise<void> {
         const provider: Provider = await this.get_latest_provider_by_kind(user, entity_ref.kind);
         const kind = this.findKind(provider, entity_ref.kind)
-        if (this.isSpecOnly(kind)) {
+        const strategy = this.intentfulContext.getStatusUpdateStrategy(kind, user)
+        // if this is not critical, we can swap the order of checkPermission() and update()
+        // to remove the verbose check
+        if (strategy instanceof SpecOnlyUpdateStrategy) {
             throw new Error("Cannot change status of a spec-only kind")
         }
         await this.authorizer.checkPermission(user, provider, Action.UpdateStatus);
         await this.validate_status(provider, entity_ref, status);
-        return this.statusDb.replace_status(entity_ref, status);
+        return strategy.replace(entity_ref, status)
     }
 
     async update_status(user: UserAuthInfo, context: any, entity_ref: Entity_Reference, status: Status): Promise<void> {
         const provider: Provider = await this.get_latest_provider_by_kind(user, entity_ref.kind);
         const kind = this.findKind(provider, entity_ref.kind)
-        if (this.isSpecOnly(kind)) {
+        const strategy = this.intentfulContext.getStatusUpdateStrategy(kind, user)
+        // if this is not critical, we can swap the order of checkPermission() and update()
+        // to remove the verbose check
+        if (strategy instanceof SpecOnlyUpdateStrategy) {
             throw new Error("Cannot change status of a spec-only kind")
         }
         await this.authorizer.checkPermission(user, provider, Action.UpdateStatus);
-        return this.statusDb.update_status(entity_ref, status);
+        return strategy.update(entity_ref, status)
     }
 
     async update_progress(user: UserAuthInfo, context: any, message: string, done_percent: number): Promise<void> {

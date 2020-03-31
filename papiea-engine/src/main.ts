@@ -62,8 +62,9 @@ async function setUpApplication(): Promise<express.Express> {
     const statusDb = await mongoConnection.get_status_db(logger);
     const s2skeyDb = await mongoConnection.get_s2skey_db(logger);
     const intentfulTaskDb = await mongoConnection.get_intentful_task_db(logger)
+    const intentfulContext = new IntentfulContext(specDb, statusDb, differ, intentfulTaskDb)
     const validator = new ValidatorImpl()
-    const providerApi = new Provider_API_Impl(logger, providerDb, statusDb, s2skeyDb, new AdminAuthorizer(), validator);
+    const providerApi = new Provider_API_Impl(logger, providerDb, statusDb, s2skeyDb, new AdminAuthorizer(), validator, intentfulContext);
     const sessionKeyDb = await mongoConnection.get_session_key_db(logger)
     const sessionKeyApi = new SessionKeyAPI(sessionKeyDb)
     const userAuthInfoExtractor = new CompositeUserAuthInfoExtractor([
@@ -71,7 +72,6 @@ async function setUpApplication(): Promise<express.Express> {
         new S2SKeyUserAuthInfoExtractor(s2skeyDb),
         new SessionKeyUserAuthInfoExtractor(sessionKeyApi, providerDb)
     ]);
-    const intentfulContext = new IntentfulContext(specDb, statusDb, differ, intentfulTaskDb)
     app.use(createAuthnRouter(logger, userAuthInfoExtractor));
     app.use(createOAuth2Router(logger, oauth2RedirectUri, providerDb, sessionKeyApi));
     const entityApiAuthorizer: Authorizer = new PerProviderAuthorizer(logger, providerApi, new ProviderCasbinAuthorizerFactory(logger));

@@ -29,7 +29,7 @@ export class ProceduralCtx implements ProceduralCtx_Interface {
         return `${this.base_url}/${this.provider_prefix}/${this.provider_version}/${entity.metadata.kind}/${entity.metadata.uuid}`
     }
 
-    async check_permission(entityAction: [Action, Entity_Reference][], provider_prefix: string = this.provider_prefix, provider_version: Version = this.provider_version, user_token?: string): Promise<boolean> {
+    async check_permission(entityAction: [Action, Entity_Reference][], user_token?: string, provider_prefix: string = this.provider_prefix, provider_version: Version = this.provider_version): Promise<boolean> {
         if (user_token) {
             const auth_header = `Bearer ${user_token}`
             return this.try_check(provider_prefix, provider_version, entityAction, {...this.headers, authorization: auth_header})

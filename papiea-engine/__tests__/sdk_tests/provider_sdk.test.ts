@@ -551,7 +551,7 @@ describe("SDK + oauth provider tests", () => {
             loadYaml("./test_data/procedure_sum_input.yml"),
             {},
             async (ctx, input) => {
-                const allowed = await ctx.check_permission([[Action.Read, { uuid: entity_metadata.uuid, kind: kind_name }]], provider.prefix, provider.version);
+                const allowed = await ctx.check_permission([[Action.Read, { uuid: entity_metadata.uuid, kind: kind_name }]], undefined,  provider.prefix, provider.version);
                 expect(allowed).toBeFalsy();
             }
         );
@@ -584,8 +584,74 @@ describe("SDK + oauth provider tests", () => {
             loadYaml("./test_data/procedure_sum_input.yml"),
             {},
             async (ctx, input) => {
-                const allowed = await ctx.check_permission([[Action.Read, { uuid: entity_metadata.uuid, kind: kind_name }]], provider.prefix, provider.version);
+                const allowed = await ctx.check_permission([[Action.Read, { uuid: entity_metadata.uuid, kind: kind_name }]], undefined, provider.prefix, provider.version);
                 expect(allowed).toBeTruthy();
+            }
+        );
+        sdk.secure_with(oauth, modelText, "xxx");
+        const { data: { token } } = await providerApi.get(`/${provider.prefix}/${provider.version}/auth/login`);
+        await providerApiAdmin.post(`/${ provider.prefix }/${ provider.version }/auth`, {
+            policy: `p, alice, owner, ${ kind_name }, *, allow`
+        });
+        try {
+            await sdk.register();
+            const res: any = await axios.post(`${sdk.entity_url}/${sdk.provider.prefix}/${sdk.provider.version}/procedure/computeWithPermissionCheck`, { input: { "a": 5, "b": 5 } },
+                { headers: { 'Authorization': `Bearer ${token}` }});
+        } finally {
+            sdk.server.close();
+            await providerApiAdmin.post(`/${ provider.prefix }/${ provider.version }/auth`, {
+                policy: null
+            });
+        }
+    });
+
+    test("Procedure check permission read should succeed with specified user token", async () => {
+        expect.hasAssertions();
+        const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
+        const location = sdk.new_kind(location_yaml);
+        sdk.version(provider_version);
+        sdk.prefix("permissioned_provider_read_success_user_token");
+        sdk.provider_procedure("computeWithPermissionCheck",
+            {},
+            Procedural_Execution_Strategy.Halt_Intentful,
+            loadYaml("./test_data/procedure_sum_input.yml"),
+            {},
+            async (ctx, input) => {
+                const allowed = await ctx.check_permission([[Action.Read, { uuid: entity_metadata.uuid, kind: kind_name }]], adminKey, provider.prefix, provider.version);
+                expect(allowed).toBeTruthy();
+            }
+        );
+        sdk.secure_with(oauth, modelText, "xxx");
+        const { data: { token } } = await providerApi.get(`/${provider.prefix}/${provider.version}/auth/login`);
+        await providerApiAdmin.post(`/${ provider.prefix }/${ provider.version }/auth`, {
+            policy: `p, alice, owner, ${ kind_name }, *, allow`
+        });
+        try {
+            await sdk.register();
+            const res: any = await axios.post(`${sdk.entity_url}/${sdk.provider.prefix}/${sdk.provider.version}/procedure/computeWithPermissionCheck`, { input: { "a": 5, "b": 5 } },
+                { headers: { 'Authorization': `Bearer ${token}` }});
+        } finally {
+            sdk.server.close();
+            await providerApiAdmin.post(`/${ provider.prefix }/${ provider.version }/auth`, {
+                policy: null
+            });
+        }
+    });
+
+    test("Procedure check permission read should fail with specified invalid user token", async () => {
+        expect.hasAssertions();
+        const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
+        const location = sdk.new_kind(location_yaml);
+        sdk.version(provider_version);
+        sdk.prefix("permissioned_provider_read_fail_user_token");
+        sdk.provider_procedure("computeWithPermissionCheck",
+            {},
+            Procedural_Execution_Strategy.Halt_Intentful,
+            loadYaml("./test_data/procedure_sum_input.yml"),
+            {},
+            async (ctx, input) => {
+                const allowed = await ctx.check_permission([[Action.Read, { uuid: entity_metadata.uuid, kind: kind_name }]], "Totally invalid key", provider.prefix, provider.version);
+                expect(allowed).toBeFalsy();
             }
         );
         sdk.secure_with(oauth, modelText, "xxx");
@@ -617,7 +683,7 @@ describe("SDK + oauth provider tests", () => {
             loadYaml("./test_data/procedure_sum_input.yml"),
             {},
             async (ctx, input) => {
-                const allowed = await ctx.check_permission([[Action.Create, { uuid: entity_metadata.uuid, kind: kind_name, spec_version: 1, extension: { owner: "alice" }, created_at: {} as Date } as Metadata]], provider.prefix, provider.version);
+                const allowed = await ctx.check_permission([[Action.Create, { uuid: entity_metadata.uuid, kind: kind_name, spec_version: 1, extension: { owner: "alice" }, created_at: {} as Date } as Metadata]], undefined, provider.prefix, provider.version);
                 expect(allowed).toBeTruthy();
             }
         );
@@ -650,7 +716,7 @@ describe("SDK + oauth provider tests", () => {
             loadYaml("./test_data/procedure_sum_input.yml"),
             {},
             async (ctx, input) => {
-                const allowed = await ctx.check_permission([[Action.Create, { uuid: entity_metadata.uuid, kind: kind_name, spec_version: 1, extension: { owner: "alice" }, created_at: {} as Date } as Metadata]], provider.prefix, provider.version);
+                const allowed = await ctx.check_permission([[Action.Create, { uuid: entity_metadata.uuid, kind: kind_name, spec_version: 1, extension: { owner: "alice" }, created_at: {} as Date } as Metadata]], undefined, provider.prefix, provider.version);
                 expect(allowed).toBeFalsy();
             }
         );
@@ -683,7 +749,7 @@ describe("SDK + oauth provider tests", () => {
             loadYaml("./test_data/procedure_sum_input.yml"),
             {},
             async (ctx, input) => {
-                const allowed = await ctx.check_permission([[Action.Create, { uuid: entity_metadata.uuid, kind: kind_name, spec_version: 1, extension: { owner: "alice" }, created_at: {} as Date } as Metadata]], provider.prefix, provider.version);
+                const allowed = await ctx.check_permission([[Action.Create, { uuid: entity_metadata.uuid, kind: kind_name, spec_version: 1, extension: { owner: "alice" }, created_at: {} as Date } as Metadata]], undefined, provider.prefix, provider.version);
                 expect(allowed).toBeFalsy();
             }
         );
@@ -719,7 +785,7 @@ describe("SDK + oauth provider tests", () => {
                 const allowed = await ctx.check_permission([
                     [Action.Create, { uuid: entity_metadata.uuid, kind: kind_name, spec_version: 1, extension: { owner: "alice" }, created_at: {} as Date } as Metadata],
                     [Action.Create, { uuid: entity_metadata.uuid, kind: kind_name, spec_version: 1, extension: { owner: "jane" }, created_at: {} as Date } as Metadata]
-                ], provider.prefix, provider.version);
+                ], undefined, provider.prefix, provider.version);
                 expect(allowed).toBeFalsy();
             }
         );
@@ -755,7 +821,7 @@ describe("SDK + oauth provider tests", () => {
                 const allowed = await ctx.check_permission([
                     [Action.Create, { uuid: entity_metadata.uuid, kind: kind_name, spec_version: 1, extension: { owner: "alice" }, created_at: {} as Date } as Metadata],
                     [Action.Create, { uuid: entity_metadata.uuid, kind: kind_name, spec_version: 1, extension: { owner: "alice" }, created_at: {} as Date } as Metadata]
-                ], provider.prefix, provider.version);
+                ], undefined, provider.prefix, provider.version);
                 expect(allowed).toBeTruthy();
             }
         );
@@ -791,7 +857,7 @@ describe("SDK + oauth provider tests", () => {
                 const allowed = await ctx.check_permission([
                     [Action.Read, { uuid: entity_metadata.uuid, kind: kind_name }],
                     [Action.Create, { uuid: entity_metadata.uuid, kind: kind_name, spec_version: 1, extension: { owner: "alice" }, created_at: {} as Date } as Metadata]
-                ], provider.prefix, provider.version);
+                ], undefined, provider.prefix, provider.version);
                 expect(allowed).toBeTruthy();
             }
         );
@@ -827,7 +893,7 @@ describe("SDK + oauth provider tests", () => {
                 const allowed = await ctx.check_permission([
                     [Action.Read, { uuid: entity_metadata.uuid, kind: kind_name }],
                     [Action.Create, { uuid: entity_metadata.uuid, kind: kind_name, spec_version: 1, extension: { owner: "alice" }, created_at: {} as Date } as Metadata]
-                ], provider.prefix, provider.version);
+                ], undefined, provider.prefix, provider.version);
                 expect(allowed).toBeFalsy();
             }
         );

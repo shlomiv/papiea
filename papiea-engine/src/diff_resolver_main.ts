@@ -1,8 +1,8 @@
 import { WinstonLogger } from "./logger"
 import { MongoConnection } from "./databases/mongo"
 import { Watchlist } from "./tasks/watchlist"
-import { IntentfulListenerMongo } from "./tasks/intentful_listener_mongo"
-import { DifferResolver } from "./tasks/differ_resolver"
+import { DiffResolver } from "./tasks/diff_resolver"
+import { BasicDiffer } from "./intentful_core/differ_impl";
 
 declare var process: {
     env: {
@@ -30,12 +30,14 @@ async function setUpDiffResolver() {
 
     const specDb = await mongoConnection.get_spec_db(logger);
     const statusDb = await mongoConnection.get_status_db(logger);
+    const providerDb = await mongoConnection.get_provider_db(logger);
     const intentfulTaskDb = await mongoConnection.get_intentful_task_db(logger)
+    const watchlistDb = await mongoConnection.get_watchlist_db(logger)
 
-    const watchlist: Watchlist = await intentfulTaskDb.get_watchlist()
-    const intentfulListener = await IntentfulListenerMongo.create(intentfulTaskDb, statusDb, watchlist)
+    const watchlist: Watchlist = new Map()
+    const differ = new BasicDiffer()
 
-    const diffResolver = new DifferResolver(intentfulTaskDb, specDb, statusDb, intentfulListener, watchlist)
+    const diffResolver = new DiffResolver(watchlist, watchlistDb, specDb, statusDb, providerDb, differ)
     console.log("Running differ resolver")
     await diffResolver.run(5000)
 }

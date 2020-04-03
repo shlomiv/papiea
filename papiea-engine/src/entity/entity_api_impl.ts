@@ -57,14 +57,6 @@ export class Entity_API_Impl implements Entity_API {
         return this.providerDb.get_provider(prefix, version);
     }
 
-    private find_kind(provider: Provider, kind_name: string): Kind {
-        const found_kind: Kind | undefined = provider.kinds.find(elem => elem.name === kind_name);
-        if (found_kind === undefined) {
-            throw new Error(`Kind: ${kind_name} not found`);
-        }
-        return found_kind;
-    }
-
     async get_intentful_task(user: UserAuthInfo, id: string): Promise<Partial<IntentfulTask>> {
         const intentful_task = await this.intentful_task_db.get_task(id)
         const [metadata, _] = await this.spec_db.get_spec(intentful_task.entity_ref)
@@ -82,7 +74,7 @@ export class Entity_API_Impl implements Entity_API {
 
     async save_entity(user: UserAuthInfo, prefix: string, kind_name: string, version: Version, spec_description: Spec, request_metadata: Metadata = {} as Metadata): Promise<[Metadata, Spec]> {
         const provider = await this.get_provider(prefix, version);
-        const kind = this.find_kind(provider, kind_name);
+        const kind = this.providerDb.find_kind(provider, kind_name);
         this.validate_metadata_extension(provider.extension_structure, request_metadata, provider.allowExtraProps);
         this.validate_spec(spec_description, kind, provider.allowExtraProps);
         if (!request_metadata.uuid) {
@@ -131,7 +123,7 @@ export class Entity_API_Impl implements Entity_API {
 
     async update_entity_spec(user: UserAuthInfo, uuid: uuid4, prefix: string, spec_version: number, extension: {[key: string]: any}, kind_name: string, version: Version, spec_description: Spec): Promise<IntentfulTask | null> {
         const provider = await this.get_provider(prefix, version);
-        const kind = this.find_kind(provider, kind_name);
+        const kind = this.providerDb.find_kind(provider, kind_name);
         this.validate_spec(spec_description, kind, provider.allowExtraProps);
         const entity_ref: Entity_Reference = { kind: kind_name, uuid: uuid };
         const metadata: Metadata = (await this.spec_db.get_spec(entity_ref))[0];
@@ -144,7 +136,7 @@ export class Entity_API_Impl implements Entity_API {
 
     async delete_entity_spec(user: UserAuthInfo, prefix: string, version: Version, kind_name: string, entity_uuid: uuid4): Promise<void> {
         const provider = await this.get_provider(prefix, version);
-        const kind = this.find_kind(provider, kind_name);
+        const kind = this.providerDb.find_kind(provider, kind_name);
         const entity_ref: Entity_Reference = { kind: kind_name, uuid: entity_uuid };
         const [metadata, _] = await this.spec_db.get_spec(entity_ref);
         await this.authorizer.checkPermission(user, { "metadata": metadata }, Action.Delete);
@@ -154,7 +146,7 @@ export class Entity_API_Impl implements Entity_API {
 
     async call_procedure(user: UserAuthInfo, prefix: string, kind_name: string, version: Version, entity_uuid: uuid4, procedure_name: string, input: any): Promise<any> {
         const provider = await this.get_provider(prefix, version);
-        const kind = this.find_kind(provider, kind_name);
+        const kind = this.providerDb.find_kind(provider, kind_name);
         const entity_spec: [Metadata, Spec] = await this.get_entity_spec(user, kind_name, entity_uuid);
         const entity_status: [Metadata, Status] = await this.get_entity_status(user, kind_name, entity_uuid);
         const procedure: Procedural_Signature | undefined = kind.entity_procedures[procedure_name];
@@ -219,7 +211,7 @@ export class Entity_API_Impl implements Entity_API {
 
     async call_kind_procedure(user: UserAuthInfo, prefix: string, kind_name: string, version: Version, procedure_name: string, input: any): Promise<any> {
         const provider = await this.get_provider(prefix, version);
-        const kind = this.find_kind(provider, kind_name);
+        const kind = this.providerDb.find_kind(provider, kind_name);
         const procedure: Procedural_Signature | undefined = kind.kind_procedures[procedure_name];
         if (procedure === undefined) {
             throw new Error(`Procedure ${procedure_name} not found for kind ${kind.name}`);

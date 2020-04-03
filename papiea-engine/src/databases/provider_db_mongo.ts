@@ -1,6 +1,6 @@
 import { Provider_DB } from "./provider_db_interface";
 import { Db, Collection } from "mongodb"
-import { Version, Provider } from "papiea-core";
+import { Version, Provider, Kind } from "papiea-core";
 import { Logger } from "../logger_interface"
 
 export class Provider_DB_Mongo implements Provider_DB {
@@ -87,5 +87,13 @@ export class Provider_DB_Mongo implements Provider_DB {
         } else {
             return providers[0];
         }
+    }
+
+    find_kind(provider: Provider, kind_name: string): Kind {
+        const found_kind: Kind | undefined = provider.kinds.find(elem => elem.name === kind_name);
+        if (found_kind === undefined) {
+            throw new Error(`Kind: ${kind_name} not found`);
+        }
+        return found_kind;
     }
 }

@@ -122,6 +122,42 @@ export class Spec_DB_Mongo implements Spec_DB {
         });
     }
 
+    async list_random_specs(size: number, fields_map?: any, sortParams?: SortParams): Promise<([Metadata, Spec])[]> {
+        const filter: any = {};
+        filter["metadata.deleted_at"] = fields_map ? datestringToFilter(fields_map.metadata.deleted_at): undefined;
+        for (let key in fields_map.metadata) {
+            if (key === "deleted_at")
+                continue;
+            filter["metadata." + key] = fields_map.metadata[key];
+        }
+        for (let key in fields_map.spec) {
+            filter["spec." + key] = fields_map.spec[key];
+        }
+        for (let key in fields_map.status) {
+            filter["status." + key] = fields_map.status[key];
+        }
+        let result: any[];
+        if (sortParams) {
+            result = await this.collection.aggregate([
+                { $match: filter },
+                { $sample: size }
+            ]).sort(sortParams).toArray();
+        } else {
+            result = await this.collection.aggregate([
+                { $match: filter },
+                { $sample: size }
+            ]).toArray();
+        }
+        return result.map((x: any): [Metadata, Spec] => {
+            if (x.spec !== null) {
+                return [x.metadata, x.spec]
+            } else {
+                throw new Error("No valid entities found");
+            }
+        });
+    }
+
+
     async delete_spec(entity_ref: Entity_Reference): Promise<void> {
         const result = await this.collection.updateOne({
             "metadata.uuid": entity_ref.uuid,

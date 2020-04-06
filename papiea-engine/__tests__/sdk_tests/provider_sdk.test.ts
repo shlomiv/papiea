@@ -684,7 +684,7 @@ describe("SDK + oauth provider tests", () => {
             loadYaml("./test_data/procedure_sum_input.yml"),
             {},
             async (ctx, input) => {
-                const allowed = await ctx.check_permission([[Action.Create, { uuid: entity_metadata.uuid, kind: kind_name, spec_version: 1, extension: { owner: "alice" }, created_at: {} as Date } as Metadata]], undefined, provider.prefix, provider.version);
+                const allowed = await ctx.check_permission([[Action.Create, { uuid: entity_metadata.uuid, kind: kind_name, spec_version: 1, extension: { owner: "alice" }, created_at: {} as Date, provider_prefix: provider.prefix, provider_version: provider.version } as Metadata]], undefined, provider.prefix, provider.version);
                 expect(allowed).toBeTruthy();
             }
         );
@@ -717,7 +717,7 @@ describe("SDK + oauth provider tests", () => {
             loadYaml("./test_data/procedure_sum_input.yml"),
             {},
             async (ctx, input) => {
-                const allowed = await ctx.check_permission([[Action.Create, { uuid: entity_metadata.uuid, kind: kind_name, spec_version: 1, extension: { owner: "alice" }, created_at: {} as Date } as Metadata]], undefined, provider.prefix, provider.version);
+                const allowed = await ctx.check_permission([[Action.Create, { uuid: entity_metadata.uuid, kind: kind_name, spec_version: 1, extension: { owner: "alice" }, created_at: {} as Date, provider_prefix: provider.prefix, provider_version: provider.version } as Metadata]], undefined, provider.prefix, provider.version);
                 expect(allowed).toBeFalsy();
             }
         );
@@ -750,7 +750,7 @@ describe("SDK + oauth provider tests", () => {
             loadYaml("./test_data/procedure_sum_input.yml"),
             {},
             async (ctx, input) => {
-                const allowed = await ctx.check_permission([[Action.Create, { uuid: entity_metadata.uuid, kind: kind_name, spec_version: 1, extension: { owner: "alice" }, created_at: {} as Date } as Metadata]], undefined, provider.prefix, provider.version);
+                const allowed = await ctx.check_permission([[Action.Create, { uuid: entity_metadata.uuid, kind: kind_name, spec_version: 1, extension: { owner: "alice" }, created_at: {} as Date, provider_prefix: provider.prefix, provider_version: provider.version } as Metadata]], undefined, provider.prefix, provider.version);
                 expect(allowed).toBeFalsy();
             }
         );
@@ -784,8 +784,8 @@ describe("SDK + oauth provider tests", () => {
             {},
             async (ctx, input) => {
                 const allowed = await ctx.check_permission([
-                    [Action.Create, { uuid: entity_metadata.uuid, kind: kind_name, spec_version: 1, extension: { owner: "alice" }, created_at: {} as Date } as Metadata],
-                    [Action.Create, { uuid: entity_metadata.uuid, kind: kind_name, spec_version: 1, extension: { owner: "jane" }, created_at: {} as Date } as Metadata]
+                    [Action.Create, { uuid: entity_metadata.uuid, kind: kind_name, spec_version: 1, extension: { owner: "alice" }, created_at: {} as Date, provider_prefix: provider.prefix, provider_version: provider.version } as Metadata],
+                    [Action.Create, { uuid: entity_metadata.uuid, kind: kind_name, spec_version: 1, extension: { owner: "jane" }, created_at: {} as Date, provider_prefix: provider.prefix, provider_version: provider.version } as Metadata]
                 ], undefined, provider.prefix, provider.version);
                 expect(allowed).toBeFalsy();
             }
@@ -820,8 +820,8 @@ describe("SDK + oauth provider tests", () => {
             {},
             async (ctx, input) => {
                 const allowed = await ctx.check_permission([
-                    [Action.Create, { uuid: entity_metadata.uuid, kind: kind_name, spec_version: 1, extension: { owner: "alice" }, created_at: {} as Date } as Metadata],
-                    [Action.Create, { uuid: entity_metadata.uuid, kind: kind_name, spec_version: 1, extension: { owner: "alice" }, created_at: {} as Date } as Metadata]
+                    [Action.Create, { uuid: entity_metadata.uuid, kind: kind_name, spec_version: 1, extension: { owner: "alice" }, created_at: {} as Date, provider_prefix: provider.prefix, provider_version: provider.version } as Metadata],
+                    [Action.Create, { uuid: entity_metadata.uuid, kind: kind_name, spec_version: 1, extension: { owner: "alice" }, created_at: {} as Date, provider_prefix: provider.prefix, provider_version: provider.version } as Metadata]
                 ], undefined, provider.prefix, provider.version);
                 expect(allowed).toBeTruthy();
             }
@@ -857,7 +857,7 @@ describe("SDK + oauth provider tests", () => {
             async (ctx, input) => {
                 const allowed = await ctx.check_permission([
                     [Action.Read, { uuid: entity_metadata.uuid, kind: kind_name }],
-                    [Action.Create, { uuid: entity_metadata.uuid, kind: kind_name, spec_version: 1, extension: { owner: "alice" }, created_at: {} as Date } as Metadata]
+                    [Action.Create, { uuid: entity_metadata.uuid, kind: kind_name, spec_version: 1, extension: { owner: "alice" }, created_at: {} as Date, provider_prefix: provider.prefix, provider_version: provider.version } as Metadata]
                 ], undefined, provider.prefix, provider.version);
                 expect(allowed).toBeTruthy();
             }
@@ -893,7 +893,7 @@ describe("SDK + oauth provider tests", () => {
             async (ctx, input) => {
                 const allowed = await ctx.check_permission([
                     [Action.Read, { uuid: entity_metadata.uuid, kind: kind_name }],
-                    [Action.Create, { uuid: entity_metadata.uuid, kind: kind_name, spec_version: 1, extension: { owner: "alice" }, created_at: {} as Date } as Metadata]
+                    [Action.Create, { uuid: entity_metadata.uuid, kind: kind_name, spec_version: 1, extension: { owner: "alice" }, created_at: {} as Date, provider_prefix: provider.prefix, provider_version: provider.version } as Metadata]
                 ], undefined, provider.prefix, provider.version);
                 expect(allowed).toBeFalsy();
             }

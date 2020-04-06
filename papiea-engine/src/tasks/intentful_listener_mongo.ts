@@ -29,14 +29,14 @@ export class IntentfulListenerMongo implements IntentfulListener {
         return listener
     }
 
-    get_watchlist_tasks(): Set<IntentfulTask> {
-        return this.watchlist.reduce((acc: Set<IntentfulTask>, entityTask) => {
-            entityTask.tasks.forEach(task => {
-                acc.add(task)
-            })
-            return acc
-        }, new Set<IntentfulTask>())
-    }
+    // get_watchlist_tasks(): Set<IntentfulTask> {
+    //     return this.watchlist.reduce((acc: Set<IntentfulTask>, entityTask) => {
+    //         entityTask.tasks.forEach(task => {
+    //             acc.add(task)
+    //         })
+    //         return acc
+    //     }, new Set<IntentfulTask>())
+    // }
 
     constructor(intentfulTaskDb: IntentfulTask_DB, statusDb: Status_DB, watchlist: Watchlist, statuses: MultiMap<string, string>) {
         this.statusDb = statusDb
@@ -53,8 +53,8 @@ export class IntentfulListenerMongo implements IntentfulListener {
         let currStatuses: [Metadata, Status][]
         while (true) {
             currTasks = await this.intentfulTaskDb.list_tasks({ marked_for_deletion: null })
-            watchlistTasks = this.get_watchlist_tasks()
-            this.checkTasks(currTasks, watchlistTasks)
+            // watchlistTasks = this.get_watchlist_tasks()
+            // this.checkTasks(currTasks, watchlistTasks)
 
             currStatuses = await this.statusDb.get_statuses_by_ref(currTasks.map(task => task.entity_ref))
             this.checkStatuses(currStatuses)

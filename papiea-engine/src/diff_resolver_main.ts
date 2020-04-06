@@ -3,6 +3,7 @@ import { MongoConnection } from "./databases/mongo"
 import { Watchlist } from "./tasks/watchlist"
 import { DiffResolver } from "./tasks/diff_resolver"
 import { BasicDiffer } from "./intentful_core/differ_impl";
+import { IntentfulContext } from "./intentful_core/intentful_context";
 
 declare var process: {
     env: {
@@ -34,10 +35,11 @@ async function setUpDiffResolver() {
     const intentfulTaskDb = await mongoConnection.get_intentful_task_db(logger)
     const watchlistDb = await mongoConnection.get_watchlist_db(logger)
 
-    const watchlist: Watchlist = new Map()
     const differ = new BasicDiffer()
+    const intentfulContext = new IntentfulContext(specDb, statusDb, differ, intentfulTaskDb)
+    const watchlist: Watchlist = new Map()
 
-    const diffResolver = new DiffResolver(watchlist, watchlistDb, specDb, statusDb, providerDb, differ)
+    const diffResolver = new DiffResolver(watchlist, watchlistDb, specDb, statusDb, providerDb, differ, intentfulContext)
     console.log("Running differ resolver")
     await diffResolver.run(5000)
 }

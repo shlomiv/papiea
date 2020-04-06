@@ -34,6 +34,8 @@ export interface Spec_DB {
     // dsl.
     list_specs(fields_map: any, sortParams?: SortParams): Promise<([Metadata, Spec])[]>;
 
+    list_random_specs(size: number, fields_map?: any, sortParams?: SortParams): Promise<([Metadata, Spec])[]>;
+
     delete_spec(entity_ref: Entity_Reference): Promise<void>
 }
 

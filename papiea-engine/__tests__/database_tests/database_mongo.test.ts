@@ -51,6 +51,8 @@ describe("MongoDb tests", () => {
             spec_version: 0,
             created_at: new Date(),
             deleted_at: undefined,
+            provider_version: "1",
+            provider_prefix: "test",
             extension: {}
         };
         const spec: Spec = { a: "A" };
@@ -65,6 +67,8 @@ describe("MongoDb tests", () => {
             spec_version: 1,
             created_at: new Date(),
             deleted_at: undefined,
+            provider_version: "1",
+            provider_prefix: "test",
             extension: {}
         };
         const spec: Spec = { a: "A1" };
@@ -80,6 +84,8 @@ describe("MongoDb tests", () => {
             spec_version: 1,
             created_at: new Date(),
             deleted_at: undefined,
+            provider_version: "1",
+            provider_prefix: "test",
             extension: {}
         };
         const spec: Spec = { a: "A2" };
@@ -122,6 +128,13 @@ describe("MongoDb tests", () => {
         expect.assertions(1);
         const specDb: Spec_DB = await connection.get_spec_db(logger);
         const res = await specDb.list_specs({ metadata: { "kind": "test" } });
+        expect(res.length).toBeGreaterThanOrEqual(1);
+    });
+
+    test("List Random Specs", async () => {
+        expect.assertions(1);
+        const specDb: Spec_DB = await connection.get_spec_db(logger);
+        const res = await specDb.list_random_specs(1, { metadata: { "kind": "test" } });
         expect(res.length).toBeGreaterThanOrEqual(1);
     });
 
@@ -516,27 +529,4 @@ describe("MongoDb tests", () => {
         expect(updatedTask.status).toEqual(IntentfulStatus.Completed_Successfully)
         await taskDb.delete_task(task.uuid)
     });
-    test("Get watchlist", async () => {
-        expect.assertions(1);
-        const taskDb: IntentfulTask_DB = await connection.get_intentful_task_db(logger);
-        const task: IntentfulTask = {
-            uuid: uuid4(),
-            diffs: [{
-                kind: "dummy",
-                intentful_signature: {} as Intentful_Signature,
-                diff_fields: {}
-            }],
-            spec_version: 1,
-            status: IntentfulStatus.Active,
-            entity_ref: { uuid: "entity_id_watchlist" } as Entity_Reference
-        };
-        await taskDb.save_task(task)
-        const watchlist = await taskDb.get_watchlist()
-        watchlist.forEach(entityTask => {
-            if (entityTask.entity_id === task.entity_ref.uuid) {
-                expect(entityTask.tasks.length).toEqual(1)
-            }
-        })
-        await taskDb.delete_task(task.uuid)
-    })
 });

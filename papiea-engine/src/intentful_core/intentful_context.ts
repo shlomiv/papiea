@@ -1,36 +1,50 @@
 import { Spec_DB } from "../databases/spec_db_interface"
 import { Status_DB } from "../databases/status_db_interface"
-import { IntentfulStrategy } from "./intentful_strategy_interface"
-import { BasicIntentfulStrategy } from "./basic_intentful_strategy"
-import { IntentfulBehaviour, Kind, Differ } from "papiea-core"
-import { SpecOnlyIntentfulStrategy } from "./spec_only_intentful_strategy"
+import { IntentfulStrategy } from "./intentful_strategies/intentful_strategy_interface"
+import { BasicIntentfulStrategy } from "./intentful_strategies/basic_intentful_strategy"
+import { IntentfulBehaviour, Kind, Differ, DiffSelectionStrategy } from "papiea-core"
+import { SpecOnlyIntentfulStrategy } from "./intentful_strategies/spec_only_intentful_strategy"
 import { UserAuthInfo } from "../auth/authn"
-import { DifferIntentfulStrategy } from "./differ_intentful_strategy"
+import { DifferIntentfulStrategy } from "./intentful_strategies/differ_intentful_strategy"
 import { IntentfulTask_DB } from "../databases/intentful_task_db_interface"
+import { BasicDiffSelectionStrategy } from "./diff_selection_strategies/basic_diff_selection_strategy";
+import { DiffSelectionStrategyInterface } from "./diff_selection_strategies/diff_selection_strategy_interface";
+import { RandomDiffSelectionStrategy } from "./diff_selection_strategies/random_diff_selection_strategy";
 
 export type BehaviourStrategyMap = Map<IntentfulBehaviour, IntentfulStrategy>
+export type DiffSelectionStrategyMap = Map<DiffSelectionStrategy, DiffSelectionStrategyInterface>
 
 export class IntentfulContext {
     private readonly specDb: Spec_DB
     private readonly statusDb: Status_DB
-    private readonly behaviourStrategy: BehaviourStrategyMap
+    private readonly behaviourStrategyMap: BehaviourStrategyMap
+    private readonly diffSelectionStrategyMap: DiffSelectionStrategyMap
 
     constructor(specDb: Spec_DB, statusDb: Status_DB, differ: Differ, intentfulTaskDb: IntentfulTask_DB) {
         this.specDb = specDb
         this.statusDb = statusDb
-        this.behaviourStrategy = new Map<IntentfulBehaviour, IntentfulStrategy>()
-        this.behaviourStrategy.set(IntentfulBehaviour.Basic, new BasicIntentfulStrategy(specDb, statusDb))
-        this.behaviourStrategy.set(IntentfulBehaviour.SpecOnly, new SpecOnlyIntentfulStrategy(specDb, statusDb))
-        this.behaviourStrategy.set(IntentfulBehaviour.Differ, new DifferIntentfulStrategy(specDb, statusDb, differ, intentfulTaskDb))
+        this.behaviourStrategyMap = new Map()
+        this.behaviourStrategyMap.set(IntentfulBehaviour.Basic, new BasicIntentfulStrategy(specDb, statusDb))
+        this.behaviourStrategyMap.set(IntentfulBehaviour.SpecOnly, new SpecOnlyIntentfulStrategy(specDb, statusDb))
+        this.behaviourStrategyMap.set(IntentfulBehaviour.Differ, new DifferIntentfulStrategy(specDb, statusDb, differ, intentfulTaskDb))
+
+        this.diffSelectionStrategyMap = new Map()
+        this.diffSelectionStrategyMap.set(DiffSelectionStrategy.Basic, new BasicDiffSelectionStrategy())
+        this.diffSelectionStrategyMap.set(DiffSelectionStrategy.Random, new RandomDiffSelectionStrategy())
     }
 
     getIntentfulStrategy(kind: Kind, user: UserAuthInfo): IntentfulStrategy {
-        const strategy = this.behaviourStrategy.get(kind.intentful_behaviour)
+        const strategy = this.behaviourStrategyMap.get(kind.intentful_behaviour)
         if (strategy === undefined) {
             throw new Error(`Strategy associated with behaviour: ${kind.intentful_behaviour} not found`)
         }
         strategy.setKind(kind)
         strategy.setUser(user)
         return strategy
+    }
+
+    getDiffSelectionStrategy(kind: Kind): DiffSelectionStrategyInterface {
+        const strategy = this.diffSelectionStrategyMap.get(kind.diff_selection_strategy || DiffSelectionStrategy.Random)
+        return strategy!
     }
 }

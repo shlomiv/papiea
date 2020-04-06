@@ -46,23 +46,6 @@ export class IntentfulTask_DB_Mongo implements IntentfulTask_DB {
         }
         return result;
     }
-    async get_watchlist(): Promise<Watchlist> {
-        const result = await this.collection.aggregate([
-            {
-                $group: {
-                    _id: "$entity_ref.uuid", tasks: { $push: "$$ROOT" }
-                }
-            }
-        ]).toArray()
-        const tasks = result as TaskAggregationResult
-        return tasks.reduce((acc: Watchlist, curr) => {
-            acc.push({
-                entity_id: curr._id,
-                tasks: curr.tasks
-            })
-            return acc
-        }, [])
-    }
 
     async update_task(uuid: string, delta: Partial<IntentfulTask>): Promise<void> {
         const result = await this.collection.updateOne({

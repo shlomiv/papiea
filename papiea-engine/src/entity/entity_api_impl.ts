@@ -87,6 +87,8 @@ export class Entity_API_Impl implements Entity_API {
             throw new Error("uuid is not valid")
         }
         request_metadata.kind = kind.name;
+        request_metadata.provider_prefix = prefix
+        request_metadata.provider_version = version
         await this.authorizer.checkPermission(user, { "metadata": request_metadata }, Action.Create);
         const strategy = this.intentfulCtx.getIntentfulStrategy(kind, user)
         const [metadata, spec] = await strategy.create(request_metadata, spec_description)

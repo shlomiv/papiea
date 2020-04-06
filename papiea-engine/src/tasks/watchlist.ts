@@ -1,7 +1,7 @@
 import { Diff, Entity_Reference, Version } from "papiea-core"
 import { IntentfulTask } from "./task_interface"
 
-// I don't like this too much, maybe rethink this
+// I don't like the provider being necessary here too much, maybe rethink this
 export interface EntryReference {
     provider_reference: {
         provider_prefix: string,

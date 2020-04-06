@@ -1,5 +1,4 @@
 import { Diff, Entity_Reference, Version } from "papiea-core"
-import { IntentfulTask } from "./task_interface"
 
 // I don't like the provider being necessary here too much, maybe rethink this
 export interface EntryReference {
@@ -15,4 +14,41 @@ export interface Delay {
     delay_seconds: number
 }
 
-export type Watchlist = Map<EntryReference, [Diff | undefined, Delay | undefined]>
+export type SerializedWatchlist = { [key: string]: [Diff | undefined, Delay | undefined] }
+
+export class Watchlist extends Map<EntryReference, [Diff | undefined, Delay | undefined]> {
+    private readonly _entries: SerializedWatchlist
+
+    constructor(watchlist?: SerializedWatchlist) {
+        super();
+        this._entries = watchlist ?? {}
+    }
+
+
+    get(key: EntryReference): [Diff | undefined, Delay | undefined] | undefined {
+        const json_key = JSON.stringify(key)
+        return this._entries[json_key]
+    }
+
+    set(key: EntryReference, value: [(Diff | undefined), (Delay | undefined)]): this {
+        const json_key = JSON.stringify(key)
+        this._entries[json_key] = value
+        return this
+    }
+
+    delete(key: EntryReference): boolean {
+        const json_key = JSON.stringify(key)
+        let exists: boolean
+        if (this._entries[json_key]) {
+            exists = true
+        } else {
+            exists = false
+        }
+        delete this._entries[json_key]
+        return exists
+    }
+
+    serialize(): SerializedWatchlist {
+        return this._entries
+    }
+}

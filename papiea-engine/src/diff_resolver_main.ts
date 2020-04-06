@@ -36,12 +36,12 @@ async function setUpDiffResolver() {
     const watchlistDb = await mongoConnection.get_watchlist_db(logger)
 
     const differ = new BasicDiffer()
-    const intentfulContext = new IntentfulContext(specDb, statusDb, differ, intentfulTaskDb)
-    const watchlist: Watchlist = new Map()
+    const intentfulContext = new IntentfulContext(specDb, statusDb, differ, intentfulTaskDb, watchlistDb)
+    const watchlist: Watchlist = new Watchlist()
 
     const diffResolver = new DiffResolver(watchlist, watchlistDb, specDb, statusDb, providerDb, differ, intentfulContext)
-    console.log("Running differ resolver")
+    console.log("Running diff resolver")
     await diffResolver.run(5000)
 }
 
-setUpDiffResolver().then(()=>console.debug("Exiting differ resolver")).catch(console.error)
+setUpDiffResolver().then(()=>console.debug("Exiting diff resolver")).catch(console.error)

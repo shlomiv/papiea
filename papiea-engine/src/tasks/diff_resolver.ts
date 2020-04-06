@@ -68,7 +68,7 @@ export class DiffResolver {
             input: diff.diff_fields
         })
         const delay = {
-            delay_seconds: result.data || kind.diff_delay || 20,
+            delay_seconds: result.data ?? kind.diff_delay ?? 20,
             delaySetTime: new Date()
         }
         // This should be a concrete address of a handling process
@@ -125,6 +125,7 @@ export class DiffResolver {
     private async populateWatchlist() {
         const batch_size = await DiffResolver.calculate_batch_size()
         const entities = await this.specDb.list_random_specs(batch_size)
+
         for (let [metadata, _] of entities) {
             this.watchlist.set({
                 provider_reference: {

@@ -75,7 +75,7 @@
     "swagger-parser": "^6.0.2",
     "ts-jest": "^23.10.5",
     "ts-node": "^7.0.1",
-    "typescript": "^3.6.4"
+    "typescript": "^3.8.3"
   },
   "jest": {
     "transform": {

@@ -1,11 +1,11 @@
 import { Collection, Db } from "mongodb";
 import { Logger } from "../logger_interface";
 import { Watchlist_DB } from "./watchlist_db_interface";
-import { Watchlist } from "../tasks/watchlist";
+import { SerializedWatchlist, Watchlist } from "../tasks/watchlist";
 
 type WatchlistResult = {
     id: number
-    watchlist: Watchlist
+    watchlist: SerializedWatchlist
 }
 
 export class Watchlist_Db_Mongo implements Watchlist_DB {
@@ -30,7 +30,7 @@ export class Watchlist_Db_Mongo implements Watchlist_DB {
         }, {
             $set: {
                 id: 1,
-                watchlist: watchlist
+                watchlist: watchlist.serialize()
             }
         }, {
             upsert: true
@@ -47,6 +47,6 @@ export class Watchlist_Db_Mongo implements Watchlist_DB {
         if (result === null) {
             throw new Error("Not found")
         }
-        return new Map(result.watchlist)
+        return new Watchlist(result.watchlist)
     }
 }

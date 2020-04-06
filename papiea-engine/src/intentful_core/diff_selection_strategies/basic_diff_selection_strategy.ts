@@ -1,12 +1,11 @@
 import { DiffSelectionStrategyInterface } from "./diff_selection_strategy_interface";
 import { Diff } from "papiea-core";
+import * as assert from "assert";
 
 export class BasicDiffSelectionStrategy implements DiffSelectionStrategyInterface{
 
     selectOne(diffs: Diff[]): Diff {
-        if (diffs.length === 0) {
-            throw new Error("No diffs found")
-        }
+        assert(diffs.length !== 0)
         return diffs[0]
     }
 }

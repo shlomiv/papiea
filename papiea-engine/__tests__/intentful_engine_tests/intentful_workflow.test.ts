@@ -39,7 +39,7 @@ describe("Intentful Workflow tests", () => {
     const locationDataDescription = getDifferLocationDataDescription()
     const provider_version = "0.1.0";
 
-    test("Change single field intentful workflow should pass", async () => {
+    test("Change single field differ resolver should pass", async () => {
         expect.assertions(2);
         const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
         try {
@@ -76,17 +76,16 @@ describe("Intentful Workflow tests", () => {
             let retries = 5
             try {
                 for (let i = 1; i <= retries; i++) {
-                    const result = await entityApi.get(`/intentful_task/${ task.uuid }`)
-                    if (result.data.status === IntentfulStatus.Completed_Successfully) {
-                        expect(result.data.status).toEqual(IntentfulStatus.Completed_Successfully)
-                        break
+                    const result = await entityApi.get(`/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`)
+                    console.log(result.data)
+                    if (result.data.status.x === 20) {
+                        expect(result.data.status.x).toEqual(20)
+                        return
                     }
-                    await timeout(7000)
+                    await timeout(10000)
                 }
-                const res = await entityApi.get(`/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`)
-                expect(res.data.status.x).toEqual(20)
             } catch (e) {
-                console.log(`Couldn't get intentful task: ${e.response}`)
+                console.log(`Couldn't get entity: ${e}`)
             }
         } finally {
             sdk.server.close();

@@ -14,6 +14,8 @@ import { Entity, Intentful_Signature, SessionKey, IntentfulStatus } from "papiea
 import uuid = require("uuid")
 import { IntentfulTask } from "../../src/tasks/task_interface"
 import { IntentfulTask_DB } from "../../src/databases/intentful_task_db_interface"
+import { Watchlist_DB } from "../../src/databases/watchlist_db_interface";
+import { Watchlist } from "../../src/tasks/watchlist";
 
 declare var process: {
     env: {
@@ -528,5 +530,26 @@ describe("MongoDb tests", () => {
         const updatedTask = await taskDb.get_task(task.uuid);
         expect(updatedTask.status).toEqual(IntentfulStatus.Completed_Successfully)
         await taskDb.delete_task(task.uuid)
+    });
+
+    test("Get watchlist", async () => {
+        expect.assertions(1);
+        const watchlistDb: Watchlist_DB = await connection.get_watchlist_db(logger);
+        const watchlist = new Watchlist()
+        const entry_ref = {
+            provider_reference: {
+                provider_prefix: "test",
+                provider_version: "1"
+            },
+            entity_reference: {
+                uuid: uuid4(),
+                kind: "test_kind"
+            }
+        }
+        watchlist.set(entry_ref, [undefined, { delay_seconds: 120, delaySetTime: new Date() }])
+        await watchlistDb.update_watchlist(watchlist)
+        const watchlistUpdated = await watchlistDb.get_watchlist()
+        expect(watchlistUpdated.get(entry_ref)![1]!.delay_seconds).toBe(120)
+        await watchlistDb.update_watchlist(new Watchlist())
     });
 });

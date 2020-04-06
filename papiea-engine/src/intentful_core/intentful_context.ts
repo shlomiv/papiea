@@ -10,23 +10,20 @@ import { IntentfulTask_DB } from "../databases/intentful_task_db_interface"
 import { BasicDiffSelectionStrategy } from "./diff_selection_strategies/basic_diff_selection_strategy";
 import { DiffSelectionStrategyInterface } from "./diff_selection_strategies/diff_selection_strategy_interface";
 import { RandomDiffSelectionStrategy } from "./diff_selection_strategies/random_diff_selection_strategy";
+import { Watchlist_DB } from "../databases/watchlist_db_interface";
 
 export type BehaviourStrategyMap = Map<IntentfulBehaviour, IntentfulStrategy>
 export type DiffSelectionStrategyMap = Map<DiffSelectionStrategy, DiffSelectionStrategyInterface>
 
 export class IntentfulContext {
-    private readonly specDb: Spec_DB
-    private readonly statusDb: Status_DB
     private readonly behaviourStrategyMap: BehaviourStrategyMap
     private readonly diffSelectionStrategyMap: DiffSelectionStrategyMap
 
-    constructor(specDb: Spec_DB, statusDb: Status_DB, differ: Differ, intentfulTaskDb: IntentfulTask_DB) {
-        this.specDb = specDb
-        this.statusDb = statusDb
+    constructor(specDb: Spec_DB, statusDb: Status_DB, differ: Differ, intentfulTaskDb: IntentfulTask_DB, watchlistDb: Watchlist_DB) {
         this.behaviourStrategyMap = new Map()
         this.behaviourStrategyMap.set(IntentfulBehaviour.Basic, new BasicIntentfulStrategy(specDb, statusDb))
         this.behaviourStrategyMap.set(IntentfulBehaviour.SpecOnly, new SpecOnlyIntentfulStrategy(specDb, statusDb))
-        this.behaviourStrategyMap.set(IntentfulBehaviour.Differ, new DifferIntentfulStrategy(specDb, statusDb, differ, intentfulTaskDb))
+        this.behaviourStrategyMap.set(IntentfulBehaviour.Differ, new DifferIntentfulStrategy(specDb, statusDb, differ, intentfulTaskDb, watchlistDb))
 
         this.diffSelectionStrategyMap = new Map()
         this.diffSelectionStrategyMap.set(DiffSelectionStrategy.Basic, new BasicDiffSelectionStrategy())

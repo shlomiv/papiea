@@ -48,7 +48,11 @@ export class DiffResolver {
     }
 
     private async updateWatchlist() {
-        this.watchlist = await this.watchlistDb.get_watchlist()
+        try {
+            this.watchlist = await this.watchlistDb.get_watchlist()
+        } catch (e) {
+            return
+        }
     }
 
     private async rediff(entry_reference: EntryReference): Promise<[Diff[], Metadata, Kind, Spec, Status]> {
@@ -68,7 +72,7 @@ export class DiffResolver {
             input: diff.diff_fields
         })
         const delay = {
-            delay_seconds: result.data ?? kind.diff_delay ?? 20,
+            delay_seconds: result.data ?? kind.diff_delay ?? 3,
             delaySetTime: new Date()
         }
         // This should be a concrete address of a handling process
@@ -76,12 +80,14 @@ export class DiffResolver {
         return [diff, delay]
     }
 
-    private removeDiff(entry_reference: EntryReference) {
+    private async removeDiff(entry_reference: EntryReference) {
         this.watchlist.delete(entry_reference)
+        await this.watchlistDb.update_watchlist(this.watchlist)
     }
 
     private async resolveDiffs() {
-        for (let [entry_reference, [current_diff, current_delay]] of this.watchlist.entries()) {
+        for (let [json_entry_reference, [current_diff, current_delay]] of this.watchlist.entries()) {
+            let entry_reference = JSON.parse(json_entry_reference)
             let diffs: Diff[] | undefined
             let metadata: Metadata | undefined, kind: Kind | undefined, spec: Spec | undefined, status: Status | undefined
             if (current_diff && current_delay) {
@@ -100,10 +106,10 @@ export class DiffResolver {
             }
             // Check if we have already rediffed this entity
             if (diffs === undefined) {
-                [diffs, metadata, spec, status] = await this.rediff(entry_reference)
+                [diffs, metadata, kind, spec, status] = await this.rediff(entry_reference)
             }
             if (diffs.length === 0) {
-                this.removeDiff(entry_reference)
+                await this.removeDiff(entry_reference)
                 return
             }
             // No active diffs found, choosing the next one

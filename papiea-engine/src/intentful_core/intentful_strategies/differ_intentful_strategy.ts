@@ -43,6 +43,8 @@ export class DifferIntentfulStrategy extends IntentfulStrategy {
         }
         await this.intentfulTaskDb.save_task(task)
         const watchlist = await this.watchlistDb.get_watchlist()
+        console.log(`Prefix: ${metadata.provider_prefix}`)
+        console.log(`Version: ${metadata.provider_version}`)
         watchlist.set({
             provider_reference: {
                 provider_prefix: metadata.provider_prefix,

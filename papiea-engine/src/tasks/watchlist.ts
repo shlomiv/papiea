@@ -16,11 +16,10 @@ export interface Delay {
 
 export type SerializedWatchlist = { [key: string]: [Diff | undefined, Delay | undefined] }
 
-export class Watchlist extends Map<EntryReference, [Diff | undefined, Delay | undefined]> {
+export class Watchlist {
     private readonly _entries: SerializedWatchlist
 
     constructor(watchlist?: SerializedWatchlist) {
-        super();
         this._entries = watchlist ?? {}
     }
 
@@ -50,5 +49,9 @@ export class Watchlist extends Map<EntryReference, [Diff | undefined, Delay | un
 
     serialize(): SerializedWatchlist {
         return this._entries
+    }
+
+    entries(): [string, [(Diff | undefined), (Delay | undefined)]][] {
+        return Object.entries(this._entries)
     }
 }

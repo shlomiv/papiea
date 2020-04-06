@@ -40,7 +40,7 @@ describe("Intentful Workflow tests", () => {
     const provider_version = "0.1.0";
 
     test("Change single field differ resolver should pass", async () => {
-        expect.assertions(2);
+        expect.assertions(1);
         const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
         try {
             const location = sdk.new_kind(locationDataDescription);

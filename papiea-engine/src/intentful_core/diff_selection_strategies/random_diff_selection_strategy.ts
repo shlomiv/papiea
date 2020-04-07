@@ -5,7 +5,11 @@ import * as assert from "assert";
 export class RandomDiffSelectionStrategy implements DiffSelectionStrategyInterface {
 
     selectOne(diffs: Diff[]): Diff {
-        assert(diffs.length !== 0)
-        return diffs[Math.floor(Math.random() * diffs.length)]
+        assert(diffs.filter(diff => diff?.intentful_signature?.procedure_callback).length > 0, "No valid diffs to choose from")
+        let diff: Diff | undefined
+        while (!diff?.intentful_signature?.procedure_callback) {
+            diff = diffs[ Math.floor(Math.random() * diffs.length) ]
+        }
+        return diff
     }
 }

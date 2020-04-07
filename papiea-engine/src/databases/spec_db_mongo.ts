@@ -36,7 +36,9 @@ export class Spec_DB_Mongo implements Spec_DB {
         const filter = {
             "metadata.uuid": entity_metadata.uuid,
             "metadata.kind": entity_metadata.kind,
-            "metadata.spec_version": entity_metadata.spec_version
+            "metadata.spec_version": entity_metadata.spec_version,
+            "metadata.provider_prefix": entity_metadata.provider_prefix,
+            "metadata.provider_version": entity_metadata.provider_version
         };
         try {
             const result = await this.collection.updateOne(filter, {

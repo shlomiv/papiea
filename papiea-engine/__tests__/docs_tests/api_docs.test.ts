@@ -4,7 +4,7 @@ import { validate } from "swagger-parser";
 import axios from "axios"
 import { loadYaml, ProviderBuilder } from "../test_data_factory";
 import { Provider_DB } from "../../src/databases/provider_db_interface";
-import { Provider, Version, Procedural_Signature, Procedural_Execution_Strategy } from "papiea-core";
+import { Provider, Version, Procedural_Signature, Procedural_Execution_Strategy, Kind } from "papiea-core";
 import ApiDocsGenerator from "../../src/api_docs/api_docs_generator";
 
 declare var process: {
@@ -54,6 +54,10 @@ class Provider_DB_Mock implements Provider_DB {
     }
 
     async get_latest_provider(provider_prefix: string): Promise<Provider> {
+        throw new Error("Not implemented")
+    }
+
+    find_kind(provider: Provider, kind_name: string): Kind {
         throw new Error("Not implemented")
     }
 }

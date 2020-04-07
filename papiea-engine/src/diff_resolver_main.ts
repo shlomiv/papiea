@@ -39,7 +39,7 @@ async function setUpDiffResolver() {
     const intentfulContext = new IntentfulContext(specDb, statusDb, differ, intentfulTaskDb, watchlistDb)
     const watchlist: Watchlist = new Watchlist()
 
-    const diffResolver = new DiffResolver(watchlist, watchlistDb, specDb, statusDb, providerDb, differ, intentfulContext)
+    const diffResolver = new DiffResolver(watchlist, watchlistDb, specDb, statusDb, providerDb, differ, intentfulContext, logger)
     console.log("Running diff resolver")
     await diffResolver.run(5000)
 }

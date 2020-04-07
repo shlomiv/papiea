@@ -4,10 +4,11 @@ import { Spec_DB } from "../databases/spec_db_interface"
 import { Status_DB } from "../databases/status_db_interface"
 import { Delay, EntryReference, Watchlist } from "./watchlist"
 import { Watchlist_DB } from "../databases/watchlist_db_interface";
-import { Differ, Diff, Metadata, Spec, Status, Kind } from "papiea-core";
+import { Differ, Diff, Metadata, Spec, Status, Kind, IntentfulBehaviour } from "papiea-core";
 import { Provider_DB } from "../databases/provider_db_interface";
 import axios from "axios"
 import { IntentfulContext } from "../intentful_core/intentful_context";
+import { WinstonLogger } from "../logger";
 
 // This should be run in a different process
 export class DiffResolver {
@@ -18,8 +19,9 @@ export class DiffResolver {
     protected watchlist: Watchlist
     private differ: Differ
     private intentfulContext: IntentfulContext;
+    private logger: WinstonLogger;
 
-    constructor(watchlist: Watchlist, watchlistDb: Watchlist_DB, specDb: Spec_DB, statusDb: Status_DB, providerDb: Provider_DB, differ: Differ, intentfulContext: IntentfulContext) {
+    constructor(watchlist: Watchlist, watchlistDb: Watchlist_DB, specDb: Spec_DB, statusDb: Status_DB, providerDb: Provider_DB, differ: Differ, intentfulContext: IntentfulContext, logger: WinstonLogger) {
         this.specDb = specDb
         this.statusDb = statusDb
         this.watchlistDb = watchlistDb
@@ -27,6 +29,7 @@ export class DiffResolver {
         this.watchlist = watchlist
         this.differ = differ
         this.intentfulContext = intentfulContext
+        this.logger = logger
     }
 
     public async run(delay: number) {
@@ -64,6 +67,7 @@ export class DiffResolver {
     }
 
     private async launchOperation(diff: Diff, metadata: Metadata, kind: Kind, spec: Spec,  status: Status): Promise<[Diff, Delay]> {
+        console.log(diff.intentful_signature.procedure_callback)
         // This yields delay
         const result = await axios.post(diff.intentful_signature.procedure_callback, {
             metadata: metadata,
@@ -87,7 +91,8 @@ export class DiffResolver {
 
     private async resolveDiffs() {
         for (let [json_entry_reference, [current_diff, current_delay]] of this.watchlist.entries()) {
-            let entry_reference = JSON.parse(json_entry_reference)
+            let entry_reference: EntryReference = JSON.parse(json_entry_reference)
+            this.logger.debug(`Diff engine Processing entity with uuid: ${entry_reference.entity_reference.uuid}`)
             let diffs: Diff[] | undefined
             let metadata: Metadata | undefined, kind: Kind | undefined, spec: Spec | undefined, status: Status | undefined
             if (current_diff && current_delay) {
@@ -97,8 +102,17 @@ export class DiffResolver {
                     const diff_index = diffs.map(diff => JSON.stringify(diff)).findIndex(diff => diff === JSON.stringify(current_diff))
                     // Diff still exists, we should retry
                     if (diff_index) {
-                        const [, delay] = await this.launchOperation(diffs[diff_index], metadata, kind, spec, status)
-                        current_delay = delay
+                        try {
+                            const [, delay] = await this.launchOperation(diffs[ diff_index ], metadata, kind, spec, status)
+                            current_delay = delay
+                            this.logger.info(`Starting to retry resolving diff for entity with uuid: ${metadata!.uuid}`)
+                        } catch (e) {
+                            this.logger.warning(`Couldn't invoke retry handler for entity with uuid ${metadata!.uuid}: ${e}`)
+                            current_delay = {
+                                delay_seconds: 3,
+                                delaySetTime: new Date()
+                            }
+                        }
                     }
                 } else {
                     continue
@@ -106,18 +120,36 @@ export class DiffResolver {
             }
             // Check if we have already rediffed this entity
             if (diffs === undefined) {
-                [diffs, metadata, kind, spec, status] = await this.rediff(entry_reference)
+                try {
+                    [diffs, metadata, kind, spec, status] = await this.rediff(entry_reference)
+                } catch (e) {
+                    this.logger.debug(`Couldn't rediff entity with uuid ${entry_reference.entity_reference.uuid}: ${e}. Removing from watchlist`)
+                    await this.removeDiff(entry_reference)
+                    continue
+                }
             }
-            if (diffs.length === 0) {
+            if (diffs.length === 0 || kind!.intentful_behaviour !== IntentfulBehaviour.Differ) {
                 await this.removeDiff(entry_reference)
-                return
+                continue
             }
             // No active diffs found, choosing the next one
+            let next_diff: Diff
             const diff_selection_strategy = this.intentfulContext.getDiffSelectionStrategy(kind!)
-            const next_diff = diff_selection_strategy.selectOne(diffs)
-            const [executing_diff, execution_delay] = await this.launchOperation(next_diff, metadata!, kind!, spec!, status!)
-            current_diff = executing_diff
-            current_delay = execution_delay
+            try {
+                next_diff = diff_selection_strategy.selectOne(diffs)
+            } catch (e) {
+                this.logger.debug(`Entity with uuid ${metadata!.uuid}: ${e}`)
+                await this.removeDiff(entry_reference)
+                continue
+            }
+            try {
+                const [executing_diff, execution_delay] = await this.launchOperation(next_diff!, metadata!, kind!, spec!, status!)
+                current_diff = executing_diff
+                current_delay = execution_delay
+                this.logger.info(`Starting to resolve diff for entity with uuid: ${metadata!.uuid}`)
+            } catch (e) {
+                this.logger.info(`Couldn't invoke handler for entity with uuid ${metadata!.uuid}: ${e}`)
+            }
         }
     }
 

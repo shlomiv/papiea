@@ -10,7 +10,6 @@ import axios from "axios"
 import { IntentfulContext } from "../intentful_core/intentful_context";
 import { WinstonLogger } from "../logger";
 
-// This should be run in a different process
 export class DiffResolver {
     protected readonly specDb: Spec_DB
     protected readonly statusDb: Status_DB
@@ -20,8 +19,9 @@ export class DiffResolver {
     private differ: Differ
     private intentfulContext: IntentfulContext;
     private logger: WinstonLogger;
+    private batchSize: number;
 
-    constructor(watchlist: Watchlist, watchlistDb: Watchlist_DB, specDb: Spec_DB, statusDb: Status_DB, providerDb: Provider_DB, differ: Differ, intentfulContext: IntentfulContext, logger: WinstonLogger) {
+    constructor(watchlist: Watchlist, watchlistDb: Watchlist_DB, specDb: Spec_DB, statusDb: Status_DB, providerDb: Provider_DB, differ: Differ, intentfulContext: IntentfulContext, logger: WinstonLogger, batchSize: number) {
         this.specDb = specDb
         this.statusDb = statusDb
         this.watchlistDb = watchlistDb
@@ -30,6 +30,7 @@ export class DiffResolver {
         this.differ = differ
         this.intentfulContext = intentfulContext
         this.logger = logger
+        this.batchSize = batchSize
     }
 
     public async run(delay: number) {
@@ -46,7 +47,7 @@ export class DiffResolver {
             await timeout(delay)
             await this.updateWatchlist()
             await this.resolveDiffs()
-            await this.populateWatchlist()
+            await this.addRandomEntities()
         }
     }
 
@@ -128,7 +129,7 @@ export class DiffResolver {
                     continue
                 }
             }
-            if (diffs.length === 0 || kind!.intentful_behaviour !== IntentfulBehaviour.Differ) {
+            if (diffs.length === 0) {
                 await this.removeDiff(entry_reference)
                 continue
             }
@@ -153,28 +154,37 @@ export class DiffResolver {
         }
     }
 
-    private static async calculate_batch_size(): Promise<number> {
-        return 5
+    private async calculate_batch_size(): Promise<number> {
+        return this.batchSize
     }
 
     // This method is needed to avoid race condition
     // when diffs may be added between the check and removing from the watchlist
     // the batch size maybe static or dynamic
-    private async populateWatchlist() {
-        const batch_size = await DiffResolver.calculate_batch_size()
+    private async addRandomEntities() {
+        const batch_size = await this.calculate_batch_size()
         const entities = await this.specDb.list_random_specs(batch_size)
 
         for (let [metadata, _] of entities) {
-            this.watchlist.set({
-                provider_reference: {
-                    provider_prefix: metadata.provider_prefix,
-                    provider_version: metadata.provider_version
-                },
-                entity_reference: {
-                    uuid: metadata.uuid,
-                    kind: metadata.kind
+            try {
+                const provider = await this.providerDb.get_provider(metadata.provider_prefix, metadata.provider_version)
+                const kind = this.providerDb.find_kind(provider, metadata.kind)
+                if (kind.intentful_behaviour !== IntentfulBehaviour.Differ) {
+                    continue
                 }
-            }, [undefined, undefined])
+                this.watchlist.set({
+                    provider_reference: {
+                        provider_prefix: metadata.provider_prefix,
+                        provider_version: metadata.provider_version
+                    },
+                    entity_reference: {
+                        uuid: metadata.uuid,
+                        kind: metadata.kind
+                    }
+                }, [undefined, undefined])
+            } catch (e) {
+                this.logger.debug(`Couldn't get info for entity with uuid ${metadata.uuid}: ${e}. Skipping`)
+            }
         }
         return this.watchlistDb.update_watchlist(this.watchlist)
     }

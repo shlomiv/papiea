@@ -15,7 +15,8 @@ declare var process: {
         PAPIEA_ADMIN_S2S_KEY: string,
         LOGGING_LEVEL: string
         PAPIEA_DEBUG: string,
-        DELETED_TASK_PERSIST_SECONDS: string
+        DELETED_TASK_PERSIST_SECONDS: string,
+        RANDOM_ENTITY_BATCH_SIZE: number,
     },
     title: string;
 };
@@ -23,6 +24,7 @@ declare var process: {
 const mongoUrl = process.env.MONGO_URL || 'mongodb://mongo:27017';
 const mongoDb = process.env.MONGO_DB || 'papiea';
 const loggingLevel = process.env.LOGGING_LEVEL || 'info';
+const batchSize = process.env.RANDOM_ENTITY_BATCH_SIZE ?? 5
 
 async function setUpDiffResolver() {
     const logger = new WinstonLogger(loggingLevel);
@@ -39,7 +41,7 @@ async function setUpDiffResolver() {
     const intentfulContext = new IntentfulContext(specDb, statusDb, differ, intentfulTaskDb, watchlistDb)
     const watchlist: Watchlist = new Watchlist()
 
-    const diffResolver = new DiffResolver(watchlist, watchlistDb, specDb, statusDb, providerDb, differ, intentfulContext, logger)
+    const diffResolver = new DiffResolver(watchlist, watchlistDb, specDb, statusDb, providerDb, differ, intentfulContext, logger, batchSize)
     console.log("Running diff resolver")
     await diffResolver.run(5000)
 }

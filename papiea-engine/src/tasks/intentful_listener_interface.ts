@@ -1,5 +1,5 @@
-import { IntentfulTask } from "./task_interface"
-import { Entity_Reference, Status } from "papiea-core"
+import { Status, Spec } from "papiea-core"
+import { EntryReference } from "./watchlist";
 
 export class Handler<T extends Function> {
     _fn: T | null
@@ -31,7 +31,9 @@ export class Handler<T extends Function> {
 }
 
 export interface IntentfulListener {
-    onTask: Handler<(task: IntentfulTask) => Promise<void>>
+    onSpec: Handler<(entity: EntryReference, specVersion: number, spec: Spec) => Promise<void>>
 
-    onStatus: Handler<(entity: Entity_Reference, specVersion: number, status: Status) => Promise<void>>
+    onStatus: Handler<(entity: EntryReference, status: Status) => Promise<void>>
+
+    run(delay: number): Promise<void>
 }

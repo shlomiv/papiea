@@ -4,6 +4,8 @@ import { Watchlist } from "./tasks/watchlist"
 import { DiffResolver } from "./tasks/diff_resolver"
 import { BasicDiffer } from "./intentful_core/differ_impl";
 import { IntentfulContext } from "./intentful_core/intentful_context";
+import { IntentfulListenerMongo } from "./tasks/intentful_listener_mongo";
+import { TaskResolver } from "./tasks/task_resolver";
 
 declare var process: {
     env: {
@@ -15,7 +17,7 @@ declare var process: {
         PAPIEA_ADMIN_S2S_KEY: string,
         LOGGING_LEVEL: string
         PAPIEA_DEBUG: string,
-        DELETED_TASK_PERSIST_SECONDS: string,
+        DELETED_TASK_PERSIST_SECONDS: number,
         RANDOM_ENTITY_BATCH_SIZE: number,
     },
     title: string;
@@ -25,6 +27,7 @@ const mongoUrl = process.env.MONGO_URL || 'mongodb://mongo:27017';
 const mongoDb = process.env.MONGO_DB || 'papiea';
 const loggingLevel = process.env.LOGGING_LEVEL || 'info';
 const batchSize = process.env.RANDOM_ENTITY_BATCH_SIZE ?? 5
+const deletedTaskPersists = process.env.DELETED_TASK_PERSIST_SECONDS ?? 5
 
 async function setUpDiffResolver() {
     const logger = new WinstonLogger(loggingLevel);
@@ -40,6 +43,12 @@ async function setUpDiffResolver() {
     const differ = new BasicDiffer()
     const intentfulContext = new IntentfulContext(specDb, statusDb, differ, intentfulTaskDb, watchlistDb)
     const watchlist: Watchlist = new Watchlist()
+
+    const intentfulListener = new IntentfulListenerMongo(intentfulTaskDb, statusDb, specDb, watchlist)
+    intentfulListener.run(5000)
+
+    const taskResolver = new TaskResolver(specDb, statusDb, intentfulTaskDb, providerDb, intentfulListener, differ)
+    taskResolver.run(5000, deletedTaskPersists)
 
     const diffResolver = new DiffResolver(watchlist, watchlistDb, specDb, statusDb, providerDb, differ, intentfulContext, logger, batchSize)
     console.log("Running diff resolver")

@@ -97,7 +97,7 @@ export class Spec_DB_Mongo implements Spec_DB {
 
     async list_specs(fields_map: any, sortParams?: SortParams): Promise<([Metadata, Spec])[]> {
         const filter: any = {};
-        filter["metadata.deleted_at"] = datestringToFilter(fields_map.metadata.deleted_at);
+        filter["metadata.deleted_at"] = datestringToFilter(fields_map?.metadata?.deleted_at);
         for (let key in fields_map.metadata) {
             if (key === "deleted_at")
                 continue;

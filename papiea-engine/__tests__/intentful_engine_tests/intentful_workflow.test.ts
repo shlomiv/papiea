@@ -78,6 +78,8 @@ describe("Intentful Workflow tests", () => {
                 for (let i = 1; i <= retries; i++) {
                     const result = await entityApi.get(`/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`)
                     console.log(result.data)
+                    const res = await entityApi.get(`/intentful_task/${ task.uuid }`)
+                    console.log(res.data)
                     if (result.data.status.x === 20) {
                         expect(result.data.status.x).toEqual(20)
                         return

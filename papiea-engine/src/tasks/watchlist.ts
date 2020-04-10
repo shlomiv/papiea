@@ -54,4 +54,9 @@ export class Watchlist {
     entries(): [string, [(Diff | undefined), (Delay | undefined)]][] {
         return Object.entries(this._entries)
     }
+
+    has(entry_reference: EntryReference): boolean {
+        const item = this._entries[JSON.stringify(entry_reference)]
+        return item !== undefined;
+    }
 }

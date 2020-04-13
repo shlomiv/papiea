@@ -17,7 +17,7 @@ export interface Delay {
 export type SerializedWatchlist = { [key: string]: [Diff | undefined, Delay | undefined] }
 
 export class Watchlist {
-    private readonly _entries: SerializedWatchlist
+    private _entries: SerializedWatchlist
 
     constructor(watchlist?: SerializedWatchlist) {
         this._entries = watchlist ?? {}
@@ -47,6 +47,10 @@ export class Watchlist {
         return exists
     }
 
+    update(watchlist: Watchlist) {
+        this._entries = watchlist._entries
+    }
+
     serialize(): SerializedWatchlist {
         return this._entries
     }
@@ -58,5 +62,10 @@ export class Watchlist {
     has(entry_reference: EntryReference): boolean {
         const item = this._entries[JSON.stringify(entry_reference)]
         return item !== undefined;
+    }
+
+    entry_uuids(): string[] {
+        const entry_refs: EntryReference[] = Object.keys(this._entries).map(key => JSON.parse(key))
+        return entry_refs.map(entry => entry.entity_reference.uuid)
     }
 }

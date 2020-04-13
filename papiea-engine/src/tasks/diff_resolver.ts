@@ -9,6 +9,7 @@ import { Provider_DB } from "../databases/provider_db_interface";
 import axios from "axios"
 import { IntentfulContext } from "../intentful_core/intentful_context";
 import { WinstonLogger } from "../logger";
+import { Handler } from "./intentful_listener_interface";
 
 export class DiffResolver {
     protected readonly specDb: Spec_DB
@@ -21,6 +22,9 @@ export class DiffResolver {
     private logger: WinstonLogger;
     private batchSize: number;
 
+    onIntentfulHandlerFail: Handler<(entity: EntryReference) => Promise<void>>
+
+
     constructor(watchlist: Watchlist, watchlistDb: Watchlist_DB, specDb: Spec_DB, statusDb: Status_DB, providerDb: Provider_DB, differ: Differ, intentfulContext: IntentfulContext, logger: WinstonLogger, batchSize: number) {
         this.specDb = specDb
         this.statusDb = statusDb
@@ -31,6 +35,7 @@ export class DiffResolver {
         this.intentfulContext = intentfulContext
         this.logger = logger
         this.batchSize = batchSize
+        this.onIntentfulHandlerFail = new Handler()
     }
 
     public async run(delay: number) {
@@ -53,7 +58,8 @@ export class DiffResolver {
 
     private async updateWatchlist() {
         try {
-            this.watchlist = await this.watchlistDb.get_watchlist()
+            const updated_watchlist = await this.watchlistDb.get_watchlist()
+            this.watchlist.update(updated_watchlist)
         } catch (e) {
             return
         }
@@ -68,7 +74,6 @@ export class DiffResolver {
     }
 
     private async launchOperation(diff: Diff, metadata: Metadata, kind: Kind, spec: Spec,  status: Status): Promise<[Diff, Delay]> {
-        console.log(diff.intentful_signature.procedure_callback)
         // This yields delay
         const result = await axios.post(diff.intentful_signature.procedure_callback, {
             metadata: metadata,
@@ -113,6 +118,7 @@ export class DiffResolver {
                                 delay_seconds: 3,
                                 delaySetTime: new Date()
                             }
+                            await this.onIntentfulHandlerFail.call(entry_reference)
                         }
                     }
                 } else {
@@ -150,6 +156,7 @@ export class DiffResolver {
                 this.logger.info(`Starting to resolve diff for entity with uuid: ${metadata!.uuid}`)
             } catch (e) {
                 this.logger.info(`Couldn't invoke handler for entity with uuid ${metadata!.uuid}: ${e}`)
+                await this.onIntentfulHandlerFail.call(entry_reference)
             }
         }
     }

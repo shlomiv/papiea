@@ -40,12 +40,12 @@ describe("Intentful Workflow tests", () => {
     const provider_version = "0.1.0";
 
     test("Change single field differ resolver should pass", async () => {
-        expect.assertions(1);
+        expect.assertions(2);
         const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
         try {
             const location = sdk.new_kind(locationDataDescription);
             sdk.version(provider_version);
-            sdk.prefix("location_provider_intentful");
+            sdk.prefix("location_provider_intentful_1");
             location.on("x", {}, async (ctx, entity, input) => {
                 await providerApiAdmin.patch('/update_status', {
                     context: "some context",
@@ -64,6 +64,7 @@ describe("Intentful Workflow tests", () => {
                     y: 11
                 }
             })
+            await timeout(5000)
             const { data: { task } } = await entityApi.put(`/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`, {
                 spec: {
                     x: 20,
@@ -76,12 +77,57 @@ describe("Intentful Workflow tests", () => {
             let retries = 5
             try {
                 for (let i = 1; i <= retries; i++) {
-                    const result = await entityApi.get(`/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`)
-                    console.log(result.data)
                     const res = await entityApi.get(`/intentful_task/${ task.uuid }`)
-                    console.log(res.data)
-                    if (result.data.status.x === 20) {
+                    if (res.data.status === IntentfulStatus.Completed_Successfully) {
+                        expect(res.data.status).toBe(IntentfulStatus.Completed_Successfully)
+                        const result = await entityApi.get(`/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`)
                         expect(result.data.status.x).toEqual(20)
+                        return
+                    }
+                    await timeout(10000)
+                }
+            } catch (e) {
+                console.log(`Couldn't get entity: ${e}`)
+            }
+        } finally {
+            sdk.server.close();
+        }
+    })
+
+    test("Change single field differ resolver should fail because of handler error", async () => {
+        expect.assertions(1);
+        const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
+        try {
+            const location = sdk.new_kind(locationDataDescription);
+            sdk.version(provider_version);
+            sdk.prefix("location_provider_intentful_2");
+            location.on("x", {}, async (ctx, entity, input) => {
+                throw new Error("Error in handler")
+            })
+            await sdk.register();
+            const kind_name = sdk.provider.kinds[0].name;
+            const { data: { metadata, spec } } = await axios.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }`, {
+                spec: {
+                    x: 10,
+                    y: 11
+                }
+            })
+            await timeout(5000)
+            const { data: { task } } = await entityApi.put(`/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`, {
+                spec: {
+                    x: 20,
+                    y: 11
+                },
+                metadata: {
+                    spec_version: 1
+                }
+            })
+            let retries = 5
+            try {
+                for (let i = 1; i <= retries; i++) {
+                    const res = await entityApi.get(`/intentful_task/${ task.uuid }`)
+                    if (res.data.status === IntentfulStatus.Failed) {
+                        expect(res.data.status).toBe(IntentfulStatus.Failed)
                         return
                     }
                     await timeout(10000)

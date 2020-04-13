@@ -34,6 +34,7 @@ export class IntentfulTask_DB_Mongo implements IntentfulTask_DB {
 
     async save_task(task: IntentfulTask): Promise<void> {
         task.created_at = new Date()
+        task.spec_version += 1
         await this.collection.insertOne(task);
     }
 

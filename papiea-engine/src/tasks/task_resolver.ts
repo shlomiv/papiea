@@ -7,8 +7,8 @@ import { EntryReference } from "./watchlist";
 import { Spec, Status, IntentfulStatus, Diff, Differ, Metadata } from "papiea-core";
 import { IntentfulTask } from "./task_interface";
 import * as assert from "assert";
-import uuid = require("uuid");
 import { timeout } from "../utils/utils";
+import { DiffResolver } from "./diff_resolver";
 
 export class TaskResolver {
     specDb: Spec_DB
@@ -18,8 +18,9 @@ export class TaskResolver {
 
     intentfulListener: IntentfulListener
     differ: Differ
+    diffResolver: DiffResolver;
 
-    constructor(specDb: Spec_DB, statusDb: Status_DB, intentfulTaskDb: IntentfulTask_DB, providerDb: Provider_DB, intentfulListener: IntentfulListener, differ: Differ) {
+    constructor(specDb: Spec_DB, statusDb: Status_DB, intentfulTaskDb: IntentfulTask_DB, providerDb: Provider_DB, intentfulListener: IntentfulListener, differ: Differ, diffResolver: DiffResolver) {
         this.specDb = specDb
         this.statusDb = statusDb
         this.providerDb = providerDb
@@ -27,9 +28,12 @@ export class TaskResolver {
 
         this.onSpec = this.onSpec.bind(this)
         this.onStatus = this.onStatus.bind(this)
+        this.onIntentfulHandlerFail = this.onIntentfulHandlerFail.bind(this)
 
+        this.diffResolver = diffResolver
         this.differ = differ
         this.intentfulListener = intentfulListener
+        this.diffResolver.onIntentfulHandlerFail = new Handler(this.onIntentfulHandlerFail)
         this.intentfulListener.onSpec = new Handler(this.onSpec)
         this.intentfulListener.onStatus = new Handler(this.onStatus)
     }
@@ -59,32 +63,26 @@ export class TaskResolver {
     private async onSpec(entity: EntryReference, specVersion: number, spec: Spec) {
         const [metadata, status] = await this.statusDb.get_status(entity.entity_reference)
         const tasks = await this.intentfulTaskDb.list_tasks({ entity_ref: entity.entity_reference })
-        const active_or_failed = tasks.find(task => task.status === IntentfulStatus.Active || task.status === IntentfulStatus.Failed)
-        if (active_or_failed) {
-            assert(active_or_failed.spec_version < specVersion, "Error got a spec with older spec version then active or failed one")
+        const created_task = tasks.find(task => task.spec_version === specVersion)
+        const rest = tasks.filter(task => task.spec_version !== specVersion && !TaskResolver.inTerminalState(task))
+        if (created_task) {
+            created_task.status = IntentfulStatus.Active
+            await this.intentfulTaskDb.update_task(created_task.uuid, { status: created_task.status })
         }
         const diffs = await this.rediff(entity, metadata, spec, status)
-        for (let task of tasks) {
-            if (TaskResolver.inTerminalState(task)) {
-                continue
-            }
+        for (let task of rest) {
+            assert(task.spec_version < specVersion, "Old task has higher spec version then newly created")
             const task_diffs = new Set(task.diffs)
             const intersection = new Set(diffs.filter(diff => task_diffs.has(diff)))
-            if (intersection.size < task.diffs.length) {
+            if (intersection.size === 0) {
+                task.status = IntentfulStatus.Completed_Successfully
+            } else if (intersection.size < task.diffs.length) {
                 task.status = IntentfulStatus.Completed_Partially
             } else if (intersection.size >= task.diffs.length) {
                 task.status = IntentfulStatus.Outdated
             }
             await this.intentfulTaskDb.update_task(task.uuid, { status: task.status, last_status_changed: new Date() })
         }
-        const new_task: IntentfulTask = {
-            uuid: uuid(),
-            spec_version: specVersion,
-            entity_ref: entity.entity_reference,
-            diffs: diffs,
-            status: diffs.length === 0 ? IntentfulStatus.Completed_Successfully : IntentfulStatus.Pending
-        }
-        await this.intentfulTaskDb.save_task(new_task)
     }
 
     private async onStatus(entity: EntryReference, status: Status) {
@@ -110,16 +108,30 @@ export class TaskResolver {
                 return
             }
         }
-        const first_pending = tasks.find(task => task.status === IntentfulStatus.Pending)
-        if (first_pending) {
-            first_pending.status = IntentfulStatus.Active
-            await this.intentfulTaskDb.update_task(first_pending.uuid, { status: first_pending.status })
+        const pending = tasks.filter(task => task.status === IntentfulStatus.Pending)
+        for (let task of pending) {
+            const task_diffs = new Set(task.diffs)
+            const intersection = new Set(diffs.filter(diff => task_diffs.has(diff)))
+            if (intersection.size === 0) {
+                task.status = IntentfulStatus.Completed_Successfully
+                await this.intentfulTaskDb.update_task(task.uuid, { status: task.status })
+            } else if (intersection.size < task.diffs.length) {
+                task.status = IntentfulStatus.Active
+                task.diffs = [...intersection]
+                await this.intentfulTaskDb.update_task(task.uuid, { diffs: task.diffs })
+                return
+            }
         }
     }
 
-    // private async onIntentfulHandlerFail(entity: EntryReference) {
-    //
-    // }
+    private async onIntentfulHandlerFail(entity: EntryReference) {
+        const tasks = await this.intentfulTaskDb.list_tasks({ entity_ref: entity.entity_reference })
+        const active_task = tasks.find(task => task.status === IntentfulStatus.Active)
+        if (active_task) {
+            active_task.status = IntentfulStatus.Failed
+            await this.intentfulTaskDb.update_task(active_task.uuid, { status: active_task.status })
+        }
+    }
 
     public async run(delay: number, taskExpirySeconds: number) {
         try {
@@ -131,7 +143,9 @@ export class TaskResolver {
     }
 
     protected async _run(delay: number, taskExpirySeconds: number) {
-        await timeout(delay)
-        await this.clearTerminalStateTasks(taskExpirySeconds)
+        while (true) {
+            await timeout(delay)
+            await this.clearTerminalStateTasks(taskExpirySeconds)
+        }
     }
 }

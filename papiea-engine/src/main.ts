@@ -56,7 +56,7 @@ async function setUpApplication(): Promise<express.Express> {
     app.use(express.json());
     app.use(getLoggingMiddleware(auditLogger));
     const mongoConnection: MongoConnection = new MongoConnection(mongoUrl, mongoDb);
-    await mongoConnection.connect();
+    await mongoConnection.connect(true);
     const differ = new BasicDiffer()
     const providerDb = await mongoConnection.get_provider_db(logger);
     const specDb = await mongoConnection.get_spec_db(logger);
@@ -66,14 +66,14 @@ async function setUpApplication(): Promise<express.Express> {
     const sessionKeyDb = await mongoConnection.get_session_key_db(logger)
     const watchlistDb = await mongoConnection.get_watchlist_db(logger)
     const validator = new ValidatorImpl()
-    const providerApi = new Provider_API_Impl(logger, providerDb, statusDb, s2skeyDb, new AdminAuthorizer(), validator);
+    const intentfulContext = new IntentfulContext(specDb, statusDb, differ, intentfulTaskDb, watchlistDb)
+    const providerApi = new Provider_API_Impl(logger, providerDb, statusDb, s2skeyDb, watchlistDb, intentfulContext, new AdminAuthorizer(), validator);
     const sessionKeyApi = new SessionKeyAPI(sessionKeyDb)
     const userAuthInfoExtractor = new CompositeUserAuthInfoExtractor([
         new AdminUserAuthInfoExtractor(adminKey),
         new S2SKeyUserAuthInfoExtractor(s2skeyDb),
         new SessionKeyUserAuthInfoExtractor(sessionKeyApi, providerDb)
     ]);
-    const intentfulContext = new IntentfulContext(specDb, statusDb, differ, intentfulTaskDb, watchlistDb)
     app.use(createAuthnRouter(logger, userAuthInfoExtractor));
     app.use(createOAuth2Router(logger, oauth2RedirectUri, providerDb, sessionKeyApi));
     const entityApiAuthorizer: Authorizer = new PerProviderAuthorizer(logger, providerApi, new ProviderCasbinAuthorizerFactory(logger));

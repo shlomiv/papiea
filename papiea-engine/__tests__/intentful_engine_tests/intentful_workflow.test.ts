@@ -122,7 +122,7 @@ describe("Intentful Workflow tests", () => {
                     spec_version: 1
                 }
             })
-            let retries = 5
+            let retries = 10
             try {
                 for (let i = 1; i <= retries; i++) {
                     const res = await entityApi.get(`/intentful_task/${ task.uuid }`)

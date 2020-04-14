@@ -1,5 +1,5 @@
 // [[file:~/work/papiea-js/Papiea-design.org::*/src/tasks/task_manager_interface.ts][/src/tasks/task_manager_interface.ts:1]]
-import { timeout } from "../utils/utils"
+import { getRandomInt, timeout } from "../utils/utils"
 import { Spec_DB } from "../databases/spec_db_interface"
 import { Status_DB } from "../databases/status_db_interface"
 import { Delay, EntryReference, Watchlist } from "./watchlist"
@@ -23,6 +23,7 @@ export class DiffResolver {
     private batchSize: number;
 
     onIntentfulHandlerFail: Handler<(entity: EntryReference) => Promise<void>>
+    onIntentfulHandlerRestart: Handler<(entity: EntryReference) => Promise<void>>
 
 
     constructor(watchlist: Watchlist, watchlistDb: Watchlist_DB, specDb: Spec_DB, statusDb: Status_DB, providerDb: Provider_DB, differ: Differ, intentfulContext: IntentfulContext, logger: WinstonLogger, batchSize: number) {
@@ -36,6 +37,7 @@ export class DiffResolver {
         this.logger = logger
         this.batchSize = batchSize
         this.onIntentfulHandlerFail = new Handler()
+        this.onIntentfulHandlerRestart = new Handler()
     }
 
     public async run(delay: number) {
@@ -82,7 +84,7 @@ export class DiffResolver {
             input: diff.diff_fields
         })
         const delay = {
-            delay_seconds: result.data ?? kind.diff_delay ?? 3,
+            delay_seconds: result.data ?? kind.diff_delay ?? 10,
             delaySetTime: new Date()
         }
         // This should be a concrete address of a handling process
@@ -90,14 +92,25 @@ export class DiffResolver {
         return [diff, delay]
     }
 
-    private async removeDiff(entry_reference: EntryReference) {
-        this.watchlist.delete(entry_reference)
+    private async checkHealthy(diff: Diff): Promise<boolean> {
+        try {
+            const result = await axios.get(diff.handler_url!)
+            return true
+        } catch (e) {
+            return false
+        }
+    }
+
+    private async removeFromWatchlist(uuid: string) {
+        this.watchlist.delete(uuid)
         await this.watchlistDb.update_watchlist(this.watchlist)
     }
 
     private async resolveDiffs() {
-        for (let [json_entry_reference, [current_diff, current_delay]] of this.watchlist.entries()) {
-            let entry_reference: EntryReference = JSON.parse(json_entry_reference)
+        const entries = this.watchlist.entries()
+
+        for (let uuid in entries) {
+            let [entry_reference, current_diff, current_delay] = entries[uuid]
             this.logger.debug(`Diff engine Processing entity with uuid: ${entry_reference.entity_reference.uuid}`)
             let diffs: Diff[] | undefined
             let metadata: Metadata | undefined, kind: Kind | undefined, spec: Spec | undefined, status: Status | undefined
@@ -106,16 +119,21 @@ export class DiffResolver {
                 if ((new Date().getTime() - current_delay.delaySetTime.getTime()) / 1000 > current_delay.delay_seconds) {
                     [diffs, metadata, kind, spec, status] = await this.rediff(entry_reference)
                     const diff_index = diffs.map(diff => JSON.stringify(diff)).findIndex(diff => diff === JSON.stringify(current_diff))
-                    // Diff still exists, we should retry
+                    // Diff still exists, we should check the health and retry if not healthy
+                    console.log(diff_index)
                     if (diff_index) {
                         try {
-                            const [, delay] = await this.launchOperation(diffs[ diff_index ], metadata, kind, spec, status)
-                            current_delay = delay
+                            if (await this.checkHealthy(diffs[diff_index])) {
+                                continue
+                            }
                             this.logger.info(`Starting to retry resolving diff for entity with uuid: ${metadata!.uuid}`)
+                            await this.onIntentfulHandlerRestart.call(entry_reference)
+                            const [, delay] = await this.launchOperation(diffs[diff_index], metadata, kind, spec, status)
+                            entries[uuid][2] = delay
                         } catch (e) {
-                            this.logger.warning(`Couldn't invoke retry handler for entity with uuid ${metadata!.uuid}: ${e}`)
-                            current_delay = {
-                                delay_seconds: 3,
+                            this.logger.debug(`Couldn't invoke retry handler for entity with uuid ${metadata!.uuid}: ${e}`)
+                            entries[uuid][2] = {
+                                delay_seconds: getRandomInt(10, 20),
                                 delaySetTime: new Date()
                             }
                             await this.onIntentfulHandlerFail.call(entry_reference)
@@ -131,12 +149,12 @@ export class DiffResolver {
                     [diffs, metadata, kind, spec, status] = await this.rediff(entry_reference)
                 } catch (e) {
                     this.logger.debug(`Couldn't rediff entity with uuid ${entry_reference.entity_reference.uuid}: ${e}. Removing from watchlist`)
-                    await this.removeDiff(entry_reference)
+                    await this.removeFromWatchlist(uuid)
                     continue
                 }
             }
             if (diffs.length === 0) {
-                await this.removeDiff(entry_reference)
+                await this.removeFromWatchlist(uuid)
                 continue
             }
             // No active diffs found, choosing the next one
@@ -146,19 +164,27 @@ export class DiffResolver {
                 next_diff = diff_selection_strategy.selectOne(diffs)
             } catch (e) {
                 this.logger.debug(`Entity with uuid ${metadata!.uuid}: ${e}`)
-                await this.removeDiff(entry_reference)
+                await this.removeFromWatchlist(uuid)
                 continue
             }
             try {
                 const [executing_diff, execution_delay] = await this.launchOperation(next_diff!, metadata!, kind!, spec!, status!)
-                current_diff = executing_diff
-                current_delay = execution_delay
+                entries[uuid][1] = executing_diff
+                entries[uuid][2] = execution_delay
                 this.logger.info(`Starting to resolve diff for entity with uuid: ${metadata!.uuid}`)
             } catch (e) {
-                this.logger.info(`Couldn't invoke handler for entity with uuid ${metadata!.uuid}: ${e}`)
+                this.logger.debug(`Couldn't invoke handler for entity with uuid ${metadata!.uuid}: ${e}`)
+                entries[uuid][2] = {
+                    delay_seconds: getRandomInt(10, 20),
+                    delaySetTime: new Date()
+                }
+                entries[uuid][1] = next_diff
+                // This should be a concrete address of a handling process
+                entries[uuid][1]!.handler_url = `${next_diff.intentful_signature.base_callback}/healthcheck`
                 await this.onIntentfulHandlerFail.call(entry_reference)
             }
         }
+        await this.watchlistDb.update_watchlist(this.watchlist)
     }
 
     private async calculate_batch_size(): Promise<number> {
@@ -179,7 +205,7 @@ export class DiffResolver {
                 if (kind.intentful_behaviour !== IntentfulBehaviour.Differ) {
                     continue
                 }
-                this.watchlist.set({
+                this.watchlist.set(metadata.uuid, [{
                     provider_reference: {
                         provider_prefix: metadata.provider_prefix,
                         provider_version: metadata.provider_version
@@ -188,9 +214,9 @@ export class DiffResolver {
                         uuid: metadata.uuid,
                         kind: metadata.kind
                     }
-                }, [undefined, undefined])
+                }, undefined, undefined])
             } catch (e) {
-                this.logger.debug(`Couldn't get info for entity with uuid ${metadata.uuid}: ${e}. Skipping`)
+                // this.logger.debug(`Couldn't get info for entity with uuid ${metadata.uuid}: ${e}. Skipping`)
             }
         }
         return this.watchlistDb.update_watchlist(this.watchlist)

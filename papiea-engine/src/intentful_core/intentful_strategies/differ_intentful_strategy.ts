@@ -43,17 +43,19 @@ export class DifferIntentfulStrategy extends IntentfulStrategy {
         }
         await this.intentfulTaskDb.save_task(task)
         const watchlist = await this.watchlistDb.get_watchlist()
-        watchlist.set({
-            provider_reference: {
-                provider_prefix: metadata.provider_prefix,
-                provider_version: metadata.provider_version
-            },
-            entity_reference: {
-                uuid: metadata.uuid,
-                kind: metadata.kind
-            }
-        }, [undefined, undefined])
-        await this.watchlistDb.update_watchlist(watchlist)
+        if (!watchlist.has(metadata.uuid)) {
+            watchlist.set(metadata.uuid, [{
+                provider_reference: {
+                    provider_prefix: metadata.provider_prefix,
+                    provider_version: metadata.provider_version
+                },
+                entity_reference: {
+                    uuid: metadata.uuid,
+                    kind: metadata.kind
+                }
+            }, undefined, undefined])
+            await this.watchlistDb.update_watchlist(watchlist)
+        }
         await this.update_entity(metadata, spec)
         return task
     }

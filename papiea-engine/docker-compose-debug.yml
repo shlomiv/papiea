@@ -19,3 +19,4 @@ services:
                         - PAPIEA_DEBUG=true
         mongo:
                 image: mongo:4.1
+                command: mongod --replSet rs0

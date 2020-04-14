@@ -29,11 +29,13 @@ export class TaskResolver {
         this.onSpec = this.onSpec.bind(this)
         this.onStatus = this.onStatus.bind(this)
         this.onIntentfulHandlerFail = this.onIntentfulHandlerFail.bind(this)
+        this.onIntentfulHandlerRestart = this.onIntentfulHandlerRestart.bind(this)
 
         this.diffResolver = diffResolver
         this.differ = differ
         this.intentfulListener = intentfulListener
         this.diffResolver.onIntentfulHandlerFail = new Handler(this.onIntentfulHandlerFail)
+        this.diffResolver.onIntentfulHandlerRestart = new Handler(this.onIntentfulHandlerRestart)
         this.intentfulListener.onSpec = new Handler(this.onSpec)
         this.intentfulListener.onStatus = new Handler(this.onStatus)
     }
@@ -63,9 +65,12 @@ export class TaskResolver {
     private async onSpec(entity: EntryReference, specVersion: number, spec: Spec) {
         const [metadata, status] = await this.statusDb.get_status(entity.entity_reference)
         const tasks = await this.intentfulTaskDb.list_tasks({ entity_ref: entity.entity_reference })
+        console.log("Tasks")
+        console.log(tasks)
         const created_task = tasks.find(task => task.spec_version === specVersion)
         const rest = tasks.filter(task => task.spec_version !== specVersion && !TaskResolver.inTerminalState(task))
         if (created_task) {
+            console.log("Setting active")
             created_task.status = IntentfulStatus.Active
             await this.intentfulTaskDb.update_task(created_task.uuid, { status: created_task.status })
         }
@@ -89,12 +94,7 @@ export class TaskResolver {
         const [metadata, spec] = await this.specDb.get_spec(entity.entity_reference)
         const tasks = await this.intentfulTaskDb.list_tasks({ entity_ref: entity.entity_reference })
         const diffs = await this.rediff(entity, metadata, spec, status)
-        const failed = tasks.find(task => task.status === IntentfulStatus.Failed)
-        if (failed) {
-            failed.status = IntentfulStatus.Active
-            await this.intentfulTaskDb.update_task(failed.uuid, { status: failed.status })
-            return
-        }
+        console.log("Processing active status")
         const active = tasks.find(task => task.status === IntentfulStatus.Active)
         if (active) {
             const task_diffs = new Set(active.diffs)
@@ -108,6 +108,7 @@ export class TaskResolver {
                 return
             }
         }
+        console.log("Processing pending")
         const pending = tasks.filter(task => task.status === IntentfulStatus.Pending)
         for (let task of pending) {
             const task_diffs = new Set(task.diffs)
@@ -130,6 +131,15 @@ export class TaskResolver {
         if (active_task) {
             active_task.status = IntentfulStatus.Failed
             await this.intentfulTaskDb.update_task(active_task.uuid, { status: active_task.status })
+        }
+    }
+
+    private async onIntentfulHandlerRestart(entity: EntryReference) {
+        const tasks = await this.intentfulTaskDb.list_tasks({ entity_ref: entity.entity_reference })
+        const failed_task = tasks.find(task => task.status === IntentfulStatus.Failed)
+        if (failed_task) {
+            failed_task.status = IntentfulStatus.Active
+            await this.intentfulTaskDb.update_task(failed_task.uuid, { status: failed_task.status })
         }
     }
 

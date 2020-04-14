@@ -94,7 +94,7 @@ describe("Intentful Task tests", () => {
     let createdTask: IntentfulTask
 
     beforeAll(async () => {
-        await mongoConnection.connect();
+        await mongoConnection.connect(false);
         intentfulTaskDb = await mongoConnection.get_intentful_task_db(intentfulWorkflowTestLogger)
     });
 

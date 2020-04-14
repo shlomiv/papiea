@@ -11,13 +11,20 @@ import { BasicDiffSelectionStrategy } from "./diff_selection_strategies/basic_di
 import { DiffSelectionStrategyInterface } from "./diff_selection_strategies/diff_selection_strategy_interface";
 import { RandomDiffSelectionStrategy } from "./diff_selection_strategies/random_diff_selection_strategy";
 import { Watchlist_DB } from "../databases/watchlist_db_interface";
+import {
+    BasicUpdateStrategy, DifferUpdateStrategy,
+    SpecOnlyUpdateStrategy,
+    StatusUpdateStrategy
+} from "./intentful_strategies/status_update_strategy";
 
 export type BehaviourStrategyMap = Map<IntentfulBehaviour, IntentfulStrategy>
 export type DiffSelectionStrategyMap = Map<DiffSelectionStrategy, DiffSelectionStrategyInterface>
+export type StatusUpdateStrategyMap = Map<IntentfulBehaviour, StatusUpdateStrategy>
 
 export class IntentfulContext {
     private readonly behaviourStrategyMap: BehaviourStrategyMap
     private readonly diffSelectionStrategyMap: DiffSelectionStrategyMap
+    private readonly statusUpdateStrategyMap: StatusUpdateStrategyMap
 
     constructor(specDb: Spec_DB, statusDb: Status_DB, differ: Differ, intentfulTaskDb: IntentfulTask_DB, watchlistDb: Watchlist_DB) {
         this.behaviourStrategyMap = new Map()
@@ -28,6 +35,11 @@ export class IntentfulContext {
         this.diffSelectionStrategyMap = new Map()
         this.diffSelectionStrategyMap.set(DiffSelectionStrategy.Basic, new BasicDiffSelectionStrategy())
         this.diffSelectionStrategyMap.set(DiffSelectionStrategy.Random, new RandomDiffSelectionStrategy())
+
+        this.statusUpdateStrategyMap = new Map()
+        this.statusUpdateStrategyMap.set(IntentfulBehaviour.Basic, new BasicUpdateStrategy(statusDb))
+        this.statusUpdateStrategyMap.set(IntentfulBehaviour.SpecOnly, new SpecOnlyUpdateStrategy(statusDb))
+        this.statusUpdateStrategyMap.set(IntentfulBehaviour.Differ, new DifferUpdateStrategy(statusDb, specDb, differ, watchlistDb))
     }
 
     getIntentfulStrategy(kind: Kind, user: UserAuthInfo): IntentfulStrategy {
@@ -43,5 +55,15 @@ export class IntentfulContext {
     getDiffSelectionStrategy(kind: Kind): DiffSelectionStrategyInterface {
         const strategy = this.diffSelectionStrategyMap.get(kind.diff_selection_strategy || DiffSelectionStrategy.Random)
         return strategy!
+    }
+
+    getStatusUpdateStrategy(kind: Kind, user: UserAuthInfo): StatusUpdateStrategy {
+        const strategy = this.statusUpdateStrategyMap.get(kind.kind_structure[kind.name]['x-papiea-entity'])
+        if (strategy === undefined) {
+            throw new Error(`Strategy associated with behaviour: ${kind.intentful_behaviour} not found`)
+        }
+        strategy.setKind(kind)
+        strategy.setUser(user)
+        return strategy
     }
 }

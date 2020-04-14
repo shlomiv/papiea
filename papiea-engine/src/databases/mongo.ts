@@ -9,6 +9,8 @@ import { SessionKeyDbMongo } from "./session_key_db_mongo"
 import { Logger } from "../logger_interface"
 import { IntentfulTask_DB_Mongo } from "./intentful_task_db_mongo"
 import { Watchlist_Db_Mongo } from "./watchlist_db_mongo";
+import { timeout } from "../utils/utils";
+import { exceptions } from "winston";
 const fs = require('fs'),
     url = require('url');
 
@@ -63,13 +65,31 @@ export class MongoConnection {
         }
     }
 
-    async connect(): Promise<void> {
+    async connect(master: boolean): Promise<void> {
         const parsedUrl = url.parse(this.url, true);
         if (parsedUrl.query && parsedUrl.query.ssl_ca_certs === 'rds-combined-ca-bundle.pem') {
             await this.download_rds_cert();
         }
         await this.client.connect();
         this.db = this.client.db(this.dbName);
+        if (master) {
+            try {
+                await this.db.executeDbAdminCommand({ replSetGetStatus: 1 })
+            } catch (e) {
+                // TODO: Find a sync version of this function
+                await this.db.executeDbAdminCommand({ replSetInitiate: {} })
+                await timeout(4000)
+            }
+        } else {
+            try {
+                // TODO: Find a sync version of this function
+                await timeout(8000)
+                await this.db.executeDbAdminCommand({ replSetGetStatus: 1 })
+            } catch (e) {
+
+            }
+        }
+
     }
 
     async close(): Promise<void> {

@@ -36,7 +36,7 @@ describe("MongoDb tests", () => {
     });
 
     beforeAll(done => {
-        connection.connect().then(done).catch(done.fail);
+        connection.connect(false).then(done).catch(done.fail);
     });
 
     afterAll(done => {
@@ -546,10 +546,11 @@ describe("MongoDb tests", () => {
                 kind: "test_kind"
             }
         }
-        watchlist.set(entry_ref, [undefined, { delay_seconds: 120, delaySetTime: new Date() }])
+        const uuid = uuid4()
+        watchlist.set(uuid, [entry_ref, undefined, { delay_seconds: 120, delaySetTime: new Date() }])
         await watchlistDb.update_watchlist(watchlist)
         const watchlistUpdated = await watchlistDb.get_watchlist()
-        expect(watchlistUpdated.get(entry_ref)![1]!.delay_seconds).toBe(120)
+        expect(watchlistUpdated.get(uuid)![2]!.delay_seconds).toBe(120)
         await watchlistDb.update_watchlist(new Watchlist())
     });
 });

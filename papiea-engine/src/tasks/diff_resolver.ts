@@ -84,7 +84,7 @@ export class DiffResolver {
             input: diff.diff_fields
         })
         const delay = {
-            delay_seconds: result.data ?? kind.diff_delay ?? 10,
+            delay_seconds: result.data ?? kind.diff_delay ?? getRandomInt(10, 20),
             delaySetTime: new Date()
         }
         // This should be a concrete address of a handling process
@@ -94,7 +94,7 @@ export class DiffResolver {
 
     private async checkHealthy(diff: Diff): Promise<boolean> {
         try {
-            const result = await axios.get(diff.handler_url!)
+            await axios.get(diff.handler_url!)
             return true
         } catch (e) {
             return false
@@ -106,6 +106,7 @@ export class DiffResolver {
         await this.watchlistDb.update_watchlist(this.watchlist)
     }
 
+    // TODO: I don't like this function, change the flow!
     private async resolveDiffs() {
         const entries = this.watchlist.entries()
 
@@ -118,10 +119,9 @@ export class DiffResolver {
                 // Delay for rediffing
                 if ((new Date().getTime() - current_delay.delaySetTime.getTime()) / 1000 > current_delay.delay_seconds) {
                     [diffs, metadata, kind, spec, status] = await this.rediff(entry_reference)
-                    const diff_index = diffs.map(diff => JSON.stringify(diff)).findIndex(diff => diff === JSON.stringify(current_diff))
+                    const diff_index = diffs.map(diff => JSON.stringify(diff.diff_fields)).findIndex(diff => diff === JSON.stringify(current_diff!.diff_fields))
                     // Diff still exists, we should check the health and retry if not healthy
-                    console.log(diff_index)
-                    if (diff_index) {
+                    if (diff_index !== -1) {
                         try {
                             if (await this.checkHealthy(diffs[diff_index])) {
                                 continue
@@ -130,6 +130,7 @@ export class DiffResolver {
                             await this.onIntentfulHandlerRestart.call(entry_reference)
                             const [, delay] = await this.launchOperation(diffs[diff_index], metadata, kind, spec, status)
                             entries[uuid][2] = delay
+                            continue
                         } catch (e) {
                             this.logger.debug(`Couldn't invoke retry handler for entity with uuid ${metadata!.uuid}: ${e}`)
                             entries[uuid][2] = {
@@ -137,7 +138,19 @@ export class DiffResolver {
                                 delaySetTime: new Date()
                             }
                             await this.onIntentfulHandlerFail.call(entry_reference)
+                            continue
                         }
+                    } else {
+                        // Diff has been resolved choosing a new one
+                        const result = await this.startNewDiffResolution(entry_reference, diffs, metadata!, kind!, spec, status)
+                        if (result === null) {
+                            await this.removeFromWatchlist(uuid)
+                            continue
+                        }
+                        const new_diff = result![0]
+                        const new_delay = result![1]
+                        entries[uuid][1] = new_diff
+                        entries[uuid][2] = new_delay
                     }
                 } else {
                     continue
@@ -158,37 +171,48 @@ export class DiffResolver {
                 continue
             }
             // No active diffs found, choosing the next one
-            let next_diff: Diff
-            const diff_selection_strategy = this.intentfulContext.getDiffSelectionStrategy(kind!)
-            try {
-                next_diff = diff_selection_strategy.selectOne(diffs)
-            } catch (e) {
-                this.logger.debug(`Entity with uuid ${metadata!.uuid}: ${e}`)
+            const result = await this.startNewDiffResolution(entry_reference, diffs, metadata!, kind!, spec, status)
+            if (result === null) {
                 await this.removeFromWatchlist(uuid)
                 continue
             }
-            try {
-                const [executing_diff, execution_delay] = await this.launchOperation(next_diff!, metadata!, kind!, spec!, status!)
-                entries[uuid][1] = executing_diff
-                entries[uuid][2] = execution_delay
-                this.logger.info(`Starting to resolve diff for entity with uuid: ${metadata!.uuid}`)
-            } catch (e) {
-                this.logger.debug(`Couldn't invoke handler for entity with uuid ${metadata!.uuid}: ${e}`)
-                entries[uuid][2] = {
-                    delay_seconds: getRandomInt(10, 20),
-                    delaySetTime: new Date()
-                }
-                entries[uuid][1] = next_diff
-                // This should be a concrete address of a handling process
-                entries[uuid][1]!.handler_url = `${next_diff.intentful_signature.base_callback}/healthcheck`
-                await this.onIntentfulHandlerFail.call(entry_reference)
-            }
+            const new_diff = result![0]
+            const new_delay = result![1]
+            entries[uuid][1] = new_diff
+            entries[uuid][2] = new_delay
         }
         await this.watchlistDb.update_watchlist(this.watchlist)
     }
 
     private async calculate_batch_size(): Promise<number> {
         return this.batchSize
+    }
+
+    private async startNewDiffResolution(entry_reference: EntryReference, diffs: Diff[], metadata: Metadata, kind: Kind, spec: Spec, status: Status): Promise<null | [Diff, Delay]> {
+        let next_diff: Diff
+        const diff_selection_strategy = this.intentfulContext.getDiffSelectionStrategy(kind!)
+        try {
+            next_diff = diff_selection_strategy.selectOne(diffs)
+        } catch (e) {
+            this.logger.debug(`Entity with uuid ${metadata!.uuid}: ${e}`)
+            return null
+        }
+        try {
+            const [executing_diff, execution_delay] = await this.launchOperation(next_diff!, metadata!, kind!, spec!, status!)
+            this.logger.info(`Starting to resolve diff for entity with uuid: ${metadata!.uuid}`)
+            return [executing_diff, execution_delay]
+        } catch (e) {
+            this.logger.debug(`Couldn't invoke handler for entity with uuid ${metadata!.uuid}: ${e}`)
+            const delay = {
+                delay_seconds: getRandomInt(10, 20),
+                delaySetTime: new Date()
+            }
+            const diff = next_diff
+            // This should be a concrete address of a handling process
+            diff!.handler_url = `${next_diff.intentful_signature.base_callback}/healthcheck`
+            await this.onIntentfulHandlerFail.call(entry_reference)
+            return [diff, delay]
+        }
     }
 
     // This method is needed to avoid race condition

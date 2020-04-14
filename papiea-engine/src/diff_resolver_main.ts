@@ -4,7 +4,6 @@ import { Watchlist } from "./tasks/watchlist"
 import { DiffResolver } from "./tasks/diff_resolver"
 import { BasicDiffer } from "./intentful_core/differ_impl";
 import { IntentfulContext } from "./intentful_core/intentful_context";
-import { IntentfulListenerMongo } from "./tasks/intentful_listener_mongo_simple";
 import { TaskResolver } from "./tasks/task_resolver";
 import { IntentfulListenerMongoStream } from "./tasks/intentful_listener_mongo_stream";
 

@@ -108,14 +108,14 @@ describe("Intentful Workflow tests", () => {
             const kind_name = sdk.provider.kinds[0].name;
             const { data: { metadata, spec } } = await axios.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }`, {
                 spec: {
-                    x: 10,
+                    x: 120,
                     y: 11
                 }
             })
             await timeout(5000)
             const { data: { task } } = await entityApi.put(`/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`, {
                 spec: {
-                    x: 20,
+                    x: 25,
                     y: 11
                 },
                 metadata: {

@@ -60,8 +60,4 @@ export class Watchlist {
         const item = this._entries[uuid]
         return item !== undefined;
     }
-
-    entry_uuids(): string[] {
-        return Object.keys(this._entries)
-    }
 }

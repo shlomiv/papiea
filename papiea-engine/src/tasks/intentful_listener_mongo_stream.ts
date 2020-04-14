@@ -53,7 +53,6 @@ export class IntentfulListenerMongoStream implements IntentfulListener {
                 // TODO: removed fields?
                 console.log(next)
                 if (next.updateDescription.updatedFields.spec) {
-                    console.log("On spec")
                     await this.onSpec.call(entry_reference, entity.metadata.spec_version, entity.spec)
                 } else {
                     if (next.updateDescription.updatedFields.status) {

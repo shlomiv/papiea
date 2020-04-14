@@ -65,12 +65,9 @@ export class TaskResolver {
     private async onSpec(entity: EntryReference, specVersion: number, spec: Spec) {
         const [metadata, status] = await this.statusDb.get_status(entity.entity_reference)
         const tasks = await this.intentfulTaskDb.list_tasks({ entity_ref: entity.entity_reference })
-        console.log("Tasks")
-        console.log(tasks)
         const created_task = tasks.find(task => task.spec_version === specVersion)
         const rest = tasks.filter(task => task.spec_version !== specVersion && !TaskResolver.inTerminalState(task))
         if (created_task) {
-            console.log("Setting active")
             created_task.status = IntentfulStatus.Active
             await this.intentfulTaskDb.update_task(created_task.uuid, { status: created_task.status })
         }
@@ -94,7 +91,6 @@ export class TaskResolver {
         const [metadata, spec] = await this.specDb.get_spec(entity.entity_reference)
         const tasks = await this.intentfulTaskDb.list_tasks({ entity_ref: entity.entity_reference })
         const diffs = await this.rediff(entity, metadata, spec, status)
-        console.log("Processing active status")
         const active = tasks.find(task => task.status === IntentfulStatus.Active)
         if (active) {
             const task_diffs = new Set(active.diffs)
@@ -108,7 +104,6 @@ export class TaskResolver {
                 return
             }
         }
-        console.log("Processing pending")
         const pending = tasks.filter(task => task.status === IntentfulStatus.Pending)
         for (let task of pending) {
             const task_diffs = new Set(task.diffs)

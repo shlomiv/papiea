@@ -29,7 +29,6 @@ export class Watchlist_Db_Mongo implements Watchlist_DB {
             "id": 1,
         }, {
             $set: {
-                id: 1,
                 watchlist: watchlist.serialize()
             }
         }, {

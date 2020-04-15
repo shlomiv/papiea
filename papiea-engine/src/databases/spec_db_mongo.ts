@@ -6,6 +6,7 @@ import { encode } from "mongo-dot-notation-tool";
 import { Entity_Reference, Metadata, Spec, Entity } from "papiea-core";
 import { SortParams } from "../entity/entity_api_impl";
 import { Logger } from "../logger_interface"
+import { IntentfulKindReference } from "./provider_db_mongo";
 
 export class Spec_DB_Mongo implements Spec_DB {
     collection: Collection;
@@ -135,30 +136,20 @@ export class Spec_DB_Mongo implements Spec_DB {
         });
     }
 
-    async list_random_specs(size: number, fields_map?: any, sortParams?: SortParams): Promise<([Metadata, Spec])[]> {
-        const filter: any = {};
-        if (fields_map) {
-            for (let key in fields_map.metadata) {
-                if (key === "deleted_at")
-                    continue;
-                filter[ "metadata." + key ] = fields_map.metadata[ key ];
-            }
-            for (let key in fields_map?.spec) {
-                filter[ "spec." + key ] = fields_map.spec[ key ];
-            }
-            for (let key in fields_map?.status) {
-                filter[ "status." + key ] = fields_map.status[ key ];
-            }
+    async list_random_intentful_specs(size: number, kind_refs: IntentfulKindReference[], sortParams?: SortParams): Promise<([Metadata, Spec])[]> {
+        const intentful_kind_names = kind_refs.map(kind => kind.kind_name)
+        if (intentful_kind_names.length === 0) {
+            return []
         }
         let result: any[];
         if (sortParams) {
             result = await this.collection.aggregate([
-                { $match: filter },
+                { $match: { "metadata.kind": { $in: intentful_kind_names } } },
                 { $sample: { size } }
             ]).sort(sortParams).toArray();
         } else {
             result = await this.collection.aggregate([
-                { $match: filter },
+                { $match: { "metadata.kind": { $in: intentful_kind_names } } },
                 { $sample: { size } }
             ]).toArray();
         }

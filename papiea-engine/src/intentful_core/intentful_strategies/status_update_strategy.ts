@@ -3,6 +3,7 @@ import { Status_DB } from "../../databases/status_db_interface";
 import { UserAuthInfo } from "../../auth/authn";
 import { Spec_DB } from "../../databases/spec_db_interface";
 import { Watchlist_DB } from "../../databases/watchlist_db_interface";
+import { create_entry } from "../../tasks/watchlist";
 
 export abstract class StatusUpdateStrategy {
     statusDb: Status_DB
@@ -64,25 +65,16 @@ export class DifferUpdateStrategy extends StatusUpdateStrategy {
 
     async update(entity_ref: Entity_Reference, status: Status): Promise<void> {
         let diffs: Diff[] = []
-        await super.update(entity_ref, status)
         const [metadata, spec] = await this.specDb.get_spec(entity_ref)
         for (let diff of this.differ.diffs(this.kind!, spec, status)) {
             diffs.push(diff)
         }
         const watchlist = await this.watchlistDb.get_watchlist()
         if (!watchlist.has(metadata.uuid)) {
-            watchlist.set(metadata.uuid, [{
-                provider_reference: {
-                    provider_prefix: metadata.provider_prefix,
-                    provider_version: metadata.provider_version
-                },
-                entity_reference: {
-                    uuid: metadata.uuid,
-                    kind: metadata.kind
-                }
-            }, undefined, undefined])
+            watchlist.set(metadata.uuid, [create_entry(metadata), undefined, undefined])
             await this.watchlistDb.update_watchlist(watchlist)
         }
+        await super.update(entity_ref, status)
     }
 
     async replace(entity_ref: Entity_Reference, status: Status) {

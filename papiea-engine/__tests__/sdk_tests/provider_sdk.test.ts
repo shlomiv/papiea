@@ -958,16 +958,17 @@ describe("SDK callback tests", () => {
     const provider_version = "0.1.0";
     const location_yaml = load(readFileSync(resolve(__dirname, "../test_data/location_kind_test_data_callback.yml"), "utf-8"));
     let kind_name: string
+    let prefix: string
 
-    afterAll(async () => {
-        await providerApiAdmin.delete(`/${provider.prefix}/${provider.version}`);
+    afterEach(async () => {
+        await providerApiAdmin.delete(`/${prefix}/${provider_version}`);
     });
 
     test("On delete callback should be called", async () => {
         expect.hasAssertions();
         const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
         const location = sdk.new_kind(location_yaml);
-        const prefix = "provider_on_delete_callback"
+        prefix = "provider_on_delete_callback"
         sdk.version(provider_version);
         sdk.prefix(prefix);
         sdk.provider_procedure("computeWithDeleteCallback",
@@ -1008,7 +1009,7 @@ describe("SDK callback tests", () => {
         expect.hasAssertions();
         const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
         const location = sdk.new_kind(location_yaml);
-        const prefix = "provider_on_create_callback"
+        prefix = "provider_on_create_callback"
         sdk.version(provider_version);
         sdk.prefix(prefix);
         sdk.provider_procedure("computeWithCreateCallback",
@@ -1049,7 +1050,7 @@ describe("SDK callback tests", () => {
         expect.assertions(2);
         const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
         const location = sdk.new_kind(location_yaml);
-        const prefix = "provider_on_delete_on_create_callback"
+        prefix = "provider_on_delete_on_create_callback"
         sdk.version(provider_version);
         sdk.prefix(prefix);
         sdk.provider_procedure("computeWithDeleteCreateCallbacks",
@@ -1093,7 +1094,7 @@ describe("SDK callback tests", () => {
         expect.hasAssertions();
         const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
         const location = sdk.new_kind(location_yaml);
-        const prefix = "provider_on_delete_callback"
+        prefix = "provider_on_delete_callback"
         sdk.version(provider_version);
         sdk.prefix(prefix);
         location.on_delete(async (ctx, input) => {
@@ -1131,7 +1132,7 @@ describe("SDK callback tests", () => {
         expect.hasAssertions();
         const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
         const location = sdk.new_kind(location_yaml);
-        const prefix = "provider_on_create_callback"
+        prefix = "provider_on_create_callback"
         sdk.version(provider_version);
         sdk.prefix(prefix);
         sdk.provider_procedure("computeWithCreateCallback",

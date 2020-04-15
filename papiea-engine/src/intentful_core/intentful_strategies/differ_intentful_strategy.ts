@@ -7,6 +7,7 @@ import { IntentfulTask } from "../../tasks/task_interface"
 import { IntentfulStatus } from "papiea-core"
 import { Watchlist_DB } from "../../databases/watchlist_db_interface";
 import uuid = require("uuid")
+import { create_entry } from "../../tasks/watchlist";
 
 export class DifferIntentfulStrategy extends IntentfulStrategy {
     protected differ: Differ
@@ -27,6 +28,7 @@ export class DifferIntentfulStrategy extends IntentfulStrategy {
 
     async update(metadata: Metadata, spec: Spec): Promise<IntentfulTask | null> {
         const [_, status] = await this.statusDb.get_status(metadata)
+        let task_spec_version = metadata.spec_version + 1
         const task: IntentfulTask = {
             uuid: uuid(),
             entity_ref: {
@@ -34,7 +36,7 @@ export class DifferIntentfulStrategy extends IntentfulStrategy {
                 kind: metadata.kind
             },
             diffs: [],
-            spec_version: metadata.spec_version,
+            spec_version: task_spec_version,
             user: this.user,
             status: IntentfulStatus.Pending
         }
@@ -44,16 +46,7 @@ export class DifferIntentfulStrategy extends IntentfulStrategy {
         await this.intentfulTaskDb.save_task(task)
         const watchlist = await this.watchlistDb.get_watchlist()
         if (!watchlist.has(metadata.uuid)) {
-            watchlist.set(metadata.uuid, [{
-                provider_reference: {
-                    provider_prefix: metadata.provider_prefix,
-                    provider_version: metadata.provider_version
-                },
-                entity_reference: {
-                    uuid: metadata.uuid,
-                    kind: metadata.kind
-                }
-            }, undefined, undefined])
+            watchlist.set(metadata.uuid, [create_entry(metadata), undefined, undefined])
             await this.watchlistDb.update_watchlist(watchlist)
         }
         await this.update_entity(metadata, spec)

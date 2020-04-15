@@ -6,6 +6,7 @@ import { loadYaml, ProviderBuilder } from "../test_data_factory";
 import { Provider_DB } from "../../src/databases/provider_db_interface";
 import { Provider, Version, Procedural_Signature, Procedural_Execution_Strategy, Kind } from "papiea-core";
 import ApiDocsGenerator from "../../src/api_docs/api_docs_generator";
+import { IntentfulKindReference } from "../../src/databases/provider_db_mongo";
 
 declare var process: {
     env: {
@@ -58,6 +59,10 @@ class Provider_DB_Mock implements Provider_DB {
     }
 
     find_kind(provider: Provider, kind_name: string): Kind {
+        throw new Error("Not implemented")
+    }
+
+    get_intentful_kinds(): Promise<IntentfulKindReference[]> {
         throw new Error("Not implemented")
     }
 }

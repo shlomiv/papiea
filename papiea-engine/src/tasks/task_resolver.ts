@@ -3,7 +3,7 @@ import { Status_DB } from "../databases/status_db_interface";
 import { IntentfulTask_DB } from "../databases/intentful_task_db_interface";
 import { Provider_DB } from "../databases/provider_db_interface";
 import { Handler, IntentfulListener } from "./intentful_listener_interface";
-import { EntryReference } from "./watchlist";
+import { EntryReference, Watchlist } from "./watchlist";
 import { Spec, Status, IntentfulStatus, Diff, Differ, Metadata } from "papiea-core";
 import { IntentfulTask } from "./task_interface";
 import * as assert from "assert";
@@ -19,8 +19,9 @@ export class TaskResolver {
     intentfulListener: IntentfulListener
     differ: Differ
     diffResolver: DiffResolver;
+    watchlist: Watchlist;
 
-    constructor(specDb: Spec_DB, statusDb: Status_DB, intentfulTaskDb: IntentfulTask_DB, providerDb: Provider_DB, intentfulListener: IntentfulListener, differ: Differ, diffResolver: DiffResolver) {
+    constructor(specDb: Spec_DB, statusDb: Status_DB, intentfulTaskDb: IntentfulTask_DB, providerDb: Provider_DB, intentfulListener: IntentfulListener, differ: Differ, diffResolver: DiffResolver, watchlist: Watchlist) {
         this.specDb = specDb
         this.statusDb = statusDb
         this.providerDb = providerDb
@@ -31,6 +32,7 @@ export class TaskResolver {
         this.onIntentfulHandlerFail = this.onIntentfulHandlerFail.bind(this)
         this.onIntentfulHandlerRestart = this.onIntentfulHandlerRestart.bind(this)
 
+        this.watchlist = watchlist
         this.diffResolver = diffResolver
         this.differ = differ
         this.intentfulListener = intentfulListener
@@ -65,7 +67,7 @@ export class TaskResolver {
     private async onSpec(entity: EntryReference, specVersion: number, spec: Spec) {
         const [metadata, status] = await this.statusDb.get_status(entity.entity_reference)
         const tasks = await this.intentfulTaskDb.list_tasks({ entity_ref: entity.entity_reference })
-        const created_task = tasks.find(task => task.spec_version === specVersion)
+        const created_task = tasks.find(task => task.spec_version === specVersion && !TaskResolver.inTerminalState(task))
         const rest = tasks.filter(task => task.spec_version !== specVersion && !TaskResolver.inTerminalState(task))
         if (created_task) {
             created_task.status = IntentfulStatus.Active

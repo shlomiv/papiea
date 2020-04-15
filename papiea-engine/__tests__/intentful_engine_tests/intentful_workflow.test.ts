@@ -2,7 +2,7 @@ import { getDifferLocationDataDescription } from "../test_data_factory"
 import axios from "axios"
 import { ProviderSdk } from "papiea-sdk"
 import { timeout } from "../../src/utils/utils"
-import { IntentfulStatus } from "papiea-core"
+import { IntentfulStatus, Version, Metadata } from "papiea-core"
 
 declare var process: {
     env: {
@@ -37,15 +37,26 @@ const providerApiAdmin = axios.create({
 describe("Intentful Workflow tests", () => {
 
     const locationDataDescription = getDifferLocationDataDescription()
-    const provider_version = "0.1.0";
+    let provider_prefix: string
+    let provider_version: Version = "0.1.0"
+    let to_delete_entites: Metadata[] = []
+
+    afterEach(async () => {
+        for (let metadata of to_delete_entites) {
+            await entityApi.delete(`${provider_prefix}/${provider_version}/${metadata.kind}/${metadata.uuid}`)
+        }
+        to_delete_entites = []
+        await providerApiAdmin.delete(`${provider_prefix}/${provider_version}`)
+    })
 
     test("Change single field differ resolver should pass", async () => {
         expect.assertions(2);
         const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
         try {
+            provider_prefix = "location_provider_intentful_1"
             const location = sdk.new_kind(locationDataDescription);
             sdk.version(provider_version);
-            sdk.prefix("location_provider_intentful_1");
+            sdk.prefix(provider_prefix);
             location.on("x", {}, async (ctx, entity, input) => {
                 await providerApiAdmin.patch('/update_status', {
                     context: "some context",
@@ -64,6 +75,7 @@ describe("Intentful Workflow tests", () => {
                     y: 11
                 }
             })
+            to_delete_entites.push(metadata)
             await timeout(5000)
             const { data: { task } } = await entityApi.put(`/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`, {
                 spec: {
@@ -98,9 +110,10 @@ describe("Intentful Workflow tests", () => {
         expect.assertions(1);
         const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
         try {
+            provider_prefix = "location_provider_intentful_2"
             const location = sdk.new_kind(locationDataDescription);
             sdk.version(provider_version);
-            sdk.prefix("location_provider_intentful_2");
+            sdk.prefix(provider_prefix);
             location.on("x", {}, async (ctx, entity, input) => {
                 throw new Error("Error in handler")
             })
@@ -112,6 +125,7 @@ describe("Intentful Workflow tests", () => {
                     y: 11
                 }
             })
+            to_delete_entites.push(metadata)
             await timeout(5000)
             const { data: { task } } = await entityApi.put(`/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`, {
                 spec: {

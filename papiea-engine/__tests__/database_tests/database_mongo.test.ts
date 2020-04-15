@@ -8,7 +8,7 @@ import { WinstonLogger } from "../../src/logger";
 import { Logger } from "../../src/logger_interface";
 import { v4 as uuid4 } from 'uuid';
 import { ConflictingEntityError } from "../../src/databases/utils/errors";
-import { Metadata, Spec, Entity_Reference, Status, Kind, Provider, S2S_Key } from "papiea-core";
+import { Metadata, Spec, Entity_Reference, Status, Kind, Provider, S2S_Key, IntentfulBehaviour } from "papiea-core";
 import { SessionKeyDb } from "../../src/databases/session_key_db_interface"
 import { Entity, Intentful_Signature, SessionKey, IntentfulStatus } from "papiea-core"
 import uuid = require("uuid")
@@ -130,13 +130,6 @@ describe("MongoDb tests", () => {
         expect.assertions(1);
         const specDb: Spec_DB = await connection.get_spec_db(logger);
         const res = await specDb.list_specs({ metadata: { "kind": "test" } });
-        expect(res.length).toBeGreaterThanOrEqual(1);
-    });
-
-    test("List Random Specs", async () => {
-        expect.assertions(1);
-        const specDb: Spec_DB = await connection.get_spec_db(logger);
-        const res = await specDb.list_random_specs(1, { metadata: { "kind": "test" } });
         expect(res.length).toBeGreaterThanOrEqual(1);
     });
 
@@ -277,6 +270,20 @@ describe("MongoDb tests", () => {
         const prefix_string: string = "test";
         const version: string = "0.1.0";
         await providerDb.delete_provider(prefix_string, version);
+    });
+
+    test("Register and Delete Provider with intenful kind", async () => {
+        expect.assertions(2)
+        const providerDb: Provider_DB = await connection.get_provider_db(logger);
+        const test_kind = { name: "intentful_kind_test", intentful_behaviour: IntentfulBehaviour.Differ } as Kind;
+        const provider: Provider = { prefix: "testIntentful", version: "0.1.0", kinds: [test_kind], procedures: {}, extension_structure: {}, allowExtraProps: false };
+        await providerDb.save_provider(provider);
+        const kind_refs = await providerDb.get_intentful_kinds()
+        const kind_names = kind_refs.map(k => k.kind_name)
+        expect(kind_names).toContain("intentful_kind_test")
+        await providerDb.delete_provider(provider.prefix, provider.version)
+        const deleted_kind_refs = await providerDb.get_intentful_kinds()
+        expect(deleted_kind_refs.length).toEqual(kind_refs.length - 1)
     });
 
     test("Create and get s2s key", async () => {

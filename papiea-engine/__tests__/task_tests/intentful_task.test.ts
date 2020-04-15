@@ -1,5 +1,5 @@
 import { getDifferLocationDataDescription, ProviderBuilder } from "../test_data_factory"
-import { IntentfulBehaviour, Procedural_Signature, IntentfulStatus } from "papiea-core"
+import { IntentfulBehaviour, IntentfulStatus } from "papiea-core"
 import { plural } from "pluralize"
 import axios from "axios"
 import { MongoConnection } from "../../src/databases/mongo"
@@ -7,7 +7,7 @@ import { Logger } from "../../src/logger_interface"
 import { WinstonLogger } from "../../src/logger"
 import { IntentfulTask_DB } from "../../src/databases/intentful_task_db_interface"
 import { IntentfulTask } from "../../src/tasks/task_interface"
-import { Intentful_Execution_Strategy } from "papiea-core"
+import { Intentful_Execution_Strategy, Metadata, Provider } from "papiea-core"
 
 declare var process: {
     env: {
@@ -92,6 +92,8 @@ describe("Intentful Task tests", () => {
     const intentfulWorkflowTestLogger: Logger = new WinstonLogger("info");
     let intentfulTaskDb: IntentfulTask_DB
     let createdTask: IntentfulTask
+    let to_delete_metadata: Metadata
+    let provider: Provider
 
     beforeAll(async () => {
         await mongoConnection.connect(false);
@@ -104,11 +106,13 @@ describe("Intentful Task tests", () => {
 
     afterEach(async () => {
         await intentfulTaskDb.delete_task(createdTask.uuid)
+        await entityApi.delete(`${provider.prefix}/${provider.version}/${to_delete_metadata.kind}/${to_delete_metadata.uuid}`)
+        await providerApiAdmin.delete(`${provider.prefix}/${provider.version}`)
     })
 
     test("Intentful task created through updating the spec", async () => {
         expect.hasAssertions()
-        const provider = new ProviderBuilder()
+        provider = new ProviderBuilder()
             .withVersion("0.1.0")
             .withKinds([locationDifferKind])
             .build()
@@ -119,6 +123,7 @@ describe("Intentful Task tests", () => {
                 y: 11
             }
         });
+        to_delete_metadata = metadata
         const { data: { task } } = await entityApi.put(`/${ provider.prefix }/${ provider.version }/${ locationDifferKind.name }/${ metadata.uuid }`, {
             spec: {
                 x: 20,
@@ -136,7 +141,7 @@ describe("Intentful Task tests", () => {
 
     test("Intentful task created through updating the spec with multiple diffs", async () => {
         expect.hasAssertions()
-        const provider = new ProviderBuilder()
+        provider = new ProviderBuilder()
             .withVersion("0.1.0")
             .withKinds([locationDifferKindWithMultipleSignatures])
             .build()
@@ -147,6 +152,7 @@ describe("Intentful Task tests", () => {
                 y: 11
             }
         });
+        to_delete_metadata = metadata
         await entityApi.get(`/${ provider.prefix }/${ provider.version }/${ locationDifferKind.name }/${ metadata.uuid }`)
         const { data: { task } } = await entityApi.put(`/${ provider.prefix }/${ provider.version }/${ locationDifferKind.name }/${ metadata.uuid }`, {
             spec: {
@@ -167,7 +173,7 @@ describe("Intentful Task tests", () => {
 
     test("Intentful task created through updating the spec and queried via API", async () => {
         expect.hasAssertions()
-        const provider = new ProviderBuilder()
+        provider = new ProviderBuilder()
             .withVersion("0.1.0")
             .withKinds([locationDifferKind])
             .build()
@@ -178,6 +184,7 @@ describe("Intentful Task tests", () => {
                 y: 11
             }
         });
+        to_delete_metadata = metadata
         const { data: { task } } = await entityApi.put(`/${ provider.prefix }/${ provider.version }/${ locationDifferKind.name }/${ metadata.uuid }`, {
             spec: {
                 x: 20,
@@ -196,7 +203,7 @@ describe("Intentful Task tests", () => {
 
     test("Intentful task created through updating the spec and queried as list via API", async () => {
         expect.hasAssertions()
-        const provider = new ProviderBuilder()
+        provider = new ProviderBuilder()
             .withVersion("0.1.0")
             .withKinds([locationDifferKind])
             .build()
@@ -207,6 +214,7 @@ describe("Intentful Task tests", () => {
                 y: 11
             }
         });
+        to_delete_metadata = metadata
         const { data: { task } } = await entityApi.put(`/${ provider.prefix }/${ provider.version }/${ locationDifferKind.name }/${ metadata.uuid }`, {
             spec: {
                 x: 20,
@@ -224,7 +232,7 @@ describe("Intentful Task tests", () => {
 
     test("Intentful task created through updating the spec and queried as list via POST API", async () => {
         expect.hasAssertions()
-        const provider = new ProviderBuilder()
+        provider = new ProviderBuilder()
             .withVersion("0.1.0")
             .withKinds([locationDifferKind])
             .build()
@@ -235,6 +243,7 @@ describe("Intentful Task tests", () => {
                 y: 11
             }
         });
+        to_delete_metadata = metadata
         const { data: { task } } = await entityApi.put(`/${ provider.prefix }/${ provider.version }/${ locationDifferKind.name }/${ metadata.uuid }`, {
             spec: {
                 x: 20,

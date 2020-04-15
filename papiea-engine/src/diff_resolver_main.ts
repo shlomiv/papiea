@@ -49,11 +49,11 @@ async function setUpDiffResolver() {
 
     const diffResolver = new DiffResolver(watchlist, watchlistDb, specDb, statusDb, providerDb, differ, intentfulContext, logger, batchSize)
 
-    const taskResolver = new TaskResolver(specDb, statusDb, intentfulTaskDb, providerDb, intentfulListenerMongoStream, differ, diffResolver)
+    const taskResolver = new TaskResolver(specDb, statusDb, intentfulTaskDb, providerDb, intentfulListenerMongoStream, differ, diffResolver, watchlist)
 
     console.log("Running diff resolver")
 
-    taskResolver.run(2000, deletedTaskPersists)
+    taskResolver.run(10000, deletedTaskPersists)
     await diffResolver.run(3000)
 }
 

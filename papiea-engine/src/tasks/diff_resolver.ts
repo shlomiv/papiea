@@ -2,9 +2,9 @@
 import { getRandomInt, timeout } from "../utils/utils"
 import { Spec_DB } from "../databases/spec_db_interface"
 import { Status_DB } from "../databases/status_db_interface"
-import { Delay, EntryReference, Watchlist } from "./watchlist"
+import { create_entry, Delay, EntryReference, Watchlist } from "./watchlist"
 import { Watchlist_DB } from "../databases/watchlist_db_interface";
-import { Differ, Diff, Metadata, Spec, Status, Kind, IntentfulBehaviour } from "papiea-core";
+import { Differ, Diff, Metadata, Spec, Status, Kind } from "papiea-core";
 import { Provider_DB } from "../databases/provider_db_interface";
 import axios from "axios"
 import { IntentfulContext } from "../intentful_core/intentful_context";
@@ -67,15 +67,20 @@ export class DiffResolver {
         }
     }
 
-    private async rediff(entry_reference: EntryReference): Promise<[Diff[], Metadata, Kind, Spec, Status]> {
-        const [metadata, spec] = await this.specDb.get_spec(entry_reference.entity_reference)
-        const [, status] = await this.statusDb.get_status(entry_reference.entity_reference)
-        const provider = await this.providerDb.get_provider(entry_reference.provider_reference.provider_prefix, entry_reference.provider_reference.provider_version)
-        const kind = this.providerDb.find_kind(provider, metadata.kind)
-        return [this.differ.all_diffs(kind, spec, status), metadata, kind, spec, status]
+    private async rediff(entry_reference: EntryReference): Promise<[Diff[], Metadata, Kind, Spec, Status] | null> {
+        try {
+            const [metadata, spec] = await this.specDb.get_spec(entry_reference.entity_reference)
+            const [, status] = await this.statusDb.get_status(entry_reference.entity_reference)
+            const provider = await this.providerDb.get_provider(entry_reference.provider_reference.provider_prefix, entry_reference.provider_reference.provider_version)
+            const kind = this.providerDb.find_kind(provider, metadata.kind)
+            return [this.differ.all_diffs(kind, spec, status), metadata, kind, spec, status]
+        } catch (e) {
+            this.logger.debug(`Couldn't rediff entity with uuid ${entry_reference.entity_reference.uuid}: ${e}. Removing from watchlist`)
+            return null
+        }
     }
 
-    private async launchOperation(diff: Diff, metadata: Metadata, kind: Kind, spec: Spec,  status: Status): Promise<[Diff, Delay]> {
+    private async launchOperation(diff: Diff, metadata: Metadata, kind: Kind, spec: Spec, status: Status): Promise<[Diff, Delay]> {
         // This yields delay
         const result = await axios.post(diff.intentful_signature.procedure_callback, {
             metadata: metadata,
@@ -118,12 +123,18 @@ export class DiffResolver {
             if (current_diff && current_delay) {
                 // Delay for rediffing
                 if ((new Date().getTime() - current_delay.delaySetTime.getTime()) / 1000 > current_delay.delay_seconds) {
-                    [diffs, metadata, kind, spec, status] = await this.rediff(entry_reference)
+                    const result = await this.rediff(entry_reference)
+                    if (!result) {
+                        await this.removeFromWatchlist(uuid)
+                        continue
+                    }
+                    [diffs, metadata, kind, spec, status] = result
+                    // [diffs, metadata, kind, spec, status] = await this.rediff(entry_reference)
                     const diff_index = diffs.map(diff => JSON.stringify(diff.diff_fields)).findIndex(diff => diff === JSON.stringify(current_diff!.diff_fields))
                     // Diff still exists, we should check the health and retry if not healthy
                     if (diff_index !== -1) {
                         try {
-                            if (await this.checkHealthy(diffs[diff_index])) {
+                            if (await this.checkHealthy(diffs![diff_index])) {
                                 continue
                             }
                             this.logger.info(`Starting to retry resolving diff for entity with uuid: ${metadata!.uuid}`)
@@ -140,31 +151,20 @@ export class DiffResolver {
                             await this.onIntentfulHandlerFail.call(entry_reference)
                             continue
                         }
-                    } else {
-                        // Diff has been resolved choosing a new one
-                        const result = await this.startNewDiffResolution(entry_reference, diffs, metadata!, kind!, spec, status)
-                        if (result === null) {
-                            await this.removeFromWatchlist(uuid)
-                            continue
-                        }
-                        const new_diff = result![0]
-                        const new_delay = result![1]
-                        entries[uuid][1] = new_diff
-                        entries[uuid][2] = new_delay
                     }
                 } else {
+                    // Time for rediff hasn't come continuing
                     continue
                 }
             }
             // Check if we have already rediffed this entity
             if (diffs === undefined) {
-                try {
-                    [diffs, metadata, kind, spec, status] = await this.rediff(entry_reference)
-                } catch (e) {
-                    this.logger.debug(`Couldn't rediff entity with uuid ${entry_reference.entity_reference.uuid}: ${e}. Removing from watchlist`)
+                const result = await this.rediff(entry_reference)
+                if (!result) {
                     await this.removeFromWatchlist(uuid)
                     continue
                 }
+                [diffs, metadata, kind, spec, status] = result
             }
             if (diffs.length === 0) {
                 await this.removeFromWatchlist(uuid)
@@ -220,28 +220,11 @@ export class DiffResolver {
     // the batch size maybe static or dynamic
     private async addRandomEntities() {
         const batch_size = await this.calculate_batch_size()
-        const entities = await this.specDb.list_random_specs(batch_size)
+        const intentful_kind_refs = await this.providerDb.get_intentful_kinds()
+        const entities = await this.specDb.list_random_intentful_specs(batch_size, intentful_kind_refs)
 
         for (let [metadata, _] of entities) {
-            try {
-                const provider = await this.providerDb.get_provider(metadata.provider_prefix, metadata.provider_version)
-                const kind = this.providerDb.find_kind(provider, metadata.kind)
-                if (kind.intentful_behaviour !== IntentfulBehaviour.Differ) {
-                    continue
-                }
-                this.watchlist.set(metadata.uuid, [{
-                    provider_reference: {
-                        provider_prefix: metadata.provider_prefix,
-                        provider_version: metadata.provider_version
-                    },
-                    entity_reference: {
-                        uuid: metadata.uuid,
-                        kind: metadata.kind
-                    }
-                }, undefined, undefined])
-            } catch (e) {
-                // this.logger.debug(`Couldn't get info for entity with uuid ${metadata.uuid}: ${e}. Skipping`)
-            }
+            this.watchlist.set(metadata.uuid, [create_entry(metadata), undefined, undefined])
         }
         return this.watchlistDb.update_watchlist(this.watchlist)
     }

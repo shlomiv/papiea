@@ -3,14 +3,6 @@ import { SortParams } from "../entity/entity_api_impl"
 import { Logger } from "../logger_interface"
 import { IntentfulTask_DB } from "./intentful_task_db_interface"
 import { IntentfulTask } from "../tasks/task_interface"
-import { Watchlist } from "../tasks/watchlist"
-
-type TaskAggregationResult = TaskAggregation[]
-
-interface TaskAggregation {
-    _id: string,
-    tasks: IntentfulTask[]
-}
 
 export class IntentfulTask_DB_Mongo implements IntentfulTask_DB {
     collection: Collection;
@@ -34,7 +26,6 @@ export class IntentfulTask_DB_Mongo implements IntentfulTask_DB {
 
     async save_task(task: IntentfulTask): Promise<void> {
         task.created_at = new Date()
-        task.spec_version += 1
         await this.collection.insertOne(task);
     }
 

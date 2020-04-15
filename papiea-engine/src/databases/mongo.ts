@@ -78,12 +78,12 @@ export class MongoConnection {
             } catch (e) {
                 // TODO: Find a sync version of this function
                 await this.db.executeDbAdminCommand({ replSetInitiate: {} })
-                await timeout(4000)
+                await timeout(8000)
             }
         } else {
             try {
                 // TODO: Find a sync version of this function
-                await timeout(8000)
+                await timeout(16000)
                 await this.db.executeDbAdminCommand({ replSetGetStatus: 1 })
             } catch (e) {
 

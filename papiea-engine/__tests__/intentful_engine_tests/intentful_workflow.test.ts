@@ -96,7 +96,7 @@ describe("Intentful Workflow tests", () => {
                         expect(result.data.status.x).toEqual(20)
                         return
                     }
-                    await timeout(10000)
+                    await timeout(5000)
                 }
             } catch (e) {
                 console.log(`Couldn't get entity: ${e}`)
@@ -107,7 +107,7 @@ describe("Intentful Workflow tests", () => {
     })
 
     test("Change single field differ resolver should fail because of handler error", async () => {
-        expect.assertions(1);
+        expect.assertions(2);
         const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
         try {
             provider_prefix = "location_provider_intentful_2"
@@ -140,11 +140,12 @@ describe("Intentful Workflow tests", () => {
             try {
                 for (let i = 1; i <= retries; i++) {
                     const res = await entityApi.get(`/intentful_task/${ task.uuid }`)
-                    if (res.data.status === IntentfulStatus.Active && res.data.times_failed > 0) {
-                        expect(res.data.times_failed).toBeGreaterThan(0)
+                    if (res.data.status === IntentfulStatus.Active && res.data.times_failed > 1) {
+                        expect(res.data.times_failed).toBeGreaterThan(1)
+                        expect(res.data.last_handler_error).toEqual("Error in handler")
                         return
                     }
-                    await timeout(10000)
+                    await timeout(5000)
                 }
             } catch (e) {
                 console.log(`Couldn't get entity: ${e}`)
@@ -197,7 +198,6 @@ describe("Intentful Workflow tests", () => {
                     expect(res.data.status).toBe(IntentfulStatus.Failed)
                     return
                 }
-                await timeout(10000)
             } catch (e) {
                 console.log(`Couldn't get entity: ${e}`)
             }

@@ -442,7 +442,8 @@ describe("MongoDb tests", () => {
             }],
             spec_version: 1,
             status: IntentfulStatus.Pending,
-            entity_ref: {} as Entity_Reference
+            entity_ref: {} as Entity_Reference,
+            times_failed: 0
         };
         await taskDb.save_task(task)
         await taskDb.delete_task(task.uuid)
@@ -465,7 +466,8 @@ describe("MongoDb tests", () => {
             }],
             spec_version: 1,
             status: IntentfulStatus.Pending,
-            entity_ref: {} as Entity_Reference
+            entity_ref: {} as Entity_Reference,
+            times_failed: 0
         };
         await taskDb.save_task(task);
         const res: IntentfulTask = await taskDb.get_task(task.uuid);
@@ -487,7 +489,8 @@ describe("MongoDb tests", () => {
             }],
             spec_version: 1,
             status: IntentfulStatus.Pending,
-            entity_ref: {} as Entity_Reference
+            entity_ref: {} as Entity_Reference,
+            times_failed: 0
         };
         await taskDb.save_task(task);
         try {
@@ -510,7 +513,8 @@ describe("MongoDb tests", () => {
             }],
             spec_version: 1,
             status: IntentfulStatus.Pending,
-            entity_ref: {} as Entity_Reference
+            entity_ref: {} as Entity_Reference,
+            times_failed: 0
         };
         await taskDb.save_task(task);
         const res = (await taskDb.list_tasks({ uuid: task.uuid }) as IntentfulTask[])[0]
@@ -530,7 +534,8 @@ describe("MongoDb tests", () => {
             }],
             spec_version: 1,
             status: IntentfulStatus.Pending,
-            entity_ref: {} as Entity_Reference
+            entity_ref: {} as Entity_Reference,
+            times_failed: 0
         };
         await taskDb.save_task(task)
         await taskDb.update_task(task.uuid, { status: IntentfulStatus.Completed_Successfully })

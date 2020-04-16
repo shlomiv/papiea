@@ -126,7 +126,7 @@ export class Spec_DB_Mongo implements Spec_DB {
     }
 
     async list_specs_in(filter_list: any[], field_name: string = "metadata.uuid"): Promise<([Metadata, Spec])[]> {
-        const result = await this.collection.find({ [field_name]: { $in: filter_list } }).toArray();
+        const result = await this.collection.find({ [field_name]: { $in: filter_list } }).sort({ "metadata.uuid": 1 }).toArray();
         return result.map((x: any): [Metadata, Spec] => {
             if (x.spec !== null) {
                 return [x.metadata, x.spec]

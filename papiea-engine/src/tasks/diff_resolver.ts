@@ -10,6 +10,7 @@ import axios from "axios"
 import { IntentfulContext } from "../intentful_core/intentful_context";
 import { WinstonLogger } from "../logger";
 import { Handler } from "./intentful_listener_interface";
+import deepEqual = require("deep-equal");
 
 export class DiffResolver {
     protected readonly specDb: Spec_DB
@@ -22,7 +23,7 @@ export class DiffResolver {
     private logger: WinstonLogger;
     private batchSize: number;
 
-    onIntentfulHandlerFail: Handler<(entity: EntryReference) => Promise<void>>
+    onIntentfulHandlerFail: Handler<(entity: EntryReference, error_msg?: string) => Promise<void>>
 
     constructor(watchlist: Watchlist, watchlistDb: Watchlist_DB, specDb: Spec_DB, statusDb: Status_DB, providerDb: Provider_DB, differ: Differ, intentfulContext: IntentfulContext, logger: WinstonLogger, batchSize: number) {
         this.specDb = specDb
@@ -108,7 +109,6 @@ export class DiffResolver {
         await this.watchlistDb.update_watchlist(this.watchlist)
     }
 
-    // TODO: I don't like this function, change the flow!
     private async resolveDiffs() {
         const entries = this.watchlist.entries()
 
@@ -126,8 +126,7 @@ export class DiffResolver {
                         continue
                     }
                     [diffs, metadata, kind, spec, status] = result
-                    // [diffs, metadata, kind, spec, status] = await this.rediff(entry_reference)
-                    const diff_index = diffs.map(diff => JSON.stringify(diff.diff_fields)).findIndex(diff => diff === JSON.stringify(current_diff!.diff_fields))
+                    const diff_index = diffs.findIndex(diff => deepEqual(diff, current_diff!.diff_fields))
                     // Diff still exists, we should check the health and retry if not healthy
                     if (diff_index !== -1) {
                         try {
@@ -144,7 +143,8 @@ export class DiffResolver {
                                 delay_seconds: getRandomInt(10, 20),
                                 delaySetTime: new Date()
                             }
-                            await this.onIntentfulHandlerFail.call(entry_reference)
+                            const error_msg = e?.response?.data?.error?.message
+                            await this.onIntentfulHandlerFail.call(entry_reference, error_msg)
                             continue
                         }
                     }
@@ -206,7 +206,8 @@ export class DiffResolver {
             const diff = next_diff
             // This should be a concrete address of a handling process
             diff!.handler_url = `${next_diff.intentful_signature.base_callback}/healthcheck`
-            await this.onIntentfulHandlerFail.call(entry_reference)
+            const error_msg = e?.response?.data?.error?.message
+            await this.onIntentfulHandlerFail.call(entry_reference, error_msg)
             return [diff, delay]
         }
     }

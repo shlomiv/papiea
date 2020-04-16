@@ -29,11 +29,13 @@
   "dependencies": {
     "@types/atob": "^2.1.2",
     "@types/btoa": "^1.2.3",
+    "@types/deep-equal": "^1.0.1",
     "atob": "^2.1.2",
     "axios": "^0.18.1",
     "btoa": "^1.2.1",
     "casbin": "^2.0.1",
     "cookie-parser": "^1.4.4",
+    "deep-equal": "^2.0.2",
     "express": "^4.16.4",
     "express-async-handler": "^1.1.4",
     "js-yaml": "^3.12.0",

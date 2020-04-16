@@ -31,7 +31,6 @@ export class TaskResolver {
 
         this.onChange = this.onChange.bind(this)
         this.onIntentfulHandlerFail = this.onIntentfulHandlerFail.bind(this)
-        this.onIntentfulHandlerRestart = this.onIntentfulHandlerRestart.bind(this)
 
         this.diffResolver = diffResolver
         this.differ = differ
@@ -137,7 +136,6 @@ export class TaskResolver {
     private getLatestTask(tasks: IntentfulTask[]): IntentfulTask | null {
         let latest_task: IntentfulTask | null = null
         for (let task of tasks) {
-            console.log(task)
             if (!latest_task) {
                 latest_task = task
             }
@@ -148,21 +146,13 @@ export class TaskResolver {
         return latest_task
     }
 
-    private async onIntentfulHandlerFail(entity: EntryReference) {
+    private async onIntentfulHandlerFail(entity: EntryReference, error_msg?: string) {
         const tasks = await this.intentfulTaskDb.list_tasks({ entity_ref: entity.entity_reference })
         const active_task = tasks.find(task => task.status === IntentfulStatus.Active)
         if (active_task) {
             active_task.times_failed += 1
-            await this.intentfulTaskDb.update_task(active_task.uuid, { times_failed: active_task.times_failed })
-        }
-    }
-
-    private async onIntentfulHandlerRestart(entity: EntryReference) {
-        const tasks = await this.intentfulTaskDb.list_tasks({ entity_ref: entity.entity_reference })
-        const failed_task = tasks.find(task => task.status === IntentfulStatus.Failed)
-        if (failed_task) {
-            failed_task.status = IntentfulStatus.Active
-            await this.intentfulTaskDb.update_task(failed_task.uuid, { status: failed_task.status })
+            active_task.last_handler_error = error_msg
+            await this.intentfulTaskDb.update_task(active_task.uuid, { times_failed: active_task.times_failed, last_handler_error: active_task.last_handler_error })
         }
     }
 

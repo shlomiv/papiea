@@ -114,7 +114,7 @@ export class Status_DB_Mongo implements Status_DB {
     }
 
     async list_status_in(filter_list: any[], field_name: string = "metadata.uuid"): Promise<([Metadata, Status])[]> {
-        const result = await this.collection.find({ [field_name]: { $in: filter_list } }).toArray();
+        const result = await this.collection.find({ [field_name]: { $in: filter_list } }).sort({ "metadata.uuid": 1 }).toArray();
         return result.map((x: any): [Metadata, Status] => {
             if (x.status !== null) {
                 return [x.metadata, x.status]

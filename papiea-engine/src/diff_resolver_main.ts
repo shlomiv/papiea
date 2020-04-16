@@ -32,7 +32,7 @@ const deletedTaskPersists = process.env.DELETED_TASK_PERSIST_SECONDS ?? 100
 async function setUpDiffResolver() {
     const logger = new WinstonLogger(loggingLevel);
     const mongoConnection: MongoConnection = new MongoConnection(mongoUrl, mongoDb);
-    await mongoConnection.connect(false);
+    await mongoConnection.connect();
 
     const specDb = await mongoConnection.get_spec_db(logger);
     const statusDb = await mongoConnection.get_status_db(logger);

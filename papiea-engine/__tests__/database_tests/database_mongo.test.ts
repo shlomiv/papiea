@@ -36,7 +36,7 @@ describe("MongoDb tests", () => {
     });
 
     beforeAll(done => {
-        connection.connect(false).then(done).catch(done.fail);
+        connection.connect().then(done).catch(done.fail);
     });
 
     afterAll(done => {

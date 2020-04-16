@@ -65,31 +65,13 @@ export class MongoConnection {
         }
     }
 
-    async connect(master: boolean): Promise<void> {
+    async connect(): Promise<void> {
         const parsedUrl = url.parse(this.url, true);
         if (parsedUrl.query && parsedUrl.query.ssl_ca_certs === 'rds-combined-ca-bundle.pem') {
             await this.download_rds_cert();
         }
         await this.client.connect();
         this.db = this.client.db(this.dbName);
-        if (master) {
-            try {
-                await this.db.executeDbAdminCommand({ replSetGetStatus: 1 })
-            } catch (e) {
-                // TODO: Find a sync version of this function
-                await this.db.executeDbAdminCommand({ replSetInitiate: {} })
-                await timeout(4000)
-            }
-        } else {
-            try {
-                // TODO: Find a sync version of this function
-                await timeout(8000)
-                await this.db.executeDbAdminCommand({ replSetGetStatus: 1 })
-            } catch (e) {
-
-            }
-        }
-
     }
 
     async close(): Promise<void> {

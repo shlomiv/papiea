@@ -56,7 +56,7 @@ async function setUpApplication(): Promise<express.Express> {
     app.use(express.json());
     app.use(getLoggingMiddleware(auditLogger));
     const mongoConnection: MongoConnection = new MongoConnection(mongoUrl, mongoDb);
-    await mongoConnection.connect(true);
+    await mongoConnection.connect();
     const differ = new BasicDiffer()
     const providerDb = await mongoConnection.get_provider_db(logger);
     const specDb = await mongoConnection.get_spec_db(logger);

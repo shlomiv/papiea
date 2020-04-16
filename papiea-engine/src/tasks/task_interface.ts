@@ -19,6 +19,9 @@ export interface IntentfulTask {
     // Diff resolved by this task
     diffs: Diff[]
 
+    // Number of times a handler has failed
+    times_failed: number
+
     // Current status of the entity
     status: IntentfulStatus
 
@@ -35,7 +38,8 @@ export class IntentfulTaskMapper {
             entity_ref: intentfulTask.entity_ref,
             spec_version: intentfulTask.spec_version,
             status: intentfulTask.status,
-            created_at: intentfulTask.created_at
+            created_at: intentfulTask.created_at,
+            times_failed: intentfulTask.times_failed
         }
     }
 

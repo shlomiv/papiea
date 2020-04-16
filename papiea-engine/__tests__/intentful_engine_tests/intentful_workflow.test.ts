@@ -140,12 +140,64 @@ describe("Intentful Workflow tests", () => {
             try {
                 for (let i = 1; i <= retries; i++) {
                     const res = await entityApi.get(`/intentful_task/${ task.uuid }`)
-                    if (res.data.status === IntentfulStatus.Failed) {
-                        expect(res.data.status).toBe(IntentfulStatus.Failed)
+                    if (res.data.status === IntentfulStatus.Active && res.data.times_failed > 0) {
+                        expect(res.data.times_failed).toBeGreaterThan(0)
                         return
                     }
                     await timeout(10000)
                 }
+            } catch (e) {
+                console.log(`Couldn't get entity: ${e}`)
+            }
+        } finally {
+            sdk.server.close();
+        }
+    })
+
+    test("Change single field differ resolver should fail because of CAS fail", async () => {
+        expect.assertions(1);
+        const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
+        try {
+            provider_prefix = "location_provider_intentful_1"
+            const location = sdk.new_kind(locationDataDescription);
+            sdk.version(provider_version);
+            sdk.prefix(provider_prefix);
+            location.on("x", {}, async (ctx, entity, input) => {
+                await providerApiAdmin.patch('/update_status', {
+                    context: "some context",
+                    entity_ref: {
+                        uuid: metadata.uuid,
+                        kind: kind_name
+                    },
+                    status: { x: entity.spec.x }
+                })
+            })
+            await sdk.register();
+            const kind_name = sdk.provider.kinds[0].name;
+            const { data: { metadata, spec } } = await axios.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }`, {
+                spec: {
+                    x: 10,
+                    y: 11
+                }
+            })
+            to_delete_entites.push(metadata)
+            await timeout(5000)
+            const { data: { task } } = await entityApi.put(`/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`, {
+                spec: {
+                    x: 20,
+                    y: 11
+                },
+                metadata: {
+                    spec_version: 0
+                }
+            })
+            try {
+                const res = await entityApi.get(`/intentful_task/${ task.uuid }`)
+                if (res.data.status === IntentfulStatus.Failed) {
+                    expect(res.data.status).toBe(IntentfulStatus.Failed)
+                    return
+                }
+                await timeout(10000)
             } catch (e) {
                 console.log(`Couldn't get entity: ${e}`)
             }

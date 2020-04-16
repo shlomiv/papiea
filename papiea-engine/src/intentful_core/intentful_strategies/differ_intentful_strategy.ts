@@ -38,7 +38,8 @@ export class DifferIntentfulStrategy extends IntentfulStrategy {
             diffs: [],
             spec_version: task_spec_version,
             user: this.user,
-            status: IntentfulStatus.Pending
+            status: IntentfulStatus.Pending,
+            times_failed: 0
         }
         for (let diff of this.differ.diffs(this.kind!, spec, status)) {
             task.diffs.push(diff)
@@ -49,7 +50,12 @@ export class DifferIntentfulStrategy extends IntentfulStrategy {
             watchlist.set(metadata.uuid, [create_entry(metadata), undefined, undefined])
             await this.watchlistDb.update_watchlist(watchlist)
         }
-        await this.update_entity(metadata, spec)
+        try {
+            await this.update_entity(metadata, spec)
+        } catch (e) {
+            task.status = IntentfulStatus.Failed
+            await this.intentfulTaskDb.update_task(task.uuid, { status: task.status })
+        }
         return task
     }
 }

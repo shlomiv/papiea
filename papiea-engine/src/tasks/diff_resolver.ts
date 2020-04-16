@@ -23,8 +23,6 @@ export class DiffResolver {
     private batchSize: number;
 
     onIntentfulHandlerFail: Handler<(entity: EntryReference) => Promise<void>>
-    onIntentfulHandlerRestart: Handler<(entity: EntryReference) => Promise<void>>
-
 
     constructor(watchlist: Watchlist, watchlistDb: Watchlist_DB, specDb: Spec_DB, statusDb: Status_DB, providerDb: Provider_DB, differ: Differ, intentfulContext: IntentfulContext, logger: WinstonLogger, batchSize: number) {
         this.specDb = specDb
@@ -37,7 +35,6 @@ export class DiffResolver {
         this.logger = logger
         this.batchSize = batchSize
         this.onIntentfulHandlerFail = new Handler()
-        this.onIntentfulHandlerRestart = new Handler()
     }
 
     public async run(delay: number) {
@@ -138,7 +135,6 @@ export class DiffResolver {
                                 continue
                             }
                             this.logger.info(`Starting to retry resolving diff for entity with uuid: ${metadata!.uuid}`)
-                            await this.onIntentfulHandlerRestart.call(entry_reference)
                             const [, delay] = await this.launchOperation(diffs[diff_index], metadata, kind, spec, status)
                             entries[uuid][2] = delay
                             continue

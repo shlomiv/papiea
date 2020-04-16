@@ -4,11 +4,12 @@ import { IntentfulTask_DB } from "../databases/intentful_task_db_interface";
 import { Provider_DB } from "../databases/provider_db_interface";
 import { Handler, IntentfulListener } from "./intentful_listener_interface";
 import { EntryReference, Watchlist } from "./watchlist";
-import { Spec, Status, IntentfulStatus, Diff, Differ, Metadata } from "papiea-core";
+import { Spec, Status, IntentfulStatus, Diff, Differ, Metadata, Entity } from "papiea-core";
 import { IntentfulTask } from "./task_interface";
 import * as assert from "assert";
 import { timeout } from "../utils/utils";
 import { DiffResolver } from "./diff_resolver";
+import { WinstonLogger } from "../logger";
 
 export class TaskResolver {
     specDb: Spec_DB
@@ -19,31 +20,28 @@ export class TaskResolver {
     intentfulListener: IntentfulListener
     differ: Differ
     diffResolver: DiffResolver;
-    watchlist: Watchlist;
+    logger: WinstonLogger;
 
-    constructor(specDb: Spec_DB, statusDb: Status_DB, intentfulTaskDb: IntentfulTask_DB, providerDb: Provider_DB, intentfulListener: IntentfulListener, differ: Differ, diffResolver: DiffResolver, watchlist: Watchlist) {
+    constructor(specDb: Spec_DB, statusDb: Status_DB, intentfulTaskDb: IntentfulTask_DB, providerDb: Provider_DB, intentfulListener: IntentfulListener, differ: Differ, diffResolver: DiffResolver, logger: WinstonLogger) {
         this.specDb = specDb
         this.statusDb = statusDb
         this.providerDb = providerDb
         this.intentfulTaskDb = intentfulTaskDb
+        this.logger = logger
 
-        this.onSpec = this.onSpec.bind(this)
-        this.onStatus = this.onStatus.bind(this)
+        this.onChange = this.onChange.bind(this)
         this.onIntentfulHandlerFail = this.onIntentfulHandlerFail.bind(this)
         this.onIntentfulHandlerRestart = this.onIntentfulHandlerRestart.bind(this)
 
-        this.watchlist = watchlist
         this.diffResolver = diffResolver
         this.differ = differ
         this.intentfulListener = intentfulListener
+        this.intentfulListener.onChange = new Handler(this.onChange)
         this.diffResolver.onIntentfulHandlerFail = new Handler(this.onIntentfulHandlerFail)
-        this.diffResolver.onIntentfulHandlerRestart = new Handler(this.onIntentfulHandlerRestart)
-        this.intentfulListener.onSpec = new Handler(this.onSpec)
-        this.intentfulListener.onStatus = new Handler(this.onStatus)
     }
 
     private static inTerminalState(task: IntentfulTask): boolean {
-        const terminal_states = [IntentfulStatus.Completed_Partially, IntentfulStatus.Completed_Successfully, IntentfulStatus.Outdated]
+        const terminal_states = [IntentfulStatus.Completed_Partially, IntentfulStatus.Completed_Successfully, IntentfulStatus.Outdated, IntentfulStatus.Failed]
         return terminal_states.includes(task.status)
     }
 
@@ -58,24 +56,19 @@ export class TaskResolver {
         }
     }
 
-    private async rediff(entry_reference: EntryReference, metadata: Metadata, spec: Spec, status: Status): Promise<Diff[]> {
-        const provider = await this.providerDb.get_provider(entry_reference.provider_reference.provider_prefix, entry_reference.provider_reference.provider_version)
-        const kind = this.providerDb.find_kind(provider, metadata.kind)
-        return this.differ.all_diffs(kind, spec, status)
+    private async rediff(entity: Entity): Promise<Diff[]> {
+        const provider = await this.providerDb.get_provider(entity.metadata.provider_prefix, entity.metadata.provider_version)
+        const kind = this.providerDb.find_kind(provider, entity.metadata.kind)
+        return this.differ.all_diffs(kind, entity.spec, entity.status)
     }
 
-    private async onSpec(entity: EntryReference, specVersion: number, spec: Spec) {
-        const [metadata, status] = await this.statusDb.get_status(entity.entity_reference)
-        const tasks = await this.intentfulTaskDb.list_tasks({ entity_ref: entity.entity_reference })
-        const created_task = tasks.find(task => task.spec_version === specVersion && !TaskResolver.inTerminalState(task))
-        const rest = tasks.filter(task => task.spec_version !== specVersion && !TaskResolver.inTerminalState(task))
-        if (created_task) {
-            created_task.status = IntentfulStatus.Active
-            await this.intentfulTaskDb.update_task(created_task.uuid, { status: created_task.status })
-        }
-        const diffs = await this.rediff(entity, metadata, spec, status)
-        for (let task of rest) {
-            assert(task.spec_version < specVersion, "Old task has higher spec version then newly created")
+    private async processOutdatedTasks(tasks: IntentfulTask[], entity: Entity): Promise<IntentfulTask[]> {
+        const diffs = await this.rediff(entity)
+        for (let task of tasks) {
+            if (TaskResolver.inTerminalState(task)) {
+                continue
+            }
+            assert(task.spec_version < entity.metadata.spec_version, "Outdated task has spec version equal or higher than current")
             const task_diffs = new Set(task.diffs)
             const intersection = new Set(diffs.filter(diff => task_diffs.has(diff)))
             if (intersection.size === 0) {
@@ -87,26 +80,25 @@ export class TaskResolver {
             }
             await this.intentfulTaskDb.update_task(task.uuid, { status: task.status, last_status_changed: new Date() })
         }
+        return tasks
     }
 
-    private async onStatus(entity: EntryReference, status: Status) {
-        const [metadata, spec] = await this.specDb.get_spec(entity.entity_reference)
-        const tasks = await this.intentfulTaskDb.list_tasks({ entity_ref: entity.entity_reference })
-        const diffs = await this.rediff(entity, metadata, spec, status)
-        const active = tasks.find(task => task.status === IntentfulStatus.Active)
-        if (active) {
-            const task_diffs = new Set(active.diffs)
-            const intersection = new Set(diffs.filter(diff => task_diffs.has(diff)))
-            if (intersection.size === 0) {
-                active.status = IntentfulStatus.Completed_Successfully
-                await this.intentfulTaskDb.update_task(active.uuid, { status: active.status })
-            } else if (intersection.size < active.diffs.length) {
-                active.diffs = [...intersection]
-                await this.intentfulTaskDb.update_task(active.uuid, { diffs: active.diffs })
-                return
-            }
+    private async processActiveTask(active: IntentfulTask, entity: Entity): Promise<IntentfulTask> {
+        const diffs = await this.rediff(entity)
+        const task_diffs = new Set(active.diffs)
+        const intersection = new Set(diffs.filter(diff => task_diffs.has(diff)))
+        if (intersection.size === 0) {
+            active.status = IntentfulStatus.Completed_Successfully
+            await this.intentfulTaskDb.update_task(active.uuid, { status: active.status })
+        } else if (intersection.size < active.diffs.length) {
+            active.diffs = [...intersection]
+            await this.intentfulTaskDb.update_task(active.uuid, { diffs: active.diffs })
         }
-        const pending = tasks.filter(task => task.status === IntentfulStatus.Pending)
+        return active
+    }
+
+    private async processPendingTasks(pending: IntentfulTask[], entity: Entity): Promise<IntentfulTask[]> {
+        const diffs = await this.rediff(entity)
         for (let task of pending) {
             const task_diffs = new Set(task.diffs)
             const intersection = new Set(diffs.filter(diff => task_diffs.has(diff)))
@@ -117,17 +109,51 @@ export class TaskResolver {
                 task.status = IntentfulStatus.Active
                 task.diffs = [...intersection]
                 await this.intentfulTaskDb.update_task(task.uuid, { diffs: task.diffs })
-                return
             }
         }
+        return pending
+    }
+
+    private async onChange(entity: Entity) {
+        try {
+            const tasks = await this.intentfulTaskDb.list_tasks({ entity_ref: { uuid: entity.metadata.uuid, kind: entity.metadata.kind } })
+            const current_spec_version = entity.metadata.spec_version
+            const latest_task = this.getLatestTask(tasks)
+            if (latest_task && latest_task.spec_version === current_spec_version && latest_task.status === IntentfulStatus.Pending) {
+                latest_task.status = IntentfulStatus.Active
+                await this.intentfulTaskDb.update_task(latest_task.uuid, { status: latest_task.status })
+                const rest = tasks.filter(task => task.spec_version !== current_spec_version)
+                await this.processOutdatedTasks(rest, entity)
+            } else if (latest_task && latest_task.spec_version === current_spec_version && latest_task.status === IntentfulStatus.Active) {
+                await this.processActiveTask(latest_task, entity)
+                const pending = tasks.filter(task => task.status === IntentfulStatus.Pending)
+                await this.processPendingTasks(pending, entity)
+            }
+        } catch (e) {
+            this.logger.debug(`Couldn't process entity with uuid: ${entity.metadata.uuid}`)
+        }
+    }
+
+    private getLatestTask(tasks: IntentfulTask[]): IntentfulTask | null {
+        let latest_task: IntentfulTask | null = null
+        for (let task of tasks) {
+            console.log(task)
+            if (!latest_task) {
+                latest_task = task
+            }
+            if (task.spec_version > latest_task.spec_version) {
+                latest_task = task
+            }
+        }
+        return latest_task
     }
 
     private async onIntentfulHandlerFail(entity: EntryReference) {
         const tasks = await this.intentfulTaskDb.list_tasks({ entity_ref: entity.entity_reference })
         const active_task = tasks.find(task => task.status === IntentfulStatus.Active)
         if (active_task) {
-            active_task.status = IntentfulStatus.Failed
-            await this.intentfulTaskDb.update_task(active_task.uuid, { status: active_task.status })
+            active_task.times_failed += 1
+            await this.intentfulTaskDb.update_task(active_task.uuid, { times_failed: active_task.times_failed })
         }
     }
 

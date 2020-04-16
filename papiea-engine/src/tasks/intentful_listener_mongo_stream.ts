@@ -1,13 +1,12 @@
 import { Handler, IntentfulListener } from "./intentful_listener_interface";
 import { ChangeStream, Collection } from "mongodb";
-import { create_entry, EntryReference, Watchlist } from "./watchlist";
-import { Spec, Status, Entity } from "papiea-core";
+import { Watchlist } from "./watchlist";
+import { Entity } from "papiea-core";
 import { MongoConnection } from "../databases/mongo";
 
 export class IntentfulListenerMongoStream implements IntentfulListener {
     private entityDbCollection: Collection;
-    onSpec: Handler<(entity: EntryReference, specVersion: number, spec: Spec) => Promise<void>>;
-    onStatus: Handler<(entity: EntryReference, status: Status) => Promise<void>>;
+    onChange: Handler<(entity: Entity) => Promise<void>>;
     private changeStreamIterator: ChangeStream;
     private watchlist: Watchlist;
     // Maybe we should store it persistently on disk?
@@ -18,8 +17,7 @@ export class IntentfulListenerMongoStream implements IntentfulListener {
         this.changeStreamIterator = this.entityDbCollection.watch([
             { $match: { operationType: "update" } }
         ], { fullDocument: 'updateLookup', resumeAfter: this.resumeToken })
-        this.onSpec = new Handler()
-        this.onStatus = new Handler()
+        this.onChange = new Handler()
         this.watchlist = watchlist
     }
 
@@ -64,16 +62,11 @@ export class IntentfulListenerMongoStream implements IntentfulListener {
             { $match: { operationType: "update" } }
         ], { fullDocument: 'updateLookup', resumeAfter: this.resumeToken })
         this.changeStreamIterator.on("change", async (change_event) => {
-            console.dir(change_event)
             this.resumeToken = change_event._id
             const entity: Entity = change_event.fullDocument
             if (this.watchlist.has(entity.metadata.uuid)) {
-                const entry_reference = create_entry(entity.metadata)
-                if (this.specChanged(change_event)) {
-                    await this.onSpec.call(entry_reference, entity.metadata.spec_version, entity.spec)
-                }
-                if (this.statusChanged(change_event)) {
-                    await this.onStatus.call(entry_reference, entity.status)
+                if (this.specChanged(change_event) || this.statusChanged(change_event)) {
+                    await this.onChange.call(entity)
                 }
             }
         }).on("error", async (err) => {

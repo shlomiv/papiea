@@ -40,8 +40,9 @@ export abstract class IntentfulStrategy {
     }
 
     async create(metadata: Metadata, spec: Spec): Promise<[Metadata, Spec]> {
+        const entity = this.create_entity(metadata, spec)
         await this.dispatch("__create", { metadata, spec })
-        return this.create_entity(metadata, spec)
+        return entity
     }
 
     protected async dispatch(procedure_name: string, entity: Partial<Entity>): Promise<any> {

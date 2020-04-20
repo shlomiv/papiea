@@ -28,6 +28,7 @@ import {
 } from "papiea-core"
 import { InvocationError, SecurityApiError } from "./typescript_sdk_exceptions"
 import { makeLoggerFactory, WinstonLoggerFactory } from "./typescript_sdk_logging"
+import { WinstonLoggerFactory } from "./typescript_sdk_logging"
 
 class SecurityApiImpl implements SecurityApi {
     readonly provider: ProviderSdk;
@@ -239,13 +240,13 @@ export class ProviderSdk implements ProviderImpl {
             base_callback: callback_url
         };
         this._procedures[name] = procedural_signature;
-        const prefix = this.get_prefix();
-        const version = this.get_version();
         this._server_manager.register_handler("/" + name, async (req, res) => {
+            const ctx = make_context(this, req.headers, name)
             try {
-                const result = await handler(new ProceduralCtx(this, prefix, version, req.headers, makeLoggerFactory(name)), req.body.input);
+                const result = await handler(ctx, req.body.input)
                 res.json(result);
             } catch (e) {
+                ctx.get_logger().error(e)
                 if (e instanceof InvocationError) {
                     return res.status(e.status_code).json(e.toResponse())
                 }
@@ -427,17 +428,18 @@ export class Kind_Builder {
             base_callback: callback_url
         };
         this.kind.entity_procedures[name] = procedural_signature;
-        const prefix = this.get_prefix();
-        const version = this.get_version();
         this.server_manager.register_handler(`/${this.kind.name}/${name}`, async (req, res) => {
+            const ctx = make_context(this.provider, req.headers,
+                                     `${this.kind.name}/${name}`)
             try {
-                const result = await handler(new ProceduralCtx(this.provider, prefix, version, req.headers, makeLoggerFactory(name)), {
+                const result = await handler(ctx, {
                     metadata: req.body.metadata,
                     spec: req.body.spec,
                     status: req.body.status
                 }, req.body.input);
                 res.json(result);
             } catch (e) {
+                ctx.get_logger().error(e)
                 if (e instanceof InvocationError) {
                     return res.status(e.status_code).json(e.toResponse())
                 }
@@ -488,17 +490,18 @@ export class Kind_Builder {
             procedure_callback: procedure_callback_url,
             base_callback: callback_url
         })
-        const prefix = this.get_prefix();
-        const version = this.get_version();
         this.server_manager.register_handler(`/${this.kind.name}/${sfs_signature}`, async (req, res) => {
+            const ctx = make_context(this.provider, req.headers,
+                                     `${this.kind.name}/${sfs_signature}`)
             try {
-                const result = await handler(new ProceduralCtx(this.provider, prefix, version, req.headers, makeLoggerFactory(sfs_signature)), {
+                const result = await handler(ctx, {
                     metadata: req.body.metadata,
                     spec: req.body.spec,
                     status: req.body.status
                 }, req.body.input);
                 res.json(result);
             } catch (e) {
+                ctx.get_logger().error(e)
                 if (e instanceof InvocationError) {
                     return res.status(e.status_code).json(e.toResponse())
                 }
@@ -526,13 +529,14 @@ export class Kind_Builder {
             base_callback: callback_url
         };
         this.kind.kind_procedures[name] = procedural_signature;
-        const prefix = this.get_prefix();
-        const version = this.get_version();
         this.server_manager.register_handler(`/${this.kind.name}/${name}`, async (req, res) => {
+            const ctx = make_context(this.provider, req.headers,
+                                     `${this.kind.name}/${name}`)
             try {
-                const result = await handler(new ProceduralCtx(this.provider, prefix, version, req.headers, makeLoggerFactory(name)), req.body.input);
+                const result = await handler(ctx, req.body.input);
                 res.json(result);
             } catch (e) {
+                ctx.get_logger().error(e)
                 if (e instanceof InvocationError) {
                     return res.status(e.status_code).json(e.toResponse())
                 }
@@ -561,4 +565,16 @@ export class Kind_Builder {
         return this
     }
 }
+
+function make_context(provider: ProviderSdk,
+    headers: any,
+    logPath: string): ProceduralCtx
+{
+    const prefix = provider.get_prefix()
+    const version = provider.get_version()
+    return new ProceduralCtx(
+        provider, prefix, version, headers,
+        new WinstonLoggerFactory({logPath: `${prefix}/${version}/${logPath}`}))
+}
+
 export {Version, Kind, Procedural_Signature, Provider, Data_Description, Procedural_Execution_Strategy, Entity, ProceduralCtx_Interface, Provider_Power, IntentfulCtx_Interface, UserInfo, S2S_Key, SecurityApi}

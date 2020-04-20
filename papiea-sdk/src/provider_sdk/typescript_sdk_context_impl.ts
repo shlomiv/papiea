@@ -84,8 +84,8 @@ export class ProceduralCtx implements ProceduralCtx_Interface {
         throw new Error("No invoking user")
     }
 
-    get_logger(log_level?: string, pretty_print?: boolean): Logger {
-        return this.loggerFactory.createLogger(log_level, pretty_print)
+    get_logger(level?: string): Logger {
+        return this.loggerFactory.createLogger({level})
     }
 
     get_provider_client(key?: string): ProviderClient {

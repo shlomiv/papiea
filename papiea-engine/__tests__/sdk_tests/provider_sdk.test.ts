@@ -1216,7 +1216,7 @@ describe("SDK client tests", () => {
             {}, Procedural_Execution_Strategy.Halt_Intentful,
             loadYaml("./test_data/procedure_geolocation_compute_input.yml"),
             loadYaml("./test_data/procedure_geolocation_compute_input.yml"), async (ctx, input) => {
-                const client = ctx.get_provider_client('')
+                const client = ctx.get_provider_client(adminKey)
                 const kind_client = client.get_kind(location.kind.name)
                 const entity_spec = await kind_client.create({
                     x: 100,

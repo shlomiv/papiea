@@ -1246,7 +1246,7 @@ describe("SDK client mock", () => {
     test("Provider mocks client", async () => {
         expect.hasAssertions();
         const location_procedure = async (ctx: ProceduralCtx_Interface, input: any) => {
-            const client = ctx.get_provider_client('')
+            const client = ctx.get_provider_client('test_key')
             let cluster_location = "us.west.";
             cluster_location += input;
             return cluster_location

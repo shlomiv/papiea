@@ -491,6 +491,36 @@ describe("Provider Sdk tests", () => {
             sdk.server.close();
         }
     });
+
+    test("Provider with provider level procedures should correctly handle exceptions in the provider", async () => {
+        expect.hasAssertions();
+        const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
+        const location = sdk.new_kind(location_yaml);
+        sdk.version(provider_version);
+        sdk.prefix("location_provider_throws_exception");
+        sdk.provider_procedure("computeSumThrowsError",
+            {},
+            Procedural_Execution_Strategy.Halt_Intentful,
+            loadYaml("./test_data/procedure_sum_input.yml"),
+            loadYaml("./test_data/procedure_sum_output.yml"),
+            async (ctx, input) => {
+                const object: any = {}
+                // This should raise exception
+                object.undef.x = 10
+            }
+        );
+        try {
+            await sdk.register();
+            const res: any = await axios.post(`${sdk.entity_url}/${sdk.provider.prefix}/${sdk.provider.version}/procedure/computeSumThrowsError`, { input: { "a": 5, "b": 5 } });
+        } catch (e) {
+            console.log(e.response.data.error.errors[0])
+            expect(e.response.data.error.errors[0].message).toBe("Cannot set property 'x' of undefined");
+            expect(e.response.data.error.errors[0].stacktrace).not.toBeUndefined();
+            expect(e.response.data.error.errors[0].stacktrace).toContain("TypeError: Cannot set property 'x' of undefined")
+        } finally {
+            sdk.server.close();
+        }
+    });
 });
 
 describe("SDK + oauth provider tests", () => {

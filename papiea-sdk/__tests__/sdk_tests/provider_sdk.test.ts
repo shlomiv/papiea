@@ -254,8 +254,9 @@ describe("Provider Sdk tests", () => {
                 });
                 return res.data.spec;
             });
+            await sdk.register();
         } catch (e) {
-            expect(e.message).toBe("Provider prefix is not set");
+            expect(e.message).toBe("Malformed provider description. Missing: prefix");
         }
     });
 

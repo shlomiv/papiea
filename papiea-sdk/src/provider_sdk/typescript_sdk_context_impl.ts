@@ -4,6 +4,7 @@ import axios, { AxiosInstance } from "axios";
 import { ProviderSdk } from "./typescript_sdk";
 import { IncomingHttpHeaders } from "http";
 import { provider_client, ProviderClient } from "papiea-client";
+import { WinstonLoggerFactory } from "./typescript_sdk_logging"
 
 export class ProceduralCtx implements ProceduralCtx_Interface {
     base_url: string;
@@ -15,15 +16,18 @@ export class ProceduralCtx implements ProceduralCtx_Interface {
     headers: IncomingHttpHeaders;
     loggerFactory: LoggerFactory
 
-    constructor(provider: ProviderSdk, provider_prefix: string, provider_version: string, headers: IncomingHttpHeaders, loggerFactory: LoggerFactory) {
+    constructor(provider: ProviderSdk, headers: IncomingHttpHeaders,
+                logPath: string)
+    {
         this.provider_url = provider.provider_url;
         this.base_url = provider.entity_url;
-        this.provider_prefix = provider_prefix;
-        this.provider_version = provider_version;
+        this.provider_prefix = provider.get_prefix();
+        this.provider_version = provider.get_version();
         this.providerApiAxios = provider.provider_api_axios;
         this.provider = provider;
         this.headers = headers
-        this.loggerFactory = loggerFactory
+        this.loggerFactory = new WinstonLoggerFactory({
+            logPath: `${this.provider_prefix}/${this.provider_version}/${logPath}`})
     }
 
     url_for(entity: Entity): string {

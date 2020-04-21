@@ -241,7 +241,7 @@ export class ProviderSdk implements ProviderImpl {
         };
         this._procedures[name] = procedural_signature;
         this._server_manager.register_handler("/" + name, async (req, res) => {
-            const ctx = make_context(this, req.headers, name)
+            const ctx = new ProceduralCtx(this, req.headers, name)
             try {
                 const result = await handler(ctx, req.body.input)
                 res.json(result);
@@ -429,8 +429,8 @@ export class Kind_Builder {
         };
         this.kind.entity_procedures[name] = procedural_signature;
         this.server_manager.register_handler(`/${this.kind.name}/${name}`, async (req, res) => {
-            const ctx = make_context(this.provider, req.headers,
-                                     `${this.kind.name}/${name}`)
+            const ctx = new ProceduralCtx(this.provider, req.headers,
+                                          `${this.kind.name}/${name}`)
             try {
                 const result = await handler(ctx, {
                     metadata: req.body.metadata,
@@ -491,8 +491,8 @@ export class Kind_Builder {
             base_callback: callback_url
         })
         this.server_manager.register_handler(`/${this.kind.name}/${sfs_signature}`, async (req, res) => {
-            const ctx = make_context(this.provider, req.headers,
-                                     `${this.kind.name}/${sfs_signature}`)
+            const ctx = new ProceduralCtx(this.provider, req.headers,
+                                          `${this.kind.name}/${sfs_signature}`)
             try {
                 const result = await handler(ctx, {
                     metadata: req.body.metadata,
@@ -530,8 +530,8 @@ export class Kind_Builder {
         };
         this.kind.kind_procedures[name] = procedural_signature;
         this.server_manager.register_handler(`/${this.kind.name}/${name}`, async (req, res) => {
-            const ctx = make_context(this.provider, req.headers,
-                                     `${this.kind.name}/${name}`)
+            const ctx = new ProceduralCtx(this.provider, req.headers,
+                                          `${this.kind.name}/${name}`)
             try {
                 const result = await handler(ctx, req.body.input);
                 res.json(result);
@@ -564,17 +564,6 @@ export class Kind_Builder {
         this.kind_procedure(name, {}, 0, {}, {}, handler)
         return this
     }
-}
-
-function make_context(provider: ProviderSdk,
-    headers: any,
-    logPath: string): ProceduralCtx
-{
-    const prefix = provider.get_prefix()
-    const version = provider.get_version()
-    return new ProceduralCtx(
-        provider, prefix, version, headers,
-        new WinstonLoggerFactory({logPath: `${prefix}/${version}/${logPath}`}))
 }
 
 export {Version, Kind, Procedural_Signature, Provider, Data_Description, Procedural_Execution_Strategy, Entity, ProceduralCtx_Interface, Provider_Power, IntentfulCtx_Interface, UserInfo, S2S_Key, SecurityApi}

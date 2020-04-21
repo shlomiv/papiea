@@ -1,15 +1,16 @@
 import "jest"
 import { load } from "js-yaml";
 import { resolve } from "path";
-import { Kind_Builder, ProviderSdk } from "papiea-sdk";
+import { Kind_Builder, ProviderSdk, ProceduralCtx_Interface } from "papiea-sdk";
 import { plural } from "pluralize"
-import { loadYaml, OAuth2Server, ProviderBuilder } from "../test_data_factory";
+import { loadYaml, MockProceduralCtx, OAuth2Server, ProviderBuilder } from "../test_data_factory";
 import axios from "axios"
 import { readFileSync } from "fs";
 import { Metadata, Procedural_Execution_Strategy, Provider, Spec, Action } from "papiea-core";
 import uuid = require("uuid");
 import { WinstonLogger } from "../../src/logger";
 import { Logger } from "../../src/logger_interface";
+import { ProviderClient } from "papiea-client";
 
 
 declare var process: {
@@ -1168,3 +1169,92 @@ describe("SDK callback tests", () => {
         }
     });
 });
+
+describe("SDK client tests", () => {
+    const provider_version = "0.1.0";
+    const location_yaml = load(readFileSync(resolve(__dirname, "../test_data/location_kind_test_data_callback.yml"), "utf-8"));
+    let prefix: string
+
+    afterEach(async () => {
+        await providerApiAdmin.delete(`/${prefix}/${provider_version}`);
+    });
+
+    test("Procedure should get client", async () => {
+        expect.hasAssertions();
+        const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
+        const location = sdk.new_kind(location_yaml);
+        prefix = "provider_with_client"
+        sdk.version(provider_version);
+        sdk.prefix(prefix);
+        sdk.provider_procedure("compute",
+            {},
+            Procedural_Execution_Strategy.Halt_Intentful,
+            loadYaml("./test_data/procedure_sum_input.yml"),
+            {},
+            async (ctx, input) => {
+                expect(ctx.get_provider_client()).toBeDefined()
+            }
+        );
+        try {
+            await sdk.register();
+            const res: any = await axios.post(`${sdk.entity_url}/${sdk.provider.prefix}/${sdk.provider.version}/procedure/compute`, { input: { "a": 5, "b": 5 } })
+        } finally {
+            sdk.server.close();
+        }
+    });
+
+    test("Provider gets client and uses it", async () => {
+        expect.hasAssertions();
+        const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
+        const location = sdk.new_kind(location_yaml);
+        prefix = "provider_with_client_kind"
+        sdk.version(provider_version);
+        sdk.prefix(prefix);
+        let uuid: string = "123"
+        location.kind_procedure(
+            "computeGeolocation",
+            {}, Procedural_Execution_Strategy.Halt_Intentful,
+            loadYaml("./test_data/procedure_geolocation_compute_input.yml"),
+            loadYaml("./test_data/procedure_geolocation_compute_input.yml"), async (ctx, input) => {
+                const client = ctx.get_provider_client('')
+                const kind_client = client.get_kind(location.kind.name)
+                const entity_spec = await kind_client.create({
+                    x: 100,
+                    y: 150
+                })
+                uuid = entity_spec.metadata.uuid
+                let cluster_location = "us.west.";
+                cluster_location += input;
+                return cluster_location
+            }
+        );
+        await sdk.register();
+        const kind_name = sdk.provider.kinds[0].name;
+        try {
+            const res: any = await axios.post(`${sdk.entity_url}/${sdk.provider.prefix}/${sdk.provider.version}/${kind_name}/procedure/computeGeolocation`, { input: "2" });
+            expect(res.data).toBe("us.west.2");
+            const entity_created = await axios.get(`${sdk.entity_url}/${sdk.provider.prefix}/${sdk.provider.version}/${kind_name}/${uuid}`)
+            expect(entity_created.data.spec.x).toEqual(100)
+        } finally {
+            sdk.server.close();
+        }
+    });
+
+});
+
+describe("SDK client mock", () => {
+    test("Provider mocks client", async () => {
+        expect.hasAssertions();
+        const location_procedure = async (ctx: ProceduralCtx_Interface, input: any) => {
+            const client = ctx.get_provider_client('')
+            let cluster_location = "us.west.";
+            cluster_location += input;
+            return cluster_location
+        }
+        const mock_ctx = MockProceduralCtx.create(key => {
+            return {} as ProviderClient
+        })
+        const res = await location_procedure(mock_ctx, "2")
+        expect(res).toEqual("us.west.2")
+    });
+})

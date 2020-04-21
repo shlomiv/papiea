@@ -2,6 +2,7 @@
 import { Kind_Builder } from "./typescript_sdk";
 import { Data_Description, Version, Status, Entity, Entity_Reference, S2S_Key, UserInfo, Action, Secret } from "papiea-core";
 import { IncomingHttpHeaders } from "http";
+import { provider_client, ProviderClient } from "papiea-client";
 
 // [[file:~/work/papiea-js/Papiea-design.org::#h-Providers-SDK-518][provider_sdk_ts_provider_interface]]
 // Api for the provider-sdk
@@ -65,6 +66,7 @@ export interface IntentfulCtx_Interface {
     get_invoking_token(): string
     check_permission(entityAction: [Action, Entity_Reference][], user_token?: string, provider_prefix?: string, provider_version?: Version): Promise<boolean>
     get_logger(log_level?: string, pretty_print?: boolean): Logger
+    get_provider_client(key?: string): ProviderClient
 }
 
 // For the time being these are equal. Later they may differ

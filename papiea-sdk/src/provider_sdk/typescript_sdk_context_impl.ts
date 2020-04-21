@@ -3,6 +3,7 @@ import { Entity, Status, Entity_Reference, Action, Version, Secret } from "papie
 import axios, { AxiosInstance } from "axios";
 import { ProviderSdk } from "./typescript_sdk";
 import { IncomingHttpHeaders } from "http";
+import { provider_client, ProviderClient } from "papiea-client";
 
 export class ProceduralCtx implements ProceduralCtx_Interface {
     base_url: string;
@@ -85,5 +86,19 @@ export class ProceduralCtx implements ProceduralCtx_Interface {
 
     get_logger(log_level?: string, pretty_print?: boolean): Logger {
         return this.loggerFactory.createLogger(log_level, pretty_print)
+    }
+
+    get_provider_client(key?: string): ProviderClient {
+        let token: string
+        if (key !== undefined) {
+            token = key
+        } else {
+            try {
+                token = this.get_invoking_token()
+            } catch (e) {
+                token = 'anonymous'
+            }
+        }
+        return provider_client(this.provider.papiea_url, this.provider_prefix, this.provider_version, token)
     }
 }

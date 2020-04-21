@@ -15,6 +15,11 @@ import * as http from "http";
 import uuid = require("uuid");
 import { IncomingMessage, ServerResponse } from "http"
 import { IntentfulBehaviour } from "papiea-core"
+import { Logger } from "../src/logger_interface";
+import { ProceduralCtx_Interface } from "papiea-sdk";
+import { SecurityApi } from "papiea-sdk";
+import { Action } from "papiea-core";
+import { ProviderClient } from "papiea-client";
 const url = require("url");
 const queryString = require("query-string");
 
@@ -504,6 +509,47 @@ export class OAuth2Server {
         } else if (req.method === "POST") {
             this.post_actions()[baseUrl](req, res)
         }
+    }
+
+}
+
+export class MockProceduralCtx implements ProceduralCtx_Interface {
+
+    public static create(provider_client_func: (key?: string) => ProviderClient): MockProceduralCtx {
+        const mock = new MockProceduralCtx()
+        mock.get_provider_client = provider_client_func
+        return mock
+    }
+
+    update_status(entity_reference: import("papiea-core").Entity_Reference, status: any): Promise<boolean> {
+        throw new Error("Method not implemented.");
+    }
+    update_progress(message: string, done_percent: number): boolean {
+        throw new Error("Method not implemented.");
+    }
+    url_for(entity: import("papiea-core").Entity): string {
+        throw new Error("Method not implemented.");
+    }
+    get_provider_security_api(): SecurityApi {
+        throw new Error("Method not implemented.");
+    }
+    get_user_security_api(user_s2skey: string): SecurityApi {
+        throw new Error("Method not implemented.");
+    }
+    get_headers(): import("http").IncomingHttpHeaders {
+        throw new Error("Method not implemented.");
+    }
+    get_invoking_token(): string {
+        throw new Error("Method not implemented.");
+    }
+    check_permission(entityAction: [Action, import("papiea-core").Entity_Reference][], user_token?: string, provider_prefix?: string, provider_version?: string): Promise<boolean> {
+        throw new Error("Method not implemented.");
+    }
+    get_logger(log_level?: string, pretty_print?: boolean): Logger {
+        throw new Error("Method not implemented.");
+    }
+    get_provider_client(key?: string): ProviderClient {
+        throw new Error("Method not implemented.");
     }
 
 }

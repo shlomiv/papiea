@@ -27,7 +27,7 @@ import {
     Version
 } from "papiea-core"
 import { InvocationError, SecurityApiError } from "./typescript_sdk_exceptions"
-import { makeLoggerFactory } from "./typescript_sdk_logging"
+import { makeLoggerFactory, WinstonLoggerFactory } from "./typescript_sdk_logging"
 
 class SecurityApiImpl implements SecurityApi {
     readonly provider: ProviderSdk;
@@ -535,12 +535,18 @@ export class Kind_Builder {
 
     on_create(handler: (ctx: ProceduralCtx_Interface, input: any) => Promise<any>): Kind_Builder {
         const name = "__create"
+        const loggerFactory = new WinstonLoggerFactory(name)
+        const logger = loggerFactory.createLogger()
+        logger.info("You are registering on create handler. Note, this is a post create handler. The behaviour is due to change")
         this.kind_procedure(name, {}, 0, {}, {}, handler)
         return this
     }
 
     on_delete(handler: (ctx: ProceduralCtx_Interface, input: any) => Promise<any>): Kind_Builder {
         const name = "__delete"
+        const loggerFactory = new WinstonLoggerFactory(name)
+        const logger = loggerFactory.createLogger()
+        logger.info("You are registering on delete handler. Note, this is a pre delete handler. The behaviour is due to change")
         this.kind_procedure(name, {}, 0, {}, {}, handler)
         return this
     }

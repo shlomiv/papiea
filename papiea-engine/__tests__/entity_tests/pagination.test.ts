@@ -19,7 +19,7 @@ const server_config = {
 
 const entityApi = axios.create({
     baseURL: `http://127.0.0.1:${serverPort}/services`,
-    timeout: 1000,
+    timeout: 10000,
     headers: { 'Content-Type': 'application/json' }
 });
 

@@ -8,6 +8,9 @@ import { S2S_Key_DB_Mongo } from "./s2skey_db_mongo";
 import { SessionKeyDbMongo } from "./session_key_db_mongo"
 import { Logger } from "../logger_interface"
 import { IntentfulTask_DB_Mongo } from "./intentful_task_db_mongo"
+import { Watchlist_Db_Mongo } from "./watchlist_db_mongo";
+import { timeout } from "../utils/utils";
+import { exceptions } from "winston";
 const fs = require('fs'),
     url = require('url');
 
@@ -24,6 +27,7 @@ export class MongoConnection {
     s2skeyDb: S2S_Key_DB_Mongo | undefined;
     sessionKeyDb: SessionKeyDbMongo | undefined
     intentfulTaskDb: IntentfulTask_DB_Mongo | undefined
+    watchlistDb: Watchlist_Db_Mongo | undefined;
 
     constructor(url: string, dbName: string) {
         this.url = url;
@@ -132,5 +136,15 @@ export class MongoConnection {
         this.intentfulTaskDb = new IntentfulTask_DB_Mongo(logger, this.db);
         await this.intentfulTaskDb.init();
         return this.intentfulTaskDb;
+    }
+
+    async get_watchlist_db(logger: Logger): Promise<Watchlist_Db_Mongo> {
+        if (this.watchlistDb !== undefined)
+            return this.watchlistDb;
+        if (this.db === undefined)
+            throw new Error("Not connected");
+        this.watchlistDb = new Watchlist_Db_Mongo(logger, this.db);
+        await this.watchlistDb.init();
+        return this.watchlistDb;
     }
 }

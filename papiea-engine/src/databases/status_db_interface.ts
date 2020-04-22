@@ -28,6 +28,8 @@ export interface Status_DB {
     // dsl.
     list_status(fields_map: any, sortParams?: SortParams): Promise<([Metadata, Status])[]>;
 
+    list_status_in(filter_list: any[], field_name?: string): Promise<([Metadata, Status])[]>
+
     delete_status(entity_ref: Entity_Reference): Promise<void>
 
     update_status(entity_ref: Entity_Reference, status: Status): Promise<void>

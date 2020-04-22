@@ -66,7 +66,7 @@ describe("Provider API tests", () => {
         providerApi.delete(`/${providerPrefix}/${providerVersion}`).then(() => done()).catch(done.fail);
     });
 
-    test("Unregister non-existend provider", done => {
+    test("Unregister non-existent provider", done => {
         providerApi.delete(`/${providerPrefix}/${providerVersion}`).then(() => done.fail()).catch(() => done());
     });
 

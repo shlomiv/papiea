@@ -473,7 +473,13 @@ export class Kind_Builder {
                     }
                 }
             },
-            result: {},
+            result: {
+                IntentfulOutput: {
+                    type: 'integer',
+                    nullable: true,
+                    description: "Delay for intentful operation"
+                }
+            },
             execution_strategy: Intentful_Execution_Strategy.Basic,
             procedure_callback: procedure_callback_url,
             base_callback: callback_url

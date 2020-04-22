@@ -3,14 +3,6 @@ import { SortParams } from "../entity/entity_api_impl"
 import { Logger } from "../logger_interface"
 import { IntentfulTask_DB } from "./intentful_task_db_interface"
 import { IntentfulTask } from "../tasks/task_interface"
-import { Watchlist } from "../tasks/watchlist"
-
-type TaskAggregationResult = TaskAggregation[]
-
-interface TaskAggregation {
-    _id: string,
-    tasks: IntentfulTask[]
-}
 
 export class IntentfulTask_DB_Mongo implements IntentfulTask_DB {
     collection: Collection;
@@ -45,23 +37,6 @@ export class IntentfulTask_DB_Mongo implements IntentfulTask_DB {
             throw new Error("key not found");
         }
         return result;
-    }
-    async get_watchlist(): Promise<Watchlist> {
-        const result = await this.collection.aggregate([
-            {
-                $group: {
-                    _id: "$entity_ref.uuid", tasks: { $push: "$$ROOT" }
-                }
-            }
-        ]).toArray()
-        const tasks = result as TaskAggregationResult
-        return tasks.reduce((acc: Watchlist, curr) => {
-            acc.push({
-                entity_id: curr._id,
-                tasks: curr.tasks
-            })
-            return acc
-        }, [])
     }
 
     async update_task(uuid: string, delta: Partial<IntentfulTask>): Promise<void> {

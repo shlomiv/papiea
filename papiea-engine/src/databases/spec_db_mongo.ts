@@ -6,6 +6,7 @@ import { encode } from "mongo-dot-notation-tool";
 import { Entity_Reference, Metadata, Spec, Entity } from "papiea-core";
 import { SortParams } from "../entity/entity_api_impl";
 import { Logger } from "../logger_interface"
+import { IntentfulKindReference } from "./provider_db_mongo";
 
 export class Spec_DB_Mongo implements Spec_DB {
     collection: Collection;
@@ -36,7 +37,9 @@ export class Spec_DB_Mongo implements Spec_DB {
         const filter = {
             "metadata.uuid": entity_metadata.uuid,
             "metadata.kind": entity_metadata.kind,
-            "metadata.spec_version": entity_metadata.spec_version
+            "metadata.spec_version": entity_metadata.spec_version,
+            "metadata.provider_prefix": entity_metadata.provider_prefix,
+            "metadata.provider_version": entity_metadata.provider_version
         };
         try {
             const result = await this.collection.updateOne(filter, {
@@ -95,7 +98,7 @@ export class Spec_DB_Mongo implements Spec_DB {
 
     async list_specs(fields_map: any, sortParams?: SortParams): Promise<([Metadata, Spec])[]> {
         const filter: any = {};
-        filter["metadata.deleted_at"] = datestringToFilter(fields_map.metadata.deleted_at);
+        filter["metadata.deleted_at"] = datestringToFilter(fields_map?.metadata?.deleted_at);
         for (let key in fields_map.metadata) {
             if (key === "deleted_at")
                 continue;
@@ -121,6 +124,44 @@ export class Spec_DB_Mongo implements Spec_DB {
             }
         });
     }
+
+    async list_specs_in(filter_list: any[], field_name: string = "metadata.uuid"): Promise<([Metadata, Spec])[]> {
+        const result = await this.collection.find({ [field_name]: { $in: filter_list } }).sort({ "metadata.uuid": 1 }).toArray();
+        return result.map((x: any): [Metadata, Spec] => {
+            if (x.spec !== null) {
+                return [x.metadata, x.spec]
+            } else {
+                throw new Error("No valid entities found");
+            }
+        });
+    }
+
+    async list_random_intentful_specs(size: number, kind_refs: IntentfulKindReference[], sortParams?: SortParams): Promise<([Metadata, Spec])[]> {
+        const intentful_kind_names = kind_refs.map(kind => kind.kind_name)
+        if (intentful_kind_names.length === 0) {
+            return []
+        }
+        let result: any[];
+        if (sortParams) {
+            result = await this.collection.aggregate([
+                { $match: { "metadata.kind": { $in: intentful_kind_names } } },
+                { $sample: { size } }
+            ]).sort(sortParams).toArray();
+        } else {
+            result = await this.collection.aggregate([
+                { $match: { "metadata.kind": { $in: intentful_kind_names } } },
+                { $sample: { size } }
+            ]).toArray();
+        }
+        return result.map((x: any): [Metadata, Spec] => {
+            if (x.spec !== null) {
+                return [x.metadata, x.spec]
+            } else {
+                throw new Error("No valid entities found");
+            }
+        });
+    }
+
 
     async delete_spec(entity_ref: Entity_Reference): Promise<void> {
         const result = await this.collection.updateOne({

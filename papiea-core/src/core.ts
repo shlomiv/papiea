@@ -44,6 +44,8 @@ export interface Metadata extends Entity_Reference {
     uuid: uuid4;
     kind: string;
     spec_version: number;
+    provider_prefix: string;
+    provider_version: Version
 
     // Additional fields
     created_at: Date;
@@ -114,6 +116,11 @@ export interface Differ {
     all_diffs(kind: Kind, spec: Spec, status: Status): Diff[];
 }
 
+export enum DiffSelectionStrategy {
+    Basic = "basic",
+    Random = "random"
+}
+
 // [[file:~/work/papiea-js/Papiea-design.org::#h-Kind-241][kind-struct]]
 export interface Kind {
 
@@ -133,6 +140,12 @@ export interface Kind {
 
     // The compiled Differ
     differ?: Differ;
+
+    // The default delay for rediffing
+    diff_delay?: number;
+
+    // Strategy which determines how next diff is going to be chosen
+    diff_selection_strategy?: DiffSelectionStrategy
 
     //// Procedural behavior
     entity_procedures: { [key: string]: Procedural_Signature; }

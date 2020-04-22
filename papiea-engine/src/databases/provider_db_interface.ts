@@ -1,5 +1,6 @@
 // [[file:~/work/papiea-js/Papiea-design.org::*/src/databases/provider_db_interface.ts][/src/databases/provider_db_interface.ts:1]]
-import { Version, Provider } from "papiea-core";
+import { Version, Provider, Kind } from "papiea-core";
+import { IntentfulKindReference } from "./provider_db_mongo";
 
 // [[file:~/work/papiea-js/Papiea-design.org::#h-Interface-104][provider-db-interface]]
 
@@ -25,6 +26,10 @@ export interface Provider_DB {
     find_providers(provider_prefix: string): Promise<Provider[]>;
 
     get_latest_provider(provider_prefix: string): Promise<Provider>;
+
+    find_kind(provider: Provider, kind_name: string): Kind;
+
+    get_intentful_kinds(): Promise<IntentfulKindReference[]>
 }
 
 // provider-db-interface ends here

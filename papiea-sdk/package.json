@@ -7,6 +7,8 @@
     "src"
   ],
   "scripts": {
+    "test": "jest --runInBand --coverage",
+    "test-ci": "jest --runInBand --coverage --ci --reporters=default --reporters=jest-junit",
     "clean": "rm -rf build",
     "build": "tsc"
   },
@@ -21,12 +23,18 @@
     "swagger-model-validator": "^3.0.6",
     "wait-port": "^0.2.2",
     "papiea-client": "file:../papiea-client",
-    "winston": "^3.2.1"
+    "winston": "^3.2.1",
+    "js-yaml": "^3.12.0"
   },
   "description": "",
   "devDependencies": {
     "@types/axios": "^0.14.0",
     "@types/express": "^4.16.1",
-    "typescript": "^3.8.3"
+    "@types/jest": "^23.3.10",
+    "@types/js-yaml": "^3.11.4",
+    "typescript": "^3.8.3",
+    "ts-jest": "^23.10.5",
+    "jest": "^23.6.0",
+    "jest-junit": "^5.2.0"
   }
 }

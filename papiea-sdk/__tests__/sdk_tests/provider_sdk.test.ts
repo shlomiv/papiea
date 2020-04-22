@@ -1,16 +1,16 @@
 import "jest"
 import { load } from "js-yaml";
 import { resolve } from "path";
-import { Kind_Builder, ProviderSdk, ProceduralCtx_Interface } from "papiea-sdk";
 import { plural } from "pluralize"
-import { loadYaml, MockProceduralCtx, OAuth2Server, ProviderBuilder } from "../test_data_factory";
+import { loadYaml, OAuth2Server, ProviderBuilder } from "../../../papiea-engine/__tests__/test_data_factory";
 import axios from "axios"
 import { readFileSync } from "fs";
-import { Metadata, Procedural_Execution_Strategy, Provider, Spec, Action } from "papiea-core";
+import { Metadata, Procedural_Execution_Strategy, Provider, Spec, Action, Entity_Reference, Entity } from "papiea-core";
 import uuid = require("uuid");
-import { WinstonLogger } from "../../src/logger";
-import { Logger } from "../../src/logger_interface";
+import { WinstonLogger } from "../../../papiea-engine/src/logger";
+import { Logger } from "../../../papiea-engine/src/logger_interface";
 import { ProviderClient } from "papiea-client";
+import { Kind_Builder, ProceduralCtx_Interface, ProviderSdk, SecurityApi } from "../../src/provider_sdk/typescript_sdk";
 
 
 declare var process: {
@@ -495,7 +495,7 @@ describe("Provider Sdk tests", () => {
 describe("SDK + oauth provider tests", () => {
     const oauth2ServerHost = '127.0.0.1';
     const oauth2ServerPort = 9002;
-    const pathToModel: string = resolve(__dirname, "../../src/auth/provider_model_example.txt");
+    const pathToModel: string = resolve(__dirname, "../test_data/provider_model_example.txt");
     const modelText: string = readFileSync(pathToModel).toString();
     const oauth = loadYaml("./test_data/auth.yaml");
     const provider_version = "0.1.0";
@@ -1242,6 +1242,48 @@ describe("SDK client tests", () => {
     });
 
 });
+
+class MockProceduralCtx implements ProceduralCtx_Interface {
+
+    public static create(provider_client_func: (key?: string) => ProviderClient): MockProceduralCtx {
+        const mock = new MockProceduralCtx()
+        mock.get_provider_client = provider_client_func
+        return mock
+    }
+
+    update_status(entity_reference: Entity_Reference, status: any): Promise<boolean> {
+        throw new Error("Method not implemented.");
+    }
+    update_progress(message: string, done_percent: number): boolean {
+        throw new Error("Method not implemented.");
+    }
+    url_for(entity: Entity): string {
+        throw new Error("Method not implemented.");
+    }
+    get_provider_security_api(): SecurityApi {
+        throw new Error("Method not implemented.");
+    }
+    get_user_security_api(user_s2skey: string): SecurityApi {
+        throw new Error("Method not implemented.");
+    }
+    get_headers(): import("http").IncomingHttpHeaders {
+        throw new Error("Method not implemented.");
+    }
+    get_invoking_token(): string {
+        throw new Error("Method not implemented.");
+    }
+    check_permission(entityAction: [Action, Entity_Reference][], user_token?: string, provider_prefix?: string, provider_version?: string): Promise<boolean> {
+        throw new Error("Method not implemented.");
+    }
+    get_logger(log_level?: string, pretty_print?: boolean): Logger {
+        throw new Error("Method not implemented.");
+    }
+    get_provider_client(key?: string): ProviderClient {
+        throw new Error("Method not implemented.");
+    }
+
+}
+
 
 describe("SDK client mock", () => {
     test("Provider mocks client", async () => {

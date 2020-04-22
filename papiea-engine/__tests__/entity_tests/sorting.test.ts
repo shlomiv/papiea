@@ -1,8 +1,7 @@
-import { getLocationDataDescription } from "../test_data_factory";
+import { ProviderBuilder } from "../test_data_factory";
 import axios from "axios";
 import { UserAuthInfo } from "../../src/auth/authn";
 import { Authorizer } from "../../src/auth/authz";
-import { ProviderSdk } from "papiea-sdk";
 import { Action } from "papiea-core";
 import { WinstonLogger } from "../../src/logger";
 import { Logger } from "../../src/logger_interface";
@@ -16,7 +15,6 @@ declare var process: {
 };
 const serverPort = parseInt(process.env.SERVER_PORT || '3000');
 const adminKey = process.env.PAPIEA_ADMIN_S2S_KEY || '';
-const papieaUrl = `http://127.0.0.1:${serverPort}`;
 
 class MockedAuthorizer extends Authorizer {
     async checkPermission(user: UserAuthInfo, object: any, action: Action): Promise<void> {
@@ -27,33 +25,34 @@ class MockedAuthorizer extends Authorizer {
     }
 }
 
-const server_config = {
-    host: "127.0.0.1",
-    port: 9000
-};
-
 const entityApi = axios.create({
     baseURL: `http://127.0.0.1:${serverPort}/services`,
     timeout: 10000,
     headers: { 'Content-Type': 'application/json' }
 });
 
+const providerApi = axios.create({
+    baseURL: `http://127.0.0.1:${serverPort}/provider/`,
+    timeout: 1000,
+    headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${adminKey}`
+    }
+});
+
 describe("Pagination tests", () => {
     const providerPrefix = "test";
     const providerVersion = "0.1.0";
-    const locationDataDescription = getLocationDataDescription();
-    const kind_name = Object.keys(locationDataDescription)[0];
+    let kind_name: string
 
     let uuids: string[] = [];
     const entityPromises: Promise<any>[] = [];
     const sortingTestLogger: Logger = new WinstonLogger("info");
 
     beforeAll(async () => {
-        const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
-        sdk.new_kind(locationDataDescription);
-        sdk.version(providerVersion);
-        sdk.prefix(providerPrefix);
-        await sdk.register();
+        const provider = new ProviderBuilder(providerPrefix).withVersion(providerVersion).withKinds().build();
+        kind_name = provider.kinds[0].name;
+        await providerApi.post('/', provider);
 
         try {
             for (let i = 0; i < 70; i++) {

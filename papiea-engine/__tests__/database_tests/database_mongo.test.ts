@@ -8,12 +8,14 @@ import { WinstonLogger } from "../../src/logger";
 import { Logger } from "../../src/logger_interface";
 import { v4 as uuid4 } from 'uuid';
 import { ConflictingEntityError } from "../../src/databases/utils/errors";
-import { Metadata, Spec, Entity_Reference, Status, Kind, Provider, S2S_Key } from "papiea-core";
+import { Metadata, Spec, Entity_Reference, Status, Kind, Provider, S2S_Key, IntentfulBehaviour } from "papiea-core";
 import { SessionKeyDb } from "../../src/databases/session_key_db_interface"
 import { Entity, Intentful_Signature, SessionKey, IntentfulStatus } from "papiea-core"
 import uuid = require("uuid")
 import { IntentfulTask } from "../../src/tasks/task_interface"
 import { IntentfulTask_DB } from "../../src/databases/intentful_task_db_interface"
+import { Watchlist_DB } from "../../src/databases/watchlist_db_interface";
+import { Watchlist } from "../../src/tasks/watchlist";
 
 declare var process: {
     env: {
@@ -51,6 +53,8 @@ describe("MongoDb tests", () => {
             spec_version: 0,
             created_at: new Date(),
             deleted_at: undefined,
+            provider_version: "1",
+            provider_prefix: "test",
             extension: {}
         };
         const spec: Spec = { a: "A" };
@@ -65,6 +69,8 @@ describe("MongoDb tests", () => {
             spec_version: 1,
             created_at: new Date(),
             deleted_at: undefined,
+            provider_version: "1",
+            provider_prefix: "test",
             extension: {}
         };
         const spec: Spec = { a: "A1" };
@@ -80,6 +86,8 @@ describe("MongoDb tests", () => {
             spec_version: 1,
             created_at: new Date(),
             deleted_at: undefined,
+            provider_version: "1",
+            provider_prefix: "test",
             extension: {}
         };
         const spec: Spec = { a: "A2" };
@@ -264,6 +272,20 @@ describe("MongoDb tests", () => {
         await providerDb.delete_provider(prefix_string, version);
     });
 
+    test("Register and Delete Provider with intenful kind", async () => {
+        expect.assertions(2)
+        const providerDb: Provider_DB = await connection.get_provider_db(logger);
+        const test_kind = { name: "intentful_kind_test", intentful_behaviour: IntentfulBehaviour.Differ } as Kind;
+        const provider: Provider = { prefix: "testIntentful", version: "0.1.0", kinds: [test_kind], procedures: {}, extension_structure: {}, allowExtraProps: false };
+        await providerDb.save_provider(provider);
+        const kind_refs = await providerDb.get_intentful_kinds()
+        const kind_names = kind_refs.map(k => k.kind_name)
+        expect(kind_names).toContain("intentful_kind_test")
+        await providerDb.delete_provider(provider.prefix, provider.version)
+        const deleted_kind_refs = await providerDb.get_intentful_kinds()
+        expect(deleted_kind_refs.length).toEqual(kind_refs.length - 1)
+    });
+
     test("Create and get s2s key", async () => {
         const s2skeyDb: S2S_Key_DB = await connection.get_s2skey_db(logger);
         const s2skey: S2S_Key = {
@@ -420,7 +442,8 @@ describe("MongoDb tests", () => {
             }],
             spec_version: 1,
             status: IntentfulStatus.Pending,
-            entity_ref: {} as Entity_Reference
+            entity_ref: {} as Entity_Reference,
+            times_failed: 0
         };
         await taskDb.save_task(task)
         await taskDb.delete_task(task.uuid)
@@ -443,7 +466,8 @@ describe("MongoDb tests", () => {
             }],
             spec_version: 1,
             status: IntentfulStatus.Pending,
-            entity_ref: {} as Entity_Reference
+            entity_ref: {} as Entity_Reference,
+            times_failed: 0
         };
         await taskDb.save_task(task);
         const res: IntentfulTask = await taskDb.get_task(task.uuid);
@@ -465,7 +489,8 @@ describe("MongoDb tests", () => {
             }],
             spec_version: 1,
             status: IntentfulStatus.Pending,
-            entity_ref: {} as Entity_Reference
+            entity_ref: {} as Entity_Reference,
+            times_failed: 0
         };
         await taskDb.save_task(task);
         try {
@@ -488,7 +513,8 @@ describe("MongoDb tests", () => {
             }],
             spec_version: 1,
             status: IntentfulStatus.Pending,
-            entity_ref: {} as Entity_Reference
+            entity_ref: {} as Entity_Reference,
+            times_failed: 0
         };
         await taskDb.save_task(task);
         const res = (await taskDb.list_tasks({ uuid: task.uuid }) as IntentfulTask[])[0]
@@ -508,7 +534,8 @@ describe("MongoDb tests", () => {
             }],
             spec_version: 1,
             status: IntentfulStatus.Pending,
-            entity_ref: {} as Entity_Reference
+            entity_ref: {} as Entity_Reference,
+            times_failed: 0
         };
         await taskDb.save_task(task)
         await taskDb.update_task(task.uuid, { status: IntentfulStatus.Completed_Successfully })
@@ -516,27 +543,26 @@ describe("MongoDb tests", () => {
         expect(updatedTask.status).toEqual(IntentfulStatus.Completed_Successfully)
         await taskDb.delete_task(task.uuid)
     });
+
     test("Get watchlist", async () => {
         expect.assertions(1);
-        const taskDb: IntentfulTask_DB = await connection.get_intentful_task_db(logger);
-        const task: IntentfulTask = {
-            uuid: uuid4(),
-            diffs: [{
-                kind: "dummy",
-                intentful_signature: {} as Intentful_Signature,
-                diff_fields: {}
-            }],
-            spec_version: 1,
-            status: IntentfulStatus.Active,
-            entity_ref: { uuid: "entity_id_watchlist" } as Entity_Reference
-        };
-        await taskDb.save_task(task)
-        const watchlist = await taskDb.get_watchlist()
-        watchlist.forEach(entityTask => {
-            if (entityTask.entity_id === task.entity_ref.uuid) {
-                expect(entityTask.tasks.length).toEqual(1)
+        const watchlistDb: Watchlist_DB = await connection.get_watchlist_db(logger);
+        const watchlist = new Watchlist()
+        const entry_ref = {
+            provider_reference: {
+                provider_prefix: "test",
+                provider_version: "1"
+            },
+            entity_reference: {
+                uuid: uuid4(),
+                kind: "test_kind"
             }
-        })
-        await taskDb.delete_task(task.uuid)
-    })
+        }
+        const uuid = uuid4()
+        watchlist.set(uuid, [entry_ref, undefined, { delay_seconds: 120, delaySetTime: new Date() }])
+        await watchlistDb.update_watchlist(watchlist)
+        const watchlistUpdated = await watchlistDb.get_watchlist()
+        expect(watchlistUpdated.get(uuid)![2]!.delay_seconds).toBe(120)
+        await watchlistDb.update_watchlist(new Watchlist())
+    });
 });

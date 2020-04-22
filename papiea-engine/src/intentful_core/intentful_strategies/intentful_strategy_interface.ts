@@ -1,10 +1,10 @@
 import { Metadata, Spec, Kind, Entity } from "papiea-core"
-import { Spec_DB } from "../databases/spec_db_interface"
-import { Status_DB } from "../databases/status_db_interface"
-import { UserAuthInfo } from "../auth/authn"
+import { Spec_DB } from "../../databases/spec_db_interface"
+import { Status_DB } from "../../databases/status_db_interface"
+import { UserAuthInfo } from "../../auth/authn"
 import axios from "axios"
-import { IntentfulTask } from "../tasks/task_interface"
-import { OnActionError } from "../errors/on_action_error";
+import { IntentfulTask } from "../../tasks/task_interface"
+import { OnActionError } from "../../errors/on_action_error";
 
 export abstract class IntentfulStrategy {
     protected readonly specDb: Spec_DB
@@ -40,8 +40,9 @@ export abstract class IntentfulStrategy {
     }
 
     async create(metadata: Metadata, spec: Spec): Promise<[Metadata, Spec]> {
+        const entity = this.create_entity(metadata, spec)
         await this.dispatch("__create", { metadata, spec })
-        return this.create_entity(metadata, spec)
+        return entity
     }
 
     protected async dispatch(procedure_name: string, entity: Partial<Entity>): Promise<any> {

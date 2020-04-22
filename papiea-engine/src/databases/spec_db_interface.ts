@@ -1,5 +1,6 @@
 import { Metadata, Spec, Entity_Reference } from "papiea-core";
 import { SortParams } from "../entity/entity_api_impl";
+import { IntentfulKindReference } from "./provider_db_mongo";
 
 
 // [[file:~/work/papiea-js/Papiea-design.org::*/src/databases/spec_db_interface.ts][/src/databases/spec_db_interface.ts:1]]
@@ -33,6 +34,10 @@ export interface Spec_DB {
     // later point, or we could use a similar dsl to mongodb search
     // dsl.
     list_specs(fields_map: any, sortParams?: SortParams): Promise<([Metadata, Spec])[]>;
+
+    list_specs_in(filter_list: any[], field_name?: string): Promise<([Metadata, Spec])[]>
+
+    list_random_intentful_specs(size: number, kind_refs: IntentfulKindReference[], sortParams?: SortParams): Promise<([Metadata, Spec])[]>;
 
     delete_spec(entity_ref: Entity_Reference): Promise<void>
 }

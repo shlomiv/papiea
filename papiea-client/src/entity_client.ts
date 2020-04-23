@@ -68,7 +68,7 @@ export interface ProviderClient {
 }
 
 export function provider_client(papiea_url: string, provider: string, version: string, s2skey?: string, meta_extension?: (s2skey: string)=>any) : ProviderClient {
-    const the_s2skey = s2skey || 'anonymous'
+    const the_s2skey = s2skey ?? 'anonymous'
     return <ProviderClient> {
         get_kind: (kind: string)=> kind_client(papiea_url, provider, kind, version, the_s2skey, meta_extension),
         invoke_procedure: (proc_name: string, input: any)=> invoke_provider_procedure(provider, version, proc_name, input, papiea_url, the_s2skey)
@@ -88,7 +88,7 @@ export interface EntityCRUD {
 }
 
 export function kind_client(papiea_url: string, provider: string, kind: string, version: string, s2skey?: string, meta_extension?: (s2skey: string)=>any): EntityCRUD {
-    const the_s2skey = s2skey || 'anonymous'
+    const the_s2skey = s2skey ?? 'anonymous'
     const crudder: EntityCRUD = {
         get: (entity_reference: Entity_Reference) => get_entity(provider, kind, version, entity_reference, papiea_url, the_s2skey),
         create: (spec: Spec) => create_entity(provider, kind, version, spec, papiea_url, meta_extension ? meta_extension(the_s2skey):undefined, the_s2skey),

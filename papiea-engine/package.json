@@ -73,7 +73,6 @@
     "jest": "^23.6.0",
     "jest-junit": "^5.2.0",
     "nodemon": "^1.18.8",
-    "papiea-sdk": "file:../papiea-sdk",
     "swagger-parser": "^6.0.2",
     "ts-jest": "^23.10.5",
     "ts-node": "^7.0.1",

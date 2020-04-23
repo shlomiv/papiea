@@ -143,7 +143,7 @@ export class DiffResolver {
                                 delay_seconds: getRandomInt(10, 20),
                                 delaySetTime: new Date()
                             }
-                            const error_msg = e?.response?.data?.error?.message
+                            const error_msg = e?.response?.data?.message
                             await this.onIntentfulHandlerFail.call(entry_reference, error_msg)
                             continue
                         }
@@ -206,7 +206,7 @@ export class DiffResolver {
             const diff = next_diff
             // This should be a concrete address of a handling process
             diff!.handler_url = `${next_diff.intentful_signature.base_callback}/healthcheck`
-            const error_msg = e?.response?.data?.error?.message
+            const error_msg = e?.response?.data?.message
             await this.onIntentfulHandlerFail.call(entry_reference, error_msg)
             return [diff, delay]
         }

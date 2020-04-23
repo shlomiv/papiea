@@ -86,7 +86,7 @@ export class ProviderSdk implements ProviderImpl {
     protected _prefix: string | null;
     protected meta_ext: { [key: string]: string };
     protected _provider: Provider | null;
-    protected readonly papiea_url: string;
+    protected readonly _papiea_url: string;
     protected readonly _s2skey: Secret;
     protected _policy: string | null = null;
     protected _oauth2: string | null = null;
@@ -99,7 +99,7 @@ export class ProviderSdk implements ProviderImpl {
         this._prefix = null;
         this._kind = [];
         this._provider = null;
-        this.papiea_url = papiea_url;
+        this._papiea_url = papiea_url;
         this._s2skey = s2skey;
         this._server_manager = server_manager || new Provider_Server_Manager();
         this._procedures = {};
@@ -127,7 +127,11 @@ export class ProviderSdk implements ProviderImpl {
     }
 
     get provider_url(): string {
-        return `${ this.papiea_url }/provider`
+        return `${ this._papiea_url }/provider`
+    }
+
+    get papiea_url(): string {
+        return this._papiea_url
     }
 
     get provider_api_axios() {
@@ -135,7 +139,7 @@ export class ProviderSdk implements ProviderImpl {
     }
 
     get entity_url(): string {
-        return `${ this.papiea_url }/services`
+        return `${ this._papiea_url }/services`
     }
 
     public get_prefix(): string {
@@ -557,4 +561,4 @@ export class Kind_Builder {
         return this
     }
 }
-export {Version, Kind, Procedural_Signature, Provider, Data_Description, Procedural_Execution_Strategy, Entity, ProceduralCtx_Interface, Provider_Power, IntentfulCtx_Interface, UserInfo, S2S_Key}
+export {Version, Kind, Procedural_Signature, Provider, Data_Description, Procedural_Execution_Strategy, Entity, ProceduralCtx_Interface, Provider_Power, IntentfulCtx_Interface, UserInfo, S2S_Key, SecurityApi}

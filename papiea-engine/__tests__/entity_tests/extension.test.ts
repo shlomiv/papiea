@@ -1,6 +1,5 @@
-import { getLocationDataDescription, getMetadataDescription } from "../test_data_factory";
+import { ProviderBuilder } from "../test_data_factory";
 import axios from "axios";
-import { ProviderSdk } from "papiea-sdk";
 import { Metadata, Spec } from "papiea-core";
 
 declare var process: {
@@ -11,12 +10,6 @@ declare var process: {
 };
 const serverPort = parseInt(process.env.SERVER_PORT || '3000');
 const adminKey = process.env.PAPIEA_ADMIN_S2S_KEY || '';
-const papieaUrl = `http://127.0.0.1:${serverPort}`;
-
-const server_config = {
-    host: "127.0.0.1",
-    port: 9000
-};
 
 const entityApi = axios.create({
     baseURL: `http://127.0.0.1:${serverPort}/services`,
@@ -24,12 +17,19 @@ const entityApi = axios.create({
     headers: { 'Content-Type': 'application/json' }
 });
 
+const providerApi = axios.create({
+    baseURL: `http://127.0.0.1:${serverPort}/provider/`,
+    timeout: 1000,
+    headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${adminKey}`
+    }
+});
+
 describe("Entity API with metadata extension tests", () => {
     const providerPrefix = "test";
     const providerVersion = "0.1.0";
-    const locationDataDescription = getLocationDataDescription();
-    const metadata_ext_description = getMetadataDescription();
-    const kind_name = Object.keys(locationDataDescription)[0];
+    let kind_name: string
     const owner_name = "test@owner.com";
     const tenant_id = "sample_id";
 
@@ -37,12 +37,9 @@ describe("Entity API with metadata extension tests", () => {
     let entity_spec: Spec;
 
     beforeAll(async () => {
-        const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
-        sdk.new_kind(locationDataDescription);
-        sdk.version(providerVersion);
-        sdk.prefix(providerPrefix);
-        sdk.metadata_extension(metadata_ext_description);
-        await sdk.register();
+        const provider = new ProviderBuilder(providerPrefix).withVersion(providerVersion).withKinds().withExtensionStructure().build();
+        kind_name = provider.kinds[0].name;
+        await providerApi.post('/', provider);
     });
 
     afterAll(async () => {

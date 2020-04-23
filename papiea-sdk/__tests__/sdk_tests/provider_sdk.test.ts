@@ -1,15 +1,16 @@
 import "jest"
 import { load } from "js-yaml";
 import { resolve } from "path";
-import { Kind_Builder, ProviderSdk } from "papiea-sdk";
 import { plural } from "pluralize"
-import { loadYaml, OAuth2Server, ProviderBuilder } from "../test_data_factory";
+import { loadYaml, OAuth2Server, ProviderBuilder } from "../../../papiea-engine/__tests__/test_data_factory";
 import axios from "axios"
 import { readFileSync } from "fs";
-import { Metadata, Procedural_Execution_Strategy, Provider, Spec, Action } from "papiea-core";
+import { Metadata, Procedural_Execution_Strategy, Provider, Spec, Action, Entity_Reference, Entity } from "papiea-core";
 import uuid = require("uuid");
-import { WinstonLogger } from "../../src/logger";
-import { Logger } from "../../src/logger_interface";
+import { WinstonLogger } from "../../../papiea-engine/src/logger";
+import { Logger } from "../../../papiea-engine/src/logger_interface";
+import { ProviderClient } from "papiea-client";
+import { Kind_Builder, ProceduralCtx_Interface, ProviderSdk, SecurityApi } from "../../src/provider_sdk/typescript_sdk";
 
 
 declare var process: {
@@ -494,7 +495,7 @@ describe("Provider Sdk tests", () => {
 describe("SDK + oauth provider tests", () => {
     const oauth2ServerHost = '127.0.0.1';
     const oauth2ServerPort = 9002;
-    const pathToModel: string = resolve(__dirname, "../../src/auth/provider_model_example.txt");
+    const pathToModel: string = resolve(__dirname, "../test_data/provider_model_example.txt");
     const modelText: string = readFileSync(pathToModel).toString();
     const oauth = loadYaml("./test_data/auth.yaml");
     const provider_version = "0.1.0";
@@ -1169,3 +1170,134 @@ describe("SDK callback tests", () => {
         }
     });
 });
+
+describe("SDK client tests", () => {
+    const provider_version = "0.1.0";
+    const location_yaml = load(readFileSync(resolve(__dirname, "../test_data/location_kind_test_data_callback.yml"), "utf-8"));
+    let prefix: string
+
+    afterEach(async () => {
+        await providerApiAdmin.delete(`/${prefix}/${provider_version}`);
+    });
+
+    test("Procedure should get client", async () => {
+        expect.hasAssertions();
+        const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
+        const location = sdk.new_kind(location_yaml);
+        prefix = "provider_with_client"
+        sdk.version(provider_version);
+        sdk.prefix(prefix);
+        sdk.provider_procedure("compute",
+            {},
+            Procedural_Execution_Strategy.Halt_Intentful,
+            loadYaml("./test_data/procedure_sum_input.yml"),
+            {},
+            async (ctx, input) => {
+                expect(ctx.get_provider_client()).toBeDefined()
+            }
+        );
+        try {
+            await sdk.register();
+            const res: any = await axios.post(`${sdk.entity_url}/${sdk.provider.prefix}/${sdk.provider.version}/procedure/compute`, { input: { "a": 5, "b": 5 } })
+        } finally {
+            sdk.server.close();
+        }
+    });
+
+    test("Provider gets client and uses it", async () => {
+        expect.hasAssertions();
+        const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
+        const location = sdk.new_kind(location_yaml);
+        prefix = "provider_with_client_kind"
+        sdk.version(provider_version);
+        sdk.prefix(prefix);
+        let uuid: string = "123"
+        location.kind_procedure(
+            "computeGeolocation",
+            {}, Procedural_Execution_Strategy.Halt_Intentful,
+            loadYaml("./test_data/procedure_geolocation_compute_input.yml"),
+            loadYaml("./test_data/procedure_geolocation_compute_input.yml"), async (ctx, input) => {
+                const client = ctx.get_provider_client(adminKey)
+                const kind_client = client.get_kind(location.kind.name)
+                const entity_spec = await kind_client.create({
+                    x: 100,
+                    y: 150
+                })
+                uuid = entity_spec.metadata.uuid
+                let cluster_location = "us.west.";
+                cluster_location += input;
+                return cluster_location
+            }
+        );
+        await sdk.register();
+        const kind_name = sdk.provider.kinds[0].name;
+        try {
+            const res: any = await axios.post(`${sdk.entity_url}/${sdk.provider.prefix}/${sdk.provider.version}/${kind_name}/procedure/computeGeolocation`, { input: "2" });
+            expect(res.data).toBe("us.west.2");
+            const entity_created = await axios.get(`${sdk.entity_url}/${sdk.provider.prefix}/${sdk.provider.version}/${kind_name}/${uuid}`)
+            expect(entity_created.data.spec.x).toEqual(100)
+        } finally {
+            sdk.server.close();
+        }
+    });
+
+});
+
+class MockProceduralCtx implements ProceduralCtx_Interface {
+
+    public static create(provider_client_func: (key?: string) => ProviderClient): MockProceduralCtx {
+        const mock = new MockProceduralCtx()
+        mock.get_provider_client = provider_client_func
+        return mock
+    }
+
+    update_status(entity_reference: Entity_Reference, status: any): Promise<boolean> {
+        throw new Error("Method not implemented.");
+    }
+    update_progress(message: string, done_percent: number): boolean {
+        throw new Error("Method not implemented.");
+    }
+    url_for(entity: Entity): string {
+        throw new Error("Method not implemented.");
+    }
+    get_provider_security_api(): SecurityApi {
+        throw new Error("Method not implemented.");
+    }
+    get_user_security_api(user_s2skey: string): SecurityApi {
+        throw new Error("Method not implemented.");
+    }
+    get_headers(): import("http").IncomingHttpHeaders {
+        throw new Error("Method not implemented.");
+    }
+    get_invoking_token(): string {
+        throw new Error("Method not implemented.");
+    }
+    check_permission(entityAction: [Action, Entity_Reference][], user_token?: string, provider_prefix?: string, provider_version?: string): Promise<boolean> {
+        throw new Error("Method not implemented.");
+    }
+    get_logger(log_level?: string, pretty_print?: boolean): Logger {
+        throw new Error("Method not implemented.");
+    }
+    get_provider_client(key?: string): ProviderClient {
+        throw new Error("Method not implemented.");
+    }
+
+}
+
+
+describe("SDK client mock", () => {
+    test("Provider mocks client", async () => {
+        expect.hasAssertions();
+        const location_procedure = async (ctx: ProceduralCtx_Interface, input: any) => {
+            const client = ctx.get_provider_client('test_key')
+            let cluster_location = "us.west.";
+            cluster_location += input;
+            return cluster_location
+        }
+        const mock_ctx = MockProceduralCtx.create(key => {
+            return {} as ProviderClient
+        })
+        const res = await location_procedure(mock_ctx, "2")
+        expect(res).toEqual("us.west.2")
+    });
+})

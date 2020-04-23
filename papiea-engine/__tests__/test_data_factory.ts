@@ -154,6 +154,7 @@ export class ProviderBuilder {
 
     public withAllowExtraProps(allowExtraProps: boolean) {
         this._allowExtraProps = allowExtraProps
+        return this
     }
 
     public withCallback(address: string) {

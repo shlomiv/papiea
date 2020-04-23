@@ -1,0 +1,49 @@
+{
+  "name": "papiea-engine-benchmarks",
+  "version": "1.0.84",
+  "description": "",
+  "main": "build/main.js",
+  "files": [
+    "build/",
+    "src/"
+  ],
+  "scripts": {
+    "start": "ts-node src/main.ts -- http://localhost:3333",
+    "clean": "rm -rf build",
+    "build": "tsc"
+  },
+  "author": "Shlomi Vaknin",
+  "license": "ISC",
+  "dependencies": {
+    "papiea-client": "file:../../papiea-client",
+    "papiea-sdk": "file:../../papiea-sdk",
+    "papiea-core": "file:../../papiea-core",
+    "autocannon": "^4.6.0",
+    "axios": "^0.19.2"
+  },
+  "devDependencies": {
+    "@types/node": "^10.14.7",
+    "ts-node": "^7.0.1",
+    "typescript": "^3.8.3",
+    "@types/autocannon": "^4.1.0"
+  },
+  "jest": {
+    "transform": {
+      ".(ts|tsx)": "ts-jest"
+    },
+    "testRegex": "\\.(test|spec)\\.(ts|tsx|js)$",
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "json"
+    ],
+    "collectCoverageFrom": [
+      "src/**"
+    ],
+    "coveragePathIgnorePatterns": [
+      "papiea-lib-clj"
+    ],
+    "testEnvironment": "node"
+  }
+}

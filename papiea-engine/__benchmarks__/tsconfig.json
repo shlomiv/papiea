@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "target": "es2018",
+    "lib": ["es2018"],
+    "module": "commonjs",
+    "declaration": true,
+    "outDir": "./build",
+    "downlevelIteration": true,
+    "strict": true,
+    "sourceMap": true,
+    "baseUrl": ".",
+    "paths": {
+      "*": [
+        "src/@types/*"
+      ]
+    }
+  },
+  "exclude": ["node_modules", "**/__tests__/*", "build"]
+}

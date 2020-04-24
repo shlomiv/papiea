@@ -39,6 +39,20 @@ Instead of using usual `docker-compose up` in papiea-engine dir, use `docker-com
 See [Attaching to node js using VS Code](https://code.visualstudio.com/docs/nodejs/nodejs-debugging#_attaching-to-nodejs)
 See [Attaching to node js using Intellij](https://www.jetbrains.com/help/pycharm/running-and-debugging-node-js.html#a34dc5da)
 
+## Benchmarking Local Papiea
+
+1. Start papiea using `docker-compose up` in the papiea-engine dir
+
+2. `docker-compose exec papiea-engine bash -c 'cd __benchmarks__ && npm i && npm run bench-local'`
+
+## Benchmarking Dedicated Papiea
+
+1. From project root `cd papiea-engine/__benchmarks__`
+
+2. Install dependencies by `npm install`
+
+3. `npm run bench -- {PAPIEA_URL} {PUBLIC_HOST} {PUBLIC_PORT}` where PAPIEA_URL is a dedicated papiea_url, PUBLIC_HOST is your sdk publicly visible hostname, PUBLIC_PORT is your sdk publicly visible port
+
 ## Environment Papiea-Engine
 
 A set of these variables might be used to tweak the default papiea-engine configuration

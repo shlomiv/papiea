@@ -1,4 +1,4 @@
-import { cleanUpTestProvider, setUpTestProvider } from "./test_data";
+import { cleanUpSdkResources, setUpTestIntentfulProvider, setUpTestProvider } from "./test_data";
 import { CrudBenchmarks } from "./database_operations/crud";
 import { ProcedureBenchmarks } from "./database_operations/procedures";
 import { IntentfulBenchmarks } from "./intentful_operations/intentful";
@@ -9,7 +9,8 @@ const PUBLIC_HOST = args[3]
 const PUBLIC_PORT = args[4]
 
 async function main() {
-    const provider = await setUpTestProvider(PAPIEA_URL, PUBLIC_HOST, PUBLIC_PORT)
+    const sdk = await setUpTestProvider(PAPIEA_URL, PUBLIC_HOST, PUBLIC_PORT)
+    const provider = sdk.provider
     const kind_name = provider.kinds[0].name
     try {
         const crud_benchmarks = new CrudBenchmarks(PAPIEA_URL, provider.prefix, provider.version, kind_name)
@@ -27,14 +28,25 @@ async function main() {
         await procedure_benchmarks.runEntityProcedure(entity_procedure)
         await procedure_benchmarks.runKindProcedure(kind_procedure)
         await procedure_benchmarks.runProviderProcedure(provider_procedure)
-
-        const intentful_benchmarks = new IntentfulBenchmarks(PAPIEA_URL, provider.prefix, provider.version, kind_name)
-        intentful_benchmarks.setOpts({ amount: 2 })
+    } catch (e) {
+        console.log(e)
+    } finally {
+        console.log("Invoking cleanup Regular Provider")
+        await cleanUpSdkResources(sdk)
+    }
+    const intentful_sdk = await setUpTestIntentfulProvider(PAPIEA_URL, PUBLIC_HOST, PUBLIC_PORT)
+    const intentful_provider = intentful_sdk.provider
+    const intentful_kind = intentful_provider.kinds[0].name
+    try {
+        const intentful_benchmarks = new IntentfulBenchmarks(PAPIEA_URL, intentful_provider.prefix, intentful_provider.version, intentful_kind)
+        intentful_benchmarks.setOpts({ amount: 5 })
         await intentful_benchmarks.runIntentfulCAS()
         await intentful_benchmarks.runIntentfulTask()
+    } catch (e) {
+        console.log(e)
     } finally {
-        console.log("Invoking cleanup")
-        await cleanUpTestProvider(provider)
+        console.log("Invoking cleanup Intentful Provider")
+        await cleanUpSdkResources(intentful_sdk)
     }
 }
 

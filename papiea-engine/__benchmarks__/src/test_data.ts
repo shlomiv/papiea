@@ -9,14 +9,14 @@ import { Procedural_Execution_Strategy, Provider } from "papiea-core";
 
 const adminKey = process.env.PAPIEA_ADMIN_S2S_KEY || '';
 const args = process.argv
-const PAPIEA_URL = args[2]
+const PAPIEA_URL = args[ 2 ]
 
 const providerApiAdmin = axios.create({
-    baseURL: `${PAPIEA_URL}/provider`,
+    baseURL: `${ PAPIEA_URL }/provider`,
     timeout: 10000,
     headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${adminKey}`
+        'Authorization': `Bearer ${ adminKey }`
     }
 });
 
@@ -36,7 +36,7 @@ function tryParsePort(portStr: string): number {
     }
 }
 
-export async function setUpTestProvider(papiea_url: string, public_host: string, public_port: string): Promise<Provider> {
+export async function setUpTestProvider(papiea_url: string, public_host: string, public_port: string): Promise<ProviderSdk> {
     const sdk = ProviderSdk.create_provider(papiea_url, adminKey, public_host, tryParsePort(public_port));
     const location = sdk.new_kind(location_desc);
     sdk.version(provider_version);
@@ -70,10 +70,10 @@ export async function setUpTestProvider(papiea_url: string, public_host: string,
         console.log("Error setting provider")
         throw e
     }
-    return sdk.provider
+    return sdk
 }
 
-export async function setUpTestIntentfulProvider(papiea_url: string, public_host: string, public_port: string): Promise<Provider> {
+export async function setUpTestIntentfulProvider(papiea_url: string, public_host: string, public_port: string): Promise<ProviderSdk> {
     const sdk = ProviderSdk.create_provider(papiea_url, adminKey, public_host, tryParsePort(public_port));
     const location = sdk.new_kind(location_differ_desc);
     sdk.version(provider_version);
@@ -94,9 +94,10 @@ export async function setUpTestIntentfulProvider(papiea_url: string, public_host
         console.log("Error setting provider")
         throw e
     }
-    return sdk.provider
+    return sdk
 }
 
-export async function cleanUpTestProvider(provider: Provider) {
-    await providerApiAdmin.delete(`/${provider.prefix}/${provider.version}`);
+export async function cleanUpSdkResources(sdk: ProviderSdk) {
+    await providerApiAdmin.delete(`/${ sdk.provider.prefix }/${ sdk.provider.version }`);
+    sdk.server.close()
 }

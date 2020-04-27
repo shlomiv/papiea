@@ -114,6 +114,7 @@ export class TaskResolver {
     }
 
     private async onChange(entity: Entity) {
+        console.log("Invoked on change")
         try {
             const tasks = await this.intentfulTaskDb.list_tasks({ entity_ref: { uuid: entity.metadata.uuid, kind: entity.metadata.kind } })
             const current_spec_version = entity.metadata.spec_version

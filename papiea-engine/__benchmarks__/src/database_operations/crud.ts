@@ -1,22 +1,15 @@
 import { Version, Entity } from "papiea-core";
 import * as autocannon from "autocannon";
 import axios from "axios"
+import { Benchmarks } from "../base_benchmark";
 
-export class CrudBenchmarks {
-    private readonly full_url: string
-    private opts: autocannon.Options
+export class CrudBenchmarks extends Benchmarks {
     entities: string[]
     private readonly entity_path: string;
 
     constructor(papiea_url: string, provider_prefix: string, provider_version: Version, kind_name: string) {
-        this.full_url = `${papiea_url}/services/${provider_prefix}/${provider_version}/${kind_name}`
+        super(papiea_url, provider_prefix, provider_version, kind_name)
         this.entity_path = `/services/${provider_prefix}/${provider_version}/${kind_name}`
-        this.opts = {
-            url: this.full_url,
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        }
         this.entities = []
     }
 

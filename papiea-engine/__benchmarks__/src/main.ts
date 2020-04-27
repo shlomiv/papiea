@@ -1,6 +1,7 @@
 import { cleanUpTestProvider, setUpTestProvider } from "./test_data";
 import { CrudBenchmarks } from "./database_operations/crud";
 import { ProcedureBenchmarks } from "./database_operations/procedures";
+import { IntentfulBenchmarks } from "./intentful_operations/intentful";
 
 const args = process.argv
 const PAPIEA_URL = args[2]
@@ -26,9 +27,14 @@ async function main() {
         await procedure_benchmarks.runEntityProcedure(entity_procedure)
         await procedure_benchmarks.runKindProcedure(kind_procedure)
         await procedure_benchmarks.runProviderProcedure(provider_procedure)
+
+        const intentful_benchmarks = new IntentfulBenchmarks(PAPIEA_URL, provider.prefix, provider.version, kind_name)
+        intentful_benchmarks.setOpts({ amount: 2 })
+        await intentful_benchmarks.runIntentfulCAS()
+        await intentful_benchmarks.runIntentfulTask()
     } finally {
         console.log("Invoking cleanup")
-        await cleanUpTestProvider(PAPIEA_URL, provider)
+        await cleanUpTestProvider(provider)
     }
 }
 

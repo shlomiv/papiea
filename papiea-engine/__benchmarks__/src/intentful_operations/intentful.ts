@@ -85,6 +85,9 @@ export class IntentfulBenchmarks extends Benchmarks {
         if (completedIn.length === 0) {
             throw new Error("Couldn't complete intentful task benchmarks")
         }
+        if (completedIn.length !== this.tasks.length) {
+            console.log("Not all intentful operations resolved successfully")
+        }
         const sum = completedIn.reduce((acc, c) => acc + c, 0)
         const avg = sum / completedIn.length
         console.log(`Wait til intentful task is completed average time: ${avg} seconds`)

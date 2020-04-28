@@ -17,11 +17,12 @@ export class ProcedureInvocationError extends Error {
     static fromError(err: ValidationError, status?: number): ProcedureInvocationError
     static fromError(err: Error, status?: number): ProcedureInvocationError {
         if (isAxiosError(err)) {
+            console.log(err)
             return new ProcedureInvocationError([{
-                message: err.response!.data.message,
-                errors: err.response!.data.errors,
-                stacktrace: err.response!.data.stacktrace
-            }], err.response!.status)
+                message: err.response?.data.message,
+                errors: err.response?.data.errors,
+                stacktrace: err.response?.data.stacktrace
+            }], err.response?.status ?? 500)
         } else if (err instanceof ValidationError) {
             return new ProcedureInvocationError(err.errors.map(e => {
                 return { message: e }

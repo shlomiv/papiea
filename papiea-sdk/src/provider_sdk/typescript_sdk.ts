@@ -110,7 +110,7 @@ export class ProviderSdk implements ProviderImpl {
         this._securityApi = new SecurityApiImpl(this, s2skey);
         this.providerApiAxios = axios.create({
             baseURL: this.provider_url,
-            timeout: 5000,
+            timeout: 10000,
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${this._s2skey}`

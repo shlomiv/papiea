@@ -49,7 +49,7 @@ describe("Intentful Workflow tests", () => {
         await providerApiAdmin.delete(`${provider_prefix}/${provider_version}`)
     })
 
-    test("Change single field differ resolver should pass", async () => {
+    test.only("Change single field differ resolver should pass", async () => {
         expect.assertions(2);
         const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
         try {
@@ -61,8 +61,8 @@ describe("Intentful Workflow tests", () => {
                 await providerApiAdmin.patch('/update_status', {
                     context: "some context",
                     entity_ref: {
-                        uuid: metadata.uuid,
-                        kind: kind_name
+                        uuid: entity.metadata.uuid,
+                        kind: entity.metadata.kind
                     },
                     status: { x: entity.spec.x }
                 })

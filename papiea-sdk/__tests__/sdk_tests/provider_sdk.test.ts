@@ -7,8 +7,7 @@ import axios from "axios"
 import { readFileSync } from "fs";
 import { Metadata, Procedural_Execution_Strategy, Provider, Spec, Action, Entity_Reference, Entity } from "papiea-core";
 import uuid = require("uuid");
-import { WinstonLogger } from "../../../papiea-engine/src/logger";
-import { Logger } from "../../../papiea-engine/src/logger_interface";
+import { Logger, LoggerFactory } from "papiea-backend-utils";
 import { ProviderClient } from "papiea-client";
 import { Kind_Builder, ProceduralCtx_Interface, ProviderSdk, SecurityApi } from "../../src/provider_sdk/typescript_sdk";
 
@@ -542,7 +541,7 @@ describe("SDK + oauth provider tests", () => {
     const kind_name = provider.kinds[0].name;
     let entity_metadata: Metadata, entity_spec: Spec;
     const oauth2Server = OAuth2Server.createServer();
-    const providerSDKTestLogger: Logger = new WinstonLogger("info");
+    const providerSDKTestLogger = LoggerFactory.makeLogger({level: "info"});
 
     beforeAll(async () => {
         await providerApiAdmin.post('/', provider);

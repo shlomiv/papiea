@@ -1,8 +1,14 @@
 // [[file:~/work/papiea-js/Papiea-design.org::*Typescript:%20/src/provider_sdk/typescript_sdk_interface][Typescript: /src/provider_sdk/typescript_sdk_interface:1]]
 import { Kind_Builder } from "./typescript_sdk";
 import { Data_Description, Version, Status, Entity, Entity_Reference, S2S_Key, UserInfo, Action, Secret } from "papiea-core";
+import {
+    LOG_LEVELS, LogLevel, LoggerOptions, Logger, LoggerFactory,
+} from 'papiea-backend-utils';
 import { IncomingHttpHeaders } from "http";
 import { provider_client, ProviderClient } from "papiea-client";
+
+// Re-exports from papiea-backend.
+export {LOG_LEVELS, LogLevel, LoggerOptions, Logger, LoggerFactory}
 
 // [[file:~/work/papiea-js/Papiea-design.org::#h-Providers-SDK-518][provider_sdk_ts_provider_interface]]
 // Api for the provider-sdk
@@ -73,32 +79,3 @@ export interface IntentfulCtx_Interface {
 export type ProceduralCtx_Interface=IntentfulCtx_Interface;
 // provider_sdk_ts_intentful_ctx_interface ends here
 // Typescript: /src/provider_sdk/typescript_sdk_interface:1 ends here
-
-export type LoggerOptions = {
-    logPath?: string,
-    level?: string,
-    format?: 'json' | 'pretty',
-}
-
-export interface LoggerFactory {
-    createLogger(options?: LoggerOptions): Logger
-}
-
-export default interface Logger {
-
-    emerg(msg: any, ...messages: any[]): void
-
-    alert(msg: any, ...messages: any[]): void
-
-    crit(msg: any, ...messages: any[]): void
-
-    error(msg: any, ...messages: any[]): void
-
-    warning(msg: any, ...messages: any[]): void
-
-    notice(msg: any, ...messages: any[]): void
-
-    info(msg: any, ...messages: any[]): void
-
-    debug(msg: any, ...messages: any[]): void
-}

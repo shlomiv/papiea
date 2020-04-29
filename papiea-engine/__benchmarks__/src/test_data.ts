@@ -1,11 +1,11 @@
 import axios from "axios";
-import { ProviderSdk } from "papiea-sdk/build/provider_sdk/typescript_sdk";
+import { ProviderSdk } from "papiea-sdk";
 import {
     getDifferLocationDataDescription,
     getLocationDataDescription,
     loadYaml
 } from "../../__tests__/test_data_factory";
-import { Procedural_Execution_Strategy, Provider } from "papiea-core";
+import { Procedural_Execution_Strategy } from "papiea-core";
 
 const adminKey = process.env.PAPIEA_ADMIN_S2S_KEY || '';
 const args = process.argv

@@ -1,5 +1,5 @@
 import { Handler, IntentfulListener } from "./intentful_listener_interface";
-import { ChangeStream, Collection } from "mongodb";
+import { ChangeStream, Collection, ChangeEventUpdate } from "mongodb";
 import { Watchlist } from "./watchlist";
 import { Entity } from "papiea-core";
 import { MongoConnection } from "../databases/mongo";
@@ -63,7 +63,10 @@ export class IntentfulListenerMongoStream implements IntentfulListener {
         ], { fullDocument: 'updateLookup', resumeAfter: this.resumeToken })
         this.changeStreamIterator.on("change", async (change_event) => {
             this.resumeToken = change_event._id
-            const entity: Entity = change_event.fullDocument
+            // TODO: Newer Mongo type defs suggest fullDocument isn't always
+            // present, but we're only listening for updates, and we should
+            // always get a ChangeEventUpdate.
+            const entity: Entity = (<ChangeEventUpdate>change_event).fullDocument
             if (this.watchlist.has(entity.metadata.uuid)) {
                 if (this.specChanged(change_event) || this.statusChanged(change_event)) {
                     await this.onChange.call(entity)

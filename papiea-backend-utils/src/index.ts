@@ -1,5 +1,9 @@
 import {
-    LOG_LEVELS, LogLevel, LoggerOptions, Logger, LoggerFactory,
+    LOG_LEVELS, LogLevel, logLevelFromString, LoggerOptions, Logger,
+    LoggerFactory,
 } from './logging';
 
-export {LOG_LEVELS, LogLevel, LoggerOptions, Logger, LoggerFactory};
+export {
+    LOG_LEVELS, LogLevel, logLevelFromString, LoggerOptions, Logger,
+    LoggerFactory,
+};

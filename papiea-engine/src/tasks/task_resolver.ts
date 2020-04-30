@@ -9,7 +9,7 @@ import { IntentfulTask } from "./task_interface";
 import * as assert from "assert";
 import { timeout } from "../utils/utils";
 import { DiffResolver } from "./diff_resolver";
-import { WinstonLogger } from "../logger";
+import { Logger } from "papiea-backend-utils";
 
 export class TaskResolver {
     private readonly specDb: Spec_DB
@@ -20,10 +20,15 @@ export class TaskResolver {
     private intentfulListener: IntentfulListener
     private differ: Differ
     private diffResolver: DiffResolver;
-    private logger: WinstonLogger;
+    private logger: Logger;
     private watchlist: Watchlist;
 
-    constructor(specDb: Spec_DB, statusDb: Status_DB, intentfulTaskDb: IntentfulTask_DB, providerDb: Provider_DB, intentfulListener: IntentfulListener, differ: Differ, diffResolver: DiffResolver, watchlist: Watchlist, logger: WinstonLogger) {
+    constructor(specDb: Spec_DB, statusDb: Status_DB,
+                intentfulTaskDb: IntentfulTask_DB, providerDb: Provider_DB,
+                intentfulListener: IntentfulListener, differ: Differ,
+                diffResolver: DiffResolver, watchlist: Watchlist,
+                logger: Logger)
+    {
         this.specDb = specDb
         this.statusDb = statusDb
         this.providerDb = providerDb

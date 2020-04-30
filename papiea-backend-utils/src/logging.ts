@@ -8,20 +8,28 @@ export const LOG_LEVELS = {
     alert: 1,
     crit: 2,
     error: 3,
-    warning: 4,
-    notice: 5,
-    info: 6,
-    debug: 7,
+    audit: 4,
+    warning: 5,
+    notice: 6,
+    info: 7,
+    debug: 8,
 }
 
 export type LogLevel = keyof typeof LOG_LEVELS // 'debug' | 'info' | ...
 
+export function logLevelFromString(str: string) : LogLevel | undefined {
+    if (str in LOG_LEVELS) return str as LogLevel
+    return undefined
+}
+
 export interface Logger {
     log(level: LogLevel, msg: any, ...messages: any[]): void
+
     emerg(msg: any, ...messages: any[]): void
     alert(msg: any, ...messages: any[]): void
     crit(msg: any, ...messages: any[]): void
     error(msg: any, ...messages: any[]): void
+    audit(msg: any, ...messages: any[]): void
     warning(msg: any, ...messages: any[]): void
     notice(msg: any, ...messages: any[]): void
     info(msg: any, ...messages: any[]): void
@@ -44,6 +52,11 @@ export class LoggerFactory {
 
     private static readonly PRODUCTION =
         (process?.env?.NODE_ENV === 'production')
+
+    public static makeLogger(options: Partial<LoggerOptions>): Logger {
+        const factory = new LoggerFactory(options)
+        return factory.createLogger()
+    }
 
     public static nested(parent: LoggerFactory,
                          options: Partial<LoggerOptions>): LoggerFactory
@@ -122,7 +135,8 @@ export class LoggerFactory {
                 }),
             ]
         })
-        return logger
+
+        return new LoggerImpl(logger)
     }
 
     public static mergeOptions(first: LoggerOptions,
@@ -141,5 +155,43 @@ export class LoggerFactory {
 
     private static prettyPrint(obj: any): string {
         return inspect(obj, LoggerFactory.INSPECT_OPTIONS)
+    }
+}
+
+class LoggerImpl implements Logger {
+    private readonly _logger: winston.Logger
+
+    constructor(logger: winston.Logger) { this._logger = logger }
+
+    log(level: LogLevel, msg: any, ...messages: any[]): void {
+        this._logger.log(level, msg, ...messages)
+    }
+
+    emerg(msg: any, ...messages: any[]): void {
+        this._logger.emerg(msg, ...messages)
+    }
+    alert(msg: any, ...messages: any[]): void {
+        this._logger.alert(msg, ...messages)
+    }
+    crit(msg: any, ...messages: any[]): void {
+        this._logger.crit(msg, ...messages)
+    }
+    error(msg: any, ...messages: any[]): void {
+        this._logger.error(msg, ...messages)
+    }
+    audit(msg: any, ...messages: any[]): void {
+        this._logger.log('audit', msg, ...messages)
+    }
+    warning(msg: any, ...messages: any[]): void {
+        this._logger.warning(msg, ...messages)
+    }
+    notice(msg: any, ...messages: any[]): void {
+        this._logger.notice(msg, ...messages)
+    }
+    info(msg: any, ...messages: any[]): void {
+        this._logger.info(msg, ...messages)
+    }
+    debug(msg: any, ...messages: any[]): void {
+        this._logger.debug(msg, ...messages)
     }
 }

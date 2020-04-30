@@ -1,7 +1,7 @@
 import { Collection, Db } from "mongodb";
 import { SessionKeyDb } from "./session_key_db_interface"
 import { SessionKey, Secret } from "papiea-core"
-import { Logger } from "../logger_interface"
+import { Logger } from "papiea-backend-utils"
 
 export class SessionKeyDbMongo implements SessionKeyDb {
     collection: Collection;

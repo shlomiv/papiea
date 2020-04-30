@@ -8,7 +8,7 @@ import { Differ, Diff, Metadata, Spec, Status, Kind } from "papiea-core";
 import { Provider_DB } from "../databases/provider_db_interface";
 import axios from "axios"
 import { IntentfulContext } from "../intentful_core/intentful_context";
-import { WinstonLogger } from "../logger";
+import { Logger } from "papiea-backend-utils";
 import { Handler } from "./intentful_listener_interface";
 import deepEqual = require("deep-equal");
 
@@ -20,12 +20,12 @@ export class DiffResolver {
     protected watchlist: Watchlist
     private differ: Differ
     private intentfulContext: IntentfulContext;
-    private logger: WinstonLogger;
+    private logger: Logger;
     private batchSize: number;
 
     onIntentfulHandlerFail: Handler<(entity: EntryReference, error_msg?: string) => Promise<void>>
 
-    constructor(watchlist: Watchlist, watchlistDb: Watchlist_DB, specDb: Spec_DB, statusDb: Status_DB, providerDb: Provider_DB, differ: Differ, intentfulContext: IntentfulContext, logger: WinstonLogger, batchSize: number) {
+    constructor(watchlist: Watchlist, watchlistDb: Watchlist_DB, specDb: Spec_DB, statusDb: Status_DB, providerDb: Provider_DB, differ: Differ, intentfulContext: IntentfulContext, logger: Logger, batchSize: number) {
         this.specDb = specDb
         this.statusDb = statusDb
         this.watchlistDb = watchlistDb

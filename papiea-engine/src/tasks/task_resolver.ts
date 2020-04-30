@@ -12,17 +12,18 @@ import { DiffResolver } from "./diff_resolver";
 import { WinstonLogger } from "../logger";
 
 export class TaskResolver {
-    specDb: Spec_DB
-    statusDb: Status_DB
-    intentfulTaskDb: IntentfulTask_DB
-    providerDb: Provider_DB
+    private readonly specDb: Spec_DB
+    private readonly statusDb: Status_DB
+    private readonly intentfulTaskDb: IntentfulTask_DB
+    private readonly providerDb: Provider_DB
 
-    intentfulListener: IntentfulListener
-    differ: Differ
-    diffResolver: DiffResolver;
-    logger: WinstonLogger;
+    private intentfulListener: IntentfulListener
+    private differ: Differ
+    private diffResolver: DiffResolver;
+    private logger: WinstonLogger;
+    private watchlist: Watchlist;
 
-    constructor(specDb: Spec_DB, statusDb: Status_DB, intentfulTaskDb: IntentfulTask_DB, providerDb: Provider_DB, intentfulListener: IntentfulListener, differ: Differ, diffResolver: DiffResolver, logger: WinstonLogger) {
+    constructor(specDb: Spec_DB, statusDb: Status_DB, intentfulTaskDb: IntentfulTask_DB, providerDb: Provider_DB, intentfulListener: IntentfulListener, differ: Differ, diffResolver: DiffResolver, watchlist: Watchlist, logger: WinstonLogger) {
         this.specDb = specDb
         this.statusDb = statusDb
         this.providerDb = providerDb
@@ -32,6 +33,7 @@ export class TaskResolver {
         this.onChange = this.onChange.bind(this)
         this.onIntentfulHandlerFail = this.onIntentfulHandlerFail.bind(this)
 
+        this.watchlist = watchlist
         this.diffResolver = diffResolver
         this.differ = differ
         this.intentfulListener = intentfulListener
@@ -114,7 +116,6 @@ export class TaskResolver {
     }
 
     private async onChange(entity: Entity) {
-        console.log("Invoked on change")
         try {
             const tasks = await this.intentfulTaskDb.list_tasks({ entity_ref: { uuid: entity.metadata.uuid, kind: entity.metadata.kind } })
             const current_spec_version = entity.metadata.spec_version
@@ -122,6 +123,7 @@ export class TaskResolver {
             if (latest_task && latest_task.spec_version === current_spec_version && latest_task.status === IntentfulStatus.Pending) {
                 latest_task.status = IntentfulStatus.Active
                 await this.intentfulTaskDb.update_task(latest_task.uuid, { status: latest_task.status })
+                await this.processActiveTask(latest_task, entity)
                 const rest = tasks.filter(task => task.spec_version !== current_spec_version)
                 await this.processOutdatedTasks(rest, entity)
             } else if (latest_task && latest_task.spec_version === current_spec_version && latest_task.status === IntentfulStatus.Active) {
@@ -157,6 +159,19 @@ export class TaskResolver {
         }
     }
 
+    private async updateTasksStatuses() {
+        let entries = this.watchlist.entries();
+        for (let uuid in entries) {
+            const [entry_ref, diff, delay] = entries[uuid]
+            const tasks = await this.intentfulTaskDb.list_tasks({ entity_ref: entry_ref.entity_reference })
+            if (tasks.length !== 0) {
+                const [metadata, spec] = await this.specDb.get_spec(entry_ref.entity_reference)
+                const [, status] = await this.statusDb.get_status(entry_ref.entity_reference)
+                this.onChange({ metadata, spec, status })
+            }
+        }
+    }
+
     public async run(delay: number, taskExpirySeconds: number) {
         try {
             await this._run(delay, taskExpirySeconds)
@@ -169,7 +184,8 @@ export class TaskResolver {
     protected async _run(delay: number, taskExpirySeconds: number) {
         while (true) {
             await timeout(delay)
-            await this.clearTerminalStateTasks(taskExpirySeconds)
+            this.clearTerminalStateTasks(taskExpirySeconds)
+            this.updateTasksStatuses()
         }
     }
 }

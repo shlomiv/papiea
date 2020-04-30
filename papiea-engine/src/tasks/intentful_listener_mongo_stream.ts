@@ -62,7 +62,6 @@ export class IntentfulListenerMongoStream implements IntentfulListener {
             { $match: { operationType: "update" } }
         ], { fullDocument: 'updateLookup', resumeAfter: this.resumeToken })
         this.changeStreamIterator.on("change", async (change_event) => {
-            console.log("On event changed")
             this.resumeToken = change_event._id
             const entity: Entity = change_event.fullDocument
             if (this.watchlist.has(entity.metadata.uuid)) {

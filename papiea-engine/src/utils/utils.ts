@@ -3,12 +3,12 @@ import { ValidationError } from "../errors/validation_error"
 import { AxiosError } from "axios"
 
 function validatePaginationParams(offset: number | undefined, limit: number | undefined) {
-    if (offset) {
+    if (offset !== undefined) {
         if (offset <= 0) {
             throw new ValidationError([new Error("Offset should not be less or equal to zero")])
         }
     }
-    if (limit) {
+    if (limit !== undefined) {
         if (limit <= 0) {
             throw new ValidationError([new Error("Limit should not be less or equal to zero")])
         }

@@ -9,7 +9,7 @@ import { createHash } from "../auth/crypto";
 import { EventEmitter } from "events";
 import { Entity_Reference, Version, Status, Provider, Kind, S2S_Key, Action, Secret, IntentfulBehaviour } from "papiea-core";
 import uuid = require("uuid");
-import { Logger } from "../logger_interface";
+import { Logger } from "papiea-backend-utils";
 import { Watchlist_DB } from "../databases/watchlist_db_interface";
 import { SpecOnlyUpdateStrategy } from "../intentful_core/intentful_strategies/status_update_strategy";
 import { IntentfulContext } from "../intentful_core/intentful_context";
@@ -25,7 +25,11 @@ export class Provider_API_Impl implements Provider_API {
     private watchlistDb: Watchlist_DB;
     private intentfulContext: IntentfulContext;
 
-    constructor(logger: Logger, providerDb: Provider_DB, statusDb: Status_DB, s2skeyDb: S2S_Key_DB, watchlistDb: Watchlist_DB, intentfulContext: IntentfulContext, authorizer: Authorizer, validator: Validator) {
+    constructor(logger: Logger, providerDb: Provider_DB, statusDb: Status_DB,
+                s2skeyDb: S2S_Key_DB, watchlistDb: Watchlist_DB,
+                intentfulContext: IntentfulContext, authorizer: Authorizer,
+                validator: Validator)
+    {
         this.providerDb = providerDb;
         this.statusDb = statusDb;
         this.s2skeyDb = s2skeyDb;

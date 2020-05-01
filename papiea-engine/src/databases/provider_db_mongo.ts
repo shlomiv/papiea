@@ -1,7 +1,7 @@
 import { Provider_DB } from "./provider_db_interface";
 import { Collection, Db } from "mongodb"
 import { IntentfulBehaviour, Kind, Provider, Version } from "papiea-core";
-import { Logger } from "../logger_interface"
+import { Logger } from "papiea-backend-utils"
 
 export interface IntentfulKindReference {
     provider_prefix: string,

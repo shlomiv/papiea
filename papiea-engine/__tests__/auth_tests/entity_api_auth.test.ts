@@ -6,8 +6,7 @@ const queryString = require("query-string");
 import { OAuth2Server, ProviderBuilder } from "../test_data_factory"
 import uuid = require("uuid");
 import { Metadata, Spec, Provider } from "papiea-core";
-import { WinstonLogger } from "../../src/logger";
-import { Logger } from "../../src/logger_interface";
+import { Logger, LoggerFactory } from 'papiea-backend-utils';
 
 declare var process: {
     env: {
@@ -68,7 +67,7 @@ describe("Entity API auth tests", () => {
     const kind_name = provider.kinds[0].name;
     let entity_metadata: Metadata, entity_spec: Spec;
     let idp_token: string;
-    const entityApiAuthTestLogger: Logger = new WinstonLogger("info");
+    const entityApiAuthTestLogger = LoggerFactory.makeLogger({level: 'info'});
 
     const tenant_uuid = uuid();
     const oauth2Server = http.createServer((req, res) => {
@@ -779,7 +778,7 @@ describe("Entity API Logout tests", () => {
         .withAuthModel()
         .build();
     const oauth2Server = OAuth2Server.createServer();
-    const entityApiAuthTestLogger: Logger = new WinstonLogger("info");
+    const entityApiAuthTestLogger = LoggerFactory.makeLogger({level: 'info'});
 
     beforeAll(async () => {
         await providerApiAdmin.post('/', provider);
@@ -823,7 +822,7 @@ describe("Entity API Refresh token tests", () => {
         .withAuthModel()
         .build();
     const oauth2Server = OAuth2Server.createServer(-5);
-    const entityApiAuthTestLogger: Logger = new WinstonLogger("info");
+    const entityApiAuthTestLogger = LoggerFactory.makeLogger({level: 'info'});
 
     beforeAll(async () => {
         await providerApiAdmin.post('/', provider);

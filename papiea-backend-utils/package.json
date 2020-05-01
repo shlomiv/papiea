@@ -1,0 +1,21 @@
+{
+  "name": "papiea-backend-utils",
+  "version": "1.0.84",
+  "description": "Papiea backend library -- functionality common to both -engine and -sdk",
+  "main": "build/index.js",
+  "scripts": {
+    "clean": "rm -rf build",
+    "build": "tsc"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^13.13.4",
+    "typescript": "^3.8.3"
+  },
+  "dependencies": {
+    "logform": "^2.1.2",
+    "papiea-core": "file:../papiea-core",
+    "winston": "^3.2.1"
+  }
+}

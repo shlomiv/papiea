@@ -3,8 +3,7 @@ import axios from "axios";
 import { UserAuthInfo } from "../../src/auth/authn";
 import { Authorizer } from "../../src/auth/authz";
 import { Action } from "papiea-core";
-import { WinstonLogger } from "../../src/logger";
-import { Logger } from "../../src/logger_interface";
+import { Logger, LoggerFactory } from 'papiea-backend-utils';
 
 
 declare var process: {
@@ -47,7 +46,7 @@ describe("Pagination tests", () => {
 
     let uuids: string[] = [];
     const entityPromises: Promise<any>[] = [];
-    const sortingTestLogger: Logger = new WinstonLogger("info");
+    const sortingTestLogger = LoggerFactory.makeLogger({level: "info"});
 
     beforeAll(async () => {
         const provider = new ProviderBuilder(providerPrefix).withVersion(providerVersion).withKinds().build();

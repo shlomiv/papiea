@@ -5,7 +5,7 @@ import { extract_property } from "./user_data_evaluator"
 import { Provider } from "papiea-core"
 import { SessionKeyAPI } from "./session_key"
 import uuid = require("uuid")
-import { Logger } from "../logger_interface"
+import { Logger } from 'papiea-backend-utils'
 
 const simpleOauthModule = require("simple-oauth2"),
     queryString = require("query-string"),

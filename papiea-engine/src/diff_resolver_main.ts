@@ -1,4 +1,4 @@
-import { WinstonLogger } from "./logger"
+import { logLevelFromString, Logger, LoggerFactory } from "papiea-backend-utils"
 import { MongoConnection } from "./databases/mongo"
 import { Watchlist } from "./tasks/watchlist"
 import { DiffResolver } from "./tasks/diff_resolver"
@@ -25,12 +25,12 @@ declare var process: {
 
 const mongoUrl = process.env.MONGO_URL || 'mongodb://mongo:27017';
 const mongoDb = process.env.MONGO_DB || 'papiea';
-const loggingLevel = process.env.LOGGING_LEVEL || 'debug';
+const loggingLevel = logLevelFromString(process.env.LOGGING_LEVEL) ?? 'debug';
 const batchSize = process.env.RANDOM_ENTITY_BATCH_SIZE ?? 5
 const deletedTaskPersists = process.env.DELETED_TASK_PERSIST_SECONDS ?? 100
 
 async function setUpDiffResolver() {
-    const logger = new WinstonLogger(loggingLevel);
+    const logger = LoggerFactory.makeLogger({level: loggingLevel});
     const mongoConnection: MongoConnection = new MongoConnection(mongoUrl, mongoDb);
     await mongoConnection.connect();
 

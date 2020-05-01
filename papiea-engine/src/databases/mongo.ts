@@ -6,11 +6,10 @@ import { Status_DB_Mongo } from "./status_db_mongo";
 import { Provider_DB_Mongo } from "./provider_db_mongo";
 import { S2S_Key_DB_Mongo } from "./s2skey_db_mongo";
 import { SessionKeyDbMongo } from "./session_key_db_mongo"
-import { Logger } from "../logger_interface"
+import { Logger } from 'papiea-backend-utils'
 import { IntentfulTask_DB_Mongo } from "./intentful_task_db_mongo"
 import { Watchlist_Db_Mongo } from "./watchlist_db_mongo";
 import { timeout } from "../utils/utils";
-import { exceptions } from "winston";
 const fs = require('fs'),
     url = require('url');
 

@@ -1,5 +1,5 @@
 import { Collection, Db } from "mongodb";
-import { Logger } from "../logger_interface";
+import { Logger } from "papiea-backend-utils";
 import { Watchlist_DB } from "./watchlist_db_interface";
 import { SerializedWatchlist, Watchlist } from "../tasks/watchlist";
 

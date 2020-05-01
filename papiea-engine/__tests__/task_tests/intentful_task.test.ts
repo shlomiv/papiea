@@ -1,10 +1,9 @@
 import { getDifferLocationDataDescription, ProviderBuilder } from "../test_data_factory"
 import { IntentfulBehaviour, IntentfulStatus } from "papiea-core"
+import { Logger, LoggerFactory } from 'papiea-backend-utils';
 import { plural } from "pluralize"
 import axios from "axios"
 import { MongoConnection } from "../../src/databases/mongo"
-import { Logger } from "../../src/logger_interface"
-import { WinstonLogger } from "../../src/logger"
 import { IntentfulTask_DB } from "../../src/databases/intentful_task_db_interface"
 import { IntentfulTask } from "../../src/tasks/task_interface"
 import { Intentful_Execution_Strategy, Metadata, Provider } from "papiea-core"
@@ -89,7 +88,7 @@ describe("Intentful Task tests", () => {
     const mongoUrl = process.env.MONGO_URL || 'mongodb://mongo:27017';
     const mongoDb = process.env.MONGO_DB || 'papiea';
     const mongoConnection: MongoConnection = new MongoConnection(mongoUrl, mongoDb);
-    const intentfulWorkflowTestLogger: Logger = new WinstonLogger("info");
+    const intentfulWorkflowTestLogger = LoggerFactory.makeLogger({level: "info"});
     let intentfulTaskDb: IntentfulTask_DB
     let createdTask: IntentfulTask
     let to_delete_metadata: Metadata

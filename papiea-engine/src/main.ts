@@ -1,4 +1,7 @@
 import * as express from "express";
+
+import { logLevelFromString, LoggerFactory } from 'papiea-backend-utils';
+
 import createAPIDocsRouter from "./api_docs/api_docs_routes";
 import ApiDocsGenerator from "./api_docs/api_docs_generator";
 import createProviderAPIRouter from "./provider/provider_routes";
@@ -15,10 +18,9 @@ import { Authorizer, AdminAuthorizer, PerProviderAuthorizer } from "./auth/authz
 import { ValidatorImpl } from "./validator";
 import { ProviderCasbinAuthorizerFactory } from "./auth/casbin";
 import { PapieaErrorImpl } from "./errors/papiea_error_impl";
-import { WinstonLogger, getLoggingMiddleware, WinstonAuditLogger } from './logger'
 import { SessionKeyAPI, SessionKeyUserAuthInfoExtractor } from "./auth/session_key"
 import { IntentfulContext } from "./intentful_core/intentful_context"
-import { AuditLogger } from "./logger_interface"
+import { AuditLogger } from "./audit_logging"
 import { BasicDiffer } from "./intentful_core/differ_impl"
 const cookieParser = require('cookie-parser');
 
@@ -44,17 +46,17 @@ const oauth2RedirectUri: string = publicAddr + "/provider/auth/callback";
 const mongoUrl = process.env.MONGO_URL || 'mongodb://mongo:27017';
 const mongoDb = process.env.MONGO_DB || 'papiea';
 const adminKey = process.env.PAPIEA_ADMIN_S2S_KEY || '';
-const loggingLevel = process.env.LOGGING_LEVEL || 'info';
+const loggingLevel = logLevelFromString(process.env.LOGGING_LEVEL) ?? 'info';
 const papieaDebug = process.env.PAPIEA_DEBUG === "true"
 
 
 async function setUpApplication(): Promise<express.Express> {
-    const logger = new WinstonLogger(loggingLevel);
-    const auditLogger: AuditLogger = new WinstonAuditLogger(papieaDebug)
+    const logger = LoggerFactory.makeLogger({level: loggingLevel});
+    const auditLogger: AuditLogger = new AuditLogger(logger, papieaDebug)
     const app = express();
     app.use(cookieParser());
     app.use(express.json());
-    app.use(getLoggingMiddleware(auditLogger));
+    app.use(auditLogger.middleware());
     const mongoConnection: MongoConnection = new MongoConnection(mongoUrl, mongoDb);
     await mongoConnection.connect();
     const differ = new BasicDiffer()

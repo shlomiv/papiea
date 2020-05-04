@@ -24,7 +24,7 @@ import { ValidationError } from "../errors/validation_error";
 import { ProcedureInvocationError } from "../errors/procedure_invocation_error";
 import uuid = require("uuid");
 import { PermissionDeniedError } from "../errors/permission_error";
-import { Logger } from "../logger_interface";
+import { Logger } from "papiea-backend-utils";
 import { IntentfulContext } from "../intentful_core/intentful_context"
 import { Provider_DB } from "../databases/provider_db_interface"
 import { IntentfulTask, IntentfulTaskMapper } from "../tasks/task_interface"

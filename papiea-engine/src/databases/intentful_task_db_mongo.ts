@@ -1,6 +1,6 @@
 import { Collection, Db } from "mongodb"
 import { SortParams } from "../entity/entity_api_impl"
-import { Logger } from "../logger_interface"
+import { Logger } from 'papiea-backend-utils'
 import { IntentfulTask_DB } from "./intentful_task_db_interface"
 import { IntentfulTask } from "../tasks/task_interface"
 

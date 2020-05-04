@@ -1,6 +1,8 @@
 import { Entity_API } from "./entity_api_interface";
 import { Router } from "express";
+import { Query } from 'express-serve-static-core';
 import { UserAuthInfo, asyncHandler } from '../auth/authn';
+import { BadRequestError } from '../errors/bad_request_error';
 import { processPaginationParams, processSortQuery } from "../utils/utils";
 import { SortParams } from "./entity_api_impl";
 import { CheckNoQueryParams, check_request } from "../validator/express_validator";
@@ -57,13 +59,13 @@ export function createEntityAPIRouter(entity_api: Entity_API): Router {
         allowed_query_params: ['offset', 'limit', 'sort', 'entity_ref', 'created_at', 'status']
     }), asyncHandler(async (req, res) => {
         const filter: any = {};
-        const offset: undefined | number = req.query.offset;
-        const limit: undefined | number = req.query.limit;
-        const rawSortQuery: undefined | string = req.query.sort;
+        const offset = queryToNum(req.query.offset);
+        const limit = queryToNum(req.query.limit);
+        const rawSortQuery = queryToString(req.query.sort);
         const sortParams = processSortQuery(rawSortQuery);
         const [skip, size] = processPaginationParams(offset, limit);
         if (req.query.entity_ref) {
-            filter.entity_ref = JSON.parse(req.query.entity_ref)
+            filter.entity_ref = JSON.parse(queryToString(req.query.entity_ref) ?? 'undefined')
         }
         if (req.query.created_at) {
             filter.created_at = req.query.created_at
@@ -80,9 +82,9 @@ export function createEntityAPIRouter(entity_api: Entity_API): Router {
         allowed_body_params: ['entity_ref', 'created_at', 'status']
     }), asyncHandler(async (req, res) => {
         const filter: any = {};
-        const offset: undefined | number = req.query.offset;
-        const limit: undefined | number = req.query.limit;
-        const rawSortQuery: undefined | string = req.query.sort;
+        const offset = queryToNum(req.query.offset);
+        const limit = queryToNum(req.query.limit);
+        const rawSortQuery = queryToString(req.query.sort);
         const sortParams = processSortQuery(rawSortQuery);
         const [skip, size] = processPaginationParams(offset, limit);
         if (req.body.entity_ref) {
@@ -102,26 +104,16 @@ export function createEntityAPIRouter(entity_api: Entity_API): Router {
         allowed_query_params: ['offset', 'limit', 'sort', 'spec', 'status', 'metadata']
     }), asyncHandler(async (req, res) => {
         const filter: any = {};
-        const offset: undefined | number = req.query.offset;
-        const limit: undefined | number = req.query.limit;
-        const rawSortQuery: undefined | string = req.query.sort;
+        const offset = queryToNum(req.query.offset);
+        const limit = queryToNum(req.query.limit);
+        const rawSortQuery = queryToString(req.query.sort);
         const sortParams = processSortQuery(rawSortQuery);
         const [skip, size] = processPaginationParams(offset, limit);
-        if (req.query.spec) {
-            filter.spec = JSON.parse(req.query.spec);
-        } else {
-            filter.spec = {};
-        }
-        if (req.query.status) {
-            filter.status = JSON.parse(req.query.status);
-        } else {
-            filter.status = {};
-        }
-        if (req.query.metadata) {
-            filter.metadata = JSON.parse(req.query.metadata);
-        } else {
-            filter.metadata = {};
-        }
+
+        filter.spec = JSON.parse(queryToString(req.query.spec) ?? '{}');
+        filter.status = JSON.parse(queryToString(req.query.status) ?? '{}');
+        filter.metadata = JSON.parse(queryToString(req.query.metadata) ?? '{}');
+
         res.json(await filterEntities(req.user, req.params.kind, filter, skip, size, sortParams));
     }));
 
@@ -135,9 +127,9 @@ export function createEntityAPIRouter(entity_api: Entity_API): Router {
         allowed_query_params: ['offset', 'limit', 'sort'],
         allowed_body_params: ['spec', 'status', 'metadata', 'offset', 'limit', 'sort']
     }), asyncHandler(async (req, res) => {
-        const offset: undefined | number = req.query.offset || req.body.offset;
-        const limit: undefined | number = req.query.limit || req.body.limit;
-        const rawSortQuery: undefined | string = req.query.sort || req.body.sort;
+        const offset = queryToNum(req.query.offset) ?? req.body.offset;
+        const limit = queryToNum(req.query.limit) ?? req.body.limit;
+        const rawSortQuery = queryToString(req.query.sort) ?? req.body.sort;
         const sortParams: undefined | SortParams = processSortQuery(rawSortQuery);
         const [skip, size] = processPaginationParams(offset, limit);
         const filter: any = {};
@@ -204,4 +196,25 @@ export function createEntityAPIRouter(entity_api: Entity_API): Router {
     }));
 
     return router;
+}
+
+type ExpressQueryParam = string | Query | (string | Query)[];
+
+function queryToNum(q?: ExpressQueryParam): number | undefined {
+    switch (typeof q) {
+        case 'number': return q;
+        case 'string': return Number.parseFloat(q);
+        case 'undefined': return undefined;
+        default:
+            throw new BadRequestError('Invalid query parameter');
+    }
+}
+
+function queryToString(q?: ExpressQueryParam): string | undefined {
+    switch (typeof q) {
+        case 'string': return q;
+        case 'undefined': return undefined;
+        default:
+            throw new BadRequestError('Invalid query parameter');
+    }
 }

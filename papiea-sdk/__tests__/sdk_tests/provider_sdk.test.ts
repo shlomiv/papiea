@@ -7,8 +7,7 @@ import axios from "axios"
 import { readFileSync } from "fs";
 import { Metadata, Procedural_Execution_Strategy, Provider, Spec, Action, Entity_Reference, Entity } from "papiea-core";
 import uuid = require("uuid");
-import { WinstonLogger } from "../../../papiea-engine/src/logger";
-import { Logger } from "../../../papiea-engine/src/logger_interface";
+import { Logger, LoggerFactory } from "papiea-backend-utils";
 import { ProviderClient } from "papiea-client";
 import { Kind_Builder, ProceduralCtx_Interface, ProviderSdk, SecurityApi } from "../../src/provider_sdk/typescript_sdk";
 
@@ -254,8 +253,9 @@ describe("Provider Sdk tests", () => {
                 });
                 return res.data.spec;
             });
+            await sdk.register();
         } catch (e) {
-            expect(e.message).toBe("Provider prefix is not set");
+            expect(e.message).toBe("Malformed provider description. Missing: prefix");
         }
     });
 
@@ -490,6 +490,36 @@ describe("Provider Sdk tests", () => {
             sdk.server.close();
         }
     });
+
+    test("Provider with provider level procedures should correctly handle exceptions in the provider", async () => {
+        expect.hasAssertions();
+        const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
+        const location = sdk.new_kind(location_yaml);
+        sdk.version(provider_version);
+        sdk.prefix("location_provider_throws_exception");
+        sdk.provider_procedure("computeSumThrowsError",
+            {},
+            Procedural_Execution_Strategy.Halt_Intentful,
+            loadYaml("./test_data/procedure_sum_input.yml"),
+            loadYaml("./test_data/procedure_sum_output.yml"),
+            async (ctx, input) => {
+                const object: any = {}
+                // This should raise exception
+                object.undef.x = 10
+            }
+        );
+        try {
+            await sdk.register();
+            const res: any = await axios.post(`${sdk.entity_url}/${sdk.provider.prefix}/${sdk.provider.version}/procedure/computeSumThrowsError`, { input: { "a": 5, "b": 5 } });
+        } catch (e) {
+            console.log(e.response.data.error.errors[0])
+            expect(e.response.data.error.errors[0].message).toBe("Cannot set property 'x' of undefined");
+            expect(e.response.data.error.errors[0].stacktrace).not.toBeUndefined();
+            expect(e.response.data.error.errors[0].stacktrace).toContain("TypeError: Cannot set property 'x' of undefined")
+        } finally {
+            sdk.server.close();
+        }
+    });
 });
 
 describe("SDK + oauth provider tests", () => {
@@ -511,7 +541,7 @@ describe("SDK + oauth provider tests", () => {
     const kind_name = provider.kinds[0].name;
     let entity_metadata: Metadata, entity_spec: Spec;
     const oauth2Server = OAuth2Server.createServer();
-    const providerSDKTestLogger: Logger = new WinstonLogger("info");
+    const providerSDKTestLogger = LoggerFactory.makeLogger({level: "info"});
 
     beforeAll(async () => {
         await providerApiAdmin.post('/', provider);

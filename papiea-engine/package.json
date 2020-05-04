@@ -45,6 +45,7 @@
     "mongo-dot-notation-tool": "^1.0.1",
     "mongodb": "^3.1.10",
     "morgan": "^1.9.1",
+    "papiea-backend-utils": "file:../papiea-backend-utils",
     "papiea-core": "file:../papiea-core",
     "pluralize": "^7.0.0",
     "query-string": "^6.2.0",
@@ -53,8 +54,7 @@
     "swagger-ui-express": "^4.0.7",
     "uuid": "^3.3.2",
     "uuid-validate": "0.0.3",
-    "wait-port": "^0.2.2",
-    "winston": "^3.2.1"
+    "wait-port": "^0.2.2"
   },
   "devDependencies": {
     "@types/express": "^4.16.0",

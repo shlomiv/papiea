@@ -1,4 +1,12 @@
-run-papiea: benchmark-install
+.PHONY: run-papiea papiea-build stop-papiea run-tests run-benchmark run-benchmark-local
+
+
+run-benchmark-local: run-papiea
+	cd ./papiea-engine; \
+	docker-compose exec papiea-engine bash -c 'cd __benchmarks__ && npm i && npm run bench-local'
+
+
+run-papiea: papiea-build
 	cd ./papiea-engine; \
 	if [ -z `docker-compose ps -q papiea-engine` ] || [ -z `docker ps -q --no-trunc | grep $$(docker-compose ps -q papiea-engine)` ]; then \
       docker-compose up -d; \
@@ -11,15 +19,12 @@ run-papiea: benchmark-install
     fi
 
 
-papiea-build:
+papiea-build: node_modules
 	npm run build-all
 
 
-papiea-install:
-	npm run install-all
-
-
-benchmark-install: papiea-install papiea-build
+node_modules:
+	npm run install-all; \
 	cd ./papiea-engine/__benchmarks__; \
 	npm install
 
@@ -39,14 +44,9 @@ run-tests: run-papiea
 	docker-compose exec papiea-engine bash -c 'cd /code/papiea-sdk && npm test'
 
 
-run-benchmark: benchmark-install
+run-benchmark: node_modules
 	cd ./papiea-engine/__benchmarks__; \
 	npm run bench -- $(ARGS)
-
-
-run-benchmark-local: run-papiea
-	cd ./papiea-engine; \
-	docker-compose exec papiea-engine bash -c 'cd __benchmarks__ && npm i && npm run bench-local'
 
 
 clean-all:

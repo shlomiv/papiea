@@ -32,7 +32,7 @@
         "InstanceType" : { "Ref" : "InstanceType" },
         "SecurityGroupIds" : [ "sg-07c79a176351db9bd" ],
         "KeyName" : { "Ref" : "KeyName" },
-        "ImageId" : "ami-06e1dca476e04c0ff",
+        "ImageId" : "ami-0e5717cd2b603e653",
         "Tags": [
           {
             "Key": "Name",

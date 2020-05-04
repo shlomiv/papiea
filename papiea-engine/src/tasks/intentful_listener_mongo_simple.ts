@@ -1,6 +1,5 @@
 import { Status, Spec, Entity } from "papiea-core"
 import { Handler, IntentfulListener } from "./intentful_listener_interface"
-import { IntentfulTask_DB } from "../databases/intentful_task_db_interface"
 import { Watchlist } from "./watchlist"
 import { Status_DB } from "../databases/status_db_interface"
 import { timeout } from "../utils/utils"
@@ -8,7 +7,6 @@ import { Spec_DB } from "../databases/spec_db_interface";
 import deepEqual = require("deep-equal");
 
 export class IntentfulListenerMongo implements IntentfulListener {
-    private readonly intentfulTaskDb: IntentfulTask_DB
     onChange: Handler<(entity: Entity) => Promise<void>>;
     private watchlist: Watchlist
     private entities: Map<string, [Spec, Status]>
@@ -31,16 +29,15 @@ export class IntentfulListenerMongo implements IntentfulListener {
                 this.entities.set(metadata.uuid, [spec, status])
                 continue
             }
-            if (deepEqual(spec, entry[0]) || deepEqual(status, entry[1])) {
+            if (!deepEqual(spec, entry[0]) || !deepEqual(status, entry[1])) {
                 this.entities.set(metadata.uuid, [spec, status])
                 await this.onChange.call({ metadata, spec, status })
             }
         }
     }
 
-    constructor(intentfulTaskDb: IntentfulTask_DB, statusDb: Status_DB, specDb: Spec_DB, watchlist: Watchlist) {
+    constructor(statusDb: Status_DB, specDb: Spec_DB, watchlist: Watchlist) {
         this.statusDb = statusDb
-        this.intentfulTaskDb = intentfulTaskDb
         this.specDb = specDb
         this.onChange = new Handler()
         this.watchlist = watchlist

@@ -49,7 +49,7 @@ describe("Intentful Workflow tests", () => {
         await providerApiAdmin.delete(`${provider_prefix}/${provider_version}`)
     })
 
-    test.only("Change single field differ resolver should pass", async () => {
+    test("Change single field differ resolver should pass", async () => {
         expect.assertions(2);
         const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
         try {

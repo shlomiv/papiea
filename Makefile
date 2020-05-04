@@ -13,7 +13,7 @@ run-papiea: papiea-build
 	  for i in `seq 1 10`; \
 	  do \
 		docker-compose logs --tail=5 papiea-engine | grep 'app listening on port' && echo Success && exit 0; \
-		sleep 15; \
+		sleep 2; \
 		docker-compose logs --tail=5; \
 	  done \
     fi

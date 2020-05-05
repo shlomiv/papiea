@@ -1,17 +1,54 @@
-import axios from "axios";
-import { Metadata, Spec, Entity_Reference, Entity, EntitySpec } from "papiea-core";
+import axios, { AxiosPromise, AxiosRequestConfig } from "axios";
+import { Metadata, Spec, Entity_Reference, Entity, EntitySpec, PapieaErrorTypes } from "papiea-core";
+import {
+    BadRequestError,
+    ConflictingEntityError,
+    EntityNotFoundError,
+    PermissionDeniedError,
+    ProcedureInvocationError,
+    PapieaServerError,
+    UnauthorizedError,
+    ValidationError
+} from "./errors/errors";
+
+function make_request<T = any>(f: (url: string, data?: any, config?: AxiosRequestConfig) => AxiosPromise<T>, url: string, data?: any, config?: AxiosRequestConfig): AxiosPromise<T> {
+    try {
+        return f(url, data, config)
+    } catch (e) {
+        switch (e?.response?.data?.error.type) {
+            case PapieaErrorTypes.ConflictingEntity:
+                throw new ConflictingEntityError(e.response.data.error.message)
+            case PapieaErrorTypes.PermissionDenied:
+                throw new PermissionDeniedError(e.response.data.error.message)
+            case PapieaErrorTypes.EntityNotFound:
+                throw new EntityNotFoundError(e.response.data.error.message)
+            case PapieaErrorTypes.ProcedureInvocation:
+                throw new ProcedureInvocationError(e.response.data.error.message)
+            case PapieaErrorTypes.Unauthorized:
+                throw new UnauthorizedError(e.response.data.error.message)
+            case PapieaErrorTypes.Validation:
+                throw new ValidationError(e.response.data.error.message)
+            case PapieaErrorTypes.BadRequest:
+                throw new BadRequestError(e.response.data.error.message)
+            case PapieaErrorTypes.ServerError:
+                throw new PapieaServerError(e.response.data.error.message)
+            default:
+                throw new Error(e)
+        }
+    }
+}
 
 async function create_entity(provider: string, kind: string, version: string, request_spec: Spec, papiea_url: string,meta_extension:any, s2skey: string): Promise<EntitySpec> {
     const payload = {
         spec: request_spec,
         ...(meta_extension) && {metadata: {extension: meta_extension}}
     }
-    const { data: { metadata, spec } } = await axios.post(`${papiea_url}/services/${provider}/${version}/${kind}`, payload, {headers:{"Authorization": `Bearer ${s2skey}`}});
+    const { data: { metadata, spec } } = await make_request(axios.post, `${papiea_url}/services/${provider}/${version}/${kind}`, payload, {headers:{"Authorization": `Bearer ${s2skey}`}});
     return { metadata, spec };
 }
 
 async function create_entity_with_meta(provider: string, kind: string, version: string, meta: Partial<Metadata>, request_spec: Spec, papiea_url: string, s2skey: string): Promise<EntitySpec> {
-    const { data: { metadata, spec } } = await axios.post(`${papiea_url}/services/${provider}/${version}/${kind}`, {
+    const { data: { metadata, spec } } = await make_request(axios.post, `${papiea_url}/services/${provider}/${version}/${kind}`, {
         spec: request_spec,
         metadata: meta
     }, {headers:{"Authorization": `Bearer ${s2skey}`}});
@@ -19,7 +56,7 @@ async function create_entity_with_meta(provider: string, kind: string, version: 
 }
 
 async function update_entity(provider: string, kind: string, version: string, request_spec: Spec, request_metadata: Metadata, papiea_url: string, s2skey: string): Promise<EntitySpec> {
-    const { data: { metadata, spec } } = await axios.put(`${papiea_url}/services/${provider}/${version}/${kind}/${request_metadata.uuid}`, {
+    const { data: { metadata, spec } } = await make_request(axios.put, `${papiea_url}/services/${provider}/${version}/${kind}/${request_metadata.uuid}`, {
         spec: request_spec,
         metadata: {
             spec_version: request_metadata.spec_version
@@ -29,27 +66,27 @@ async function update_entity(provider: string, kind: string, version: string, re
 }
 
 async function get_entity(provider: string, kind: string, version: string, entity_reference: Entity_Reference, papiea_url: string, s2skey: string): Promise<Entity> {
-    const { data: { metadata, spec, status } } = await axios.get(`${papiea_url}/services/${provider}/${version}/${kind}/${entity_reference.uuid}`,
+    const { data: { metadata, spec, status } } = await make_request(axios.get, `${papiea_url}/services/${provider}/${version}/${kind}/${entity_reference.uuid}`,
     {headers:{"Authorization": `Bearer ${s2skey}`}});
     return { metadata, spec, status }
 }
 
 async function delete_entity(provider: string, kind: string, version: string, entity_reference: Entity_Reference, papiea_url: string, s2skey: string): Promise<void> {
-    await axios.delete(`${papiea_url}/services/${provider}/${version}/${kind}/${entity_reference.uuid}`, {headers:{"Authorization": `Bearer ${s2skey}`}});
+    await make_request(axios.delete, `${papiea_url}/services/${provider}/${version}/${kind}/${entity_reference.uuid}`, {headers:{"Authorization": `Bearer ${s2skey}`}});
 }
 
 async function invoke_entity_procedure(provider: string, kind: string, version: string, procedure_name: string, input: any, entity_reference: Entity_Reference, papiea_url: string, s2skey: string): Promise<any> {
-    const res = await axios.post(`${papiea_url}/services/${provider}/${version}/${kind}/${entity_reference.uuid}/procedure/${procedure_name}`, {input}, {headers:{"Authorization": `Bearer ${s2skey}`}});
+    const res = await make_request(axios.post, `${papiea_url}/services/${provider}/${version}/${kind}/${entity_reference.uuid}/procedure/${procedure_name}`, {input}, {headers:{"Authorization": `Bearer ${s2skey}`}});
     return res.data;
 }
 
 async function invoke_kind_procedure(provider: string, kind: string, version: string, procedure_name: string, input: any, papiea_url: string, s2skey: string): Promise<any> {
-    const res = await axios.post(`${papiea_url}/services/${provider}/${version}/${kind}/procedure/${procedure_name}`, {input}, {headers:{"Authorization": `Bearer ${s2skey}`}});
+    const res = await make_request(axios.post, `${papiea_url}/services/${provider}/${version}/${kind}/procedure/${procedure_name}`, {input}, {headers:{"Authorization": `Bearer ${s2skey}`}});
     return res.data;
 }
 
 export async function invoke_provider_procedure(provider: string, version: string, procedure_name: string, input: any, papiea_url: string, s2skey: string): Promise<any> {
-    const res = await axios.post(`${papiea_url}/services/${provider}/${version}/procedure/${procedure_name}`, {input}, {headers:{"Authorization": `Bearer ${s2skey}`}});
+    const res = await make_request(axios.post, `${papiea_url}/services/${provider}/${version}/procedure/${procedure_name}`, {input}, {headers:{"Authorization": `Bearer ${s2skey}`}});
     return res.data;
 }
 
@@ -58,7 +95,7 @@ export interface FilterResults {
     results: Entity[]
 }
 export async function filter_entity(provider: string, kind: string, version: string, filter: any, papiea_url: string, s2skey: string): Promise<FilterResults> {
-    const res = await axios.post(`${papiea_url}/services/${provider}/${version}/${kind}/filter/`, filter, {headers:{"Authorization": `Bearer ${s2skey}`}});
+    const res = await make_request(axios.post, `${papiea_url}/services/${provider}/${version}/${kind}/filter/`, filter, {headers:{"Authorization": `Bearer ${s2skey}`}});
     return res.data
 }
 

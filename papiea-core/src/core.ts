@@ -254,13 +254,25 @@ export interface SessionKey {
     idpToken: any
 }
 
+export enum PapieaErrorTypes {
+    Validation,
+    BadRequest,
+    ProcedureInvocation,
+    EntityNotFound,
+    Unauthorized,
+    PermissionDenied,
+    ConflictingEntity,
+    ServerError
+}
+
 
 // Modeled after https://developers.google.com/drive/api/v3/handle-errors
 export interface PapieaError {
     error: {
-        errors: { [key: string]: any }[],
+        errors: { [key: string]: any }[]
         code: number
         message: string
+        type: PapieaErrorTypes
     }
 }
 

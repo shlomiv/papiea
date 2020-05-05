@@ -81,6 +81,7 @@ export class Provider_API_Impl implements Provider_API {
         }
         await this.authorizer.checkPermission(user, provider, Action.UpdateStatus);
         await this.statusDb.update_status(entity_ref, status);
+        await strategy.update(entity_ref, status)
     }
 
     async update_progress(user: UserAuthInfo, context: any, message: string, done_percent: number): Promise<void> {

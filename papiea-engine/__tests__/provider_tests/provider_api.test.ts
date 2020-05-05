@@ -86,7 +86,7 @@ describe("Provider API tests", () => {
         });
 
         const newStatus = { host: "medium", ip: "127.0.0.1", name: "test_cluster" };
-        await providerApi.post(`/update_status/${provider.prefix}/${provider.version}`, {
+        await providerApi.post(`/${provider.prefix}/${provider.version}/update_status`, {
             context: "some context",
             entity_ref: {
                 uuid: metadata.uuid,
@@ -112,7 +112,7 @@ describe("Provider API tests", () => {
         });
 
         try {
-            await providerApi.post(`/update_status/${provider.prefix}/${provider.version}`, {
+            await providerApi.post(`/${provider.prefix}/${provider.version}/update_status`, {
                 context: "some context",
                 entity_ref: {
                     uuid: metadata.uuid,
@@ -151,7 +151,7 @@ describe("Provider API tests", () => {
         });
 
         const newStatus = { host: "big", name: "test_cluster" };
-        await providerApi.patch(`/update_status/${provider.prefix}/${provider.version}`, {
+        await providerApi.patch(`/${provider.prefix}/${provider.version}/update_status`, {
             context: "some context",
             entity_ref: {
                 uuid: metadata.uuid,
@@ -187,7 +187,7 @@ describe("Provider API tests", () => {
 
         const newStatus = { x: 15, y: 100 };
         try {
-            await providerApi.post(`/update_status/${provider.prefix}/${provider.version}`, {
+            await providerApi.post(`/${provider.prefix}/${provider.version}/update_status`, {
                 context: "some context",
                 entity_ref: {
                     uuid: metadata.uuid,
@@ -218,7 +218,7 @@ describe('Status-only fields are not overridden by spec changes', function () {
             }
         });
 
-        await providerApi.patch(`/update_status/${provider.prefix}/${provider.version}`, {
+        await providerApi.patch(`/${provider.prefix}/${provider.version}/update_status`, {
             context: "some context",
             entity_ref: {
                 uuid: metadata.uuid,

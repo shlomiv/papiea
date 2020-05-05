@@ -58,7 +58,7 @@ describe("Intentful Workflow tests", () => {
             sdk.version(provider_version);
             sdk.prefix(provider_prefix);
             location.on("x", {}, async (ctx, entity, input) => {
-                await providerApiAdmin.patch(`/update_status/${sdk.provider.prefix}/${sdk.provider.version}`, {
+                await providerApiAdmin.patch(`/${sdk.provider.prefix}/${sdk.provider.version}/update_status`, {
                     context: "some context",
                     entity_ref: {
                         uuid: entity.metadata.uuid,
@@ -164,7 +164,7 @@ describe("Intentful Workflow tests", () => {
             sdk.version(provider_version);
             sdk.prefix(provider_prefix);
             location.on("x", {}, async (ctx, entity, input) => {
-                await providerApiAdmin.patch(`/update_status/${sdk.provider.prefix}/${sdk.provider.version}`, {
+                await providerApiAdmin.patch(`/${sdk.provider.prefix}/${sdk.provider.version}/update_status`, {
                     context: "some context",
                     entity_ref: {
                         uuid: metadata.uuid,

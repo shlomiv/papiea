@@ -142,7 +142,7 @@ describe("Provider API auth tests", () => {
             headers: { 'Authorization': `Bearer ${ s2skey.key }` }
         });
         const newStatus = Object.assign({}, spec, { ip: "1.1.1.1" })
-        await providerApi.post(`/update_status/${provider.prefix}/${provider.version}`, {
+        await providerApi.post(`/${provider.prefix}/${provider.version}/update_status`, {
             context: "some context",
             entity_ref: {
                 uuid: metadata.uuid,
@@ -193,7 +193,7 @@ describe("Provider API auth tests", () => {
                     }
                 }
             );
-            await providerApi.post(`/update_status/${provider.prefix}/${provider.version}`, {
+            await providerApi.post(`/${provider.prefix}/${provider.version}/update_status`, {
                 context: "some context",
                 entity_ref: {
                     uuid: metadata.uuid,

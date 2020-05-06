@@ -1,31 +1,50 @@
-export class ConflictingEntityError extends Error {
+export class PapieaErrorImpl extends Error {
+    original_error: Error
+
+    constructor(message: string, e: Error) {
+        super(message)
+        this.original_error = e
+    }
 
 }
 
-export class EntityNotFoundError extends Error {
+
+// Spec with this version already exists
+export class ConflictingEntityError extends PapieaErrorImpl {
 
 }
 
-export class PermissionDeniedError extends Error {
+// Entity not found on papiea
+export class EntityNotFoundError extends PapieaErrorImpl {
 
 }
 
-export class ProcedureInvocationError extends Error {
+// Token provided doesn't have access rights for the operation
+export class PermissionDeniedError extends PapieaErrorImpl {
 
 }
 
-export class UnauthorizedError extends Error {
+// Error in procedure handler
+export class ProcedureInvocationError extends PapieaErrorImpl {
 
 }
 
-export class ValidationError extends Error {
+// No auth token provided in Authorization header
+export class UnauthorizedError extends PapieaErrorImpl {
 
 }
 
-export class BadRequestError extends Error {
+// Entity spec/status didn't pass validation
+export class ValidationError extends PapieaErrorImpl {
 
 }
 
-export class PapieaServerError extends Error {
+// Wrong data on the request side
+export class BadRequestError extends PapieaErrorImpl {
+
+}
+
+// Something went wrong on papiea
+export class PapieaServerError extends PapieaErrorImpl {
 
 }

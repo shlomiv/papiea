@@ -1,3 +1,6 @@
+default: run-benchmark-local
+
+
 .PHONY: run-papiea papiea-build stop-papiea run-tests run-benchmark run-benchmark-local
 
 
@@ -49,7 +52,16 @@ run-benchmark: node_modules
 	npm run bench -- $(ARGS)
 
 
-clean-all:
-	npm run clean-all; \
+clean-all: clean-build clean-node-modules
+
+
+clean-node-modules:
+	for p in core client backend-utils engine sdk; do rm -rf papiea-$$p/node_modules; done; \
 	cd ./papiea-engine/__benchmarks__; \
 	rm -rf node_modules
+
+
+clean-build:
+	npm run clean-all; \
+	cd ./papiea-engine/__benchmarks__; \
+	rm -rf build

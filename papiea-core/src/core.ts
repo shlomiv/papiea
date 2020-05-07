@@ -254,7 +254,7 @@ export interface SessionKey {
     idpToken: any
 }
 
-export enum PapieaErrorTypes {
+export enum PapieaErrorType {
     Validation,
     BadRequest,
     ProcedureInvocation,
@@ -272,7 +272,7 @@ export interface PapieaError {
         errors: { [key: string]: any }[]
         code: number
         message: string
-        type: PapieaErrorTypes
+        type: PapieaErrorType
     }
 }
 

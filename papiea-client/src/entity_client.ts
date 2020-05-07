@@ -1,5 +1,5 @@
 import axios, { AxiosPromise, AxiosRequestConfig } from "axios";
-import { Metadata, Spec, Entity_Reference, Entity, EntitySpec, PapieaErrorTypes } from "papiea-core";
+import { Metadata, Spec, Entity_Reference, Entity, EntitySpec, PapieaErrorType } from "papiea-core";
 import {
     BadRequestError,
     ConflictingEntityError,
@@ -16,21 +16,21 @@ function make_request<T = any>(f: (url: string, data?: any, config?: AxiosReques
         return f(url, data, config)
     } catch (e) {
         switch (e?.response?.data?.error.type) {
-            case PapieaErrorTypes.ConflictingEntity:
+            case PapieaErrorType.ConflictingEntity:
                 throw new ConflictingEntityError(e.response.data.error.message, e)
-            case PapieaErrorTypes.PermissionDenied:
+            case PapieaErrorType.PermissionDenied:
                 throw new PermissionDeniedError(e.response.data.error.message, e)
-            case PapieaErrorTypes.EntityNotFound:
+            case PapieaErrorType.EntityNotFound:
                 throw new EntityNotFoundError(e.response.data.error.message, e)
-            case PapieaErrorTypes.ProcedureInvocation:
+            case PapieaErrorType.ProcedureInvocation:
                 throw new ProcedureInvocationError(e.response.data.error.message, e)
-            case PapieaErrorTypes.Unauthorized:
+            case PapieaErrorType.Unauthorized:
                 throw new UnauthorizedError(e.response.data.error.message, e)
-            case PapieaErrorTypes.Validation:
+            case PapieaErrorType.Validation:
                 throw new ValidationError(e.response.data.error.message, e)
-            case PapieaErrorTypes.BadRequest:
+            case PapieaErrorType.BadRequest:
                 throw new BadRequestError(e.response.data.error.message, e)
-            case PapieaErrorTypes.ServerError:
+            case PapieaErrorType.ServerError:
                 throw new PapieaServerError(e.response.data.error.message, e)
             default:
                 throw new Error(e)

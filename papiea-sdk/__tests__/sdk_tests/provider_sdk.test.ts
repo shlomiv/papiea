@@ -290,12 +290,10 @@ describe("Provider Sdk tests", () => {
         }
     });
 
-    test.only("Provider with kind level procedures should be created on papiea", async () => {
+    test("Provider with kind level procedures should be created on papiea", async () => {
         expect.hasAssertions()
         const kind_copy = JSON.parse(JSON.stringify(location_yaml))
-        console.dir(kind_copy)
         kind_copy["Location"]["x-papiea-entity"] = "basic"
-        console.dir(kind_copy)
         const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
         const location = sdk.new_kind(kind_copy);
         sdk.version(provider_version);

@@ -85,7 +85,7 @@ export class Provider_API_Impl implements Provider_API {
         // e.g. partial status update: {name: {last: 'BBB'}}
         // Thus we get the merged version and validate it
         // Only after that we transform partial status into mongo dot notation query
-        const currentStatus = await this.statusDb.get_status(entity_ref)
+        const [,currentStatus] = await this.statusDb.get_status(entity_ref)
         const mergedStatus = {...currentStatus, ...partialStatus}
         await this.validate_status(provider, entity_ref, mergedStatus);
         return strategy.update(entity_ref, partialStatus)

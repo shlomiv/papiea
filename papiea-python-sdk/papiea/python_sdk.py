@@ -47,7 +47,7 @@ class ProviderServerManager(object):
         async def healthcheck_callback_fn(req):
             return web.json_response({"status": "Available"}, status=200)
 
-        self.app.add_routes([web.get("healthcheck", healthcheck_callback_fn)])
+        self.app.add_routes([web.get("/healthcheck", healthcheck_callback_fn)])
 
     async def start_server(self) -> NoReturn:
         if self.should_run:

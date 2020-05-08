@@ -53,6 +53,26 @@ See [Attaching to node js using Intellij](https://www.jetbrains.com/help/pycharm
 
 3. `npm run bench -- {PAPIEA_URL} {PUBLIC_HOST} {PUBLIC_PORT}` where PAPIEA_URL is a dedicated papiea_url, PUBLIC_HOST is your sdk publicly visible hostname, PUBLIC_PORT is your sdk publicly visible port
 
+OPTIONALLY: you can use AWS Cloudformation stack to setup benchmark environment, to do that you:
+
+1. Upload `papiea-engine/__benchmarks__/aws_template/benchmark.json` as a template or use `https://papiea-bucket.s3-us-west-2.amazonaws.com/benchmark.json`
+
+2. SSH to mongo-instance 
+
+3. Do `cd mongo && docker-compose -f docker-compose-mongo.yml up -d`
+
+3. SSH to papiea-instance 
+
+4. `export MONGO_URL='mongod://${MONGO_INSTANCE_PUBLIC_IP}:27017'`
+
+5. `git clone https://github.com/nutanix/papiea-js.git`
+
+6. `cd papiea-js/papiea-engine`
+
+7. `docker-compose -f docker-compose-benchmark.yml up -d`
+
+Now you can use your `${PAPIEA_INSTANCE_PUBLIC_IP}:3333` as PAPIEA_URL in benchmarks
+
 ## Environment Papiea-Engine
 
 A set of these variables might be used to tweak the default papiea-engine configuration

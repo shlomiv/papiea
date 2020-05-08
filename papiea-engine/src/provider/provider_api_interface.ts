@@ -18,10 +18,10 @@ export interface Provider_API {
     unregister_provider(user: UserAuthInfo, provider_prefix: string, version: Version): Promise<void>;
 
     // Replace status with a specified one
-    replace_status(user: UserAuthInfo, context: any, entity_ref: Entity_Reference, status: Status): Promise<void>;
+    replace_status(user: UserAuthInfo, provider_prefix: string, version: Version, context: any, entity_ref: Entity_Reference, status: Status): Promise<void>;
 
     // POST "/provider/update_progress"
-    update_progress(user: UserAuthInfo, context: any, message: string, done_percent: number): Promise<void>;
+    update_progress(user: UserAuthInfo, provider_prefix: string, version: Version, context: any, message: string, done_percent: number): Promise<void>;
 
     // Binny wants to rename this
     // POST "/provider/{prefix}/{version}/power"
@@ -39,9 +39,7 @@ export interface Provider_API {
 
     on_auth_change(callbackfn: (provider: Provider) => void): void;
 
-    // Updating status
-    // POST "/provider/update_status"
-    update_status(user: UserAuthInfo, context: any, entity_ref: Entity_Reference, status: Status): Promise<void>;
+    update_status(user: UserAuthInfo, provider_prefix: string, version: Version, context: any, entity_ref: Entity_Reference, status: Status): Promise<void>;
 
     create_key(user: UserAuthInfo, name: string, owner: string, provider_prefix: string, extension?: any, key?: string): Promise<S2S_Key>;
 

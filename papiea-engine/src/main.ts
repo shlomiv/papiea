@@ -17,7 +17,7 @@ import { S2SKeyUserAuthInfoExtractor } from "./auth/s2s";
 import { Authorizer, AdminAuthorizer, PerProviderAuthorizer } from "./auth/authz";
 import { ValidatorImpl } from "./validator";
 import { ProviderCasbinAuthorizerFactory } from "./auth/casbin";
-import { PapieaErrorImpl } from "./errors/papiea_error_impl";
+import { PapieaErrorResponseImpl } from "./errors/papiea_error_impl";
 import { SessionKeyAPI, SessionKeyUserAuthInfoExtractor } from "./auth/session_key"
 import { IntentfulContext } from "./intentful_core/intentful_context"
 import { AuditLogger } from "./audit_logging"
@@ -86,7 +86,7 @@ async function setUpApplication(): Promise<express.Express> {
         if (res.headersSent) {
             return next(err);
         }
-        const papieaError = PapieaErrorImpl.create(err);
+        const papieaError = PapieaErrorResponseImpl.create(err);
         res.status(papieaError.status)
         res.json(papieaError.toResponse())
         logger.error(papieaError, err.stack)

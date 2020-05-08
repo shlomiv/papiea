@@ -4,12 +4,13 @@ import { IntentfulTask_DB } from "../databases/intentful_task_db_interface";
 import { Provider_DB } from "../databases/provider_db_interface";
 import { Handler, IntentfulListener } from "./intentful_listener_interface";
 import { EntryReference, Watchlist } from "./watchlist";
-import { Spec, Status, IntentfulStatus, Diff, Differ, Metadata, Entity } from "papiea-core";
+import { IntentfulStatus, Diff, Differ, Entity } from "papiea-core";
 import { IntentfulTask } from "./task_interface";
 import * as assert from "assert";
 import { timeout } from "../utils/utils";
 import { DiffResolver } from "./diff_resolver";
 import { Logger } from "papiea-backend-utils";
+import deepEqual = require("deep-equal");
 
 export class TaskResolver {
     private readonly specDb: Spec_DB
@@ -46,6 +47,18 @@ export class TaskResolver {
         this.diffResolver.onIntentfulHandlerFail = new Handler(this.onIntentfulHandlerFail)
     }
 
+    private static getIntersection(current_diffs: Diff[], task_diffs: Diff[], predicate: (curr_diff: Diff, task_diff: Diff) => boolean): Set<Diff> {
+        const intersection: Set<Diff> = new Set()
+        for (let diff of current_diffs) {
+            for (let task_diff of task_diffs) {
+                if (predicate(diff, task_diff)) {
+                    intersection.add(diff)
+                }
+            }
+        }
+        return intersection
+    }
+
     private static inTerminalState(task: IntentfulTask): boolean {
         const terminal_states = [IntentfulStatus.Completed_Partially, IntentfulStatus.Completed_Successfully, IntentfulStatus.Outdated, IntentfulStatus.Failed]
         return terminal_states.includes(task.status)
@@ -75,8 +88,7 @@ export class TaskResolver {
                 continue
             }
             assert(task.spec_version < entity.metadata.spec_version, "Outdated task has spec version equal or higher than current")
-            const task_diffs = new Set(task.diffs)
-            const intersection = new Set(diffs.filter(diff => task_diffs.has(diff)))
+            const intersection = TaskResolver.getIntersection(diffs, task.diffs, (diff, task_diff) => deepEqual(diff.diff_fields, task_diff.diff_fields))
             if (intersection.size === 0) {
                 task.status = IntentfulStatus.Completed_Successfully
             } else if (intersection.size < task.diffs.length) {
@@ -91,8 +103,7 @@ export class TaskResolver {
 
     private async processActiveTask(active: IntentfulTask, entity: Entity): Promise<IntentfulTask> {
         const diffs = await this.rediff(entity)
-        const task_diffs = new Set(active.diffs)
-        const intersection = new Set(diffs.filter(diff => task_diffs.has(diff)))
+        const intersection = TaskResolver.getIntersection(diffs, active.diffs, (diff, task_diff) => deepEqual(diff.diff_fields, task_diff.diff_fields))
         if (intersection.size === 0) {
             active.status = IntentfulStatus.Completed_Successfully
             await this.intentfulTaskDb.update_task(active.uuid, { status: active.status })
@@ -106,8 +117,7 @@ export class TaskResolver {
     private async processPendingTasks(pending: IntentfulTask[], entity: Entity): Promise<IntentfulTask[]> {
         const diffs = await this.rediff(entity)
         for (let task of pending) {
-            const task_diffs = new Set(task.diffs)
-            const intersection = new Set(diffs.filter(diff => task_diffs.has(diff)))
+            const intersection = TaskResolver.getIntersection(diffs, task.diffs, (diff, task_diff) => deepEqual(diff.diff_fields, task_diff.diff_fields))
             if (intersection.size === 0) {
                 task.status = IntentfulStatus.Completed_Successfully
                 await this.intentfulTaskDb.update_task(task.uuid, { status: task.status })
@@ -170,9 +180,13 @@ export class TaskResolver {
             const [entry_ref, diff, delay] = entries[uuid]
             const tasks = await this.intentfulTaskDb.list_tasks({ entity_ref: entry_ref.entity_reference })
             if (tasks.length !== 0) {
-                const [metadata, spec] = await this.specDb.get_spec(entry_ref.entity_reference)
-                const [, status] = await this.statusDb.get_status(entry_ref.entity_reference)
-                this.onChange({ metadata, spec, status })
+                try {
+                    const [metadata, spec] = await this.specDb.get_spec(entry_ref.entity_reference)
+                    const [, status] = await this.statusDb.get_status(entry_ref.entity_reference)
+                    this.onChange({ metadata, spec, status })
+                } catch (e) {
+
+                }
             }
         }
     }

@@ -70,7 +70,7 @@ export class Provider_API_Impl implements Provider_API {
         return strategy.replace(entity_ref, status)
     }
 
-    async update_status(user: UserAuthInfo, provider_prefix: string, version: Version, context: any, entity_ref: Entity_Reference, status: Status): Promise<void> {
+    async update_status(user: UserAuthInfo, provider_prefix: string, version: Version, context: any, entity_ref: Entity_Reference, partialStatus: Status): Promise<void> {
         const provider: Provider = await this.providerDb.get_provider(provider_prefix, version);
         const kind = this.providerDb.find_kind(provider, entity_ref.kind)
         const strategy = this.intentfulContext.getStatusUpdateStrategy(kind, user)
@@ -80,8 +80,15 @@ export class Provider_API_Impl implements Provider_API {
             throw new Error("Cannot change status of a spec-only kind")
         }
         await this.authorizer.checkPermission(user, provider, Action.UpdateStatus);
-        await this.statusDb.update_status(entity_ref, status);
-        await strategy.update(entity_ref, status)
+        // We receive update in form of partial status
+        // e.g. full status: {name: {last: 'Foo', first: 'Bar'}}
+        // e.g. partial status update: {name: {last: 'BBB'}}
+        // Thus we get the merged version and validate it
+        // Only after that we transform partial status into mongo dot notation query
+        const [,currentStatus] = await this.statusDb.get_status(entity_ref)
+        const mergedStatus = {...currentStatus, ...partialStatus}
+        await this.validate_status(provider, entity_ref, mergedStatus);
+        return strategy.update(entity_ref, partialStatus)
     }
 
     async update_progress(user: UserAuthInfo, context: any, message: string, done_percent: number): Promise<void> {

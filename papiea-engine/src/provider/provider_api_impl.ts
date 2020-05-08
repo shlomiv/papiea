@@ -7,12 +7,12 @@ import { Authorizer } from "../auth/authz";
 import { UserAuthInfo } from "../auth/authn";
 import { createHash } from "../auth/crypto";
 import { EventEmitter } from "events";
-import { Entity_Reference, Version, Status, Provider, Kind, S2S_Key, Action, Secret, IntentfulBehaviour } from "papiea-core";
-import uuid = require("uuid");
+import { Action, Entity_Reference, Kind, Provider, S2S_Key, Secret, Status, Version } from "papiea-core";
 import { Logger } from "papiea-backend-utils";
 import { Watchlist_DB } from "../databases/watchlist_db_interface";
 import { SpecOnlyUpdateStrategy } from "../intentful_core/intentful_strategies/status_update_strategy";
 import { IntentfulContext } from "../intentful_core/intentful_context";
+import uuid = require("uuid");
 
 export class Provider_API_Impl implements Provider_API {
     private providerDb: Provider_DB;
@@ -56,8 +56,8 @@ export class Provider_API_Impl implements Provider_API {
         return this.providerDb.delete_provider(provider_prefix, version);
     }
 
-    async replace_status(user: UserAuthInfo, context: any, entity_ref: Entity_Reference, status: Status): Promise<void> {
-        const provider: Provider = await this.get_latest_provider_by_kind(user, entity_ref.kind);
+    async replace_status(user: UserAuthInfo, provider_prefix: string, version: Version, context: any, entity_ref: Entity_Reference, status: Status): Promise<void> {
+        const provider: Provider = await this.providerDb.get_provider(provider_prefix, version);
         const kind = this.providerDb.find_kind(provider, entity_ref.kind)
         const strategy = this.intentfulContext.getStatusUpdateStrategy(kind, user)
         // if this is not critical, we can swap the order of checkPermission() and update()
@@ -70,8 +70,8 @@ export class Provider_API_Impl implements Provider_API {
         return strategy.replace(entity_ref, status)
     }
 
-    async update_status(user: UserAuthInfo, context: any, entity_ref: Entity_Reference, status: Status): Promise<void> {
-        const provider: Provider = await this.get_latest_provider_by_kind(user, entity_ref.kind);
+    async update_status(user: UserAuthInfo, provider_prefix: string, version: Version, context: any, entity_ref: Entity_Reference, partialStatus: Status): Promise<void> {
+        const provider: Provider = await this.providerDb.get_provider(provider_prefix, version);
         const kind = this.providerDb.find_kind(provider, entity_ref.kind)
         const strategy = this.intentfulContext.getStatusUpdateStrategy(kind, user)
         // if this is not critical, we can swap the order of checkPermission() and update()
@@ -80,7 +80,15 @@ export class Provider_API_Impl implements Provider_API {
             throw new Error("Cannot change status of a spec-only kind")
         }
         await this.authorizer.checkPermission(user, provider, Action.UpdateStatus);
-        await this.statusDb.update_status(entity_ref, status);
+        // We receive update in form of partial status
+        // e.g. full status: {name: {last: 'Foo', first: 'Bar'}}
+        // e.g. partial status update: {name: {last: 'BBB'}}
+        // Thus we get the merged version and validate it
+        // Only after that we transform partial status into mongo dot notation query
+        const [,currentStatus] = await this.statusDb.get_status(entity_ref)
+        const mergedStatus = {...currentStatus, ...partialStatus}
+        await this.validate_status(provider, entity_ref, mergedStatus);
+        return strategy.update(entity_ref, partialStatus)
     }
 
     async update_progress(user: UserAuthInfo, context: any, message: string, done_percent: number): Promise<void> {
@@ -112,8 +120,7 @@ export class Provider_API_Impl implements Provider_API {
     }
 
     async get_latest_provider_by_kind(user: UserAuthInfo, kind_name: string): Promise<Provider> {
-        const res = await this.providerDb.get_latest_provider_by_kind(kind_name);
-        return res;
+        return await this.providerDb.get_latest_provider_by_kind(kind_name);
     }
 
     private async validate_status(provider: Provider, entity_ref: Entity_Reference, status: Status) {

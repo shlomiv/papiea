@@ -1,21 +1,21 @@
-import { PapieaError } from "papiea-core";
+import { PapieaResponse } from "papiea-core";
 import { EntityNotFoundError, ConflictingEntityError } from "../databases/utils/errors";
 import { ValidationError } from "./validation_error";
 import { ProcedureInvocationError } from "./procedure_invocation_error";
 import { PermissionDeniedError, UnauthorizedError } from "./permission_error";
 import { BadRequestError } from "./bad_request_error";
-import { PapieaErrorType } from "papiea-core";
+import { PapieaError } from "papiea-core";
 
 
-export class PapieaErrorImpl implements PapieaError {
+export class PapieaErrorResponseImpl implements PapieaResponse {
     error: {
         errors: { [key: string]: any }[],
         code: number
         message: string,
-        type: PapieaErrorType
+        type: PapieaError
     }
 
-    constructor(code: number, errorMsg: string, type: PapieaErrorType, errors?: { [key: string]: any }[]) {
+    constructor(code: number, errorMsg: string, type: PapieaError, errors?: { [key: string]: any }[]) {
         if (errors) {
             this.error = {
                 code,
@@ -48,34 +48,34 @@ export class PapieaErrorImpl implements PapieaError {
         let errorPayload: { message: string }[];
         switch (err.constructor) {
             case BadRequestError:
-                return new PapieaErrorImpl(400, "Bad Request", PapieaErrorType.BadRequest,
+                return new PapieaErrorResponseImpl(400, "Bad Request", PapieaError.BadRequest,
                     [{ message: err.message }])
             case ValidationError:
                 errorPayload = (err as ValidationError).errors.map(description => {
                     return { message: description }
                 })
-                return new PapieaErrorImpl(400, "Validation failed.", PapieaErrorType.Validation, errorPayload)
+                return new PapieaErrorResponseImpl(400, "Validation failed.", PapieaError.Validation, errorPayload)
             case ProcedureInvocationError:
-                return new PapieaErrorImpl((err as ProcedureInvocationError).status, "Procedure invocation failed.", PapieaErrorType.ProcedureInvocation, (err as ProcedureInvocationError).errors)
+                return new PapieaErrorResponseImpl((err as ProcedureInvocationError).status, "Procedure invocation failed.", PapieaError.ProcedureInvocation, (err as ProcedureInvocationError).errors)
             case EntityNotFoundError:
-                return new PapieaErrorImpl(
+                return new PapieaErrorResponseImpl(
                     404,
                     "Entity not found.",
-                    PapieaErrorType.EntityNotFound,
+                    PapieaError.EntityNotFound,
                     [{ message: `Entity with kind: ${(err as EntityNotFoundError).kind}, uuid: ${(err as EntityNotFoundError).uuid} not found` }],
                 )
             case UnauthorizedError:
-                return new PapieaErrorImpl(401, "Unauthorized.", PapieaErrorType.Unauthorized)
+                return new PapieaErrorResponseImpl(401, "Unauthorized.", PapieaError.Unauthorized)
             case PermissionDeniedError:
-                return new PapieaErrorImpl(403, "Permission denied.", PapieaErrorType.PermissionDenied)
+                return new PapieaErrorResponseImpl(403, "Permission denied.", PapieaError.PermissionDenied)
             case ConflictingEntityError:
                 let conflictingError = err as ConflictingEntityError
                 let metadata = conflictingError.existing_metadata
 
-                return new PapieaErrorImpl(409, `Conflicting Entity: ${metadata.uuid} has version ${metadata.spec_version}`, PapieaErrorType.ConflictingEntity)
+                return new PapieaErrorResponseImpl(409, `Conflicting Entity: ${metadata.uuid} has version ${metadata.spec_version}`, PapieaError.ConflictingEntity)
             default:
                 console.log(`Default handle got error: ${err.message}`)
-                return new PapieaErrorImpl(500, err.message, PapieaErrorType.ServerError)
+                return new PapieaErrorResponseImpl(500, err.message, PapieaError.ServerError)
         }
     }
 }

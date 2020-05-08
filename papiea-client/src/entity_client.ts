@@ -1,5 +1,5 @@
 import axios, { AxiosPromise, AxiosRequestConfig } from "axios";
-import { Metadata, Spec, Entity_Reference, Entity, EntitySpec, PapieaErrorType } from "papiea-core";
+import { Metadata, Spec, Entity_Reference, Entity, EntitySpec, PapieaError } from "papiea-core";
 import {
     BadRequestError,
     ConflictingEntityError,
@@ -16,21 +16,21 @@ function make_request<T = any>(f: (url: string, data?: any, config?: AxiosReques
         return f(url, data, config)
     } catch (e) {
         switch (e?.response?.data?.error.type) {
-            case PapieaErrorType.ConflictingEntity:
+            case PapieaError.ConflictingEntity:
                 throw new ConflictingEntityError(e.response.data.error.message, e)
-            case PapieaErrorType.PermissionDenied:
+            case PapieaError.PermissionDenied:
                 throw new PermissionDeniedError(e.response.data.error.message, e)
-            case PapieaErrorType.EntityNotFound:
+            case PapieaError.EntityNotFound:
                 throw new EntityNotFoundError(e.response.data.error.message, e)
-            case PapieaErrorType.ProcedureInvocation:
+            case PapieaError.ProcedureInvocation:
                 throw new ProcedureInvocationError(e.response.data.error.message, e)
-            case PapieaErrorType.Unauthorized:
+            case PapieaError.Unauthorized:
                 throw new UnauthorizedError(e.response.data.error.message, e)
-            case PapieaErrorType.Validation:
+            case PapieaError.Validation:
                 throw new ValidationError(e.response.data.error.message, e)
-            case PapieaErrorType.BadRequest:
+            case PapieaError.BadRequest:
                 throw new BadRequestError(e.response.data.error.message, e)
-            case PapieaErrorType.ServerError:
+            case PapieaError.ServerError:
                 throw new PapieaServerError(e.response.data.error.message, e)
             default:
                 throw new Error(e)

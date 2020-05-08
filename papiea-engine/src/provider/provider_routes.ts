@@ -32,27 +32,27 @@ export default function createProviderAPIRouter(providerApi: Provider_API) {
         res.json(provider)
     }));
 
-    providerApiRouter.post('/update_status', check_request({
+    providerApiRouter.post('/:prefix/:version/update_status', check_request({
         allowed_query_params: [],
         allowed_body_params: ['context', 'entity_ref', 'status']
     }), asyncHandler(async (req, res) => {
-        await providerApi.replace_status(req.user, req.body.context, req.body.entity_ref, req.body.status);
+        await providerApi.replace_status(req.user, req.params.prefix, req.params.version, req.body.context, req.body.entity_ref, req.body.status);
         res.json("OK")
     }));
 
-    providerApiRouter.patch('/update_status', check_request({
+    providerApiRouter.patch('/:prefix/:version/update_status', check_request({
         allowed_query_params: [],
         allowed_body_params: ['context', 'entity_ref', 'status']
     }), asyncHandler(async (req, res) => {
-        await providerApi.update_status(req.user, req.body.context, req.body.entity_ref, req.body.status);
+        await providerApi.update_status(req.user, req.params.prefix, req.params.version, req.body.context, req.body.entity_ref, req.body.status);
         res.json("OK")
     }));
 
-    providerApiRouter.post('/update_progress', check_request({
+    providerApiRouter.post('/:prefix/:version/update_progress', check_request({
         allowed_query_params: [],
         allowed_body_params: ['context', 'message', 'done_percent']
     }), asyncHandler(async (req, res) => {
-        await providerApi.update_progress(req.user, req.body.context, req.body.message, req.body.done_percent);
+        await providerApi.update_progress(req.user, req.params.prefix, req.params.version, req.body.context, req.body.message, req.body.done_percent);
         res.json("OK");
     }));
 

@@ -6,6 +6,7 @@ import { BasicDiffer } from "./intentful_core/differ_impl";
 import { IntentfulContext } from "./intentful_core/intentful_context";
 import { TaskResolver } from "./tasks/task_resolver";
 import { IntentfulListenerMongoStream } from "./tasks/intentful_listener_mongo_stream";
+import { IntentfulListenerMongo } from "./tasks/intentful_listener_mongo_simple";
 
 declare var process: {
     env: {
@@ -44,12 +45,12 @@ async function setUpDiffResolver() {
     const intentfulContext = new IntentfulContext(specDb, statusDb, differ, intentfulTaskDb, watchlistDb)
     const watchlist: Watchlist = new Watchlist()
 
-    const intentfulListenerMongoStream = new IntentfulListenerMongoStream(mongoConnection, watchlist)
-    intentfulListenerMongoStream.run()
+    const intentfulListenerMongo = new IntentfulListenerMongo(statusDb, specDb, watchlist)
+    intentfulListenerMongo.run(500)
 
     const diffResolver = new DiffResolver(watchlist, watchlistDb, specDb, statusDb, providerDb, differ, intentfulContext, logger, batchSize)
 
-    const taskResolver = new TaskResolver(specDb, statusDb, intentfulTaskDb, providerDb, intentfulListenerMongoStream, differ, diffResolver, watchlist, logger)
+    const taskResolver = new TaskResolver(specDb, statusDb, intentfulTaskDb, providerDb, intentfulListenerMongo, differ, diffResolver, watchlist, logger)
 
     console.log("Running diff resolver")
 

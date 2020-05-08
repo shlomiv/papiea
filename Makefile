@@ -1,4 +1,4 @@
-default: run-benchmark-local
+default: papiea-build
 
 
 .PHONY: run-papiea papiea-build stop-papiea run-tests run-benchmark run-benchmark-local

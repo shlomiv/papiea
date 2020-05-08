@@ -46,7 +46,6 @@ export class LoggerFactory {
     readonly options: LoggerOptions
 
     private static readonly INSPECT_OPTIONS = {
-        colors: true, depth: 3, maxStringLength: 120,
         sorted: true, getters: true
     }
 
@@ -89,7 +88,6 @@ export class LoggerFactory {
             const skip_fields = ['level','timestamp','label','message','stack']
 
             formatArgs.push(winston.format.errors({stack: true}))
-            formatArgs.push(winston.format.colorize())
             formatArgs.push(winston.format.printf(info => {
                 let msg = `${info.level}\t`
                 if (info.timestamp) msg = `${msg} ${info.timestamp}`

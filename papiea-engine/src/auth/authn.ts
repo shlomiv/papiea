@@ -85,6 +85,7 @@ export function createAuthnRouter(logger: Logger, userAuthInfoExtractor: UserAut
         const urlParts = req.originalUrl.split('/');
         const provider_prefix: string | undefined = urlParts[2];
         const provider_version: string | undefined = urlParts[3];
+        const endpoint_path: string | undefined = urlParts[4];
 
         const user_info = await userAuthInfoExtractor.getUserAuthInfo(token, provider_prefix, provider_version);
         if (user_info === null) {
@@ -92,8 +93,7 @@ export function createAuthnRouter(logger: Logger, userAuthInfoExtractor: UserAut
         }
         if (urlParts.length > 1) {
             if (provider_prefix
-                // TODO: probably need to change /provider/update_status to /provider/:prefix/:version/update_status
-                && provider_prefix !== "update_status"
+                && endpoint_path !== "update_status"
                 && (user_info.provider_prefix !== undefined && user_info.provider_prefix !== provider_prefix)
                 && !user_info.is_admin) {
                 throw new UnauthorizedError();

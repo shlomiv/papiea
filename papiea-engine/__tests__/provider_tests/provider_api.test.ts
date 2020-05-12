@@ -1,6 +1,6 @@
 import "jest"
 import axios from "axios"
-import { getClusterKind, loadYaml, ProviderBuilder } from "../test_data_factory"
+import { getClusterKind, loadYamlFromTestFactoryDir, ProviderBuilder } from "../test_data_factory"
 import { Provider } from "papiea-core";
 
 declare var process: {
@@ -167,7 +167,7 @@ describe("Provider API tests", () => {
     });
 
     test("Register provider with extension structure", async () => {
-        const extension_desc = loadYaml("./test_data/metadata_extension.yml");
+        const extension_desc = loadYamlFromTestFactoryDir("./test_data/metadata_extension.yml");
         const provider: Provider = { prefix: providerPrefix, version: providerVersion, kinds: [], procedures: {}, extension_structure: extension_desc, allowExtraProps: false };
         await providerApi.post('/', provider);
         await providerApi.delete(`/${ providerPrefix }/${ providerVersion }`);

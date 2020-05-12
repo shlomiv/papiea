@@ -66,6 +66,9 @@ export function processSortQuery(query: string | undefined): undefined | SortPar
 }
 
 export function isEmpty(obj: any) {
+    if (obj === undefined || obj === null) {
+        return false
+    }
     for(let key in obj) {
         if(obj.hasOwnProperty(key))
             return false;

@@ -3,7 +3,7 @@ import { ProviderSdk } from "papiea-sdk";
 import {
     getDifferLocationDataDescription,
     getLocationDataDescription,
-    loadYaml
+    loadYamlFromTestFactoryDir
 } from "../../__tests__/test_data_factory";
 import { Procedural_Execution_Strategy } from "papiea-core";
 
@@ -41,15 +41,15 @@ export async function setUpTestProvider(papiea_url: string, public_host: string,
     const location = sdk.new_kind(location_desc);
     sdk.version(provider_version);
     sdk.prefix(provider_prefix);
-    location.entity_procedure("moveX", {}, Procedural_Execution_Strategy.Halt_Intentful, loadYaml("../__tests__/test_data/procedure_move_input.yml"), loadYaml("../__tests__/test_data/location_kind_test_data.yml"), async (ctx, entity, input) => {
+    location.entity_procedure("moveX", {}, Procedural_Execution_Strategy.Halt_Intentful, loadYamlFromTestFactoryDir("../__tests__/test_data/procedure_move_input.yml"), loadYamlFromTestFactoryDir("../__tests__/test_data/location_kind_test_data.yml"), async (ctx, entity, input) => {
         entity.spec.x += input;
         return entity.spec;
     });
     location.kind_procedure(
         "computeGeolocation",
         {}, Procedural_Execution_Strategy.Halt_Intentful,
-        loadYaml("../__tests__/test_data/procedure_geolocation_compute_input.yml"),
-        loadYaml("../__tests__/test_data/procedure_geolocation_compute_input.yml"), async (ctx, input) => {
+        loadYamlFromTestFactoryDir("../__tests__/test_data/procedure_geolocation_compute_input.yml"),
+        loadYamlFromTestFactoryDir("../__tests__/test_data/procedure_geolocation_compute_input.yml"), async (ctx, input) => {
             let cluster_location = "us.west.";
             cluster_location += input;
             return cluster_location
@@ -58,8 +58,8 @@ export async function setUpTestProvider(papiea_url: string, public_host: string,
     sdk.provider_procedure("computeSum",
         {},
         Procedural_Execution_Strategy.Halt_Intentful,
-        loadYaml("../__tests__/test_data/procedure_sum_input.yml"),
-        loadYaml("../__tests__/test_data/procedure_sum_output.yml"),
+        loadYamlFromTestFactoryDir("../__tests__/test_data/procedure_sum_input.yml"),
+        loadYamlFromTestFactoryDir("../__tests__/test_data/procedure_sum_output.yml"),
         async (ctx, input) => {
             return input.a + input.b;
         }

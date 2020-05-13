@@ -34,7 +34,7 @@ node_modules:
 
 stop-papiea:
 		cd ./papiea-engine; \
-    	if [ -z `docker-compose ps -q papiea-engine` ] || [ -z `docker ps -q --no-trunc | grep $$(docker-compose ps -q papiea-engine)` ]; then \
+        if [ -z `docker-compose ps -q papiea-engine` ] || [ -z `docker ps -q --no-trunc | grep $$(docker-compose ps -q papiea-engine)` ]; then \
 			echo 'Papiea not running'; \
 		else \
 		  docker-compose kill; \
@@ -60,8 +60,14 @@ clean-node-modules:
 	cd ./papiea-engine/__benchmarks__; \
 	rm -rf node_modules
 
+clean: clean-build
 
 clean-build:
 	npm run clean-all; \
 	cd ./papiea-engine/__benchmarks__; \
 	rm -rf build
+
+clean-package-lock:
+	for p in core client backend-utils engine sdk; do rm -rf papiea-$$p/package-lock.json; done; \
+	cd ./papiea-engine/__benchmarks__; \
+	rm -rf package-lock.json

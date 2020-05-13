@@ -118,13 +118,11 @@ Npm does not behave properly for us, e.g.:
 3. Other times it complains that it has no write permissions to directories `npm` wrote on its own (inside `npm_modules`)
 
 The first two problems are fixable by removing the `package-lock.json`. To remedy that, run:
-1. `make clean-all` - just in case
-2. `make clean-package-lock`
+1. `make clean-all`
 3. `make` - should now pass
 
 For the third one, and this one is really strange, some of the folders in `npm_modules` are under a regular user, and some are under root user. I cannot explain how that happens, and that is very bad. To fix this, do the follwing:
 1. `sudo make clean-all`
-2. `sudo make clean-package-lock`
 3. `make` - should now pass
 
 We are looking into moving away from `npm`, as these troubles are happening randomly and without an appearnt cause. 

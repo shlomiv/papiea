@@ -1,8 +1,8 @@
 default: papiea-build
 
-
 .PHONY: run-papiea papiea-build stop-papiea run-tests run-benchmark run-benchmark-local
 
+papiea-packages = core client backend-utils engine sdk
 
 run-benchmark-local: run-papiea
 	cd ./papiea-engine; \
@@ -12,14 +12,14 @@ run-benchmark-local: run-papiea
 run-papiea: papiea-build
 	cd ./papiea-engine; \
 	if [ -z `docker-compose ps -q papiea-engine` ] || [ -z `docker ps -q --no-trunc | grep $$(docker-compose ps -q papiea-engine)` ]; then \
-      docker-compose up -d; \
+	docker-compose up -d; \
 	  for i in `seq 1 10`; \
 	  do \
 		docker-compose logs --tail=5 papiea-engine | grep 'app listening on port' && echo Success && exit 0; \
 		sleep 2; \
 		docker-compose logs --tail=5; \
 	  done \
-    fi
+	fi
 
 
 papiea-build: node_modules
@@ -33,12 +33,12 @@ node_modules:
 
 
 stop-papiea:
-		cd ./papiea-engine; \
-        if [ -z `docker-compose ps -q papiea-engine` ] || [ -z `docker ps -q --no-trunc | grep $$(docker-compose ps -q papiea-engine)` ]; then \
-			echo 'Papiea not running'; \
-		else \
-		  docker-compose kill; \
-        fi
+	cd ./papiea-engine; \
+		if [ -z `docker-compose ps -q papiea-engine` ] || [ -z `docker ps -q --no-trunc | grep $$(docker-compose ps -q papiea-engine)` ]; then \
+		echo 'Papiea not running'; \
+	else \
+	  docker-compose kill; \
+	fi
 
 
 run-tests: run-papiea
@@ -52,22 +52,22 @@ run-benchmark: node_modules
 	npm run bench -- $(ARGS)
 
 
-clean-all: clean-build clean-node-modules
+clean-all: clean clean-node-modules clean-package-lock
 
 
 clean-node-modules:
-	for p in core client backend-utils engine sdk; do rm -rf papiea-$$p/node_modules; done; \
+	for p in $(papiea-packages) ; do rm -rf papiea-$$p/node_modules; done; \
 	cd ./papiea-engine/__benchmarks__; \
 	rm -rf node_modules
 
-clean: clean-build
 
-clean-build:
+clean:
 	npm run clean-all; \
 	cd ./papiea-engine/__benchmarks__; \
 	rm -rf build
 
+
 clean-package-lock:
-	for p in core client backend-utils engine sdk; do rm -rf papiea-$$p/package-lock.json; done; \
+	for p in $(papiea-packages) ; do rm -rf papiea-$$p/package-lock.json; done; \
 	cd ./papiea-engine/__benchmarks__; \
 	rm -rf package-lock.json

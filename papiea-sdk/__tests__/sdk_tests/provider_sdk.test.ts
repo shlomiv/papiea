@@ -496,6 +496,7 @@ describe("Provider Sdk tests", () => {
     });
 
     test("Papiea should fail validation if input param is undefined instead of empty object", async () => {
+        expect.assertions(1)
         const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
         const location = sdk.new_kind(location_yaml);
         const input_args = {type: 'object', properties: {}}
@@ -513,7 +514,31 @@ describe("Provider Sdk tests", () => {
             await sdk.register();
             const res: any = await axios.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/procedure/computeSumWithEmptyInput`, { input: undefined });
         } catch(e) {
-            expect(e.response.data.error.errors[0]).toBe("Function was expecting empty object")
+            expect(e.response.data.error.errors[0].message).toBe("computeSumWithEmptyInput with schema input was expecting empty object")
+        } finally {
+            sdk.server.close();
+        }
+    });
+
+    test("Papiea should correclty validate if output param is an empty object", async () => {
+        const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
+        const location = sdk.new_kind(location_yaml);
+        const input_args = {type: 'object', properties: {}}
+        sdk.version(provider_version);
+        sdk.prefix("location_provider_empty_input_fail");
+        sdk.provider_procedure("computeSumWithEmptyOutput",
+            {},
+            Procedural_Execution_Strategy.Halt_Intentful,
+            {input: input_args},
+            {output: {}},
+            async (ctx, input) => {
+            }
+        );
+        try {
+            await sdk.register();
+            const res: any = await axios.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/procedure/computeSumWithEmptyOutput`, { input: {} });
+        } catch(e) {
+            expect(e.response.data.error.errors[0].message).toBe("computeSumWithEmptyOutput with schema input was expecting empty object")
         } finally {
             sdk.server.close();
         }
@@ -538,7 +563,7 @@ describe("Provider Sdk tests", () => {
             await sdk.register();
             const res: any = await axios.post(`${sdk.entity_url}/${sdk.provider.prefix}/${sdk.provider.version}/procedure/computeSumWithNoValidation`, { input: { "a": 5, "b": 5 } });
         } catch (e) {
-            expect(e.response.data.error.errors[0].message).toBe('Function was expecting output of type void');
+            expect(e.response.data.error.errors[0].message).toBe("computeSumWithNoValidation with schema undefined was expecting type void");
         } finally {
             sdk.server.close();
         }

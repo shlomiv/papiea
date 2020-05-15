@@ -123,7 +123,7 @@ For the third one, and this one is really strange, some of the folders in `npm_m
 1. `sudo make clean-all`
 3. `make` - should now pass
 
-We are looking into moving away from `npm`, as these troubles are happening randomly and without an appearnt cause. 
+We are looking into moving away from `npm`, possibly to `yarn`, as these troubles are happening randomly and without an appearnt cause. 
 
 ## License and copyright
 

@@ -5,12 +5,13 @@
   "main": "index.js",
   "author": "Shlomi Vaknin",
   "scripts": {
-    "clean-all": "for p in core client backend-utils engine sdk; do npm --prefix papiea-$p run clean || exit 1; done",
-    "build-all": "for p in core client backend-utils engine sdk; do npm --prefix papiea-$p run build || exit 1; done",
-    "patch-all": "for p in core client backend-utils engine sdk; do npm --prefix papiea-$p version patch || exit 1; done",
-    "install-all": "for p in core client backend-utils engine sdk; do npm --prefix papiea-$p install || exit 1; done",
-    "build-all!": "npm run clean-all && npm run build-all",
-    "publish-all": "npm run build-all! && node publish-papiea.js"
+    "upgrade-all": "for p in core client backend-utils engine sdk; do yarn --cwd papiea-$p upgrade || exit 1; done",
+    "clean-all": "for p in core client backend-utils engine sdk; do yarn --cwd papiea-$p run clean || exit 1; done",
+    "build-all": "for p in core client backend-utils engine sdk; do yarn --cwd papiea-$p run build || exit 1; done",
+    "patch-all": "for p in core client backend-utils engine sdk; do yarn --cwd papiea-$p version patch || exit 1; done",
+    "install-all": "for p in core client backend-utils engine sdk; do yarn --cwd papiea-$p || exit 1; done",
+    "build-all!": "yarn run upgrade-all && yarn run build-all",
+    "publish-all": "yarn run build-all! && node publish-papiea.js"
   },
   "repository": {
     "type": "git",

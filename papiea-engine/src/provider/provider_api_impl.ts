@@ -130,7 +130,8 @@ export class Provider_API_Impl implements Provider_API {
             throw new Error("Kind not found");
         }
         const schemas: any = Object.assign({}, kind.kind_structure);
-        this.validator.validate(status, Object.values(kind.kind_structure)[0], schemas, allowExtraProps);
+        this.validator.validate(status, Object.values(kind.kind_structure)[0], schemas,
+            allowExtraProps, Object.keys(kind.kind_structure)[0]);
     }
 
     async update_auth(user: UserAuthInfo, provider_prefix: string, provider_version: Version, auth: any): Promise<void> {

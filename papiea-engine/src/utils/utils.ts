@@ -66,6 +66,12 @@ export function processSortQuery(query: string | undefined): undefined | SortPar
 }
 
 export function isEmpty(obj: any) {
+    // JS type system note:
+    // axios returns "" as response.data if no data was returned
+    // thus if a procedure returns "" it is considered as no response
+    if (obj === undefined || obj === null || obj === "") {
+        return false
+    }
     for(let key in obj) {
         if(obj.hasOwnProperty(key))
             return false;

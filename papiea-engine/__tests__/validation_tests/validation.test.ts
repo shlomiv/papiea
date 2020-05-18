@@ -18,7 +18,7 @@ describe("Validation tests", () => {
         };
         const try_validate = ValidationBuilder.createSimpleValidationFunc(done);
         try_validate(() => {
-            validator.validate(entity.spec, maybeLocation, trimmedLocationDataDescription, false)
+            validator.validate(entity.spec, maybeLocation, trimmedLocationDataDescription, false, "trimmedLocation")
         })
     });
 
@@ -30,7 +30,7 @@ describe("Validation tests", () => {
         };
         const try_validate = ValidationBuilder.createSimpleValidationFunc(done);
         try_validate(() => {
-            validator.validate(entity.spec, maybeLocation, trimmedLocationDataDescription, false)
+            validator.validate(entity.spec, maybeLocation, trimmedLocationDataDescription, false, "trimmedLocation")
         }, true)
     });
 
@@ -44,7 +44,7 @@ describe("Validation tests", () => {
         };
         const try_validate = ValidationBuilder.createSimpleValidationFunc(done);
         try_validate(() => {
-            validator.validate(entity.spec, maybeLocation, trimmedLocationDataDescription, false)
+            validator.validate(entity.spec, maybeLocation, trimmedLocationDataDescription, false, "trimmedLocation")
         })
     });
 
@@ -58,7 +58,7 @@ describe("Validation tests", () => {
         };
         const try_validate = ValidationBuilder.createSimpleValidationFunc(done);
         try_validate(() => {
-            validator.validate(entity.spec, maybeLocation, trimmedLocationDataDescription, false)
+            validator.validate(entity.spec, maybeLocation, trimmedLocationDataDescription, false, "trimmedLocation")
         }, true)
     });
 
@@ -71,7 +71,7 @@ describe("Validation tests", () => {
         };
         const try_validate = ValidationBuilder.createSimpleValidationFunc(done);
         try_validate(() => {
-            validator.validate(entity.spec, maybeLocation, trimmedLocationDataDescription, false)
+            validator.validate(entity.spec, maybeLocation, trimmedLocationDataDescription, false, "trimmedLocation")
         }, true)
     });
 
@@ -87,7 +87,7 @@ describe("Validation tests", () => {
         };
         const try_validate = ValidationBuilder.createSimpleValidationFunc(done);
         try_validate(() => {
-            validator.validate(entity.spec, maybeLocation, trimmedLocationDataDescription, false)
+            validator.validate(entity.spec, maybeLocation, trimmedLocationDataDescription, false, "trimmedLocation")
         })
     });
 
@@ -103,7 +103,7 @@ describe("Validation tests", () => {
         };
         const try_validate = ValidationBuilder.createSimpleValidationFunc(done);
         try_validate(() => {
-            validator.validate(entity.spec, maybeLocation, trimmedLocationDataDescription, false)
+            validator.validate(entity.spec, maybeLocation, trimmedLocationDataDescription, false, "trimmedLocation")
         }, true)
     });
 
@@ -119,7 +119,7 @@ describe("Validation tests", () => {
         };
         const try_validate = ValidationBuilder.createSimpleValidationFunc(done);
         try_validate(() => {
-            validator.validate(entity.spec, maybeLocation, trimmedLocationDataDescription, false)
+            validator.validate(entity.spec, maybeLocation, trimmedLocationDataDescription, false, "trimmedLocation")
         }, true)
     });
 
@@ -138,7 +138,7 @@ describe("Validation tests", () => {
         };
         const try_validate = ValidationBuilder.createSimpleValidationFunc(done);
         try_validate(() => {
-            validator.validate(entity.spec, maybeLocationStringParam, trimmedLocationDataDescriptionStringParam, false)
+            validator.validate(entity.spec, maybeLocationStringParam, trimmedLocationDataDescriptionStringParam, false, "trimmedLocation")
         })
     });
 
@@ -151,7 +151,7 @@ describe("Validation tests", () => {
         };
         const try_validate = ValidationBuilder.createSimpleValidationFunc(done);
         try_validate(() => {
-            validator.validate(entity.spec, maybeLocationStringParam, trimmedLocationDataDescriptionStringParam, false)
+            validator.validate(entity.spec, maybeLocationStringParam, trimmedLocationDataDescriptionStringParam, false, "trimmedLocation")
         }, true)
     });
 });

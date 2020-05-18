@@ -1,11 +1,10 @@
-import { logLevelFromString, Logger, LoggerFactory } from "papiea-backend-utils"
+import { logLevelFromString, LoggerFactory } from "papiea-backend-utils"
 import { MongoConnection } from "./databases/mongo"
 import { Watchlist } from "./tasks/watchlist"
 import { DiffResolver } from "./tasks/diff_resolver"
 import { BasicDiffer } from "./intentful_core/differ_impl";
 import { IntentfulContext } from "./intentful_core/intentful_context";
 import { TaskResolver } from "./tasks/task_resolver";
-import { IntentfulListenerMongoStream } from "./tasks/intentful_listener_mongo_stream";
 import { IntentfulListenerMongo } from "./tasks/intentful_listener_mongo_simple";
 
 declare var process: {

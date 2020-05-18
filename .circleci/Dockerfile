@@ -5,7 +5,7 @@ WORKDIR /code/papiea-engine
 RUN cd /code \
     # Use cached node_modules
     && mv /node_modules /code/papiea-engine/node_modules \
-    && npm cache clean \
+    && npm cache clean --force \
     && npm run install-all \
     && npm install -g typescript \
     && npm --prefix papiea-engine run build-clj \

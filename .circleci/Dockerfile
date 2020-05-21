@@ -5,8 +5,8 @@ WORKDIR /code/papiea-engine
 RUN cd /code \
     # Use cached node_modules
     && mv /node_modules /code/papiea-engine/node_modules \
-    && make build_all \
-    && npm install -g typescript \
+    && ls | echo \
+    && make \
     && npm --prefix papiea-engine run build-clj
 
 CMD /bin/bash -c "yarn run start_differ & yarn run start"

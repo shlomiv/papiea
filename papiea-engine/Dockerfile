@@ -1,6 +1,9 @@
 FROM ubuntu:18.04
 
-RUN apt-get update && apt-get upgrade -y \
+RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add - \
+    echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list \
+    && apt-get update && apt-get upgrade -y \
+    && apt-get install -y yarn \
     && apt-get install -y locales \
     && echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen \
     && locale-gen \
@@ -26,8 +29,7 @@ RUN cd / && lein deps && lein cljsbuild once && rm project.clj
 
 # Cache node_modules
 ADD package.json /package.json
-ADD package-lock.json /package-lock.json
-RUN cd / && npm install && rm package.json && rm package-lock.json
+RUN cd / && yarn && rm package.json
 # Shlomi: In case npm fails with the cryptic "cb() was never called", 
 # remove your host's package-lock.json and rerun `npm install`. 
 

@@ -5,12 +5,9 @@
   "main": "index.js",
   "author": "Shlomi Vaknin",
   "scripts": {
-    "upgrade-all": "for p in core client backend-utils engine sdk; do yarn --cwd papiea-$p upgrade || exit 1; done",
     "clean-all": "for p in core client backend-utils engine sdk; do yarn --cwd papiea-$p run clean || exit 1; done",
-    "build-all": "for p in core client backend-utils engine sdk; do yarn --cwd papiea-$p run build || exit 1; done",
     "patch-all": "for p in core client backend-utils engine sdk; do yarn --cwd papiea-$p version patch || exit 1; done",
-    "install-all": "for p in core client backend-utils engine sdk; do yarn --cwd papiea-$p || exit 1; done",
-    "build-all!": "yarn run upgrade-all && yarn run build-all",
+    "build-all!": "yarn run upgrade-all",
     "publish-all": "yarn run build-all! && node publish-papiea.js"
   },
   "repository": {

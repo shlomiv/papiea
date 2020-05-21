@@ -1,12 +1,24 @@
 default: build_all
 
-.PHONY: run-papiea papiea-build stop-papiea run-tests run-benchmark run-benchmark-local node_modules_bench \
-node_modules_main node_modules_deps clean-node-modules clean clean-all build_main build_bench build_deps \
+.PHONY: run-papiea papiea-build stop-papiea run-tests run-benchmark run-benchmark-local \
+node_modules_main node_modules_deps clean-node-modules clean clean-all build_main build_deps \
 build_all run-papiea-debug
 
 papiea-packages = core client backend-utils engine sdk
 
-run-benchmark-local: build_bench run-papiea
+
+run-tests: run-papiea
+	cd ./papiea-engine; \
+	docker-compose exec papiea-engine yarn run test; \
+	docker-compose exec papiea-engine bash -c 'cd /code/papiea-sdk && npm test'
+
+
+run-benchmark: build_main
+	cd ./papiea-engine/__benchmarks__; \
+	yarn run bench -- $(ARGS)
+
+
+run-benchmark-local: papiea-engine/__benchmarks__/build run-papiea
 	cd ./papiea-engine; \
 	docker-compose exec papiea-engine bash -c 'cd __benchmarks__ && npm run bench-local'
 
@@ -23,6 +35,7 @@ run-papiea: build_main
 	  done \
 	fi
 
+
 run-papiea-debug: build_main
 	cd ./papiea-engine; \
 	if [ -z `docker-compose ps -q papiea-engine` ] || [ -z `docker ps -q --no-trunc | grep $$(docker-compose ps -q papiea-engine)` ]; then \
@@ -36,39 +49,6 @@ run-papiea-debug: build_main
 	fi
 
 
-build_all: build_bench
-
-node_modules_deps:
-	yarn --cwd papiea-core; \
-	yarn --cwd papiea-backend-utils; \
-	yarn --cwd papiea-client; \
-
-
-build_deps: node_modules_deps
-	yarn --cwd papiea-core run build; \
-	yarn --cwd papiea-backend-utils run build; \
-	yarn --cwd papiea-client upgrade; \
-	yarn --cwd papiea-client run build
-
-
-node_modules_main: build_deps
-	yarn --cwd papiea-engine; \
-	yarn --cwd papiea-sdk
-
-
-build_main: node_modules_main
-	yarn --cwd papiea-engine run build; \
-	yarn --cwd papiea-sdk run build
-
-
-node_modules_bench: build_main
-	yarn --cwd papiea-engine/__benchmarks__; \
-
-
-build_bench: node_modules_bench
-	yarn --cwd papiea-engine/__benchmarks__ run build; \
-
-
 stop-papiea:
 	cd ./papiea-engine; \
 		if [ -z `docker-compose ps -q papiea-engine` ] || [ -z `docker ps -q --no-trunc | grep $$(docker-compose ps -q papiea-engine)` ]; then \
@@ -78,15 +58,67 @@ stop-papiea:
 	fi
 
 
-run-tests: run-papiea
-	cd ./papiea-engine; \
-	docker-compose exec papiea-engine yarn run test; \
-	docker-compose exec papiea-engine bash -c 'cd /code/papiea-sdk && npm test'
+build_all: papiea-engine/__benchmarks__/build
 
 
-run-benchmark: build_main
-	cd ./papiea-engine/__benchmarks__; \
-	yarn run bench -- $(ARGS)
+papiea-engine/__benchmarks__/build: papiea-engine/__benchmarks__/node_modules
+	yarn --cwd papiea-engine/__benchmarks__ run build
+
+
+papiea-engine/__benchmarks__/node_modules: build_main
+	yarn --cwd papiea-engine/__benchmarks__
+
+
+build_main: node_modules_main papiea-engine/build papiea-sdk/build
+
+
+papiea-sdk/build:
+	yarn --cwd papiea-sdk run build
+
+
+papiea-engine/build:
+	yarn --cwd papiea-engine run build
+
+
+node_modules_main: build_deps papiea-engine/node_modules papiea-sdk/node_modules
+
+
+papiea-sdk/node_modules:
+	yarn --cwd papiea-sdk
+
+
+papiea-engine/node_modules:
+	yarn --cwd papiea-engine
+
+
+build_deps: node_modules_deps papiea-core/build papiea-backend-utils/build papiea-client/build
+
+
+papiea-client/build:
+	yarn --cwd papiea-client run build
+
+
+papiea-backend-utils/build:
+	yarn --cwd papiea-backend-utils run build
+
+
+papiea-core/build:
+	yarn --cwd papiea-core run build
+
+
+node_modules_deps: papiea-core/node_modules papiea-backend-utils/node_modules papiea-client/node_modules
+
+
+papiea-core/node_modules:
+	yarn --cwd papiea-core
+
+
+papiea-backend-utils/node_modules:
+	yarn --cwd papiea-backend-utils
+
+
+papiea-client/node_modules:
+	yarn --cwd papiea-client
 
 
 clean-all: clean-node-modules clean

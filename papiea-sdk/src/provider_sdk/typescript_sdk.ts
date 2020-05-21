@@ -546,7 +546,7 @@ export class Kind_Builder {
         return this
     }
 
-    on_create(handler: (ctx: ProceduralCtx_Interface, input: any) => Promise<any>): Kind_Builder {
+    on_create(handler: (ctx: ProceduralCtx_Interface, entity: Partial<Entity>) => Promise<any>): Kind_Builder {
         const name = "__create"
         const loggerFactory = new LoggerFactory({logPath: name})
         const logger = loggerFactory.createLogger()
@@ -555,7 +555,7 @@ export class Kind_Builder {
         return this
     }
 
-    on_delete(handler: (ctx: ProceduralCtx_Interface, input: any) => Promise<any>): Kind_Builder {
+    on_delete(handler: (ctx: ProceduralCtx_Interface, entity: Partial<Entity>) => Promise<any>): Kind_Builder {
         const name = "__delete"
         const loggerFactory = new LoggerFactory({logPath: name})
         const logger = loggerFactory.createLogger()

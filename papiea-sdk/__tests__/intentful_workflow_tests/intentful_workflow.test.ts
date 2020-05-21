@@ -22,7 +22,10 @@ const server_config = {
 const entityApi = axios.create({
     baseURL: `http://127.0.0.1:${serverPort}/services`,
     timeout: 1000,
-    headers: { 'Content-Type': 'application/json' }
+    headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${adminKey}`
+    }
 });
 
 const providerApiAdmin = axios.create({
@@ -67,9 +70,13 @@ describe("Intentful Workflow tests", () => {
                     status: { x: entity.spec.x }
                 })
             })
+            location.on_create(async (ctx, entity) => {
+                const { metadata, spec } = entity
+                await ctx.update_status(metadata!, spec!)
+            })
             await sdk.register();
             const kind_name = sdk.provider.kinds[0].name;
-            const { data: { metadata, spec } } = await axios.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }`, {
+            const { data: { metadata, spec } } = await entityApi.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }`, {
                 spec: {
                     x: 10,
                     y: 11
@@ -117,9 +124,13 @@ describe("Intentful Workflow tests", () => {
             location.on("x", {}, async (ctx, entity, input) => {
                 throw new Error("Error in handler")
             })
+            location.on_create(async (ctx, entity) => {
+                const { metadata, spec } = entity
+                await ctx.update_status(metadata!, spec!)
+            })
             await sdk.register();
             const kind_name = sdk.provider.kinds[0].name;
-            const { data: { metadata, spec } } = await axios.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }`, {
+            const { data: { metadata, spec } } = await entityApi.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }`, {
                 spec: {
                     x: 120,
                     y: 11
@@ -173,9 +184,13 @@ describe("Intentful Workflow tests", () => {
                     status: { x: entity.spec.x }
                 })
             })
+            location.on_create(async (ctx, entity) => {
+                const { metadata, spec } = entity
+                await ctx.update_status(metadata!, spec!)
+            })
             await sdk.register();
             const kind_name = sdk.provider.kinds[0].name;
-            const { data: { metadata, spec } } = await axios.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }`, {
+            const { data: { metadata, spec } } = await entityApi.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }`, {
                 spec: {
                     x: 10,
                     y: 11

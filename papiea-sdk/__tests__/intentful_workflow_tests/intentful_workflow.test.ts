@@ -221,3 +221,37 @@ describe("Intentful Workflow tests", () => {
         }
     })
 })
+
+describe("Intentful Workflow test sfs validation", () => {
+
+    const locationDataDescription = getDifferLocationDataDescription()
+    let provider_prefix: string
+    let provider_version: Version = "0.1.0"
+
+
+    test("Registering provider with wrong sfs shouldn't pass", async () => {
+        expect.assertions(2);
+        const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
+        try {
+            provider_prefix = "location_provider_intentful_fail_validation"
+            const location = sdk.new_kind(locationDataDescription);
+            sdk.version(provider_version);
+            sdk.prefix(provider_prefix);
+            location.on("wrong, wrong2", {}, async (ctx, entity, input) => {
+                await providerApiAdmin.patch(`/${ sdk.provider.prefix }/${ sdk.provider.version }/update_status`, {
+                    context: "some context",
+                    entity_ref: {
+                        uuid: entity.metadata.uuid,
+                        kind: entity.metadata.kind
+                    },
+                    status: { x: entity.spec.x }
+                })
+            })
+            await sdk.register();
+        } catch (e) {
+            expect(e.response.status).toEqual(400)
+            expect(e.response.data.error.errors[ 0 ].message).toContain("SFS: 'wrong, wrong2' validation on kind:" +
+                ` ${Object.keys(locationDataDescription)[0]} failed with error: Parse error at line 1,`)
+        }
+    })
+})

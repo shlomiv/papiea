@@ -11,7 +11,7 @@
   "license": "ISC",
   "dependencies": {
     "axios": "^0.18.1",
-    "papiea-core": "^1.0.86",
+    "papiea-core": "file:../papiea-core",
     "wait-port": "^0.2.2"
   },
   "devDependencies": {

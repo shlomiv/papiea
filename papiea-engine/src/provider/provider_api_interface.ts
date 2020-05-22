@@ -23,8 +23,6 @@ export interface Provider_API {
     // POST "/provider/update_progress"
     update_progress(user: UserAuthInfo, provider_prefix: string, version: Version, context: any, message: string, done_percent: number): Promise<void>;
 
-    // Binny wants to rename this
-    // POST "/provider/{prefix}/{version}/power"
     power(user: UserAuthInfo, provider_prefix: string, version: Version, power_state: Provider_Power): Promise<void>;
 
     get_latest_provider_by_kind(user: UserAuthInfo, kind_name: string): Promise<Provider>;

@@ -11,13 +11,13 @@ const run_compiled_sfs = (compiled_sfs: any, spec: any, status: any) =>
     papi_clj.core.run_compiled_sfs(compiled_sfs, spec, status);
 
 export class SFSCompiler {
-    static try_parse_sfs(signature: string, kind: string): void {
+    static try_parse_sfs(signature: string, kind_name: string): void {
         try {
             sfs_parser(signature)
         } catch(e) {
             const message = e.message
             throw new ValidationError([
-                new Error(`SFS: '${signature}' validation on kind: ${kind} failed with error: ${message}`)
+                new Error(`SFS: '${signature}' validation on kind: ${kind_name} failed with error: ${message}`)
             ])
         }
     }

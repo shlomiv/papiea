@@ -5,7 +5,7 @@ export class BasicDiffer implements Differ {
     // Get the diff iterator from an entity based on the
     public* diffs(kind: Kind, spec: Spec, status: Status): Generator<Diff, any, undefined> {
         for (let sig of kind.intentful_signatures) {
-            const compiled_signature = SFSCompiler.compile_sfs(sig.signature)
+            const compiled_signature = SFSCompiler.try_compile_sfs(sig.signature, kind.name)
             if (SFSCompiler.run_sfs(compiled_signature, spec, status) !== null) {
                 yield {
                     kind: kind.name,
@@ -20,7 +20,7 @@ export class BasicDiffer implements Differ {
     // original dependency tree
     public all_diffs(kind: Kind, spec: Spec, status: Status): Diff[] {
         return kind.intentful_signatures.map(sig => {
-                const compiled_signature = SFSCompiler.compile_sfs(sig.signature)
+                const compiled_signature = SFSCompiler.try_compile_sfs(sig.signature, kind.name)
                 const diff_fields = SFSCompiler.run_sfs(compiled_signature, spec, status)
                 return {
                     kind: kind.name,

@@ -178,7 +178,10 @@
   (str a))
 
 (defn ^:export parse_sfs[sfs-signature]
-  (insta/parse sfs-parser sfs-signature))
+  (let [result (insta/parse sfs-parser sfs-signature)]
+    (if (some? (insta/get-failure result))
+      (throw (js/Error. (with-out-str (prn result))))
+      result)))
 
 (defn ^:export optimize_sfs_ast[ast]
   (optimize-ast ast))

@@ -1,4 +1,5 @@
 import { SFS, Entity_Reference, Spec, Status, Provider_Callback_URL, Kind, Differ, Diff, Provider } from "papiea-core";
+import { ValidationError } from "../errors/validation_error"
 
 // TODO: add d.ts for type annotations
 const papi_clj = require("../../papiea-lib-clj/papiea-lib-clj.js").papiea_lib_clj;
@@ -10,7 +11,19 @@ const run_compiled_sfs = (compiled_sfs: any, spec: any, status: any) =>
     papi_clj.core.run_compiled_sfs(compiled_sfs, spec, status);
 
 export class SFSCompiler {
-    static compile_sfs(signature: string): any {
+    static try_parse_sfs(signature: string, kind_name: string): void {
+        try {
+            sfs_parser(signature)
+        } catch(e) {
+            const message = e.message
+            throw new ValidationError([
+                new Error(`SFS: '${signature}' validation on kind: ${kind_name} failed with error: ${message}`)
+            ])
+        }
+    }
+
+    static try_compile_sfs(signature: string, kind: string): any {
+        this.try_parse_sfs(signature, kind)
         return sfs_compiler(signature)
     }
 

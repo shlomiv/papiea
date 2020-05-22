@@ -12,6 +12,14 @@ describe("SFS Tests", () => {
     test("Simple sfs ast", () => {
         expect(clj_str(sfs_parser('a'))).toEqual('[:S [:simple "a"]]');
     });
+    test("Sfs parser should throw exception", () => {
+        expect.assertions(1)
+        try {
+            sfs_parser('wrong, wrong');
+        } catch (e) {
+            expect(e).toBeDefined()
+        }
+    });
     test("Complex sfs ast", () => {
         expect(clj_str(sfs_parser('f1.{id}.[another, props.{id2}.name]'))).toEqual('[:S [:complex [:simple "f1"] [:vector [:change] "id"] [:group [:simple "another"] [:complex [:simple "props"] [:vector [:change] "id2"] [:simple "name"]]]]]');
     });
@@ -46,5 +54,25 @@ describe("SFS Tests", () => {
             key: 'd',
             'spec-val': [ 2 ],
             'status-val': [ 3 ] } ]);
+    });
+    test("Run the sfs 'a.{id}.[a,d]' on spec:{a:1, d:2} status:{a:3, d:4}", () => {
+        let sfs = sfs_compiler("a.{id}.[a,d]");
+        let r = run_compiled_sfs(sfs,
+            {
+                "a": [{ "id": 1, "a": 1, "d": 2 },
+                    { "id": 2, "a": 1, "d": 2 }]
+            },
+            {
+                "a": [{ "id": 1, "a": 2, "d": 3 },
+                    { "id": 2, "a": 1, "d": 3 }]
+            });
+        expect(r).toEqual([ { keys: { id: 1 },
+            key: 'a',
+            'spec-val': [ 1 ],
+            'status-val': [ 2 ] },
+            { keys: { id: 1 },
+                key: 'd',
+                'spec-val': [ 2 ],
+                'status-val': [ 3 ] } ]);
     });
 })

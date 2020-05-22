@@ -58,9 +58,19 @@ describe("Differ tests", () => {
             "a": [{ "id": 1, "a": 2, "d": 3 },
                 { "id": 2, "a": 1, "d": 3 }]
         }
-        const diff_fields = SFSCompiler.run_sfs(SFSCompiler.compile_sfs("a.{id}.[a,d]"), spec, status)
+        const diff_fields = SFSCompiler.run_sfs(SFSCompiler.try_compile_sfs("a.{id}.[a,d]", "test_kind"), spec, status)
         for (let diff of differ.diffs(locationDifferKind, spec, status)) {
             expect(diff.diff_fields).toEqual(diff_fields)
+        }
+    })
+
+    test("Differ produces exception when it cannot parse sfs", () => {
+        expect.assertions(1)
+
+        try {
+            SFSCompiler.try_compile_sfs("wrong_sfs, wrong_sfs2", "test_kind")
+        } catch (e) {
+            expect(e.errors[0]).toContain("SFS: 'wrong_sfs, wrong_sfs2' validation on kind: test_kind failed with error: Parse error at line 1,")
         }
     })
 
@@ -75,7 +85,7 @@ describe("Differ tests", () => {
             "x": 15,
             "y": 11
         }
-        const diff_fields = SFSCompiler.run_sfs(SFSCompiler.compile_sfs("x"), spec, status)
+        const diff_fields = SFSCompiler.run_sfs(SFSCompiler.try_compile_sfs("x", "test_kind"), spec, status)
         for (let diff of differ.diffs(locationDifferKind, spec, status)) {
             expect(diff.diff_fields).toEqual(diff_fields)
         }

@@ -7,13 +7,13 @@ describe("SFS Compiler Tests", () => {
 
     test("SFS Compiler compile single signature", () => {
         expect.assertions(1)
-        const compiledSignature = SFSCompiler.compile_sfs("a.{id}.[a,d]")
+        const compiledSignature = SFSCompiler.try_compile_sfs("a.{id}.[a,d]", "test_kind")
         expect(compiledSignature).not.toBeUndefined()
     })
 
     test("SFS Compiler run sfs", () => {
         expect.assertions(1)
-        const compiledSignature = SFSCompiler.compile_sfs("a.{id}.[a,d]")
+        const compiledSignature = SFSCompiler.try_compile_sfs("a.{id}.[a,d]", "test_kind")
         const diffFields = SFSCompiler.run_sfs(compiledSignature, {
                 "a": [{ "id": 1, "a": 1, "d": 2 },
                     { "id": 2, "a": 1, "d": 2 }]

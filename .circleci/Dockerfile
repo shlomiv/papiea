@@ -7,7 +7,12 @@ RUN cd /code \
     && mv /node_modules /code/papiea-engine/node_modules \
     && apt-get update \
     && apt-get install -y build-essential \
-    && make \
     && npm --prefix papiea-engine run build-clj
+
+# Install yarn
+RUN curl -o- -L yarnpkg.com/install.sh | bash
+ENV PATH="${HOME}/.yarn/bin:${HOME}/.config/yarn/global/node_modules/.bin:${PATH}"
+
+RUN make
 
 CMD /bin/bash -c "yarn run start_differ & yarn run start"

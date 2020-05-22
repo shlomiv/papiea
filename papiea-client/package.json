@@ -1,7 +1,7 @@
 {
   "name": "papiea-client",
   "description": "",
-  "version": "1.0.84",
+  "version": "1.0.86",
   "main": "build/entity_client.js",
   "scripts": {
     "clean": "rm -rf build",
@@ -11,7 +11,7 @@
   "license": "ISC",
   "dependencies": {
     "axios": "^0.18.1",
-    "papiea-core": "file:../papiea-core",
+    "papiea-core": "^1.0.86",
     "wait-port": "^0.2.2"
   },
   "devDependencies": {

@@ -154,4 +154,17 @@ describe("Validation tests", () => {
             validator.validate(entity.spec, maybeLocationStringParam, trimmedLocationDataDescriptionStringParam, false, "trimmedLocation")
         }, true)
     });
+
+    test("Required parameter x with empty string", (done) => {
+        const entity = {
+            spec: {
+                x: "",
+                y: 11
+            }
+        };
+        const try_validate = ValidationBuilder.createSimpleValidationFunc(done);
+        try_validate(() => {
+            validator.validate(entity.spec, maybeLocationStringParam, trimmedLocationDataDescriptionStringParam, false, "trimmedLocation")
+        })
+    });
 });

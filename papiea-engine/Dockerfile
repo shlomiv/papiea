@@ -1,9 +1,9 @@
 FROM ubuntu:18.04
 
-RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add - \
-    echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list \
-    && apt-get update && apt-get upgrade -y \
-    && apt-get install -y yarn \
+RUN apt-get update && apt-get upgrade -y \
+    && apt-get install -y build-essential \
+    && apt-get install -y curl \
+    && apt purge cmdtest \
     && apt-get install -y locales \
     && echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen \
     && locale-gen \
@@ -23,15 +23,13 @@ RUN wget -q -O /usr/bin/lein \
     && chmod +x /usr/bin/lein
 RUN lein
 
+# Install yarn
+RUN curl -o- -L yarnpkg.com/install.sh | bash
+ENV PATH="${HOME}/.yarn/bin:${HOME}/.config/yarn/global/node_modules/.bin:${PATH}"
+
 # Cache .m2
 ADD papiea-lib-clj/project.clj /project.clj
 RUN cd / && lein deps && lein cljsbuild once && rm project.clj
-
-# Cache node_modules
-ADD package.json /package.json
-RUN cd / && yarn && rm package.json
-# Shlomi: In case npm fails with the cryptic "cb() was never called", 
-# remove your host's package-lock.json and rerun `npm install`. 
 
 # Declare the ports we use
 EXPOSE 3000

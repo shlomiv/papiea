@@ -14,7 +14,8 @@ Please see [Papiea's design document](https://nutanix.github.io/papiea-js/Papiea
 Since papiea consists of multiple package you need to build them all
 separately or use a set of commands to build them all
 
-1. In the project root install and build all dependencies `make build_all`. (Note you need to have yarn installed)
+1. In the project root install and build all dependencies `make build_all`. (Note you need to have yarn installed
+, how to install yarn https://yarnpkg.com/getting-started/install)
 
 ## Local Development Instructions Papiea-Engine
 
@@ -106,22 +107,6 @@ For now this clojurescript library is embedded, but it may end up in a different
     select the host where the repl is running (usually localhost, but can be run anywhere.
     Use `.ssh/config` to name that host), then select `node` as the running environment and you should have a repl.
     Debugging is not yet working in cljs, but I simply use regular clojure if I need to live debug for now.
-
-## Troubleshooting npm
-
-Npm does not behave properly for us, e.g.:
-
-1. Some times it complains that `tsc` is not found
-2. Other times it may complain that no `package.json` is found at a location where it actually exists
-3. Other times it complains that it has no write permissions to directories `npm` wrote on its own (inside `npm_modules`)
-
-The first two problems are fixable by removing the `package-lock.json`. To remedy that, run:
-1. `make clean-all`
-3. `make` - should now pass
-
-For the third one, and this one is really strange, some of the folders in `npm_modules` are under a regular user, and some are under root user. I cannot explain how that happens, and that is very bad. To fix this, do the follwing:
-1. `sudo make clean-all`
-3. `make` - should now pass
 
 We are looking into moving away from `npm`, possibly to `yarn`, as these troubles are happening randomly and without an appearnt cause.
 

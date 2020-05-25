@@ -12,6 +12,9 @@ RUN cd /code \
 # Install yarn
 RUN curl -o- -L yarnpkg.com/install.sh | bash
 ENV PATH="${HOME}/.yarn/bin:${HOME}/.config/yarn/global/node_modules/.bin:${PATH}"
+RUN echo "export PATH=/new/path:${PATH}" >> /root/.bashrc
+
+RUN echo "$PATH"
 
 RUN ls && pwd
 

@@ -20,6 +20,8 @@ RUN ls && pwd
 
 RUN ls ~/.yarn/bin
 
+RUN yarn
+
 RUN cd /code && make
 
 CMD /bin/bash -c "yarn run start_differ & yarn run start"

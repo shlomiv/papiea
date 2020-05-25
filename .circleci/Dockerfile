@@ -13,6 +13,8 @@ RUN cd /code \
 RUN curl -o- -L yarnpkg.com/install.sh | bash
 ENV PATH="${HOME}/.yarn/bin:${HOME}/.config/yarn/global/node_modules/.bin:${PATH}"
 
-RUN make
+RUN ls && pwd
+
+RUN cd /code && make
 
 CMD /bin/bash -c "yarn run start_differ & yarn run start"

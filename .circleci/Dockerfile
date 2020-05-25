@@ -15,6 +15,8 @@ ENV PATH="${HOME}/.yarn/bin:${HOME}/.config/yarn/global/node_modules/.bin:${PATH
 
 RUN ls && pwd
 
+RUN ls .yarn/bin
+
 RUN cd /code && make
 
 CMD /bin/bash -c "yarn run start_differ & yarn run start"

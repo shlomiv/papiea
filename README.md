@@ -108,8 +108,6 @@ For now this clojurescript library is embedded, but it may end up in a different
     Use `.ssh/config` to name that host), then select `node` as the running environment and you should have a repl.
     Debugging is not yet working in cljs, but I simply use regular clojure if I need to live debug for now.
 
-We are looking into moving away from `npm`, possibly to `yarn`, as these troubles are happening randomly and without an appearnt cause.
-
 ## License and copyright
 
 Copyright (C) 2018 Nutanix

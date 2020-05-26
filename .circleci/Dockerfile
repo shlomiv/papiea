@@ -11,7 +11,7 @@ RUN cd /code \
 
 # Install yarn
 RUN curl -o- -L yarnpkg.com/install.sh | bash
-ENV PATH="/root/.yarn/bin:${HOME}/.yarn/bin:${HOME}/.config/yarn/global/node_modules/.bin:${PATH}"
+ENV PATH="/root/.yarn/bin:/root/.yarn/bin:/root/.config/yarn/global/node_modules/.bin:${PATH}"
 #RUN echo "export PATH=${HOME}/.yarn/bin:${HOME}/.config/yarn/global/node_modules/.bin:${PATH}" >> ~/.bashrc
 #RUN /bin/bash -c "source ~/.bashrc"
 #RUN /bin/bash -c ". ~/.bashrc"

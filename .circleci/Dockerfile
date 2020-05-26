@@ -11,18 +11,22 @@ RUN cd /code \
 
 # Install yarn
 RUN curl -o- -L yarnpkg.com/install.sh | bash
-ENV PATH="${HOME}/.yarn/bin:${HOME}/.config/yarn/global/node_modules/.bin:${PATH}"
-RUN echo "export PATH=${HOME}/.yarn/bin:${HOME}/.config/yarn/global/node_modules/.bin:${PATH}" >> ~/.bashrc
-RUN /bin/bash -c "source ~/.bashrc"
-RUN /bin/bash -c ". ~/.bashrc"
+ENV PATH="/root/.yarn/bin:/root/.yarn/bin:/root/.config/yarn/global/node_modules/.bin:${PATH}"
+#RUN echo "export PATH=${HOME}/.yarn/bin:${HOME}/.config/yarn/global/node_modules/.bin:${PATH}" >> ~/.bashrc
+#RUN /bin/bash -c "source ~/.bashrc"
+#RUN /bin/bash -c ". ~/.bashrc"
 
-RUN echo "$PATH"
+#RUN echo $HOME && cd ~/.yarn/bin && pwd
 
-RUN ls && pwd
+#RUN /bin/bash -c 'echo $HOME && cd ~/.yarn/bin && pwd'
 
-RUN ls ~/.yarn/bin
+#RUN /bin/bash -c 'echo "$PATH"'
 
-RUN yarn
+#RUN /bin/bash -c 'pwd && ls && env'
+
+#RUN /bin/bash -c 'ls -ltr ~/.yarn/bin'
+
+#RUN /bin/bash -c 'which yarn'
 
 RUN cd /code && make
 

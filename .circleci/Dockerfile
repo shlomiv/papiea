@@ -16,6 +16,8 @@ RUN echo "export PATH=${HOME}/.yarn/bin:${HOME}/.config/yarn/global/node_modules
 RUN /bin/bash -c "source ~/.bashrc"
 RUN /bin/bash -c ". ~/.bashrc"
 
+RUN /bin/bash -c 'echo $HOME && cd ~/.yarn/bin && pwd'
+
 RUN /bin/bash -c 'echo "$PATH"'
 
 RUN /bin/bash -c 'pwd && ls && env'

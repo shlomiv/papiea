@@ -17,7 +17,7 @@ RUN /bin/bash -c "source ~/.bashrc"
 RUN /bin/bash -c ". ~/.bashrc"
 
 RUN echo $HOME && cd ~/.yarn/bin && pwd
-RUN 
+
 RUN /bin/bash -c 'echo $HOME && cd ~/.yarn/bin && pwd'
 
 RUN /bin/bash -c 'echo "$PATH"'

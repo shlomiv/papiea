@@ -20,9 +20,11 @@ RUN /bin/bash -c 'echo "$PATH"'
 
 RUN /bin/bash -c 'pwd && ls && env'
 
-RUN /bin/bash -c 'ls ~/.yarn/bin'
+RUN /bin/bash -c 'ls -ltr ~/.yarn/bin'
 
-RUN /bin/bash -c 'yarn'
+RUN /bin/bash -c 'which yarn'
+
+RUN /bin/basb -c '~/.yarn/bin/yarn'
 
 RUN cd /code && make
 

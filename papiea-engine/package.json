@@ -9,7 +9,7 @@
   ],
   "scripts": {
     "clean": "rm -rf build",
-    "build": "yarn run tsc -v && yarn run tsc",
+    "build": "yarn upgrade && yarn run tsc -v && yarn run tsc",
     "build!": "npm run clean && npm run build",
     "start": "ts-node src/main.ts",
     "start_differ": "ts-node src/diff_resolver_main.ts",

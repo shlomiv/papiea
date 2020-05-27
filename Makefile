@@ -91,7 +91,7 @@ papiea-engine/node_modules:
 	yarn --cwd papiea-engine
 
 
-build_deps: node_modules_deps papiea-core/build papiea-backend-utils/build papiea-client/build
+build_deps: node_modules_deps papiea-backend-utils/build papiea-client/build
 
 
 papiea-client/build:
@@ -102,15 +102,7 @@ papiea-backend-utils/build:
 	yarn --cwd papiea-backend-utils run build
 
 
-papiea-core/build:
-	yarn --cwd papiea-core run build
-
-
-node_modules_deps: papiea-core/node_modules papiea-backend-utils/node_modules papiea-client/node_modules
-
-
-papiea-core/node_modules:
-	yarn --cwd papiea-core
+node_modules_deps: papiea-core/build papiea-backend-utils/node_modules papiea-client/node_modules
 
 
 papiea-backend-utils/node_modules:
@@ -120,6 +112,13 @@ papiea-backend-utils/node_modules:
 papiea-client/node_modules:
 	yarn --cwd papiea-client
 
+
+papiea-core/build: papiea-core/node_modules
+	yarn --cwd papiea-core run build
+
+
+papiea-core/node_modules:
+	yarn --cwd papiea-core
 
 clean-all: clean-node-modules clean
 

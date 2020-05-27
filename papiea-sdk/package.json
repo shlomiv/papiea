@@ -10,7 +10,7 @@
     "test": "jest --runInBand --coverage",
     "test-ci": "jest --runInBand --coverage --ci --reporters=default --reporters=jest-junit",
     "clean": "rm -rf build",
-    "build": "tsc"
+    "build": "yarn run tsc"
   },
   "author": "",
   "license": "ISC",

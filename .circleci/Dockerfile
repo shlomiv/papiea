@@ -4,7 +4,6 @@ COPY . /code
 WORKDIR /code/papiea-engine
 RUN cd /code \
     # Use cached node_modules
-    && mv /node_modules /code/papiea-engine/node_modules \
     && apt-get update \
     && apt-get install -y build-essential \
     && npm --prefix papiea-engine run build-clj

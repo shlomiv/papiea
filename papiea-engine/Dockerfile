@@ -23,10 +23,6 @@ RUN wget -q -O /usr/bin/lein \
     && chmod +x /usr/bin/lein
 RUN lein
 
-# Install yarn
-RUN curl -o- -L yarnpkg.com/install.sh | bash
-ENV PATH="/root/.yarn/bin:/root/.config/yarn/global/node_modules/.bin:${PATH}"
-
 # Cache .m2
 ADD papiea-lib-clj/project.clj /project.clj
 RUN cd / && lein deps && lein cljsbuild once && rm project.clj

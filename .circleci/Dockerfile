@@ -1,4 +1,4 @@
-FROM nutanix-docker.jfrog.io/papiea:base
+FROM nutanix-docker.jfrog.io/papiea:yarn-base
 
 COPY . /code
 WORKDIR /code/papiea-engine

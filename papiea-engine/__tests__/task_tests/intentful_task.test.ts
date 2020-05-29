@@ -22,7 +22,10 @@ const adminKey = process.env.PAPIEA_ADMIN_S2S_KEY || '';
 const entityApi = axios.create({
     baseURL: `http://127.0.0.1:${serverPort}/services`,
     timeout: 1000,
-    headers: { 'Content-Type': 'application/json' }
+    headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${adminKey}`
+    }
 });
 
 const providerApiAdmin = axios.create({
@@ -134,8 +137,9 @@ describe("Intentful Task tests", () => {
         })
         expect(task.status).toEqual(IntentfulStatus.Pending)
         expect(task.diffs[0].diff_fields[0]["spec-val"][0]).toEqual(20)
-        expect(task.diffs[0].diff_fields[0]["status-val"][0]).toEqual(10)
+        expect(task.diffs[0].diff_fields[0]["status-val"][0]).toEqual(null)
         createdTask = task
+        console.log(createdTask)
     })
 
     test("Intentful task created through updating the spec with multiple diffs", async () => {
@@ -165,8 +169,8 @@ describe("Intentful Task tests", () => {
         expect(task.status).toEqual(IntentfulStatus.Pending)
         expect(task.diffs[0].diff_fields[0]["spec-val"][0]).toEqual(20)
         expect(task.diffs[1].diff_fields[0]["spec-val"][0]).toEqual(110)
-        expect(task.diffs[0].diff_fields[0]["status-val"][0]).toEqual(10)
-        expect(task.diffs[1].diff_fields[0]["status-val"][0]).toEqual(11)
+        expect(task.diffs[0].diff_fields[0]["status-val"][0]).toEqual(null)
+        expect(task.diffs[1].diff_fields[0]["status-val"][0]).toEqual(null)
         createdTask = task
     })
 

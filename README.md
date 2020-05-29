@@ -7,7 +7,7 @@ between intended state and real world state.
 
 ## Design document
 
-Please see [Papiea's design document](https://nutanix.github.io/papiea-js/Papiea-design.html)
+Please see [Papiea's design document](https://nutanix.github.io/papiea/Papiea-design.html)
 
 ## Build Instructions Papiea
 

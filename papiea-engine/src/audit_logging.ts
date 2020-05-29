@@ -1,4 +1,4 @@
-import { NextFunction, Request, RequestHandler } from 'express'
+import { Request, RequestHandler } from 'express'
 import { IncomingHttpHeaders } from 'http'
 
 import { Logger } from 'papiea-backend-utils'

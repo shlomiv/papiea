@@ -1,6 +1,6 @@
 {
   "name": "papiea-engine",
-  "version": "1.0.84",
+  "version": "1.0.86",
   "description": "",
   "main": "build/main.js",
   "files": [
@@ -50,7 +50,7 @@
     "pluralize": "^7.0.0",
     "query-string": "^6.2.0",
     "simple-oauth2": "^2.2.1",
-    "swagger-model-validator": "^3.0.6",
+    "swagger-model-validator": "^3.0.19",
     "swagger-ui-express": "^4.0.7",
     "uuid": "^3.3.2",
     "uuid-validate": "0.0.3",

@@ -22,7 +22,10 @@ const server_config = {
 const entityApi = axios.create({
     baseURL: `http://127.0.0.1:${serverPort}/services`,
     timeout: 1000,
-    headers: { 'Content-Type': 'application/json' }
+    headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${adminKey}`
+    }
 });
 
 const providerApiAdmin = axios.create({
@@ -67,9 +70,13 @@ describe("Intentful Workflow tests", () => {
                     status: { x: entity.spec.x }
                 })
             })
+            location.on_create(async (ctx, entity) => {
+                const { metadata, spec } = entity
+                await ctx.update_status(metadata!, spec!)
+            })
             await sdk.register();
             const kind_name = sdk.provider.kinds[0].name;
-            const { data: { metadata, spec } } = await axios.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }`, {
+            const { data: { metadata, spec } } = await entityApi.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }`, {
                 spec: {
                     x: 10,
                     y: 11
@@ -117,9 +124,13 @@ describe("Intentful Workflow tests", () => {
             location.on("x", {}, async (ctx, entity, input) => {
                 throw new Error("Error in handler")
             })
+            location.on_create(async (ctx, entity) => {
+                const { metadata, spec } = entity
+                await ctx.update_status(metadata!, spec!)
+            })
             await sdk.register();
             const kind_name = sdk.provider.kinds[0].name;
-            const { data: { metadata, spec } } = await axios.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }`, {
+            const { data: { metadata, spec } } = await entityApi.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }`, {
                 spec: {
                     x: 120,
                     y: 11
@@ -173,9 +184,13 @@ describe("Intentful Workflow tests", () => {
                     status: { x: entity.spec.x }
                 })
             })
+            location.on_create(async (ctx, entity) => {
+                const { metadata, spec } = entity
+                await ctx.update_status(metadata!, spec!)
+            })
             await sdk.register();
             const kind_name = sdk.provider.kinds[0].name;
-            const { data: { metadata, spec } } = await axios.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }`, {
+            const { data: { metadata, spec } } = await entityApi.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }`, {
                 spec: {
                     x: 10,
                     y: 11
@@ -203,6 +218,40 @@ describe("Intentful Workflow tests", () => {
             }
         } finally {
             sdk.server.close();
+        }
+    })
+})
+
+describe("Intentful Workflow test sfs validation", () => {
+
+    const locationDataDescription = getDifferLocationDataDescription()
+    let provider_prefix: string
+    let provider_version: Version = "0.1.0"
+
+
+    test("Registering provider with wrong sfs shouldn't pass", async () => {
+        expect.assertions(2);
+        const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
+        try {
+            provider_prefix = "location_provider_intentful_fail_validation"
+            const location = sdk.new_kind(locationDataDescription);
+            sdk.version(provider_version);
+            sdk.prefix(provider_prefix);
+            location.on("wrong, wrong2", {}, async (ctx, entity, input) => {
+                await providerApiAdmin.patch(`/${ sdk.provider.prefix }/${ sdk.provider.version }/update_status`, {
+                    context: "some context",
+                    entity_ref: {
+                        uuid: entity.metadata.uuid,
+                        kind: entity.metadata.kind
+                    },
+                    status: { x: entity.spec.x }
+                })
+            })
+            await sdk.register();
+        } catch (e) {
+            expect(e.response.status).toEqual(400)
+            expect(e.response.data.error.errors[ 0 ].message).toContain("SFS: 'wrong, wrong2' validation on kind:" +
+                ` ${Object.keys(locationDataDescription)[0]} failed with error: Parse error at line 1,`)
         }
     })
 })

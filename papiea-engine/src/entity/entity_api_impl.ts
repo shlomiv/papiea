@@ -161,7 +161,8 @@ export class Entity_API_Impl implements Entity_API {
         Object.assign(schemas, procedure.argument);
         Object.assign(schemas, procedure.result);
         try {
-            this.validator.validate(input, Object.values(procedure.argument)[ 0 ], schemas, provider.allowExtraProps);
+            this.validator.validate(input, Object.values(procedure.argument)[0], schemas,
+                provider.allowExtraProps, Object.keys(procedure.argument)[0], procedure_name);
         } catch (err) {
             throw ProcedureInvocationError.fromError(err, 400)
         }
@@ -175,7 +176,8 @@ export class Entity_API_Impl implements Entity_API {
                 }, {
                     headers: user
                 });
-            this.validator.validate(data, Object.values(procedure.result)[0], schemas, provider.allowExtraProps);
+            this.validator.validate(data, Object.values(procedure.result)[0], schemas,
+                provider.allowExtraProps, Object.keys(procedure.argument)[0], procedure_name);
             return data;
         } catch (err) {
             throw ProcedureInvocationError.fromError(err)
@@ -195,7 +197,8 @@ export class Entity_API_Impl implements Entity_API {
         Object.assign(schemas, procedure.argument);
         Object.assign(schemas, procedure.result);
         try {
-            this.validator.validate(input, Object.values(procedure.argument)[ 0 ], schemas, provider.allowExtraProps);
+            this.validator.validate(input, Object.values(procedure.argument)[0], schemas,
+                provider.allowExtraProps, Object.keys(procedure.argument)[0], procedure_name);
         } catch (err) {
             throw ProcedureInvocationError.fromError(err, 400)
         }
@@ -206,7 +209,14 @@ export class Entity_API_Impl implements Entity_API {
                 }, {
                     headers: user
                 });
-            this.validator.validate(data, Object.values(procedure.result)[0], schemas, provider.allowExtraProps);
+            console.log("HERE")
+            console.log(data)
+            console.log(Object.values(procedure.result)[0])
+            console.log(Object.keys(procedure.result)[0])
+            console.log(procedure.name)
+
+            this.validator.validate(data, Object.values(procedure.result)[0], schemas,
+                provider.allowExtraProps, Object.keys(procedure.argument)[0], procedure_name);
             return data;
         } catch (err) {
             throw ProcedureInvocationError.fromError(err)
@@ -224,7 +234,8 @@ export class Entity_API_Impl implements Entity_API {
         Object.assign(schemas, procedure.argument);
         Object.assign(schemas, procedure.result);
         try {
-            this.validator.validate(input, Object.values(procedure.argument)[ 0 ], schemas, provider.allowExtraProps);
+            this.validator.validate(input, Object.values(procedure.argument)[0], schemas,
+                provider.allowExtraProps, Object.keys(procedure.argument)[0], procedure_name);
         } catch (err) {
             throw ProcedureInvocationError.fromError(err, 400)
         }
@@ -235,7 +246,8 @@ export class Entity_API_Impl implements Entity_API {
                 }, {
                     headers: user
                 });
-            this.validator.validate(data, Object.values(procedure.result)[0], schemas, provider.allowExtraProps);
+            this.validator.validate(data, Object.values(procedure.result)[0], schemas,
+                provider.allowExtraProps, Object.keys(procedure.argument)[0], procedure_name);
             return data;
         } catch (err) {
             throw ProcedureInvocationError.fromError(err)
@@ -244,7 +256,8 @@ export class Entity_API_Impl implements Entity_API {
 
     private validate_spec(spec: Spec, kind: Kind, allowExtraProps: boolean) {
         const schemas: any = Object.assign({}, kind.kind_structure);
-        this.validator.validate(spec, Object.values(kind.kind_structure)[0], schemas, allowExtraProps);
+        this.validator.validate(spec, Object.values(kind.kind_structure)[0], schemas,
+            allowExtraProps, Object.keys(kind.kind_structure)[0]);
     }
 
     private validate_metadata_extension(extension_structure: Data_Description, metadata: Metadata | undefined, allowExtraProps: boolean) {
@@ -258,7 +271,8 @@ export class Entity_API_Impl implements Entity_API {
             throw new ValidationError([{"name": "Error", message: "Metadata extension is not specified"}])
         }
         const schemas: any = Object.assign({}, extension_structure);
-        this.validator.validate(metadata.extension, Object.values(extension_structure)[0], schemas, allowExtraProps);
+        this.validator.validate(metadata.extension, Object.values(extension_structure)[0], schemas,
+            allowExtraProps, Object.keys(extension_structure)[0]);
     }
 
     async check_permission(user: UserAuthInfo, prefix: string, version: Version, entityAction: [Action, Entity_Reference][]): Promise<OperationSuccess> {

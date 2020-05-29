@@ -13,6 +13,8 @@ import { Watchlist_DB } from "../databases/watchlist_db_interface";
 import { SpecOnlyUpdateStrategy } from "../intentful_core/intentful_strategies/status_update_strategy";
 import { IntentfulContext } from "../intentful_core/intentful_context";
 import uuid = require("uuid");
+import { IntentfulBehaviour } from "papiea-core/build/core"
+import { SFSCompiler } from "../intentful_core/sfs_compiler"
 
 export class Provider_API_Impl implements Provider_API {
     private providerDb: Provider_DB;
@@ -41,8 +43,17 @@ export class Provider_API_Impl implements Provider_API {
         this.validator = validator
     }
 
+    validate_sfs(provider: Provider) {
+        for (let kind of provider.kinds) {
+            if (kind.intentful_behaviour === IntentfulBehaviour.Differ) {
+                kind.intentful_signatures.forEach(sig => SFSCompiler.try_parse_sfs(sig.signature, kind.name))
+            }
+        }
+    }
+
     async register_provider(user: UserAuthInfo, provider: Provider): Promise<void> {
         await this.authorizer.checkPermission(user, provider, Action.RegisterProvider);
+        this.validate_sfs(provider)
         return this.providerDb.save_provider(provider);
     }
 
@@ -130,7 +141,8 @@ export class Provider_API_Impl implements Provider_API {
             throw new Error("Kind not found");
         }
         const schemas: any = Object.assign({}, kind.kind_structure);
-        this.validator.validate(status, Object.values(kind.kind_structure)[0], schemas, allowExtraProps);
+        this.validator.validate(status, Object.values(kind.kind_structure)[0], schemas,
+            allowExtraProps, Object.keys(kind.kind_structure)[0]);
     }
 
     async update_auth(user: UserAuthInfo, provider_prefix: string, provider_version: Version, auth: any): Promise<void> {

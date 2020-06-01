@@ -425,7 +425,7 @@ describe("Entity API tests", () => {
         } catch (e) {
             console.log(`Got error: ${JSON.stringify(e.response.data)}`)
             expect(e.response.status).toEqual(409)
-            expect(e.response.data.error.message).toEqual(`Conflicting Entity: ${entity_uuid} has version ${1}`)
+            expect(e.response.data.error.message).toEqual(`Conflicting Entity: ${entity_uuid}. Existing entity has version ${1}`)
         }
     });
 

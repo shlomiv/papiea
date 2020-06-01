@@ -94,7 +94,7 @@ describe("Uuid validation tests", () => {
                 }
             })
         } catch (e) {
-            expect(e.response.data.error.message).toEqual("An entity with this uuid already exists")
+            expect(e.response.data.error.message).toContain("Conflicting Entity")
         }
         await entityApi.delete(`${providerPrefix}/${providerVersion}/${kind_name}/${metadata.uuid}`)
     })

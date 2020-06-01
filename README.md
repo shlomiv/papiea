@@ -48,7 +48,7 @@ See [Attaching to node js using Intellij](https://www.jetbrains.com/help/pycharm
 
 1. From project root `cd papiea-engine/__benchmarks__`
 
-2. Install dependencies by `yarn` (Note you need to have yarn installed)
+2. Install dependencies by `yarn` (Note you need to have yarn installed https://yarnpkg.com/getting-started/install)
 
 3. `npm run bench -- {PAPIEA_URL} {PUBLIC_HOST} {PUBLIC_PORT}` where PAPIEA_URL is a dedicated papiea_url, PUBLIC_HOST is your sdk publicly visible hostname, PUBLIC_PORT is your sdk publicly visible port
 

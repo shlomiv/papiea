@@ -1,5 +1,6 @@
 import { getSpecOnlyKind, ProviderBuilder } from "../test_data_factory"
 import axios from "axios"
+import uuid = require("uuid")
 
 declare var process: {
     env: {
@@ -26,11 +27,11 @@ const providerApi = axios.create({
 });
 
 describe("Uuid validation tests", () => {
-    const providerPrefix = "test_validation_uuid";
+    const providerPrefix = uuid();
     const providerVersion = "0.1.0";
     let kind_name: string
     const specOnlyEntityKind = getSpecOnlyKind()
-    specOnlyEntityKind.uuid_validation_pattern = "^a$"
+    specOnlyEntityKind.uuid_validation_pattern = "^a*$"
 
     beforeAll(async () => {
         const provider = new ProviderBuilder(providerPrefix).withVersion(providerVersion).withKinds([specOnlyEntityKind]).build();
@@ -79,7 +80,7 @@ describe("Uuid validation tests", () => {
                 y: 11
             },
             metadata: {
-                uuid: "a"
+                uuid: "aa"
             }
         })
         try {
@@ -89,22 +90,13 @@ describe("Uuid validation tests", () => {
                     y: 11
                 },
                 metadata: {
-                    uuid: "a"
+                    uuid: "aa"
                 }
             })
         } catch (e) {
             expect(e.response.data.error.message).toEqual("An entity with this uuid already exists")
         }
-        console.log(metadata.uuid)
         await entityApi.delete(`${providerPrefix}/${providerVersion}/${kind_name}/${metadata.uuid}`)
-        try {
-            const res = await entityApi.get(`${ providerPrefix }/${ providerVersion }/${ kind_name }/a`)
-            console.log(res.data.metadata)
-            console.log(res.data.metadata.deleted_at)
-            console.log("Found")
-        } catch (e) {
-            console.log("Not found")
-        }
     })
 
     test("Uuid should be provided if there is a pattern specified", async () => {

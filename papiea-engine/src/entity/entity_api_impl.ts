@@ -306,18 +306,14 @@ export class Entity_API_Impl implements Entity_API {
     }
 
     private async test_unique_uuid(provider: Provider, uuid: string) {
-        return true
+        try {
+            const result_spec = await this.spec_db.list_specs({ metadata: { uuid: uuid, provider_version: provider.version, provider_prefix: provider.prefix, deleted_at: null } })
+            const result_status = await this.status_db.list_status({ metadata: { uuid: uuid, provider_version: provider.version, provider_prefix: provider.prefix, deleted_at: null } })
+            return result_spec.length === 0 && result_status.length === 0;
+        } catch (e) {
+            // Hiding details of the error for security reasons
+            // since it is not supposed to occur under normal circumstances
+            throw new Error("uuid is not valid")
+        }
     }
-    //     try {
-    //         const result_spec = await this.spec_db.list_specs({ metadata: { uuid: uuid, provider_version: provider.version, provider_prefix: provider.prefix, deleted_at: null } })
-    //         const result_status = await this.status_db.list_status({ metadata: { uuid: uuid, provider_version: provider.version, provider_prefix: provider.prefix, deleted_at: null } })
-    //         console.log(result_spec)
-    //         console.log(result_status)
-    //         return result_spec.length === 0 && result_status.length === 0;
-    //     } catch (e) {
-    //         // Hiding details of the error for security reasons
-    //         // since it is not supposed to occur under normal circumstances
-    //         throw new Error("uuid is not valid")
-    //     }
-    // }
 }

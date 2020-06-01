@@ -139,7 +139,6 @@ describe("Intentful Task tests", () => {
         expect(task.diffs[0].diff_fields[0]["spec-val"][0]).toEqual(20)
         expect(task.diffs[0].diff_fields[0]["status-val"][0]).toEqual(null)
         createdTask = task
-        console.log(createdTask)
     })
 
     test("Intentful task created through updating the spec with multiple diffs", async () => {

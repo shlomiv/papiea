@@ -72,7 +72,7 @@ describe("Pagination tests", () => {
 
     afterAll(async () => {
         const deletePromises: Promise<any>[] = [];
-        await axios.delete(`http://127.0.0.1:${serverPort}/provider/${providerPrefix}/${providerVersion}`);
+        await providerApi.delete(`${providerPrefix}/${providerVersion}`);
         try {
             uuids.forEach(uuid => {
                 deletePromises.push(entityApi.delete(`/${providerPrefix}/${providerVersion}/${kind_name}/${uuid}`));

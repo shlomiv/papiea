@@ -37,7 +37,7 @@ describe("Pagination tests", () => {
 
     afterAll(async () => {
         jest.setTimeout(5000);
-        await axios.delete(`http://127.0.0.1:${serverPort}/provider/${providerPrefix}/${providerVersion}`);
+        await providerApi.delete(`${providerPrefix}/${providerVersion}`);
     });
 
     let uuids: string[] = [];

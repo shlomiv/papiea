@@ -39,7 +39,7 @@ describe("Entity API tests", () => {
     });
 
     afterAll(async () => {
-        await axios.delete(`http://127.0.0.1:${serverPort}/provider/${providerPrefix}/${providerVersion}`);
+        await providerApi.delete(`${providerPrefix}/${providerVersion}`);
     });
 
     let entity_metadata: Metadata;

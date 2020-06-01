@@ -59,13 +59,13 @@ export class ValidatorImpl {
             throw new ValidationError([{"name": "Error", message: "Metadata extension is not specified"}])
         }
         const schemas: any = Object.assign({}, extension_structure);
-        this.validator.validate(metadata.extension, Object.values(extension_structure)[0], schemas,
+        this.validate(metadata.extension, Object.values(extension_structure)[0], schemas,
             allowExtraProps, Object.keys(extension_structure)[0]);
     }
 
     public validate_spec(spec: Spec, kind: Kind, allowExtraProps: boolean) {
         const schemas: any = Object.assign({}, kind.kind_structure);
-        this.validator.validate(spec, Object.values(kind.kind_structure)[0], schemas,
+        this.validate(spec, Object.values(kind.kind_structure)[0], schemas,
             allowExtraProps, Object.keys(kind.kind_structure)[0]);
     }
 
@@ -76,7 +76,7 @@ export class ValidatorImpl {
             throw new Error("Kind not found");
         }
         const schemas: any = Object.assign({}, kind.kind_structure);
-        this.validator.validate(status, Object.values(kind.kind_structure)[0], schemas,
+        this.validate(status, Object.values(kind.kind_structure)[0], schemas,
             allowExtraProps, Object.keys(kind.kind_structure)[0]);
     }
 
@@ -93,9 +93,7 @@ export class ValidatorImpl {
         const validatorDenyExtraProps = !allowExtraProps
         const allowBlankTarget = false
         if (modelIsEmpty(model)) {
-            console.log("Model is empty")
             if (isEmpty(data)) {
-                console.log("Data is empty")
                 return {valid: true}
             } else {
                 throw new ValidationError([{

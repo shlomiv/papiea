@@ -614,7 +614,6 @@ describe("Provider Sdk tests", () => {
             await sdk.register();
             const res: any = await axios.post(`${sdk.entity_url}/${sdk.provider.prefix}/${sdk.provider.version}/procedure/computeSumThrowsError`, { input: { "a": 5, "b": 5 } });
         } catch (e) {
-            console.log(e.response.data.error.errors[0])
             expect(e.response.data.error.errors[0].message).toBe("Cannot set property 'x' of undefined");
             expect(e.response.data.error.errors[0].stacktrace).not.toBeUndefined();
             expect(e.response.data.error.errors[0].stacktrace).toContain("TypeError: Cannot set property 'x' of undefined")

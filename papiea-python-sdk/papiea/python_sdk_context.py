@@ -81,8 +81,9 @@ class ProceduralCtx(object):
         self, entity_reference: EntityReference, status: Status
     ) -> bool:
         try:
+            url = f"{self.provider.get_prefix()}/{self.provider.get_version()}"
             await self.provider_api.patch(
-                f"{self.provider_url}/update_status",
+                f"{url}/update_status",
                 {"entity_ref": entity_reference, "status": status},
             )
             return True

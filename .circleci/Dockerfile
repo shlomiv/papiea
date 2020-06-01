@@ -1,14 +1,16 @@
-FROM nutanix-docker.jfrog.io/papiea:base
+FROM nutanix-docker.jfrog.io/papiea:yarn-base
 
 COPY . /code
 WORKDIR /code/papiea-engine
 RUN cd /code \
-    # Use cached node_modules
-    && mv /node_modules /code/papiea-engine/node_modules \
-    && npm cache clean --force \
-    && npm run install-all \
-    && npm install -g typescript \
-    && npm --prefix papiea-engine run build-clj \
-    && npm run build-all 
+    && apt-get update \
+    && apt-get install -y build-essential \
+    && npm --prefix papiea-engine run build-clj
 
-CMD /bin/bash -c "npm run start_differ & npm run start"
+# Install yarn
+RUN curl -o- -L yarnpkg.com/install.sh | bash
+ENV PATH="${PATH}:/root/.yarn/bin"
+
+RUN cd /code && make
+
+CMD /bin/bash -c "yarn run start_differ & yarn run start"

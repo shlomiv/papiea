@@ -14,9 +14,8 @@ Please see [Papiea's design document](https://nutanix.github.io/papiea/Papiea-de
 Since papiea consists of multiple package you need to build them all
 separately or use a set of commands to build them all
 
-1. In the project root install all dependencies `npm run install-all`.
-
-2. In the project root build all packages `npm run build-all`.
+1. In the project root install and build all dependencies `make build_all`. (Note you need to have yarn installed
+, how to install yarn https://yarnpkg.com/getting-started/install)
 
 ## Local Development Instructions Papiea-Engine
 
@@ -49,7 +48,7 @@ See [Attaching to node js using Intellij](https://www.jetbrains.com/help/pycharm
 
 1. From project root `cd papiea-engine/__benchmarks__`
 
-2. Install dependencies by `npm install`
+2. Install dependencies by `yarn` (Note you need to have yarn installed https://yarnpkg.com/getting-started/install)
 
 3. `npm run bench -- {PAPIEA_URL} {PUBLIC_HOST} {PUBLIC_PORT}` where PAPIEA_URL is a dedicated papiea_url, PUBLIC_HOST is your sdk publicly visible hostname, PUBLIC_PORT is your sdk publicly visible port
 

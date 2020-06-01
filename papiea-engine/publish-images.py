@@ -13,6 +13,7 @@ subprocess.check_call([
     '-p', os.environ['ARTIFACTORY_PASSWORD']])
 
 with open(".dockerignore", "w") as f:
+    f.write("!papiea-engine/__tests__/test_data_factory.ts")
     f.write("*/__tests__")
 
 subprocess.check_call([

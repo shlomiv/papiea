@@ -7,9 +7,7 @@ fi
 
 DB_HOST=${MONGO_HOST:-'mongo'}
 DB_PORT=${MONGO_PORT:-'27017'}
-npm install
 npm run build-clj
-wait-port $DB_HOST:$DB_PORT
 if [ $HOT_RELOAD == 'true' ]
 then
     if [ $PAPIEA_DEBUG == 'true' ]; then

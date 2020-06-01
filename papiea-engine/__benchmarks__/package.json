@@ -11,7 +11,7 @@
     "bench-local": "ts-node src/main.ts -- http://localhost:3000 localhost 9000",
     "bench": "ts-node src/main.ts",
     "clean": "rm -rf build",
-    "build": "tsc"
+    "build": "yarn run tsc"
   },
   "author": "Shlomi Vaknin",
   "license": "ISC",

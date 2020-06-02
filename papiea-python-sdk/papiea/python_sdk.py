@@ -413,8 +413,8 @@ class KindBuilder(object):
                     ProceduralCtx(self.provider, prefix, version, req.headers),
                     Entity(
                         metadata=body_obj.metadata,
-                        spec=body_obj.spec,
-                        status=body_obj.status,
+                        spec=body_obj.spec or {},
+                        status=body_obj.status or {},
                     ),
                     body_obj.input,
                 )
@@ -514,8 +514,8 @@ class KindBuilder(object):
                     ProceduralCtx(self.provider, prefix, version, req.headers),
                     Entity(
                         metadata=body_obj.metadata,
-                        spec=body_obj.spec,
-                        status=body_obj.status,
+                        spec=body_obj.spec or {},
+                        status=body_obj.status or {},
                     ),
                     body_obj.input,
                 )

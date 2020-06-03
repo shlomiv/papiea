@@ -44,7 +44,7 @@ export class Watchlist_Db_Mongo implements Watchlist_DB {
             "id": 1,
         });
         if (result === null) {
-            throw new Error("Not found")
+            throw new Error("Watchlist Not found")
         }
         return new Watchlist(result.watchlist)
     }

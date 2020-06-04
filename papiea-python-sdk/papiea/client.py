@@ -15,8 +15,8 @@ class EntityCRUD(object):
         provider: str,
         version: str,
         kind: str,
-        logger: logging.Logger,
         s2skey: Optional[str] = None,
+        logger: logging.Logger = logging.getLogger(__name__),
     ):
         headers = {
             "Content-Type": "application/json",
@@ -79,7 +79,12 @@ class EntityCRUD(object):
 
 class ProviderClient(object):
     def __init__(
-        self, papiea_url: str, provider: str, version: str, logger: logging.Logger, s2skey: Optional[str] = None
+        self,
+        papiea_url: str,
+        provider: str,
+        version: str,
+        s2skey: Optional[str] = None,
+        logger: logging.Logger = logging.getLogger(__name__),
     ):
         self.papiea_url = papiea_url
         self.provider = provider
@@ -108,7 +113,7 @@ class ProviderClient(object):
 
     def get_kind(self, kind: str) -> EntityCRUD:
         return EntityCRUD(
-            self.papiea_url, self.provider, self.version, kind, self.logger, self.s2skey
+            self.papiea_url, self.provider, self.version, kind, self.s2skey, self.logger
         )
 
     async def invoke_procedure(self, procedure_name: str, input: Any) -> Any:

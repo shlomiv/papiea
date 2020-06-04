@@ -32,8 +32,8 @@ class ProceduralCtx(object):
             self.provider_prefix,
             self.provider_version,
             entity_reference.kind,
-            self.provider.logger,
             self.get_invoking_token(),
+            self.provider.logger,
         )
 
     async def check_permission(

@@ -6,7 +6,6 @@ from aiohttp import web
 
 from .api import ApiInstance, json_loads_attrs
 from .core import (
-    AttributeDict,
     DataDescription,
     Entity,
     IntentfulExecutionStrategy,
@@ -135,7 +134,7 @@ class ProviderSdk(object):
         s2skey: Secret,
         server_manager: Optional[ProviderServerManager] = None,
         allow_extra_props: bool = False,
-        logger: logging.Logger = logging.getLogger(__name__)
+        logger: logging.Logger = None
     ):
         self._version = None
         self._prefix = None
@@ -286,7 +285,7 @@ class ProviderSdk(object):
             try:
                 body_obj = json_loads_attrs(await req.text())
                 result = await handler(
-                    ProceduralCtx(self, prefix, version, req.headers, logger=self.logger), body_obj
+                    ProceduralCtx(self, prefix, version, req.headers), body_obj
                 )
                 return web.json_response(result)
             except InvocationError as e:
@@ -341,9 +340,10 @@ class ProviderSdk(object):
         public_host: Optional[str],
         public_port: Optional[int],
         allow_extra_props: bool = False,
+        logger: logging.Logger = logging.getLogger(__name__)
     ) -> "ProviderSdk":
         server_manager = ProviderServerManager(public_host, public_port)
-        return ProviderSdk(papiea_url, s2skey, server_manager, allow_extra_props)
+        return ProviderSdk(papiea_url, s2skey, server_manager, allow_extra_props, logger)
 
     def secure_with(
         self, oauth_config: Any, casbin_model: str, casbin_initial_policy: str
@@ -413,7 +413,7 @@ class KindBuilder(object):
             try:
                 body_obj = json_loads_attrs(await req.text())
                 result = await handler(
-                    ProceduralCtx(self.provider, prefix, version, req.headers, logger=self.provider.logger),
+                    ProceduralCtx(self.provider, prefix, version, req.headers),
                     Entity(
                         metadata=body_obj.metadata,
                         spec=body_obj.get("spec", {}),
@@ -461,7 +461,7 @@ class KindBuilder(object):
             try:
                 body_obj = json_loads_attrs(await req.text())
                 result = await handler(
-                    ProceduralCtx(self.provider, prefix, version, req.headers, logger=self.provider.logger),
+                    ProceduralCtx(self.provider, prefix, version, req.headers),
                     body_obj.input,
                 )
                 return web.json_response(result)
@@ -514,7 +514,7 @@ class KindBuilder(object):
             try:
                 body_obj = json_loads_attrs(await req.text())
                 result = await handler(
-                    ProceduralCtx(self.provider, prefix, version, req.headers, logger=self.provider.logger),
+                    ProceduralCtx(self.provider, prefix, version, req.headers),
                     Entity(
                         metadata=body_obj.metadata,
                         spec=body_obj.get("spec", {}),

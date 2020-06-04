@@ -1,3 +1,4 @@
+import logging
 from types import TracebackType
 from typing import Any, Optional, Type
 
@@ -14,6 +15,7 @@ class EntityCRUD(object):
         provider: str,
         version: str,
         kind: str,
+        logger: logging.Logger,
         s2skey: Optional[str] = None,
     ):
         headers = {
@@ -22,7 +24,7 @@ class EntityCRUD(object):
         if s2skey is not None:
             headers["Authorization"] = f"Bearer {s2skey}"
         self.api_instance = ApiInstance(
-            f"{papiea_url}/services/{provider}/{version}/{kind}", headers=headers
+            f"{papiea_url}/services/{provider}/{version}/{kind}", headers=headers, logger=logger
         )
 
     async def __aenter__(self) -> "EntityCRUD":
@@ -77,19 +79,20 @@ class EntityCRUD(object):
 
 class ProviderClient(object):
     def __init__(
-        self, papiea_url: str, provider: str, version: str, s2skey: Optional[str] = None
+        self, papiea_url: str, provider: str, version: str, logger: logging.Logger, s2skey: Optional[str] = None
     ):
         self.papiea_url = papiea_url
         self.provider = provider
         self.version = version
         self.s2skey = s2skey
+        self.logger = logger
         headers = {
             "Content-Type": "application/json",
         }
         if s2skey is not None:
             headers["Authorization"] = f"Bearer {s2skey}"
         self.api_instance = ApiInstance(
-            f"{papiea_url}/services/{provider}/{version}", headers=headers
+            f"{papiea_url}/services/{provider}/{version}", headers=headers, logger=logger
         )
 
     async def __aenter__(self) -> "ProviderClient":
@@ -105,7 +108,7 @@ class ProviderClient(object):
 
     def get_kind(self, kind: str) -> EntityCRUD:
         return EntityCRUD(
-            self.papiea_url, self.provider, self.version, kind, self.s2skey
+            self.papiea_url, self.provider, self.version, kind, self.logger, self.s2skey
         )
 
     async def invoke_procedure(self, procedure_name: str, input: Any) -> Any:

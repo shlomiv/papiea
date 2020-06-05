@@ -5,7 +5,8 @@ import { encode } from "mongo-dot-notation-tool"
 import { Entity_Reference, Status, Metadata, Entity } from "papiea-core";
 import { SortParams } from "../entity/entity_api_impl";
 import { Logger } from "papiea-backend-utils";
-import { deepMerge } from "../utils/utils"
+import { deepMerge, isEmpty } from "../utils/utils"
+import { build_filter_query } from "./utils/filtering"
 
 export class Status_DB_Mongo implements Status_DB {
     collection: Collection;
@@ -82,21 +83,8 @@ export class Status_DB_Mongo implements Status_DB {
         });
     }
 
-    async list_status(fields_map: any, sortParams?: SortParams): Promise<([Metadata, Status])[]> {
-        let filter: any = {};
-        if (fields_map.metadata && fields_map.metadata.deleted_at) {
-            filter["metadata.deleted_at"] = datestringToFilter(fields_map.metadata.deleted_at);
-        }
-        for (let key in fields_map.metadata) {
-            if (key === "deleted_at")
-                continue;
-            filter["metadata." + key] = fields_map.metadata[key];
-        }
-        filter = deepMerge(
-            filter,
-            encode({spec: fields_map.spec}),
-            encode({status: fields_map.status})
-        )
+    async list_status(fields_map: any, exact_match: boolean, sortParams?: SortParams): Promise<([Metadata, Status])[]> {
+        const filter = build_filter_query(fields_map, exact_match)
         let result: any[];
         if (sortParams) {
             result = await this.collection.find(filter).sort(sortParams).toArray();

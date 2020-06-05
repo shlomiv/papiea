@@ -7,7 +7,8 @@ import { Entity_Reference, Metadata, Spec, Entity } from "papiea-core";
 import { SortParams } from "../entity/entity_api_impl";
 import { Logger } from "papiea-backend-utils";
 import { IntentfulKindReference } from "./provider_db_mongo";
-import { deepMerge } from "../utils/utils"
+import { deepMerge, isEmpty } from "../utils/utils"
+import { build_filter_query } from "./utils/filtering"
 
 export class Spec_DB_Mongo implements Spec_DB {
     collection: Collection;
@@ -97,19 +98,8 @@ export class Spec_DB_Mongo implements Spec_DB {
         });
     }
 
-    async list_specs(fields_map: any, sortParams?: SortParams): Promise<([Metadata, Spec])[]> {
-        let filter: any = {};
-        filter["metadata.deleted_at"] = datestringToFilter(fields_map?.metadata?.deleted_at);
-        for (let key in fields_map.metadata) {
-            if (key === "deleted_at")
-                continue;
-            filter["metadata." + key] = fields_map.metadata[key];
-        }
-        filter = deepMerge(
-            filter,
-            encode({spec: fields_map.spec}),
-            encode({status: fields_map.status})
-        )
+    async list_specs(fields_map: any, exact_match: boolean, sortParams?: SortParams): Promise<([Metadata, Spec])[]> {
+        const filter = build_filter_query(fields_map, exact_match)
         let result: any[];
         if (sortParams) {
             result = await this.collection.find(filter).sort(sortParams).toArray();

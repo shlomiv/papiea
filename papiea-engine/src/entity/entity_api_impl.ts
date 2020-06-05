@@ -209,12 +209,6 @@ export class Entity_API_Impl implements Entity_API {
                 }, {
                     headers: user
                 });
-            console.log("HERE")
-            console.log(data)
-            console.log(Object.values(procedure.result)[0])
-            console.log(Object.keys(procedure.result)[0])
-            console.log(procedure.name)
-
             this.validator.validate(data, Object.values(procedure.result)[0], schemas,
                 provider.allowExtraProps, Object.keys(procedure.argument)[0], procedure_name);
             return data;

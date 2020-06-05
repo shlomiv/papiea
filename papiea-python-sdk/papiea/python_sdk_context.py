@@ -1,4 +1,5 @@
 import json
+import logging
 from typing import List, Optional, Tuple
 
 from aiohttp import ClientSession
@@ -32,6 +33,7 @@ class ProceduralCtx(object):
             self.provider_version,
             entity_reference.kind,
             self.get_invoking_token(),
+            self.provider.logger,
         )
 
     async def check_permission(
@@ -79,15 +81,12 @@ class ProceduralCtx(object):
 
     async def update_status(
         self, entity_reference: EntityReference, status: Status
-    ) -> bool:
-        try:
-            await self.provider_api.patch(
-                f"{self.provider_url}/update_status",
-                {"entity_ref": entity_reference, "status": status},
-            )
-            return True
-        except Exception as e:
-            return False
+    ):
+        url = f"{self.provider.get_prefix()}/{self.provider.get_version()}"
+        await self.provider_api.patch(
+            f"{url}/update_status",
+            {"entity_ref": entity_reference, "status": status},
+        )
 
     def update_progress(self, message: str, done_percent: int) -> bool:
         raise Exception("Unimplemented")

@@ -61,7 +61,7 @@ export class Status_DB_Mongo implements Status_DB {
             "metadata.kind": entity_ref.kind
         });
         if (result === null) {
-            throw new Error("Not found")
+            throw new Error("Status Not found")
         }
         return [result.metadata, result.status]
     }

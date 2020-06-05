@@ -36,6 +36,17 @@ export class PapieaErrorResponseImpl implements PapieaResponse {
 
     }
 
+    public toString() {
+        const error_details = this.error.errors.reduce((acc, current) => {
+            for (let prop in current) {
+                acc = `${acc}; 
+                Cause: ${prop} - Error: ${current[prop]}`
+            }
+            return acc
+        }, "")
+        return `Error msg: ${this.error.message}. Details: ${error_details}`
+    }
+
     public get status(): number {
         return this.error.code
     }

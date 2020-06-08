@@ -65,7 +65,18 @@ export class Provider_DB_Mongo implements Provider_DB {
         if (intentful_kinds.length === 0) {
             return
         }
-        await this.subCollection.insertMany(intentful_kinds)
+        try {
+            await this.subCollection.insertMany(intentful_kinds)
+        } catch (err) {
+            // Check a DuplicateMongo Error
+            // If the error is a DuplicateMongo Error
+            // then we are reregestering provider and its fine
+            if (err.code === 11000) {
+                return
+            } else {
+                throw err
+            }
+        }
     }
 
     async get_provider(provider_prefix: string, version: Version): Promise<Provider> {

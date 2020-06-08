@@ -29,6 +29,7 @@ const mongoPort = process.env.MONGO_PORT || '27017';
 describe("MongoDb tests", () => {
     const connection: MongoConnection = new MongoConnection(`mongodb://${mongoHost}:${mongoPort}`, process.env.MONGO_DB || 'papiea');
     const logger = LoggerFactory.makeLogger({level: 'info'});
+    const exact_match = false
 
     beforeEach(() => {
         jest.setTimeout(50000);
@@ -128,14 +129,14 @@ describe("MongoDb tests", () => {
     test("List Specs", async () => {
         expect.assertions(1);
         const specDb: Spec_DB = await connection.get_spec_db(logger);
-        const res = await specDb.list_specs({ metadata: { "kind": "test" } });
+        const res = await specDb.list_specs({ metadata: { "kind": "test" } }, exact_match);
         expect(res.length).toBeGreaterThanOrEqual(1);
     });
 
     test("List Specs - check spec data", async () => {
         expect.assertions(4);
         const specDb: Spec_DB = await connection.get_spec_db(logger);
-        const res = await specDb.list_specs({ metadata: { "kind": "test" }, spec: { "a": "A1" } });
+        const res = await specDb.list_specs({ metadata: { "kind": "test" }, spec: { "a": "A1" } }, exact_match);
         expect(res).not.toBeNull();
         expect(res[0]).not.toBeNull();
         expect(res.length).toBeGreaterThanOrEqual(1);
@@ -202,14 +203,14 @@ describe("MongoDb tests", () => {
     test("List Statuses", async () => {
         expect.assertions(1);
         const statusDb: Status_DB = await connection.get_status_db(logger);
-        const res = await statusDb.list_status({ metadata: { "kind": "test" } });
+        const res = await statusDb.list_status({ metadata: { "kind": "test" } }, exact_match);
         expect(res.length).toBeGreaterThanOrEqual(1);
     });
 
     test("List Statuses - check status data", async () => {
         expect.assertions(3);
         const statusDb: Status_DB = await connection.get_status_db(logger);
-        const res = await statusDb.list_status({ metadata: { "kind": "test" }, status: { a: "A1" } });
+        const res = await statusDb.list_status({ metadata: { "kind": "test" }, status: { a: "A1" } }, exact_match);
         expect(res.length).toBeGreaterThanOrEqual(1);
         expect(res[0]).not.toBeNull();
         // @ts-ignore

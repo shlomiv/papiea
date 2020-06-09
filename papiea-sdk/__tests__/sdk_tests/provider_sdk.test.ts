@@ -56,6 +56,7 @@ describe("Provider Sdk tests", () => {
     });
     const provider_version = "0.1.0";
     const location_yaml = load(readFileSync(resolve(__dirname, "../test_data/location_kind_test_data.yml"), "utf-8"));
+    const location_array_yaml = load(readFileSync(resolve(__dirname, "../test_data/location_kind_test_data_array.yml"), "utf-8"));
     test("Yaml parses into walkable tree", (done) => {
         expect(location_yaml).not.toBeNull();
         expect(location_yaml.Location).not.toBeNull();
@@ -316,6 +317,165 @@ describe("Provider Sdk tests", () => {
         } catch(e) {
             expect(e).toBeDefined()
             expect(e.response.status).toEqual(400)
+        } finally {
+            sdk.server.close();
+        }
+    });
+
+    test("Provider with kind level procedures update status with nested object", async () => {
+        expect.hasAssertions()
+        const kind_copy = JSON.parse(JSON.stringify(location_yaml))
+        kind_copy["Location"]["x-papiea-entity"] = "basic"
+        const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
+        const location = sdk.new_kind(kind_copy);
+        sdk.version(provider_version);
+        sdk.prefix("location_provider");
+        location.entity_procedure("moveX", {}, Procedural_Execution_Strategy.Halt_Intentful, loadYamlFromTestFactoryDir("./test_data/procedure_move_input.yml"), loadYamlFromTestFactoryDir("./test_data/location_kind_test_data.yml"), async (ctx, entity, input) => {
+            entity.spec.v = {
+                e: 15
+            };
+            await ctx.update_status(entity.metadata, {
+                x: 10,
+                y: 15,
+                v: {
+                    e: 15
+                }
+            })
+            return entity.spec;
+        });
+        try {
+            await sdk.register();
+            const kind_name = sdk.provider.kinds[ 0 ].name;
+            const { data: { metadata, spec } } = await axios.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }`, {
+                spec: {
+                    x: 10,
+                    y: 11
+                }
+            });
+            await axios.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }/procedure/moveX`, { input: 5 });
+            const result = await entityApi.get(`${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`)
+            expect(result.data.status.v.e).toEqual(15)
+            await entityApi.delete(`${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`)
+        } finally {
+            sdk.server.close();
+        }
+    });
+
+    // TODO: some low-level merging/serialization stuff doesn't allow us to use ctx.update_status() with
+    // TODO: top level array
+    // TODO: fix the test after fixing the aforementioned
+    // test("Provider with kind level procedures update status with nested array of objects", async () => {
+    //     expect.hasAssertions()
+    //     let kind_name: string = ""
+    //     let uuid: string = ""
+    //     const kind_copy = JSON.parse(JSON.stringify(location_array_yaml))
+    //     kind_copy["Location"]["x-papiea-entity"] = "differ"
+    //     const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
+    //     const location = sdk.new_kind(kind_copy);
+    //     sdk.version(provider_version);
+    //     sdk.prefix("location_provider");
+    //     location.entity_procedure("moveX", {}, Procedural_Execution_Strategy.Halt_Intentful, loadYamlFromTestFactoryDir("./test_data/procedure_move_input.yml"), loadYamlFromTestFactoryDir("./test_data/location_kind_test_data.yml"), async (ctx, entity, input) => {
+    //         await ctx.update_status(entity.metadata, [{
+    //             x: 10,
+    //             y: 15,
+    //             v: {
+    //                 e: 15
+    //             }
+    //         }])
+    //         return entity.spec;
+    //     });
+    //     try {
+    //         await sdk.register();
+    //         kind_name = sdk.provider.kinds[ 0 ].name;
+    //         const { data: { metadata, spec } } = await axios.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }`, {
+    //             spec: [{
+    //                 x: 10,
+    //                 y: 11
+    //             }]
+    //         });
+    //         uuid = metadata.uuid
+    //         console.log(1)
+    //         await axios.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }/procedure/moveX`, { input: 5 });
+    //         console.log(2)
+    //         const result = await entityApi.get(`${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`)
+    //         console.log(3)
+    //         expect(result.data.status[0].v.e).toEqual(15)
+    //         console.log(4)
+    //     } finally {
+    //         await entityApi.delete(`${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ uuid }`)
+    //         sdk.server.close();
+    //     }
+    // });
+
+    test("Provider with kind level procedures replace status with nested array of objects", async () => {
+        expect.hasAssertions()
+        const kind_copy = JSON.parse(JSON.stringify(location_array_yaml))
+        kind_copy["Location"]["x-papiea-entity"] = "basic"
+        const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
+        const location = sdk.new_kind(kind_copy);
+        sdk.version(provider_version);
+        sdk.prefix("location_provider_array_replace");
+        location.entity_procedure("moveX", {}, Procedural_Execution_Strategy.Halt_Intentful, loadYamlFromTestFactoryDir("./test_data/procedure_move_input.yml"), kind_copy, async (ctx, entity, input) => {
+            await ctx.replace_status(entity.metadata, [{
+                x: 10,
+                y: 15,
+                v: {
+                    e: 15
+                }
+            }])
+            return [{x: 10, y: 15}];
+        });
+        try {
+            await sdk.register();
+            const kind_name = sdk.provider.kinds[ 0 ].name;
+            const { data: { metadata, spec } } = await axios.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }`, {
+                spec: [{
+                    x: 10,
+                    y: 11
+                }]
+            });
+            await axios.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }/procedure/moveX`, { input: 5 });
+            const result = await entityApi.get(`${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`)
+            expect(result.data.status[0].v.e).toEqual(15)
+            await entityApi.delete(`${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`)
+        } finally {
+            sdk.server.close();
+        }
+    });
+
+    test("Provider with kind level procedures replace status with nested object", async () => {
+        expect.hasAssertions()
+        const kind_copy = JSON.parse(JSON.stringify(location_yaml))
+        kind_copy["Location"]["x-papiea-entity"] = "basic"
+        const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
+        const location = sdk.new_kind(kind_copy);
+        sdk.version(provider_version);
+        sdk.prefix("location_provider");
+        location.entity_procedure("moveX", {}, Procedural_Execution_Strategy.Halt_Intentful, loadYamlFromTestFactoryDir("./test_data/procedure_move_input.yml"), loadYamlFromTestFactoryDir("./test_data/location_kind_test_data.yml"), async (ctx, entity, input) => {
+            entity.spec.v = {
+                e: 15
+            };
+            await ctx.replace_status(entity.metadata, {
+                x: 10,
+                y: 15,
+                v: {
+                    e: 15
+                }
+            })
+            return entity.spec;
+        });
+        try {
+            await sdk.register();
+            const kind_name = sdk.provider.kinds[ 0 ].name;
+            const { data: { metadata, spec } } = await axios.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }`, {
+                spec: {
+                    x: 10,
+                    y: 11
+                }
+            });
+            await axios.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }/procedure/moveX`, { input: 5 });
+            const result = await entityApi.get(`${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`)
+            expect(result.data.status["v"]).toEqual({e: 15})
         } finally {
             sdk.server.close();
         }
@@ -1385,6 +1545,11 @@ class MockProceduralCtx implements ProceduralCtx_Interface {
     update_status(entity_reference: Entity_Reference, status: any): Promise<boolean> {
         throw new Error("Method not implemented.");
     }
+
+    replace_status(entity_reference: Entity_Reference, status: any): Promise<boolean> {
+        throw new Error("Method not implemented.");
+    }
+
     update_progress(message: string, done_percent: number): boolean {
         throw new Error("Method not implemented.");
     }

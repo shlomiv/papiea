@@ -39,7 +39,7 @@ describe("Entity API tests", () => {
     });
 
     afterAll(async () => {
-        await axios.delete(`http://127.0.0.1:${serverPort}/provider/${providerPrefix}/${providerVersion}`);
+        await providerApi.delete(`${providerPrefix}/${providerVersion}`);
     });
 
     let entity_metadata: Metadata;
@@ -437,7 +437,7 @@ describe("Entity API tests", () => {
             });
         } catch (e) {
             expect(e.response.status).toEqual(409)
-            expect(e.response.data.error.message).toEqual(`Conflicting Entity: ${entity_uuid} has version ${1}`)
+            expect(e.response.data.error.message).toEqual(`Conflicting Entity: ${entity_uuid}. Existing entity has version ${1}`)
         }
     });
 

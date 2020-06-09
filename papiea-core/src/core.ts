@@ -124,6 +124,10 @@ export enum DiffSelectionStrategy {
 // [[file:~/work/papiea-js/Papiea-design.org::#h-Kind-241][kind-struct]]
 export interface Kind {
 
+    // A regex for validating uuid provided
+    // If absent, papiea provides its own
+    uuid_validation_pattern?: string
+
     // The name of the kind, and its plural form for proper REST naming
     name: string;
     name_plural?: string;

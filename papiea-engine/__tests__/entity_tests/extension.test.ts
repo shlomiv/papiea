@@ -43,7 +43,7 @@ describe("Entity API with metadata extension tests", () => {
     });
 
     afterAll(async () => {
-        await axios.delete(`http://127.0.0.1:${serverPort}/provider/${providerPrefix}/${providerVersion}`);
+        await providerApi.delete(`${providerPrefix}/${providerVersion}`);
     });
 
     test("Create entity with missing metadata extension should fail validation", async () => {

@@ -18,10 +18,7 @@ export class Status_DB_Mongo implements Status_DB {
     }
 
     async init(): Promise<void> {
-        await this.collection.createIndex(
-            { "metadata.uuid": 1 },
-            { name: "entity_uuid", unique: true }
-        );
+
     }
 
     async replace_status(entity_ref: Entity_Reference, status: Status): Promise<void> {

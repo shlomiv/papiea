@@ -3,13 +3,10 @@ import { Status_DB } from "../databases/status_db_interface";
 import { Spec_DB } from "../databases/spec_db_interface";
 import { Entity_API, OperationSuccess } from "./entity_api_interface";
 import { Validator } from "../validator";
-import * as uuid_validate from "uuid-validate";
 import { Authorizer } from "../auth/authz";
 import { UserAuthInfo } from "../auth/authn";
 import {
-    Data_Description,
     Entity_Reference,
-    Kind,
     Metadata,
     Procedural_Signature,
     Provider,
@@ -17,10 +14,8 @@ import {
     Status,
     uuid4,
     Version,
-    Action
+    Action,
 } from "papiea-core";
-import { isEmpty } from "../utils/utils";
-import { ValidationError } from "../errors/validation_error";
 import { ProcedureInvocationError } from "../errors/procedure_invocation_error";
 import uuid = require("uuid");
 import { PermissionDeniedError } from "../errors/permission_error";
@@ -29,6 +24,7 @@ import { IntentfulContext } from "../intentful_core/intentful_context"
 import { Provider_DB } from "../databases/provider_db_interface"
 import { IntentfulTask, IntentfulTaskMapper } from "../tasks/task_interface"
 import { IntentfulTask_DB } from "../databases/intentful_task_db_interface"
+import { ConflictingEntityError } from "../databases/utils/errors"
 
 export type SortParams = { [key: string]: number };
 
@@ -75,16 +71,24 @@ export class Entity_API_Impl implements Entity_API {
     async save_entity(user: UserAuthInfo, prefix: string, kind_name: string, version: Version, spec_description: Spec, request_metadata: Metadata = {} as Metadata): Promise<[Metadata, Spec]> {
         const provider = await this.get_provider(prefix, version);
         const kind = this.providerDb.find_kind(provider, kind_name);
-        this.validate_metadata_extension(provider.extension_structure, request_metadata, provider.allowExtraProps);
-        this.validate_spec(spec_description, kind, provider.allowExtraProps);
+        this.validator.validate_metadata_extension(provider.extension_structure, request_metadata, provider.allowExtraProps);
+        this.validator.validate_spec(spec_description, kind, provider.allowExtraProps);
         if (!request_metadata.uuid) {
-            request_metadata.uuid = uuid();
+            if (kind.uuid_validation_pattern === undefined) {
+                request_metadata.uuid = uuid();
+            } else {
+                throw new Error("Uuid is not provided, but supposed to be since validation pattern is specified")
+            }
+        } else {
+            const result = await this.get_existing_entities(provider, request_metadata.uuid)
+            if (result.length !== 0) {
+                const [metadata, spec, status] = result
+                throw new ConflictingEntityError("An entity with this uuid already exists", metadata, spec, status)
+            }
         }
+        this.validator.validate_uuid(kind, request_metadata.uuid)
         if (!request_metadata.spec_version) {
             request_metadata.spec_version = 0;
-        }
-        if (!uuid_validate(request_metadata.uuid)) {
-            throw new Error("uuid is not valid")
         }
         request_metadata.kind = kind.name;
         request_metadata.provider_prefix = prefix
@@ -126,7 +130,7 @@ export class Entity_API_Impl implements Entity_API {
     async update_entity_spec(user: UserAuthInfo, uuid: uuid4, prefix: string, spec_version: number, extension: {[key: string]: any}, kind_name: string, version: Version, spec_description: Spec): Promise<IntentfulTask | null> {
         const provider = await this.get_provider(prefix, version);
         const kind = this.providerDb.find_kind(provider, kind_name);
-        this.validate_spec(spec_description, kind, provider.allowExtraProps);
+        this.validator.validate_spec(spec_description, kind, provider.allowExtraProps);
         const entity_ref: Entity_Reference = { kind: kind_name, uuid: uuid };
         const metadata: Metadata = (await this.spec_db.get_spec(entity_ref))[0];
         await this.authorizer.checkPermission(user, { "metadata": metadata }, Action.Update);
@@ -248,27 +252,6 @@ export class Entity_API_Impl implements Entity_API {
         }
     }
 
-    private validate_spec(spec: Spec, kind: Kind, allowExtraProps: boolean) {
-        const schemas: any = Object.assign({}, kind.kind_structure);
-        this.validator.validate(spec, Object.values(kind.kind_structure)[0], schemas,
-            allowExtraProps, Object.keys(kind.kind_structure)[0]);
-    }
-
-    private validate_metadata_extension(extension_structure: Data_Description, metadata: Metadata | undefined, allowExtraProps: boolean) {
-        if (metadata === undefined) {
-            return
-        }
-        if (isEmpty(extension_structure)) {
-            return
-        }
-        if (isEmpty(metadata)) {
-            throw new ValidationError([{"name": "Error", message: "Metadata extension is not specified"}])
-        }
-        const schemas: any = Object.assign({}, extension_structure);
-        this.validator.validate(metadata.extension, Object.values(extension_structure)[0], schemas,
-            allowExtraProps, Object.keys(extension_structure)[0]);
-    }
-
     async check_permission(user: UserAuthInfo, prefix: string, version: Version, entityAction: [Action, Entity_Reference][]): Promise<OperationSuccess> {
         if (entityAction.length === 1) {
             return await this.check_single_permission(user, prefix, version, entityAction[0])
@@ -321,6 +304,22 @@ export class Entity_API_Impl implements Entity_API {
             return true;
         } catch (e) {
             return false;
+        }
+    }
+
+    private async get_existing_entities(provider: Provider, uuid: string): Promise<[Metadata, Spec, Status] | []> {
+        try {
+            const result_spec = await this.spec_db.list_specs({ metadata: { uuid: uuid, provider_version: provider.version, provider_prefix: provider.prefix, deleted_at: null } }, false)
+            const result_status = await this.status_db.list_status({ metadata: { uuid: uuid, provider_version: provider.version, provider_prefix: provider.prefix, deleted_at: null } }, false)
+            if (result_spec.length !== 0 || result_status.length !== 0) {
+                return [result_spec[0][0], result_spec[0][1], result_status[0][1]]
+            } else {
+                return []
+            }
+        } catch (e) {
+            // Hiding details of the error for security reasons
+            // since it is not supposed to occur under normal circumstances
+            throw new Error("uuid is not valid")
         }
     }
 }

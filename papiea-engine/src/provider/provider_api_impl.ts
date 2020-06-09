@@ -7,14 +7,12 @@ import { Authorizer } from "../auth/authz";
 import { UserAuthInfo } from "../auth/authn";
 import { createHash } from "../auth/crypto";
 import { EventEmitter } from "events";
-import { Action, Entity_Reference, Kind, Provider, S2S_Key, Secret, Status, Version } from "papiea-core";
+import { Action, Entity_Reference, Provider, S2S_Key, Secret, Status, Version } from "papiea-core";
 import { Logger } from "papiea-backend-utils";
 import { Watchlist_DB } from "../databases/watchlist_db_interface";
 import { SpecOnlyUpdateStrategy } from "../intentful_core/intentful_strategies/status_update_strategy";
 import { IntentfulContext } from "../intentful_core/intentful_context";
 import uuid = require("uuid");
-import { IntentfulBehaviour } from "papiea-core/build/core"
-import { SFSCompiler } from "../intentful_core/sfs_compiler"
 
 export class Provider_API_Impl implements Provider_API {
     private providerDb: Provider_DB;
@@ -43,17 +41,9 @@ export class Provider_API_Impl implements Provider_API {
         this.validator = validator
     }
 
-    validate_sfs(provider: Provider) {
-        for (let kind of provider.kinds) {
-            if (kind.intentful_behaviour === IntentfulBehaviour.Differ) {
-                kind.intentful_signatures.forEach(sig => SFSCompiler.try_parse_sfs(sig.signature, kind.name))
-            }
-        }
-    }
-
     async register_provider(user: UserAuthInfo, provider: Provider): Promise<void> {
         await this.authorizer.checkPermission(user, provider, Action.RegisterProvider);
-        this.validate_sfs(provider)
+        this.validator.validate_sfs(provider)
         return this.providerDb.save_provider(provider);
     }
 
@@ -77,7 +67,7 @@ export class Provider_API_Impl implements Provider_API {
             throw new Error("Cannot change status of a spec-only kind")
         }
         await this.authorizer.checkPermission(user, provider, Action.UpdateStatus);
-        await this.validate_status(provider, entity_ref, status);
+        await this.validator.validate_status(provider, entity_ref, status);
         return strategy.replace(entity_ref, status)
     }
 
@@ -98,7 +88,7 @@ export class Provider_API_Impl implements Provider_API {
         // Only after that we transform partial status into mongo dot notation query
         const [,currentStatus] = await this.statusDb.get_status(entity_ref)
         const mergedStatus = {...currentStatus, ...partialStatus}
-        await this.validate_status(provider, entity_ref, mergedStatus);
+        await this.validator.validate_status(provider, entity_ref, mergedStatus);
         return strategy.update(entity_ref, partialStatus)
     }
 
@@ -132,17 +122,6 @@ export class Provider_API_Impl implements Provider_API {
 
     async get_latest_provider_by_kind(user: UserAuthInfo, kind_name: string): Promise<Provider> {
         return await this.providerDb.get_latest_provider_by_kind(kind_name);
-    }
-
-    private async validate_status(provider: Provider, entity_ref: Entity_Reference, status: Status) {
-        const kind = provider.kinds.find((kind: Kind) => kind.name === entity_ref.kind);
-        const allowExtraProps = provider.allowExtraProps;
-        if (kind === undefined) {
-            throw new Error("Kind not found");
-        }
-        const schemas: any = Object.assign({}, kind.kind_structure);
-        this.validator.validate(status, Object.values(kind.kind_structure)[0], schemas,
-            allowExtraProps, Object.keys(kind.kind_structure)[0]);
     }
 
     async update_auth(user: UserAuthInfo, provider_prefix: string, provider_version: Version, auth: any): Promise<void> {

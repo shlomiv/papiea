@@ -1,11 +1,8 @@
 import { ValidationError } from "../errors/validation_error";
 import { isEmpty } from "../utils/utils"
-
-const SwaggerModelValidator = require('swagger-model-validator');
-
-export interface Validator {
-    validate(data: any, model: any | undefined, models: any, allowExtraProps: boolean, schemaName: string, procedureName?: string): void
-}
+import { Entity_Reference, Provider, Status, Kind, Spec, IntentfulBehaviour, Data_Description, Metadata } from "papiea-core"
+import { SFSCompiler } from "../intentful_core/sfs_compiler"
+import * as uuid_validate from "uuid-validate"
 
 // We can receive model in 2 forms:
 // As user specified in definition, which means it has "properties" field ( { properties: {} } } )
@@ -20,19 +17,83 @@ function modelIsEmpty(model: any) {
     return false
 }
 
+const SwaggerModelValidator = require('swagger-model-validator');
+
+export interface Validator {
+    validate_uuid(kind: Kind, uuid: string): void
+    validate_metadata_extension(extension_structure: Data_Description, metadata: Metadata | undefined, allowExtraProps: boolean): void
+    validate_spec(spec: Spec, kind: Kind, allowExtraProps: boolean): void
+    validate_sfs(provider: Provider): void
+    validate_status(provider: Provider, entity_ref: Entity_Reference, status: Status): void
+    validate(data: any, model: any | undefined, models: any, allowExtraProps: boolean, schemaName: string, procedureName?: string): void
+}
+
 export class ValidatorImpl {
     private validator = new SwaggerModelValidator();
 
     constructor() {
     }
 
-    validate(data: any, model: any | undefined, models: any, allowExtraProps: boolean, schemaName: string, procedureName?: string) {
+    public validate_uuid(kind: Kind, uuid: string) {
+        const validation_pattern = kind.uuid_validation_pattern
+        if (validation_pattern === undefined) {
+            if (!uuid_validate(uuid)) {
+                throw new Error("uuid is not valid")
+            }
+        } else {
+            const regex = new RegExp(validation_pattern, 'g')
+            if (!regex.test(uuid)) {
+                throw new Error("uuid is not valid")
+            }
+        }
+    }
+
+    public validate_metadata_extension(extension_structure: Data_Description, metadata: Metadata | undefined, allowExtraProps: boolean) {
+        if (metadata === undefined) {
+            return
+        }
+        if (isEmpty(extension_structure)) {
+            return
+        }
+        if (isEmpty(metadata)) {
+            throw new ValidationError([{"name": "Error", message: "Metadata extension is not specified"}])
+        }
+        const schemas: any = Object.assign({}, extension_structure);
+        this.validate(metadata.extension, Object.values(extension_structure)[0], schemas,
+            allowExtraProps, Object.keys(extension_structure)[0]);
+    }
+
+    public validate_spec(spec: Spec, kind: Kind, allowExtraProps: boolean) {
+        const schemas: any = Object.assign({}, kind.kind_structure);
+        this.validate(spec, Object.values(kind.kind_structure)[0], schemas,
+            allowExtraProps, Object.keys(kind.kind_structure)[0]);
+    }
+
+    public async validate_status(provider: Provider, entity_ref: Entity_Reference, status: Status) {
+        const kind = provider.kinds.find((kind: Kind) => kind.name === entity_ref.kind);
+        const allowExtraProps = provider.allowExtraProps;
+        if (kind === undefined) {
+            throw new Error("Kind not found");
+        }
+        const schemas: any = Object.assign({}, kind.kind_structure);
+        this.validate(status, Object.values(kind.kind_structure)[0], schemas,
+            allowExtraProps, Object.keys(kind.kind_structure)[0]);
+    }
+
+    public validate_sfs(provider: Provider) {
+        for (let kind of provider.kinds) {
+            if (kind.intentful_behaviour === IntentfulBehaviour.Differ) {
+                // Throws an exception if it fails
+                kind.intentful_signatures.forEach(sig => SFSCompiler.try_parse_sfs(sig.signature, kind.name))
+            }
+        }
+    }
+
+    public validate(data: any, model: any | undefined, models: any, allowExtraProps: boolean, schemaName: string, procedureName?: string) {
         const validatorDenyExtraProps = !allowExtraProps
         const allowBlankTarget = false
         if (modelIsEmpty(model)) {
-            console.log("Model is empty")
             if (isEmpty(data)) {
-                console.log("Data is empty")
                 return {valid: true}
             } else {
                 throw new ValidationError([{

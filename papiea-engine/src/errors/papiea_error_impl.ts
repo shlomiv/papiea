@@ -83,7 +83,7 @@ export class PapieaErrorResponseImpl implements PapieaResponse {
                 let conflictingError = err as ConflictingEntityError
                 let metadata = conflictingError.existing_metadata
 
-                return new PapieaErrorResponseImpl(409, `Conflicting Entity: ${metadata.uuid} has version ${metadata.spec_version}`, PapieaError.ConflictingEntity)
+                return new PapieaErrorResponseImpl(409, `Conflicting Entity: ${metadata.uuid}. Existing entity has version ${metadata.spec_version}`, PapieaError.ConflictingEntity)
             default:
                 console.log(`Default handle got error: ${err.message}`)
                 return new PapieaErrorResponseImpl(500, err.message, PapieaError.ServerError)

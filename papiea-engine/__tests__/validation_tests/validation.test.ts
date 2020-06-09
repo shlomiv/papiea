@@ -1,6 +1,8 @@
 import "jest"
 import { ValidatorImpl } from "../../src/validator";
-import { getLocationDataDescription, ValidationBuilder } from "../test_data_factory";
+import { getLocationDataDescription, getSpecOnlyKind, ValidationBuilder } from "../test_data_factory";
+import uuid = require("uuid")
+import { SpecOnlyEntityKind } from "papiea-core"
 
 describe("Validation tests", () => {
 
@@ -166,5 +168,41 @@ describe("Validation tests", () => {
         try_validate(() => {
             validator.validate(entity.spec, maybeLocationStringParam, trimmedLocationDataDescriptionStringParam, false, "trimmedLocation")
         })
+    });
+
+    const kind = getSpecOnlyKind()
+    const kind_with_pattern: SpecOnlyEntityKind = JSON.parse(JSON.stringify(kind))
+    kind_with_pattern.uuid_validation_pattern = "^a$"
+
+    test("Validator validate uuid when pattern is not specified", async () => {
+        expect.assertions(1)
+        const id = uuid()
+        expect(() => {
+            validator.validate_uuid(kind, id)
+        }).not.toThrow()
+    });
+
+    test("Validator doesn't validate uuid when pattern is specified", async () => {
+        expect.assertions(1)
+        const id = uuid()
+        expect(() => {
+            validator.validate_uuid(kind_with_pattern, id)
+        }).toThrow()
+    });
+
+    test("Validator validate uuid when pattern is specified", async () => {
+        expect.assertions(1)
+        const id = "a"
+        expect(() => {
+            validator.validate_uuid(kind_with_pattern, id)
+        }).not.toThrow()
+    });
+
+    test("Validator doesn't validate uuid when pattern is specified and uuid is incorrect", async () => {
+        expect.assertions(1)
+        const id = "b"
+        expect(() => {
+            validator.validate_uuid(kind_with_pattern, id)
+        }).toThrow()
     });
 });

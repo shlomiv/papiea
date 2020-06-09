@@ -22,10 +22,11 @@ export class Spec_DB_Mongo implements Spec_DB {
     async init(): Promise<void> {
         try {
             await this.collection.createIndex(
-                { "metadata.uuid": 1 },
+                [{ "metadata.uuid": 1 }, {"metadata.provider_prefix":1}],
                 { name: "entity_uuid", unique: true },
             );
         } catch (err) {
+            this.logger.error("Cannot create index:", err)
             throw err
         }
     }
@@ -62,8 +63,12 @@ export class Spec_DB_Mongo implements Spec_DB {
         } catch (err) {
             if (err.code === 11000) {
                 const entity_ref: Entity_Reference = { uuid: entity_metadata.uuid, kind: entity_metadata.kind };
-                const [metadata, spec] = await this.get_spec(entity_ref);
-                throw new ConflictingEntityError("Spec with this version already exists", metadata, spec);
+                try {
+                  const [metadata, spec] = await this.get_spec(entity_ref);
+                  throw new ConflictingEntityError("Spec with this version already exists", metadata, spec);
+                } catch (e) {
+                    throw new Error(`Cannot create entity ${e}, ${err}`)
+                }
             } else {
                 throw err;
             }

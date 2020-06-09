@@ -89,7 +89,7 @@ async function setUpApplication(): Promise<express.Express> {
         const papieaError = PapieaErrorResponseImpl.create(err);
         res.status(papieaError.status)
         res.json(papieaError.toResponse())
-        logger.error(papieaError.toString(), err.stack)
+        logger.error("Top level Error: "+papieaError.toString(), err.stack)
     });
     return app;
 }

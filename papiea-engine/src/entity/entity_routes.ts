@@ -167,14 +167,8 @@ export function createEntityAPIRouter(entity_api: Entity_API): Router {
         allowed_query_params: [],
         allowed_body_params: ['metadata', 'spec']
     }), asyncHandler(async (req, res) => {
-        if (req.params.status) {
             const [metadata, spec] = await entity_api.save_entity(req.user, req.params.prefix, req.params.kind, req.params.version, req.body.spec, req.body.metadata);
             res.json({ "metadata": metadata, "spec": spec });
-        } else {
-            // Spec only entity
-            const [metadata, spec] = await entity_api.save_entity(req.user, req.params.prefix, req.params.kind, req.params.version, req.body.spec, req.body.metadata);
-            res.json({ "metadata": metadata, "spec": spec });
-        }
     }));
 
     router.delete("/:prefix/:version/:kind/:uuid", CheckNoQueryParams, asyncHandler(async (req, res) => {

@@ -8,6 +8,44 @@ export default class ApiDocsGenerator {
         this.providerDb = providerDb;
     }
 
+    getMetadata(pattern?: string) {
+        const metadata = {
+            "Metadata": {
+                "required": [
+                    "uuid",
+                    "kind",
+                    "spec_version"
+                ],
+                "properties": {
+                    "uuid": {
+                        "type": "string",
+                    },
+                    "kind": {
+                        "type": "string"
+                    },
+                    "spec_version": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "deleted_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            }
+        }
+        if (pattern) {
+            (metadata.Metadata.properties.uuid as any)["pattern"] = pattern
+        } else {
+            (metadata.Metadata.properties.uuid as any)["format"] = "uuid"
+        }
+        return metadata
+    }
+
     getDefaultResponse() {
         return {
             "description": "Unexpected error",
@@ -33,7 +71,7 @@ export default class ApiDocsGenerator {
                                 "required": ["metadata", "spec"],
                                 "properties": {
                                     "metadata": {
-                                        "$ref": `#/components/schemas/Metadata`
+                                        "$ref": `#/components/schemas/${ kind.name }-Metadata`
                                     },
                                     "spec": {
                                         "$ref": `#/components/schemas/${ kind.name }-Spec`
@@ -66,7 +104,7 @@ export default class ApiDocsGenerator {
                                         "required": ["metadata", "spec"],
                                         "properties": {
                                             "metadata": {
-                                                "$ref": `#/components/schemas/Metadata`
+                                                "$ref": `#/components/schemas/${ kind.name }-Metadata`
                                             },
                                             "spec": {
                                                 "$ref": `#/components/schemas/${ kind.name }-Spec`
@@ -100,7 +138,7 @@ export default class ApiDocsGenerator {
                             "required": ["metadata", "spec"],
                             "properties": {
                                 "metadata": {
-                                    "$ref": `#/components/schemas/Metadata`
+                                    "$ref": `#/components/schemas/${ kind.name }-Metadata`
                                 },
                                 "spec": {
                                     "$ref": `#/components/schemas/${ kind.name }-Spec`
@@ -219,7 +257,7 @@ export default class ApiDocsGenerator {
                                     "$ref": `#/components/schemas/${ kind.name }-Spec`
                                 },
                                 "metadata": {
-                                    "$ref": `#/components/schemas/Metadata`
+                                    "$ref": `#/components/schemas/${ kind.name }-Metadata`
                                 }
                             }
                         }
@@ -519,13 +557,15 @@ export default class ApiDocsGenerator {
         }
     }
 
-    createSchema(schemas: any, kindStructure: any, type: string) {
-        const kindSchema: any = JSON.parse(JSON.stringify(kindStructure))
+    createSchema(schemas: any, kind: Kind, type: string) {
+        const kindSchema: any = JSON.parse(JSON.stringify(kind.kind_structure))
         const schemaName = Object.keys(kindSchema)[0]
         if (type === "spec") {
-            kindSchema[`${schemaName}-Spec`] = kindSchema[schemaName]
-            delete kindSchema[schemaName]
+            kindSchema[ `${ schemaName }-Spec` ] = kindSchema[ schemaName ]
+            delete kindSchema[ schemaName ]
             this.removeSchemaField(kindSchema, "status-only")
+        } else if (type === "metadata") {
+            kindSchema[ `${ schemaName }-Metadata` ] = this.getMetadata(kind.uuid_validation_pattern)
         } else {
             kindSchema[`${schemaName}-Status`] = kindSchema[schemaName]
             delete kindSchema[schemaName]
@@ -695,8 +735,8 @@ export default class ApiDocsGenerator {
                     Object.assign(schemas, procedure.result);
                 });
             }
-            this.createSchema(schemas, kind.kind_structure, "spec")
-            this.createSchema(schemas, kind.kind_structure, "status")
+            this.createSchema(schemas, kind, "spec")
+            this.createSchema(schemas, kind, "status")
         });
         if (provider.procedures) {
             Object.values(provider.procedures).forEach(procedure => {

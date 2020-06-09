@@ -193,7 +193,9 @@ describe("Entity API tests", () => {
         let res = await entityApi.post(`${ providerPrefix }/${ providerVersion }/${ kind_name }/filter`, {
             spec: {
                 x: 10,
-                "v.e": 12
+                v: {
+                    e: 12
+                }
             }
         });
         expect(res.data.results.length).toBeGreaterThanOrEqual(1);
@@ -215,7 +217,7 @@ describe("Entity API tests", () => {
             expect(entity.spec.x).toEqual(10);
             expect(entity.spec.v.e).toEqual(12);
         });
-        res = await entityApi.post(`${ providerPrefix }/${ providerVersion }/${ kind_name }/filter`, {
+        res = await entityApi.post(`${ providerPrefix }/${ providerVersion }/${ kind_name }/filter?exact=true`, {
             spec: {
                 x: 10,
                 v: {
@@ -228,7 +230,9 @@ describe("Entity API tests", () => {
         res = await entityApi.post(`${ providerPrefix }/${ providerVersion }/${ kind_name }/filter`, {
             status: {
                 x: 10,
-                "v.e": 12
+                v: {
+                    e: 12
+                }
             }
         });
         expect(res.data.results.length).toBeGreaterThanOrEqual(1);
@@ -236,9 +240,10 @@ describe("Entity API tests", () => {
             expect(entity.status.x).toEqual(10);
             expect(entity.status.v.e).toEqual(12);
         });
-        res = await entityApi.post(`${ providerPrefix }/${ providerVersion }/${ kind_name }/filter`, {
+        res = await entityApi.post(`${ providerPrefix }/${ providerVersion }/${ kind_name }/filter?exact=true`, {
             status: {
                 x: 10,
+                y: 11,
                 v: {
                     e: 12,
                     d: 13
@@ -250,7 +255,7 @@ describe("Entity API tests", () => {
             expect(entity.status.x).toEqual(10);
             expect(entity.status.v.e).toEqual(12);
         });
-        res = await entityApi.post(`${ providerPrefix }/${ providerVersion }/${ kind_name }/filter`, {
+        res = await entityApi.post(`${ providerPrefix }/${ providerVersion }/${ kind_name }/filter?exact=true`, {
             status: {
                 x: 10,
                 v: {
@@ -263,11 +268,19 @@ describe("Entity API tests", () => {
         res = await entityApi.post(`${ providerPrefix }/${ providerVersion }/${ kind_name }/filter`, {
             spec: {
                 x: 10,
-                "v.e": 12
+                y: 11,
+                v: {
+                    e: 12,
+                    d: 13
+                },
             },
             status: {
                 x: 10,
-                "v.e": 12
+                y: 11,
+                v: {
+                    e: 12,
+                    d: 13
+                },
             }
         });
         expect(res.data.results.length).toBeGreaterThanOrEqual(1);
@@ -423,7 +436,6 @@ describe("Entity API tests", () => {
                 }
             });
         } catch (e) {
-            console.log(`Got error: ${JSON.stringify(e.response.data)}`)
             expect(e.response.status).toEqual(409)
             expect(e.response.data.error.message).toEqual(`Conflicting Entity: ${entity_uuid}. Existing entity has version ${1}`)
         }

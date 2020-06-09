@@ -1,4 +1,5 @@
 import json
+import logging
 from types import TracebackType
 from typing import Any, Optional, Type
 
@@ -23,21 +24,23 @@ class ApiException(Exception):
         self.details = details
 
     @staticmethod
-    async def check_response(resp: web.Response) -> None:
+    async def check_response(resp: web.Response, logger: logging.Logger) -> None:
         if resp.status >= 400:
             details = await resp.text()
             try:
                 details = json_loads_attrs(details)
             except:
                 pass
+            logger.error(f"Got exception while makeing request. Status: {resp.status}, Reason: {resp.reason}, Details: {details}")
             raise ApiException(resp.status, resp.reason, details)
 
 
 class ApiInstance(object):
-    def __init__(self, base_url: str, timeout: int = 5000, headers: dict = {}):
+    def __init__(self, base_url: str, timeout: int = 5000, headers: dict = {}, *, logger: logging.Logger):
         self.base_url = base_url
         self.headers = headers
         self.session = ClientSession(timeout=ClientTimeout(total=timeout))
+        self.logger = logger
 
     async def __aenter__(self) -> "ApiInstance":
         return self
@@ -58,7 +61,7 @@ class ApiInstance(object):
         async with self.session.post(
             self.base_url + "/" + prefix, data=data_binary, headers=new_headers
         ) as resp:
-            await ApiException.check_response(resp)
+            await ApiException.check_response(resp, self.logger)
             res = await resp.text()
         if res == "":
             return None
@@ -72,7 +75,7 @@ class ApiInstance(object):
         async with self.session.put(
             self.base_url + "/" + prefix, data=data_binary, headers=new_headers
         ) as resp:
-            await ApiException.check_response(resp)
+            await ApiException.check_response(resp, self.logger)
             res = await resp.text()
         if res == "":
             return None
@@ -86,7 +89,7 @@ class ApiInstance(object):
         async with self.session.patch(
             self.base_url + "/" + prefix, data=data_binary, headers=new_headers
         ) as resp:
-            await ApiException.check_response(resp)
+            await ApiException.check_response(resp, self.logger)
             res = await resp.text()
         if res == "":
             return None
@@ -99,7 +102,7 @@ class ApiInstance(object):
         async with self.session.get(
             self.base_url + "/" + prefix, headers=new_headers
         ) as resp:
-            await ApiException.check_response(resp)
+            await ApiException.check_response(resp, self.logger)
             res = await resp.text()
         if res == "":
             return None
@@ -112,7 +115,7 @@ class ApiInstance(object):
         async with self.session.delete(
             self.base_url + "/" + prefix, headers=new_headers
         ) as resp:
-            await ApiException.check_response(resp)
+            await ApiException.check_response(resp, self.logger)
             res = await resp.text()
         if res == "":
             return None

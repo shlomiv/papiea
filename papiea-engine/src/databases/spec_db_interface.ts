@@ -33,7 +33,7 @@ export interface Spec_DB {
     // We could come up with command such as greater-than etc at some
     // later point, or we could use a similar dsl to mongodb search
     // dsl.
-    list_specs(fields_map: any, sortParams?: SortParams): Promise<([Metadata, Spec])[]>;
+    list_specs(fields_map: any, exact_match: boolean, sortParams?: SortParams): Promise<([Metadata, Spec])[]>;
 
     list_specs_in(filter_list: any[], field_name?: string): Promise<([Metadata, Spec])[]>
 

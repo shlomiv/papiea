@@ -46,7 +46,7 @@ export class LoggerFactory {
     readonly options: LoggerOptions
 
     private static readonly INSPECT_OPTIONS = {
-        sorted: true, getters: true
+        sorted: true, getters: true, depth: 10,
     }
 
     private static readonly PRODUCTION =

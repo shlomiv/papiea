@@ -62,12 +62,14 @@ export class Spec_DB_Mongo implements Spec_DB {
         } catch (err) {
             if (err.code === 11000) {
                 const entity_ref: Entity_Reference = { uuid: entity_metadata.uuid, kind: entity_metadata.kind };
+                let res:any 
                 try {
-                  const [metadata, spec] = await this.get_spec(entity_ref);
-                  throw new ConflictingEntityError("Spec with this version already exists", metadata, spec);
+                  res = await this.get_spec(entity_ref);
                 } catch (e) {
                     throw new Error(`Cannot create entity ${e}, ${err}`)
                 }
+                const [metadata, spec] = res
+                throw new ConflictingEntityError("Spec with this version already exists", metadata, spec);
             } else {
                 throw err;
             }

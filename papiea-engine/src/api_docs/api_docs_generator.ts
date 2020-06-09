@@ -565,7 +565,7 @@ export default class ApiDocsGenerator {
             delete kindSchema[ schemaName ]
             this.removeSchemaField(kindSchema, "status-only")
         } else if (type === "metadata") {
-            kindSchema[ `${ schemaName }-Metadata` ] = this.getMetadata(kind.uuid_validation_pattern)
+            kindSchema[ `${ schemaName }-Metadata` ] = this.getMetadata(kind.uuid_validation_pattern)["Metadata"]
         } else {
             kindSchema[`${schemaName}-Status`] = kindSchema[schemaName]
             delete kindSchema[schemaName]
@@ -737,6 +737,7 @@ export default class ApiDocsGenerator {
             }
             this.createSchema(schemas, kind, "spec")
             this.createSchema(schemas, kind, "status")
+            this.createSchema(schemas, kind, "metadata")
         });
         if (provider.procedures) {
             Object.values(provider.procedures).forEach(procedure => {

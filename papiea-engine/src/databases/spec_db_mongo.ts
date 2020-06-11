@@ -2,10 +2,9 @@ import { Spec_DB } from "./spec_db_interface";
 import { Collection, Db } from "mongodb";
 import { ConflictingEntityError, EntityNotFoundError } from "./utils/errors";
 import { datestringToFilter } from "./utils/date";
-import { encode } from "mongo-dot-notation-tool";
 import { Entity_Reference, Metadata, Spec, Entity } from "papiea-core";
 import { SortParams } from "../entity/entity_api_impl";
-import { Logger } from "papiea-backend-utils";
+import { Logger, dotnotation } from "papiea-backend-utils";
 import { IntentfulKindReference } from "./provider_db_mongo";
 import { deepMerge, isEmpty } from "../utils/utils"
 import { build_filter_query } from "./utils/filtering"
@@ -33,7 +32,7 @@ export class Spec_DB_Mongo implements Spec_DB {
     async update_spec(entity_metadata: Metadata, spec: Spec): Promise<[Metadata, Spec]> {
         let additional_fields: any = {};
         if (entity_metadata.extension !== undefined) {
-            additional_fields = encode({"metadata.extension": entity_metadata.extension});
+            additional_fields = dotnotation({"metadata.extension": entity_metadata.extension});
         }
         additional_fields["metadata.created_at"] = new Date();
         const filter = {

@@ -1,3 +1,4 @@
+import enum
 from typing import Any
 
 
@@ -42,6 +43,18 @@ class Action(str):
 Status = Any
 Provider = AttributeDict
 Kind = AttributeDict
+
+
+# TODO: these should be strings
+class PapieaError(enum.Enum):
+    Validation = 0
+    BadRequest = 1
+    ProcedureInvocation = 2
+    EntityNotFound = 3
+    Unauthorized = 4
+    PermissionDenied = 5
+    ConflictingEntity = 6
+    ServerError = 7
 
 
 class IntentfulExecutionStrategy(str):

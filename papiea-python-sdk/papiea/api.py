@@ -7,6 +7,7 @@ from aiohttp import ClientSession, ClientTimeout, web
 from multidict import CIMultiDict
 
 from .core import AttributeDict
+from .python_sdk_exceptions import PapieaBaseException
 
 
 def json_loads_attrs(s: str) -> Any:
@@ -29,9 +30,12 @@ class ApiException(Exception):
             details = await resp.text()
             try:
                 details = json_loads_attrs(details)
+                logger.error(
+                    f"Got exception while making request. Status: {resp.status}, Reason: {resp.reason}, Details: {details}")
+                PapieaBaseException.raise_error(resp.status, resp.reason, details, resp)
             except:
                 pass
-            logger.error(f"Got exception while makeing request. Status: {resp.status}, Reason: {resp.reason}, Details: {details}")
+            logger.error(f"Got exception while making request. Status: {resp.status}, Reason: {resp.reason}")
             raise ApiException(resp.status, resp.reason, details)
 
 

@@ -49,19 +49,17 @@ describe("Provider API tests", () => {
         expect(res.data.kinds).not.toBeUndefined();
     });
 
-    test("ReRegister provider", done => {
+    test("ReRegister provider", async () => {
         const prefix = "test_provider_reregister"
         const original_provider: Provider = { prefix: prefix, version: providerVersion, kinds: [], procedures: {}, extension_structure: {}, allowExtraProps: true };
-        providerApi.post('/', original_provider).then(() => done()).catch(done.fail);
-        providerApi.get(`/${ prefix }/${ providerVersion }`).then(res => {
-            expect(res.data.allowExtraProps).toBeTruthy()
-        })
+        await providerApi.post('/', original_provider)
+        const res = await providerApi.get(`/${ prefix }/${ providerVersion }`)
+        expect(res.data.allowExtraProps).toBeTruthy()
         const overriden_provider: Provider = { prefix: prefix, version: providerVersion, kinds: [], procedures: {}, extension_structure: {}, allowExtraProps: false };
-        providerApi.post('/', overriden_provider).then(() => done()).catch(done.fail);
-        providerApi.get(`/${ prefix }/${ providerVersion }`).then(res => {
-            expect(res.data.allowExtraProps).toBeFalsy()
-        })
-        providerApi.delete(`/${prefix}/${providerVersion}`).then(() => done()).catch(done.fail);
+        await providerApi.post('/', overriden_provider)
+        const result = await providerApi.get(`/${ prefix }/${ providerVersion }`)
+        expect(result.data.allowExtraProps).toBeFalsy()
+        await providerApi.delete(`/${prefix}/${providerVersion}`)
     });
 
     test("Get multiple providers", async () => {

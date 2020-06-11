@@ -41,8 +41,6 @@ export class Status_DB_Mongo implements Status_DB {
 
     async update_status(entity_ref: Entity_Reference, status: Status): Promise<void> {
         const partial_status_query = dotnotation({"status": status});
-        
-        console.log("SHLOMI?>!?!?!?!?!?!?", JSON.stringify({status, "encoded":partial_status_query}, undefined, 2))
         const result = await this.collection.updateOne({
             "metadata.uuid": entity_ref.uuid,
             "metadata.kind": entity_ref.kind

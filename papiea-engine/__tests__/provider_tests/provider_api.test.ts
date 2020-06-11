@@ -41,21 +41,27 @@ describe("Provider API tests", () => {
         providerApi.post('/', provider).then(() => done()).catch(done.fail);
     });
 
-    test("ReRegister provider", done => {
-        const prefix = "test_provider_reregister"
-        const original_provider: Provider = { prefix: prefix, version: providerVersion, kinds: [], procedures: {}, extension_structure: {}, allowExtraProps: true };
-        providerApi.post('/', original_provider).then(() => done()).catch(done.fail);
-        const overriden_provider: Provider = { prefix: prefix, version: providerVersion, kinds: [], procedures: {}, extension_structure: {}, allowExtraProps: false };
-        providerApi.post('/', overriden_provider).then(() => done()).catch(done.fail);
-        providerApi.delete(`/${prefix}/${providerVersion}`).then(() => done()).catch(done.fail);
-    });
-
     test("Register malformed provider", done => {
         providerApi.post('/', {}).then(() => done.fail()).catch(() => done());
     });
     test("Get provider", async () => {
         const res = await providerApi.get(`/${ providerPrefix }/${ providerVersion }`);
         expect(res.data.kinds).not.toBeUndefined();
+    });
+
+    test("ReRegister provider", done => {
+        const prefix = "test_provider_reregister"
+        const original_provider: Provider = { prefix: prefix, version: providerVersion, kinds: [], procedures: {}, extension_structure: {}, allowExtraProps: true };
+        providerApi.post('/', original_provider).then(() => done()).catch(done.fail);
+        providerApi.get(`/${ prefix }/${ providerVersion }`).then(res => {
+            expect(res.data.allowExtraProps).toBeTruthy()
+        })
+        const overriden_provider: Provider = { prefix: prefix, version: providerVersion, kinds: [], procedures: {}, extension_structure: {}, allowExtraProps: false };
+        providerApi.post('/', overriden_provider).then(() => done()).catch(done.fail);
+        providerApi.get(`/${ prefix }/${ providerVersion }`).then(res => {
+            expect(res.data.allowExtraProps).toBeFalsy()
+        })
+        providerApi.delete(`/${prefix}/${providerVersion}`).then(() => done()).catch(done.fail);
     });
 
     test("Get multiple providers", async () => {

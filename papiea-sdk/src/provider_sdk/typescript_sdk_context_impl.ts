@@ -67,6 +67,18 @@ export class ProceduralCtx implements ProceduralCtx_Interface {
         return true
     }
 
+    async replace_status(entity_reference: Entity_Reference, status: Status, provider_prefix: string = this.provider.get_prefix(), provider_version: Version = this.provider.get_version()): Promise<boolean> {
+        const res = await this.providerApiAxios.post(`${this.provider_url}/${provider_prefix}/${provider_version}/update_status`,{
+            entity_ref: entity_reference,
+            status: status
+        });
+        if (res.status != 200) {
+            console.error("Could not update status:", entity_reference, status, res.status, res.data);
+            return false
+        }
+        return true
+    }
+
     update_progress(message: string, done_percent: number): boolean {
         throw new Error("Unimplemented")
     }

@@ -88,6 +88,15 @@ class ProceduralCtx(object):
             {"entity_ref": entity_reference, "status": status},
         )
 
+    async def replace_status(
+        self, entity_reference: EntityReference, status: Status
+    ):
+        url = f"{self.provider.get_prefix()}/{self.provider.get_version()}"
+        await self.provider_api.post(
+            f"{url}/update_status",
+            {"entity_ref": entity_reference, "status": status},
+        )
+
     def update_progress(self, message: str, done_percent: int) -> bool:
         raise Exception("Unimplemented")
 

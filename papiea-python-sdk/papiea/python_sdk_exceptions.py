@@ -39,9 +39,13 @@ class PapieaBaseException(Exception):
             logger.error(f"Got exception while making request. Status: {resp.status}, Reason: {resp.reason}")
             raise ApiException(resp.status, resp.reason, details)
         error = details.get("error")
+        logger.info(error)
         if error:
+            logger.info("There is error")
             exception = EXCEPTION_MAP.get(error["type"])
+            logger.info(exception)
             if exception:
+                logger.info("There is exception")
                 raise exception(error["message"], resp, details)
         raise ApiException(resp.status, resp.reason, details)
 

@@ -44,7 +44,11 @@ class PapieaBaseException(Exception):
             logger.info("There is error")
             logger.info(error["type"])
             logger.info(EXCEPTION_MAP)
-            exception = EXCEPTION_MAP.get(error["type"])
+            try:
+                error_type = PapieaError[error["type"]]
+            except KeyError:
+                error_type = None
+            exception = EXCEPTION_MAP.get(error_type)
             logger.info(exception)
             if exception:
                 logger.info("There is exception")

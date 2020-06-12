@@ -27,16 +27,7 @@ class ApiException(Exception):
     @staticmethod
     async def check_response(resp: web.Response, logger: logging.Logger) -> None:
         if resp.status >= 400:
-            details = await resp.text()
-            try:
-                details = json_loads_attrs(details)
-                logger.error(
-                    f"Got exception while making request. Status: {resp.status}, Reason: {resp.reason}, Details: {details}")
-                PapieaBaseException.raise_error(resp.status, resp.reason, details, resp)
-            except:
-                pass
-            logger.error(f"Got exception while making request. Status: {resp.status}, Reason: {resp.reason}")
-            raise ApiException(resp.status, resp.reason, details)
+            await PapieaBaseException.raise_error(resp, logger)
 
 
 class ApiInstance(object):

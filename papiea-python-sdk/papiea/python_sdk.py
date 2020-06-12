@@ -544,7 +544,6 @@ class KindBuilder(object):
 
     def on_delete(
         self,
-        strategy: ProceduralExecutionStrategy,
         handler: Callable[[ProceduralCtx, Any], Any],
     ) -> "KindBuilder":
         name = "__delete"

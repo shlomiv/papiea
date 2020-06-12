@@ -47,14 +47,14 @@ Kind = AttributeDict
 
 # TODO: these should be strings
 class PapieaError(enum.Enum):
-    Validation = 0
-    BadRequest = 1
-    ProcedureInvocation = 2
-    EntityNotFound = 3
-    Unauthorized = 4
-    PermissionDenied = 5
-    ConflictingEntity = 6
-    ServerError = 7
+    Validation = "validation_error"
+    BadRequest = "bad_request_error"
+    ProcedureInvocation = "procedure_invocation_error"
+    EntityNotFound = "entity_not_found_error"
+    Unauthorized = "unauthorized_error"
+    PermissionDenied = "permission_denied_error"
+    ConflictingEntity = "conflicting_entity_error"
+    ServerError = "server_error"
 
 
 class IntentfulExecutionStrategy(str):

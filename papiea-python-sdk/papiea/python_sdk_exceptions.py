@@ -1,25 +1,35 @@
+import logging
 from typing import Any, List, Optional
 
-from aiohttp import web
+from aiohttp import ClientResponse
 
-from papiea.api import ApiException
+from papiea.api import ApiException, json_loads_attrs
 from papiea.core import PapieaError
 
 
 class PapieaBaseException(Exception):
-    def __init__(self, message: str, resp: web.Response):
+    # Sending in details because connected may be closed by the time
+    # Info details are requested
+    def __init__(self, message: str, resp: ClientResponse, details: Any):
         super().__init__(message)
         self.resp = resp
+        self.details = details
 
     @staticmethod
-    def raise_error(status: int, reason: str, details: Any, resp: web.Response):
-        error = details.get("error")
-        if error:
-            exception = EXCEPTION_MAP.get(error["type"])
-            if exception:
-                raise exception(error["message"], resp)
-            else:
-                raise ApiException(status, reason, details)
+    async def raise_error(resp: ClientResponse, logger: logging.Logger):
+        details = await resp.text()
+        logger.error(f"Got exception while making request. Status: {resp.status}, Reason: {resp.reason}")
+        try:
+            details = json_loads_attrs(details)
+            error = details.get("error")
+            if error:
+                exception = EXCEPTION_MAP.get(error["type"])
+                if exception:
+                    raise exception(error["message"], resp, details)
+                else:
+                    raise ApiException(resp.status, resp.reason, details)
+        except:
+            raise ApiException(resp.status, resp.reason, details)
 
 
 class ConflictingEntityException(PapieaBaseException):

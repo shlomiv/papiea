@@ -1,5 +1,4 @@
 import json
-import logging
 from typing import List, Optional, Tuple
 
 from aiohttp import ClientSession
@@ -7,7 +6,6 @@ from multidict import CIMultiDict
 
 from .client import EntityCRUD
 from .core import Action, EntityReference, Secret, Status, Version
-from .python_sdk_exceptions import InvocationError
 
 
 class ProceduralCtx(object):

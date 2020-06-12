@@ -3,31 +3,11 @@ import logging
 from types import TracebackType
 from typing import Any, Optional, Type
 
-from aiohttp import ClientSession, ClientTimeout, web
+from aiohttp import ClientSession, ClientTimeout
 from multidict import CIMultiDict
 
-from .core import AttributeDict
-from .python_sdk_exceptions import PapieaBaseException
-
-
-def json_loads_attrs(s: str) -> Any:
-    def object_hook(obj):
-        return AttributeDict(obj)
-
-    return json.loads(s, object_hook=object_hook)
-
-
-class ApiException(Exception):
-    def __init__(self, status: int, reason: str, details: str):
-        super().__init__(reason)
-        self.status = status
-        self.reason = reason
-        self.details = details
-
-    @staticmethod
-    async def check_response(resp: web.Response, logger: logging.Logger) -> None:
-        if resp.status >= 400:
-            await PapieaBaseException.raise_error(resp, logger)
+from papiea.python_sdk_exceptions import check_response
+from papiea.utils import json_loads_attrs
 
 
 class ApiInstance(object):
@@ -56,7 +36,7 @@ class ApiInstance(object):
         async with self.session.post(
             self.base_url + "/" + prefix, data=data_binary, headers=new_headers
         ) as resp:
-            await ApiException.check_response(resp, self.logger)
+            await check_response(resp, self.logger)
             res = await resp.text()
         if res == "":
             return None
@@ -70,7 +50,7 @@ class ApiInstance(object):
         async with self.session.put(
             self.base_url + "/" + prefix, data=data_binary, headers=new_headers
         ) as resp:
-            await ApiException.check_response(resp, self.logger)
+            await check_response(resp, self.logger)
             res = await resp.text()
         if res == "":
             return None
@@ -84,7 +64,7 @@ class ApiInstance(object):
         async with self.session.patch(
             self.base_url + "/" + prefix, data=data_binary, headers=new_headers
         ) as resp:
-            await ApiException.check_response(resp, self.logger)
+            await check_response(resp, self.logger)
             res = await resp.text()
         if res == "":
             return None
@@ -97,7 +77,7 @@ class ApiInstance(object):
         async with self.session.get(
             self.base_url + "/" + prefix, headers=new_headers
         ) as resp:
-            await ApiException.check_response(resp, self.logger)
+            await check_response(resp, self.logger)
             res = await resp.text()
         if res == "":
             return None
@@ -110,7 +90,7 @@ class ApiInstance(object):
         async with self.session.delete(
             self.base_url + "/" + prefix, headers=new_headers
         ) as resp:
-            await ApiException.check_response(resp, self.logger)
+            await check_response(resp, self.logger)
             res = await resp.text()
         if res == "":
             return None

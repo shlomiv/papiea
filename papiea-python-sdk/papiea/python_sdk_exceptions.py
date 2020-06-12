@@ -1,10 +1,24 @@
+import json
 import logging
 from typing import Any, List, Optional
 
 from aiohttp import ClientResponse
 
-from papiea.api import ApiException, json_loads_attrs
 from papiea.core import PapieaError
+from papiea.utils import json_loads_attrs
+
+
+class ApiException(Exception):
+    def __init__(self, status: int, reason: str, details: str):
+        super().__init__(reason)
+        self.status = status
+        self.reason = reason
+        self.details = details
+
+
+async def check_response(resp: ClientResponse, logger: logging.Logger):
+    if resp.status >= 400:
+        await PapieaBaseException.raise_error(resp, logger)
 
 
 class PapieaBaseException(Exception):

@@ -4,7 +4,7 @@ from typing import Any, Callable, List, NoReturn, Optional, Type
 
 from aiohttp import web
 
-from .api import ApiInstance, json_loads_attrs
+from .api import ApiInstance
 from .core import (
     DataDescription,
     Entity,
@@ -22,6 +22,7 @@ from .core import (
 )
 from .python_sdk_context import IntentfulCtx, ProceduralCtx
 from .python_sdk_exceptions import InvocationError, SecurityApiError
+from .utils import json_loads_attrs
 
 
 class ProviderServerManager(object):

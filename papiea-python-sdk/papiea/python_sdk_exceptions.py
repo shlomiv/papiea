@@ -44,12 +44,7 @@ class PapieaBaseException(Exception):
             logger.info("There is error")
             logger.info(error["type"])
             logger.info(EXCEPTION_MAP)
-            try:
-                error_type = PapieaError[error["type"]]
-            except KeyError:
-                error_type = None
-            logger.info(error_type)
-            exception = EXCEPTION_MAP.get(error_type)
+            exception = EXCEPTION_MAP.get(error["type"])
             logger.info(exception)
             if exception:
                 logger.info("There is exception")
@@ -122,12 +117,12 @@ class SecurityApiError(InvocationError):
 
 
 EXCEPTION_MAP = {
-    PapieaError.ConflictingEntity: ConflictingEntityException,
-    PapieaError.EntityNotFound: EntityNotFoundException,
-    PapieaError.PermissionDenied: PermissionDeniedException,
-    PapieaError.ProcedureInvocation: ProcedureInvocationException,
-    PapieaError.Unauthorized: UnauthorizedException,
-    PapieaError.Validation: ValidationException,
-    PapieaError.BadRequest: BadRequestException,
-    PapieaError.ServerError: PapieaServerException
+    PapieaError.ConflictingEntity.value: ConflictingEntityException,
+    PapieaError.EntityNotFound.value: EntityNotFoundException,
+    PapieaError.PermissionDenied.value: PermissionDeniedException,
+    PapieaError.ProcedureInvocation.value: ProcedureInvocationException,
+    PapieaError.Unauthorized.value: UnauthorizedException,
+    PapieaError.Validation.value: ValidationException,
+    PapieaError.BadRequest.value: BadRequestException,
+    PapieaError.ServerError.value: PapieaServerException
 }

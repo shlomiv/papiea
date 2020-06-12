@@ -32,18 +32,18 @@ class PapieaBaseException(Exception):
     @staticmethod
     async def raise_error(resp: ClientResponse, logger: logging.Logger):
         details = await resp.text()
-        logger.error(f"Got exception while making request. Status: {resp.status}, Reason: {resp.reason}")
         try:
             details = json_loads_attrs(details)
-            error = details.get("error")
-            if error:
-                exception = EXCEPTION_MAP.get(error["type"])
-                if exception:
-                    raise exception(error["message"], resp, details)
-                else:
-                    raise ApiException(resp.status, resp.reason, details)
+            logger.error(f"Got exception while making request. Status: {resp.status}, Reason: {resp.reason}, Details: {details}")
         except:
+            logger.error(f"Got exception while making request. Status: {resp.status}, Reason: {resp.reason}")
             raise ApiException(resp.status, resp.reason, details)
+        error = details.get("error")
+        if error:
+            exception = EXCEPTION_MAP.get(error["type"])
+            if exception:
+                raise exception(error["message"], resp, details)
+        raise ApiException(resp.status, resp.reason, details)
 
 
 class ConflictingEntityException(PapieaBaseException):

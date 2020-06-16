@@ -1,7 +1,7 @@
 // Shlomi: Moved encode here from mongo-dot-notation-tool and fixed it to not venture into vectors
 // Need to add tests to this
 function encode(value: any, keyChain: string[], result: any) {
-    const isObject = (value: any)=> (value instanceof Object && !(value instanceof Array))
+    const isObject = (value: any)=> value && value.toString() === '[object Object]'
     const isArray = (value: any)=>  Array.isArray(value);
     let _key:any;
 

@@ -121,12 +121,9 @@ export class DiffResolver {
             this.logger.debug(`Diff engine Processing entity with uuid: ${entry_reference.entity_reference.uuid}`)
             let diffs: Diff[] | undefined
             let metadata: Metadata | undefined, kind: Kind | undefined, spec: Spec | undefined, status: Status | undefined
-            console.log(`Diff: ${current_diff}  Delay ${current_delay}`)
             if (current_diff && current_delay) {
                 // Delay for rediffing
                 const del = (new Date().getTime() - current_delay.delaySetTime.getTime()) / 1000
-                console.log(`Calculated delay: ${del}`)
-                console.log(`Current delay: ${current_delay.delay_seconds}`)
                 if ((new Date().getTime() - current_delay.delaySetTime.getTime()) / 1000 > current_delay.delay_seconds) {
                     const result = await this.rediff(entry_reference)
                     if (!result) {
@@ -182,13 +179,9 @@ export class DiffResolver {
             }
             const new_diff = result![0]
             const new_delay = result![1]
-            console.log(`New diff`)
-            console.dir(new_diff)
-            console.dir(new_delay)
             entries[uuid][1] = new_diff
             entries[uuid][2] = new_delay
         }
-        console.log(this.watchlist)
         await this.watchlistDb.update_watchlist(this.watchlist)
     }
 

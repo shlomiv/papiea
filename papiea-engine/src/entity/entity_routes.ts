@@ -1,71 +1,72 @@
-import { Entity_API } from "./entity_api_interface";
-import { Router } from "express";
-import { Query } from 'express-serve-static-core';
-import { UserAuthInfo, asyncHandler } from '../auth/authn';
-import { BadRequestError } from '../errors/bad_request_error';
-import { processPaginationParams, processSortQuery } from "../utils/utils";
-import { SortParams } from "./entity_api_impl";
-import { CheckNoQueryParams, check_request } from "../validator/express_validator";
+import { EntityAPI } from "./entity_api_interface"
+import { Router } from "express"
+import { Query } from "express-serve-static-core"
+import { UserAuthInfo, asyncHandler } from "../auth/authn"
+import { BadRequestError } from "../errors/bad_request_error"
+import { processPaginationParams, processSortQuery } from "../utils/utils"
+import { SortParams } from "./entity_api_impl"
+import { CheckNoQueryParams, check_request } from "../validator/express_validator"
 
 const CheckProcedureCallParams = check_request({
     allowed_query_params: [],
-    allowed_body_params: ['input']
-});
+    allowed_body_params: ["input"],
+})
 
 interface PaginatedResult {
     results: any[],
     entity_count: number
 }
 
-export function createEntityAPIRouter(entity_api: Entity_API): Router {
-    const router = Router();
+export function createEntityAPIRouter(entity_api: EntityAPI): Router {
+    const router = Router()
 
-    const paginateEntities = async function(entities: any, skip: number, size: number): Promise<PaginatedResult> {
-        const totalEntities: number = entities.length;
-        const pageEntities = entities.slice(skip, skip + size);
+    const paginateEntities = async function (entities: any, skip: number, size: number): Promise<PaginatedResult> {
+        const totalEntities: number = entities.length
+        const pageEntities = entities.slice(skip, skip + size)
 
-        return { results: pageEntities, entity_count: totalEntities };
+        return { results: pageEntities, entity_count: totalEntities }
     }
 
     const filterEntities = async function (user: UserAuthInfo, kind_name: string, filter: any, skip: number, size: number, exactMatch: boolean, sortParams?: SortParams): Promise<any> {
-        const resultSpecs: any[] = await entity_api.filter_entity_spec(user, kind_name, filter, exactMatch, sortParams);
+        const resultSpecs: any[] = await entity_api.filter_entity_spec(user, kind_name, filter, exactMatch, sortParams)
 
-        const resultStatuses: any[] = await entity_api.filter_entity_status(user, kind_name, filter, exactMatch, sortParams);
+        const resultStatuses: any[] = await entity_api.filter_entity_status(user, kind_name, filter, exactMatch, sortParams)
 
-        const uuidToEntity: { [key: string]: any } = {};
+        const uuidToEntity: { [key: string]: any } = {}
 
         resultSpecs.forEach(x => {
-            uuidToEntity[x[0].uuid] = { metadata: x[0], spec: x[1] };
-        });
+            uuidToEntity[x[0].uuid] = { metadata: x[0], spec: x[1] }
+        })
 
         resultStatuses.forEach(x => {
-            if (uuidToEntity[x[0].uuid] !== undefined)
-                uuidToEntity[x[0].uuid].status = x[1];
-        });
+            if (uuidToEntity[x[0].uuid] !== undefined) {
+                uuidToEntity[x[0].uuid].status = x[1]
+            }
+        })
 
-        const entities = Object.values(uuidToEntity);
+        const entities = Object.values(uuidToEntity)
         return paginateEntities(entities, skip, size)
-    };
+    }
 
     router.post("/:prefix/:version/check_permission", CheckNoQueryParams, asyncHandler(async (req, res) => {
         res.json(await entity_api.check_permission(req.user, req.params.prefix, req.params.version, req.body))
-    }));
+    }))
 
     router.get("/intentful_task/:id", CheckNoQueryParams, asyncHandler(async (req, res) => {
         res.json(await entity_api.get_intentful_task(req.user, req.params.id))
     }))
 
     router.get("/intentful_task", check_request({
-        allowed_query_params: ['offset', 'limit', 'sort', 'entity_ref', 'created_at', 'status']
-    }), asyncHandler(async (req, res) => {
-        const filter: any = {};
-        const offset = queryToNum(req.query.offset);
-        const limit = queryToNum(req.query.limit);
-        const rawSortQuery = queryToString(req.query.sort);
-        const sortParams = processSortQuery(rawSortQuery);
-        const [skip, size] = processPaginationParams(offset, limit);
+        allowed_query_params: ["offset", "limit", "sort", "entity_ref", "created_at", "status"],
+    }),        asyncHandler(async (req, res) => {
+        const filter: any = {}
+        const offset = queryToNum(req.query.offset)
+        const limit = queryToNum(req.query.limit)
+        const rawSortQuery = queryToString(req.query.sort)
+        const sortParams = processSortQuery(rawSortQuery)
+        const [skip, size] = processPaginationParams(offset, limit)
         if (req.query.entity_ref) {
-            filter.entity_ref = JSON.parse(queryToString(req.query.entity_ref) ?? 'undefined')
+            filter.entity_ref = JSON.parse(queryToString(req.query.entity_ref) ?? "undefined")
         }
         if (req.query.created_at) {
             filter.created_at = req.query.created_at
@@ -78,15 +79,15 @@ export function createEntityAPIRouter(entity_api: Entity_API): Router {
     }))
 
     router.post("/intentful_task/filter", check_request({
-        allowed_query_params: ['offset', 'limit', 'sort'],
-        allowed_body_params: ['entity_ref', 'created_at', 'status']
-    }), asyncHandler(async (req, res) => {
-        const filter: any = {};
-        const offset = queryToNum(req.query.offset);
-        const limit = queryToNum(req.query.limit);
-        const rawSortQuery = queryToString(req.query.sort);
-        const sortParams = processSortQuery(rawSortQuery);
-        const [skip, size] = processPaginationParams(offset, limit);
+        allowed_query_params: ["offset", "limit", "sort"],
+        allowed_body_params: ["entity_ref", "created_at", "status"],
+    }),         asyncHandler(async (req, res) => {
+        const filter: any = {}
+        const offset = queryToNum(req.query.offset)
+        const limit = queryToNum(req.query.limit)
+        const rawSortQuery = queryToString(req.query.sort)
+        const sortParams = processSortQuery(rawSortQuery)
+        const [skip, size] = processPaginationParams(offset, limit)
         if (req.body.entity_ref) {
             filter.entity_ref = req.body.entity_ref
         }
@@ -101,131 +102,131 @@ export function createEntityAPIRouter(entity_api: Entity_API): Router {
     }))
 
     router.get("/:prefix/:version/:kind", check_request({
-        allowed_query_params: ['offset', 'limit', 'sort', 'spec', 'status', 'metadata', 'exact']
-    }), asyncHandler(async (req, res) => {
-        const filter: any = {};
-        const offset = queryToNum(req.query.offset);
-        const limit = queryToNum(req.query.limit);
-        const rawSortQuery = queryToString(req.query.sort);
+        allowed_query_params: ["offset", "limit", "sort", "spec", "status", "metadata", "exact"],
+    }),        asyncHandler(async (req, res) => {
+        const filter: any = {}
+        const offset = queryToNum(req.query.offset)
+        const limit = queryToNum(req.query.limit)
+        const rawSortQuery = queryToString(req.query.sort)
         const exactMatch = queryToBool(req.query.exact) ?? false
-        const sortParams = processSortQuery(rawSortQuery);
-        const [skip, size] = processPaginationParams(offset, limit);
+        const sortParams = processSortQuery(rawSortQuery)
+        const [skip, size] = processPaginationParams(offset, limit)
 
-        filter.spec = JSON.parse(queryToString(req.query.spec) ?? '{}');
-        filter.status = JSON.parse(queryToString(req.query.status) ?? '{}');
-        filter.metadata = JSON.parse(queryToString(req.query.metadata) ?? '{}');
+        filter.spec = JSON.parse(queryToString(req.query.spec) ?? "{}")
+        filter.status = JSON.parse(queryToString(req.query.status) ?? "{}")
+        filter.metadata = JSON.parse(queryToString(req.query.metadata) ?? "{}")
 
-        res.json(await filterEntities(req.user, req.params.kind, filter, skip, size, exactMatch, sortParams));
-    }));
+        res.json(await filterEntities(req.user, req.params.kind, filter, skip, size, exactMatch, sortParams))
+    }))
 
     router.get("/:prefix/:version/:kind/:uuid", CheckNoQueryParams, asyncHandler(async (req, res) => {
-        const [metadata, spec] = await entity_api.get_entity_spec(req.user, req.params.kind, req.params.uuid);
-        const [_, status] = await entity_api.get_entity_status(req.user, req.params.kind, req.params.uuid);
-        res.json({ "metadata": metadata, "spec": spec, "status": status });
-    }));
+        const [metadata, spec] = await entity_api.get_entity_spec(req.user, req.params.kind, req.params.uuid)
+        const [_, status] = await entity_api.get_entity_status(req.user, req.params.kind, req.params.uuid)
+        res.json({ metadata: metadata, spec: spec, status: status })
+    }))
 
     router.post("/:prefix/:version/:kind/filter", check_request({
-        allowed_query_params: ['offset', 'limit', 'sort', 'exact'],
-        allowed_body_params: ['spec', 'status', 'metadata', 'offset', 'limit', 'sort']
-    }), asyncHandler(async (req, res) => {
-        const offset = queryToNum(req.query.offset) ?? req.body.offset;
-        const limit = queryToNum(req.query.limit) ?? req.body.limit;
-        const rawSortQuery = queryToString(req.query.sort) ?? req.body.sort;
+        allowed_query_params: ["offset", "limit", "sort", "exact"],
+        allowed_body_params: ["spec", "status", "metadata", "offset", "limit", "sort"],
+    }),         asyncHandler(async (req, res) => {
+        const offset = queryToNum(req.query.offset) ?? req.body.offset
+        const limit = queryToNum(req.query.limit) ?? req.body.limit
+        const rawSortQuery = queryToString(req.query.sort) ?? req.body.sort
         const exactMatch = queryToBool(req.query.exact) ?? false
-        const sortParams: undefined | SortParams = processSortQuery(rawSortQuery);
-        const [skip, size] = processPaginationParams(offset, limit);
-        const filter: any = {};
+        const sortParams: undefined | SortParams = processSortQuery(rawSortQuery)
+        const [skip, size] = processPaginationParams(offset, limit)
+        const filter: any = {}
         if (req.body.spec) {
-            filter.spec = req.body.spec;
+            filter.spec = req.body.spec
         } else {
-            filter.spec = {};
+            filter.spec = {}
         }
         if (req.body.status) {
-            filter.status = req.body.status;
+            filter.status = req.body.status
         } else {
-            filter.status = {};
+            filter.status = {}
         }
         if (req.body.metadata) {
-            filter.metadata = req.body.metadata;
+            filter.metadata = req.body.metadata
         } else {
-            filter.metadata = {};
+            filter.metadata = {}
         }
 
-        res.json(await filterEntities(req.user, req.params.kind, filter, skip, size, exactMatch, sortParams));
-    }));
+        res.json(await filterEntities(req.user, req.params.kind, filter, skip, size, exactMatch, sortParams))
+    }))
 
     router.put("/:prefix/:version/:kind/:uuid", check_request({
         allowed_query_params: [],
-        allowed_body_params: ['metadata', 'spec']
-    }), asyncHandler(async (req, res) => {
-        const request_metadata = req.body.metadata;
-        const task = await entity_api.update_entity_spec(req.user, req.params.uuid, req.params.prefix, request_metadata.spec_version, request_metadata.extension, req.params.kind, req.params.version, req.body.spec);
-        res.json({ "task": task });
-    }));
+        allowed_body_params: ["metadata", "spec"],
+    }),        asyncHandler(async (req, res) => {
+        const request_metadata = req.body.metadata
+        const task = await entity_api.update_entity_spec(req.user, req.params.uuid, req.params.prefix, request_metadata.spec_version, request_metadata.extension, req.params.kind, req.params.version, req.body.spec)
+        res.json({ task: task })
+    }))
 
     router.post("/:prefix/:version/:kind", check_request({
         allowed_query_params: [],
-        allowed_body_params: ['metadata', 'spec']
-    }), asyncHandler(async (req, res) => {
+        allowed_body_params: ["metadata", "spec"],
+    }),         asyncHandler(async (req, res) => {
         if (req.params.status) {
-            const [metadata, spec] = await entity_api.save_entity(req.user, req.params.prefix, req.params.kind, req.params.version, req.body.spec, req.body.metadata);
-            res.json({ "metadata": metadata, "spec": spec });
+            const [metadata, spec] = await entity_api.save_entity(req.user, req.params.prefix, req.params.kind, req.params.version, req.body.spec, req.body.metadata)
+            res.json({ metadata: metadata, spec: spec })
         } else {
             // Spec only entity
-            const [metadata, spec] = await entity_api.save_entity(req.user, req.params.prefix, req.params.kind, req.params.version, req.body.spec, req.body.metadata);
-            res.json({ "metadata": metadata, "spec": spec });
+            const [metadata, spec] = await entity_api.save_entity(req.user, req.params.prefix, req.params.kind, req.params.version, req.body.spec, req.body.metadata)
+            res.json({ metadata: metadata, spec: spec })
         }
-    }));
+    }))
 
     router.delete("/:prefix/:version/:kind/:uuid", CheckNoQueryParams, asyncHandler(async (req, res) => {
-        await entity_api.delete_entity_spec(req.user, req.params.prefix, req.params.version, req.params.kind, req.params.uuid);
+        await entity_api.delete_entity_spec(req.user, req.params.prefix, req.params.version, req.params.kind, req.params.uuid)
         res.json("OK")
-    }));
+    }))
 
     router.post("/:prefix/:version/:kind/:uuid/procedure/:procedure_name", CheckProcedureCallParams, asyncHandler(async (req, res) => {
-        const result: any = await entity_api.call_procedure(req.user, req.params.prefix, req.params.kind, req.params.version, req.params.uuid, req.params.procedure_name, req.body.input);
-        res.json(result);
-    }));
+        const result: any = await entity_api.call_procedure(req.user, req.params.prefix, req.params.kind, req.params.version, req.params.uuid, req.params.procedure_name, req.body.input)
+        res.json(result)
+    }))
 
     router.post("/:prefix/:version/:kind/procedure/:procedure_name", CheckProcedureCallParams, asyncHandler(async (req, res) => {
-        const result: any = await entity_api.call_kind_procedure(req.user, req.params.prefix, req.params.kind, req.params.version, req.params.procedure_name, req.body.input);
-        res.json(result);
-    }));
+        const result: any = await entity_api.call_kind_procedure(req.user, req.params.prefix, req.params.kind, req.params.version, req.params.procedure_name, req.body.input)
+        res.json(result)
+    }))
 
     router.post("/:prefix/:version/procedure/:procedure_name", CheckProcedureCallParams, asyncHandler(async (req, res) => {
-        const result: any = await entity_api.call_provider_procedure(req.user, req.params.prefix, req.params.version, req.params.procedure_name, req.body.input);
-        res.json(result);
-    }));
+        const result: any = await entity_api.call_provider_procedure(req.user, req.params.prefix, req.params.version, req.params.procedure_name, req.body.input)
+        res.json(result)
+    }))
 
-    return router;
+    return router
 }
 
-type ExpressQueryParam = string | Query | (string | Query)[];
+type ExpressQueryParam = string | Query | (string | Query)[]
 
 function queryToNum(q?: ExpressQueryParam): number | undefined {
     switch (typeof q) {
-        case 'number': return q;
-        case 'string': return Number.parseFloat(q);
-        case 'undefined': return undefined;
+        case "number": return q
+        case "string": return Number.parseFloat(q)
+        case "undefined": return undefined
         default:
-            throw new BadRequestError('Invalid query parameter');
+            throw new BadRequestError("Invalid query parameter")
     }
 }
 
 function queryToString(q?: ExpressQueryParam): string | undefined {
     switch (typeof q) {
-        case 'string': return q;
-        case 'undefined': return undefined;
+        case "string": return q
+        case "undefined": return undefined
         default:
-            throw new BadRequestError('Invalid query parameter');
+            throw new BadRequestError("Invalid query parameter")
     }
 }
 
 function queryToBool(q?: ExpressQueryParam): boolean | undefined {
     switch (typeof q) {
-        case 'string': return q === "true"
-        case 'undefined': return undefined;
+        case "string": return q === "true"
+        case "undefined": return undefined
         default:
-            throw new BadRequestError('Invalid query parameter');
+            throw new BadRequestError("Invalid query parameter")
     }
 }

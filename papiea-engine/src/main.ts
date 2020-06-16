@@ -5,7 +5,7 @@ import { logLevelFromString, LoggerFactory } from "papiea-backend-utils"
 import { ProviderAPIImpl } from "./provider/provider_api_impl"
 import { MongoConnection } from "./databases/mongo"
 import { createEntityAPIRouter } from "./entity/entity_routes"
-import { Entity_API_Impl } from "./entity/entity_api_impl"
+import { EntityAPIImpl } from "./entity/entity_api_impl"
 import {
     createAuthnRouter, CompositeUserAuthInfoExtractor, AdminUserAuthInfoExtractor,
 } from "./auth/authn"
@@ -97,7 +97,7 @@ async function setUpApplication(): Promise<express.Express> {
         new ProviderCasbinAuthorizerFactory(logger),
     )
     app.use("/services", createEntityAPIRouter(
-        new Entity_API_Impl(
+        new EntityAPIImpl(
             logger,
             statusDb,
             specDb,

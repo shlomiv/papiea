@@ -27,7 +27,8 @@
         ],
         "no-console": [false],
         "no-var-requires": false,
-        "ter-arrow-parens": [true, "as-needed"]
+        "ter-arrow-parens": [true, "as-needed"],
+        "no-shadowed-variable": false
     },
     "rulesDirectory": []
 }

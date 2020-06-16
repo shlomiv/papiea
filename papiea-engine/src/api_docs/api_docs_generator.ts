@@ -1,7 +1,7 @@
 import { Provider_DB } from "../databases/provider_db_interface";
 import { Provider, Kind, Procedural_Signature } from "papiea-core";
 
-export default class ApiDocsGenerator {
+export class ApiDocsGenerator {
     providerDb: Provider_DB;
 
     constructor(providerDb: Provider_DB) {

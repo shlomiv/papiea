@@ -43,11 +43,13 @@ export class IntentfulTaskMapper {
             status: intentfulTask.status,
             created_at: intentfulTask.created_at,
             times_failed: intentfulTask.times_failed,
-            last_handler_error: intentfulTask.last_handler_error
+            last_handler_error: intentfulTask.last_handler_error,
         }
     }
 
-    public static filter(intentfulTasks: IntentfulTask[], entities: [Metadata, Spec][]): IntentfulTask[] {
+    public static filter(
+        intentfulTasks: IntentfulTask[], entities: [Metadata, Spec][],
+    ): IntentfulTask[] {
         const tasks: IntentfulTask[] = []
         entities.forEach(entity => {
             intentfulTasks.forEach(task => {
@@ -66,7 +68,7 @@ export class IntentfulTaskMapper {
                 entity_ref: task.entity_ref,
                 spec_version: task.spec_version,
                 status: task.status,
-                created_at: task.created_at
+                created_at: task.created_at,
             }
         })
     }

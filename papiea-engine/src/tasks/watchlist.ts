@@ -4,7 +4,7 @@ import { Diff, Entity_Reference, Version, Metadata } from "papiea-core"
 export interface EntryReference {
     provider_reference: {
         provider_prefix: string,
-        provider_version: Version
+        provider_version: Version,
     },
     entity_reference: Entity_Reference
 }
@@ -18,16 +18,18 @@ export function create_entry(metadata: Metadata): EntryReference {
     return {
         provider_reference: {
             provider_prefix: metadata.provider_prefix,
-            provider_version: metadata.provider_version
+            provider_version: metadata.provider_version,
         },
         entity_reference: {
             uuid: metadata.uuid,
-            kind: metadata.kind
-        }
+            kind: metadata.kind,
+        },
     }
 }
 
-export type SerializedWatchlist = { [key: string]: [EntryReference, Diff | undefined, Delay | undefined] }
+export type SerializedWatchlist = {
+    [key: string]: [EntryReference, Diff | undefined, Delay | undefined],
+}
 
 export class Watchlist {
     private _entries: SerializedWatchlist
@@ -35,7 +37,6 @@ export class Watchlist {
     constructor(watchlist?: SerializedWatchlist) {
         this._entries = watchlist ?? {}
     }
-
 
     get(uuid: string): [EntryReference, Diff | undefined, Delay | undefined] | undefined {
         return this._entries[uuid]
@@ -71,6 +72,6 @@ export class Watchlist {
 
     has(uuid: string): boolean {
         const item = this._entries[uuid]
-        return item !== undefined;
+        return item !== undefined
     }
 }

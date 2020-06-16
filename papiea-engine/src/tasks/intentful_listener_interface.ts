@@ -1,5 +1,6 @@
 import { Entity } from "papiea-core"
 
+// tslint:disable-next-line:ban-types
 export class Handler<T extends Function> {
     _fn: T | null
 

@@ -15,54 +15,54 @@ function validatePaginationParams(offset: number | undefined, limit: number | un
     }
 }
 
-export function processPaginationParams(offset: number | undefined, limit: number | undefined): [number, number] {
-    let skip = 0;
-    let size = 30;
+export function processPaginationParams(
+    offset: number | undefined, limit: number | undefined,
+): [number, number] {
+    let skip = 0
+    let size = 30
     if (!offset && !limit) {
-        validatePaginationParams(offset, limit);
+        validatePaginationParams(offset, limit)
         return [skip, size]
     }
-    else if (!offset && limit) {
-        validatePaginationParams(offset, limit);
-        size = Number(limit);
+    if (!offset && limit) {
+        validatePaginationParams(offset, limit)
+        size = Number(limit)
         return [skip, size]
     }
-    else if (offset && !limit) {
-        validatePaginationParams(offset, limit);
-        skip = Number(offset);
-        return [skip, size]
-    } else {
-        validatePaginationParams(offset, limit);
-        size = Number(limit);
-        skip = Number(offset);
+    if (offset && !limit) {
+        validatePaginationParams(offset, limit)
+        skip = Number(offset)
         return [skip, size]
     }
-
+    validatePaginationParams(offset, limit)
+    size = Number(limit)
+    skip = Number(offset)
+    return [skip, size]
 }
 
 export function processSortQuery(query: string | undefined): undefined | SortParams {
     if (query === undefined) {
-        return undefined;
+        return undefined
     }
-    const processedQuery: SortParams = {};
-    const splitFields = query.split(",");
+    const processedQuery: SortParams = {}
+    const splitFields = query.split(",")
     splitFields.forEach(fieldQuery => {
-        const [field, sortOrd] = fieldQuery.split(":");
+        const [field, sortOrd] = fieldQuery.split(":")
         switch (sortOrd) {
             case "asc":
-                processedQuery[field] = 1;
-                break;
+                processedQuery[field] = 1
+                break
             case "desc":
-                processedQuery[field] = -1;
-                break;
+                processedQuery[field] = -1
+                break
             case undefined:
-                processedQuery[field] = 1;
-                break;
+                processedQuery[field] = 1
+                break
             default:
                 throw new ValidationError([new Error("Sorting key's value must be either 'asc' or 'desc'")])
         }
-    });
-    return processedQuery;
+    })
+    return processedQuery
 }
 
 export function isEmpty(obj: any) {
@@ -72,14 +72,15 @@ export function isEmpty(obj: any) {
     if (obj === undefined || obj === null || obj === "") {
         return false
     }
-    for(let key in obj) {
-        if(obj.hasOwnProperty(key))
-            return false;
+    for (const key in obj) {
+        if (obj.hasOwnProperty(key)) {
+            return false
+        }
     }
-    return true;
+    return true
 }
 
-export function safeJSONParse(chunk: string): Object | null {
+export function safeJSONParse(chunk: string): object | null {
     try {
         return JSON.parse(chunk)
     } catch (e) {
@@ -89,38 +90,41 @@ export function safeJSONParse(chunk: string): Object | null {
 }
 
 export function timeout(ms: number) {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise(resolve => setTimeout(resolve, ms))
 }
 
 export function getRandomInt(min: number, max: number) {
-    min = Math.ceil(min);
-    max = Math.floor(max);
-    return Math.floor(Math.random() * (max - min + 1)) + min;
+    const min_val = Math.ceil(min)
+    const max_val = Math.floor(max)
+    return Math.floor(Math.random() * (max_val - min_val + 1)) + min_val
 }
 
 export function isAxiosError(e: Error): e is AxiosError {
-    return e.hasOwnProperty("response");
+    return e.hasOwnProperty("response")
 }
 
-export function isObject(item: any): item is Object {
-    return (item && typeof item === 'object' && !Array.isArray(item));
+export function isObject(item: any): item is object {
+    return (item && typeof item === "object" && !Array.isArray(item))
 }
-
 
 export function deepMerge(target: any, ...sources: any[]): any {
-    if (!sources.length) return target;
-    const source = sources.shift();
+    if (!sources.length) return target
+    const source = sources.shift()
 
     if (isObject(target) && isObject(source)) {
         for (const key in source) {
+            // @ts-ignore
             if (isObject(source[key])) {
-                if (!target[key]) Object.assign(target, { [key]: {} });
-                deepMerge(target[key], source[key]);
+                // @ts-ignore
+                if (!target[key]) Object.assign(target, { [key]: {} })
+                // @ts-ignore
+                deepMerge(target[key], source[key])
             } else {
-                Object.assign(target, { [key]: source[key] });
+                // @ts-ignore
+                Object.assign(target, { [key]: source[key] })
             }
         }
     }
 
-    return deepMerge(target, ...sources);
+    return deepMerge(target, ...sources)
 }

@@ -1,10 +1,10 @@
 import * as express from "express";
-import { Provider_API, Provider_Power } from "./provider_api_interface";
+import { ProviderAPI, Provider_Power } from "./provider_api_interface";
 import { asyncHandler } from '../auth/authn';
 import { BadRequestError } from '../errors/bad_request_error';
 import { CheckNoQueryParams, check_request } from "../validator/express_validator";
 
-export default function createProviderAPIRouter(providerApi: Provider_API) {
+export default function createProviderAPIRouter(providerApi: ProviderAPI) {
     const providerApiRouter = express.Router();
 
     providerApiRouter.post('/', CheckNoQueryParams, asyncHandler(async (req, res) => {

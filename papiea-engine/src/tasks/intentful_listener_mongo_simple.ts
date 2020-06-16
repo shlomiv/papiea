@@ -3,11 +3,11 @@ import { Handler, IntentfulListener } from "./intentful_listener_interface"
 import { Watchlist } from "./watchlist"
 import { Status_DB } from "../databases/status_db_interface"
 import { timeout } from "../utils/utils"
-import { Spec_DB } from "../databases/spec_db_interface";
-import deepEqual = require("deep-equal");
+import { Spec_DB } from "../databases/spec_db_interface"
+import deepEqual = require("deep-equal")
 
 export class IntentfulListenerMongo implements IntentfulListener {
-    onChange: Handler<(entity: Entity) => Promise<void>>;
+    onChange: Handler<(entity: Entity) => Promise<void>>
     private watchlist: Watchlist
     private entities: Map<string, [Spec, Status]>
     private statuses: Map<string, Status>
@@ -20,7 +20,7 @@ export class IntentfulListenerMongo implements IntentfulListener {
         const uuids = Object.keys(entries)
         const metadata_specs = await this.specDb.list_specs_in(uuids)
         const metadata_statuses = await this.statusDb.list_status_in(uuids)
-        for (let i in metadata_specs) {
+        for (const i in metadata_specs) {
             // These are guaranteed to be in order because they are sorted by uuids
             const [metadata, spec] = metadata_specs[i]
             const [, status] = metadata_statuses[i]
@@ -48,14 +48,14 @@ export class IntentfulListenerMongo implements IntentfulListener {
 
     public async run(delay: number) {
         try {
-            await this._run(delay)
+            await this.run_loop(delay)
         } catch (e) {
             console.error(e)
             throw e
         }
     }
 
-    protected async _run(delay: number) {
+    protected async run_loop(delay: number) {
         while (true) {
             await timeout(delay)
             await this.check_watchlist_changes()

@@ -1,0 +1,33 @@
+{
+    "defaultSeverity": "error",
+    "extends": [
+        "tslint:recommended",
+        "tslint-config-airbnb"
+    ],
+    "jsRules": {},
+    "rules": {
+        "quotemark": [
+            true,
+            "double"
+        ],
+        "semicolon": [true, "never"],
+        "variable-name": {
+            "options": [
+                "check-format",
+                "allow-pascal-case",
+                "allow-snake-case",
+                "allow-leading-underscore"
+            ]
+        },
+        "object-shorthand-properties-first": false,
+        "ter-indent": [
+            true,
+            4,
+            {"SwitchCase": 1}
+        ],
+        "no-console": [false],
+        "no-var-requires": false,
+        "ter-arrow-parens": [true, "as-needed"]
+    },
+    "rulesDirectory": []
+}

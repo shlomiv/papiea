@@ -1,7 +1,7 @@
-import { Request, RequestHandler } from 'express'
-import { IncomingHttpHeaders } from 'http'
+import { Request, RequestHandler } from "express"
+import { IncomingHttpHeaders } from "http"
 
-import { Logger } from 'papiea-backend-utils'
+import { Logger } from "papiea-backend-utils"
 
 import { UserAuthInfo, UserAuthInfoRequest } from "./auth/authn"
 import { safeJSONParse } from "./utils/utils"
@@ -28,8 +28,8 @@ export class AuditLogger {
 
     middleware(): RequestHandler {
         return (req, res, next) => {
-            const end = res.end;
-            let body: any;
+            const end = res.end
+            let body: any
             res.end = (chunk: any, encoding?: any, cb?: any): void => {
                 res.end = end
                 res.end(chunk, encoding, cb)
@@ -39,7 +39,7 @@ export class AuditLogger {
                 }
             }
             res.on("finish", () => {
-                (<any>res).body = body
+                (res as any).body = body
                 this.log(req, res)
             })
             next()

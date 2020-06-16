@@ -79,6 +79,7 @@ export class DiffResolver {
     }
 
     private async launchOperation(diff: Diff, metadata: Metadata, kind: Kind, spec: Spec, status: Status): Promise<[Diff, Delay]> {
+        let delay_time: number | undefined = undefined
         // This yields delay
         const result = await axios.post(diff.intentful_signature.procedure_callback, {
             metadata: metadata,
@@ -86,8 +87,11 @@ export class DiffResolver {
             status: status,
             input: diff.diff_fields
         })
+        if (!Number.isNaN(result.data)) {
+            delay_time = result.data
+        }
         const delay = {
-            delay_seconds: result.data ?? kind.diff_delay ?? getRandomInt(10, 20),
+            delay_seconds: delay_time ?? kind.diff_delay ?? getRandomInt(10, 20),
             delaySetTime: new Date()
         }
         // This should be a concrete address of a handling process
@@ -117,8 +121,12 @@ export class DiffResolver {
             this.logger.debug(`Diff engine Processing entity with uuid: ${entry_reference.entity_reference.uuid}`)
             let diffs: Diff[] | undefined
             let metadata: Metadata | undefined, kind: Kind | undefined, spec: Spec | undefined, status: Status | undefined
+            console.log(`Diff: ${current_diff}  Delay ${current_delay}`)
             if (current_diff && current_delay) {
                 // Delay for rediffing
+                const del = (new Date().getTime() - current_delay.delaySetTime.getTime()) / 1000
+                console.log(`Calculated delay: ${del}`)
+                console.log(`Current delay: ${current_delay.delay_seconds}`)
                 if ((new Date().getTime() - current_delay.delaySetTime.getTime()) / 1000 > current_delay.delay_seconds) {
                     const result = await this.rediff(entry_reference)
                     if (!result) {
@@ -149,7 +157,7 @@ export class DiffResolver {
                         }
                     }
                 } else {
-                    // Time for rediff hasn't come continuing
+                    // Time for rediff hasn't come, continuing
                     continue
                 }
             }
@@ -174,9 +182,13 @@ export class DiffResolver {
             }
             const new_diff = result![0]
             const new_delay = result![1]
+            console.log(`New diff`)
+            console.dir(new_diff)
+            console.dir(new_delay)
             entries[uuid][1] = new_diff
             entries[uuid][2] = new_delay
         }
+        console.log(this.watchlist)
         await this.watchlistDb.update_watchlist(this.watchlist)
     }
 
@@ -221,7 +233,9 @@ export class DiffResolver {
         const entities = await this.specDb.list_random_intentful_specs(batch_size, intentful_kind_refs)
 
         for (let [metadata, _] of entities) {
-            this.watchlist.set(metadata.uuid, [create_entry(metadata), undefined, undefined])
+            if (!this.watchlist.has(metadata.uuid)) {
+                this.watchlist.set(metadata.uuid, [create_entry(metadata), undefined, undefined])
+            }
         }
         return this.watchlistDb.update_watchlist(this.watchlist)
     }

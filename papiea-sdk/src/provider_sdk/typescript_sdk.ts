@@ -482,7 +482,7 @@ export class Kind_Builder {
                 IntentfulOutput: {
                     type: 'integer',
                     nullable: true,
-                    description: "Delay for intentful operation"
+                    description: "Delay for the entity to be rediffed in (measured in seconds)"
                 }
             },
             execution_strategy: Intentful_Execution_Strategy.Basic,

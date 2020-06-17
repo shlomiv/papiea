@@ -11,7 +11,7 @@ from papiea.utils import json_loads_attrs
 
 
 class ApiInstance(object):
-    def __init__(self, base_url: str, timeout: int = 5000, headers: dict = {}, *, logger: logging.Logger):
+    def __init__(self, base_url: str, timeout: int = 5000 * 60, headers: dict = {}, *, logger: logging.Logger):
         self.base_url = base_url
         self.headers = headers
         self.session = ClientSession(timeout=ClientTimeout(total=timeout))

@@ -87,8 +87,9 @@ export class DiffResolver {
             status: status,
             input: diff.diff_fields
         })
-        if (!Number.isNaN(result.data)) {
-            delay_time = result.data
+        if (result.data.delay_seconds !== undefined
+            && result.data.delay_seconds !== null && !Number.isNaN(result.data.delay_seconds)) {
+            delay_time = result.data.delay_seconds
         }
         const delay = {
             delay_seconds: delay_time ?? kind.diff_delay ?? getRandomInt(10, 20),

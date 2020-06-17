@@ -243,7 +243,7 @@ describe("Intentful Workflow tests", () => {
                     })
                 } else {
                     // 12 seconds delay
-                    return 12
+                    return {"delay_secs": 12}
                 }
             })
             location.on_create(async (ctx, entity) => {

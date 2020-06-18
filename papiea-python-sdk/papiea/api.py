@@ -11,9 +11,10 @@ from papiea.utils import json_loads_attrs
 
 
 class ApiInstance(object):
-    def __init__(self, base_url: str, timeout: int = 5000 * 60, headers: dict = {}, *, logger: logging.Logger):
+    def __init__(self, base_url: str, timeout: int = 5000, headers: dict = {}, *, logger: logging.Logger):
         self.base_url = base_url
         self.headers = headers
+        # Shlomi: This does not work! 
         self.session = ClientSession(timeout=ClientTimeout(total=timeout))
         self.logger = logger
 
@@ -61,14 +62,24 @@ class ApiInstance(object):
         new_headers.update(self.headers)
         new_headers.update(headers)
         data_binary = json.dumps(data).encode("utf-8")
-        async with self.session.patch(
-            self.base_url + "/" + prefix, data=data_binary, headers=new_headers
-        ) as resp:
-            await check_response(resp, self.logger)
-            res = await resp.text()
-        if res == "":
-            return None
-        return json_loads_attrs(res)
+        this = self
+        async def patcher():
+            async with this.session.patch(
+                this.base_url + "/" + prefix, data=data_binary, headers=new_headers
+            ) as resp:
+                await check_response(resp, this.logger)
+                res = await resp.text()
+            if res == "":
+                return None
+            return json_loads_attrs(res)
+
+        try:
+            await patcher()
+        except:
+            self.logger.debug("RENEWING SESSION")
+            await self.session.close()
+            self.session = ClientSession(timeout=ClientTimeout(total=self.timeout))
+            await patcher()
 
     async def get(self, prefix: str, headers: dict = {}) -> Any:
         new_headers = CIMultiDict()

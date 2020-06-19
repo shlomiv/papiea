@@ -6,7 +6,7 @@
   "author": "Shlomi Vaknin",
   "scripts": {
     "clean-all": "for p in core backend-utils client engine sdk; do yarn --cwd papiea-$p run clean || exit 1; done",
-    "patch-all": "for p in core backend-utils client engine sdk; do yarn --cwd papiea-$p version patch || exit 1; done",
+    "patch-all": "for p in core backend-utils client engine sdk; do yarn --cwd papiea-$p version --patch  --no-git-tag-version --no-commit-hooks || exit 1; done",
     "build-all": "for p in core backend-utils client engine sdk; do yarn --cwd papiea-$p install ; yarn --cwd papiea-$p run build || exit 1; done",
     "build-all!": "yarn run clean-all && yarn run build-all",
     "publish-all": "yarn run build-all! && node publish-papiea.js"

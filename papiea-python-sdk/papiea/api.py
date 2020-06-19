@@ -6,7 +6,7 @@ from typing import Any, Optional, Type
 from aiohttp import ClientSession, ClientTimeout
 from multidict import CIMultiDict
 
-from papiea.python_sdk_exceptions import check_response
+from papiea.python_sdk_exceptions import check_response, PapieaBaseException, ApiException
 from papiea.utils import json_loads_attrs
 
 
@@ -15,7 +15,6 @@ class ApiInstance(object):
         self.base_url = base_url
         self.headers = headers
         self.timeout = timeout
-        # Shlomi: This does not work! 
         self.session = ClientSession(timeout=ClientTimeout(total=timeout))
         self.logger = logger
 
@@ -35,78 +34,117 @@ class ApiInstance(object):
         new_headers.update(self.headers)
         new_headers.update(headers)
         data_binary = json.dumps(data).encode("utf-8")
-        async with self.session.post(
-            self.base_url + "/" + prefix, data=data_binary, headers=new_headers
-        ) as resp:
-            await check_response(resp, self.logger)
-            res = await resp.text()
-        if res == "":
-            return None
-        return json_loads_attrs(res)
+        try:
+            async with self.session.post(
+                    self.base_url + "/" + prefix, data=data_binary, headers=new_headers
+            ) as resp:
+                await check_response(resp, self.logger)
+                res = await resp.text()
+            if res == "":
+                return None
+            return json_loads_attrs(res)
+        except PapieaBaseException as papiea_exception:
+            raise papiea_exception
+        except ApiException as api_exception:
+            raise api_exception
+        except Exception as e:
+            self.logger.debug("RENEWING SESSION")
+            await self.renew_session()
+            await self.post(prefix, data, headers)
 
     async def put(self, prefix: str, data: dict, headers: dict = {}) -> Any:
         new_headers = CIMultiDict()
         new_headers.update(self.headers)
         new_headers.update(headers)
         data_binary = json.dumps(data).encode("utf-8")
-        async with self.session.put(
-            self.base_url + "/" + prefix, data=data_binary, headers=new_headers
-        ) as resp:
-            await check_response(resp, self.logger)
-            res = await resp.text()
-        if res == "":
-            return None
-        return json_loads_attrs(res)
+        try:
+            async with self.session.put(
+                    self.base_url + "/" + prefix, data=data_binary, headers=new_headers
+            ) as resp:
+                await check_response(resp, self.logger)
+                res = await resp.text()
+            if res == "":
+                return None
+            return json_loads_attrs(res)
+        except PapieaBaseException as papiea_exception:
+            raise papiea_exception
+        except ApiException as api_exception:
+            raise api_exception
+        except Exception as e:
+            self.logger.debug("RENEWING SESSION")
+            await self.renew_session()
+            await self.put(prefix, data, headers)
 
     async def patch(self, prefix: str, data: dict, headers: dict = {}) -> Any:
         new_headers = CIMultiDict()
         new_headers.update(self.headers)
         new_headers.update(headers)
         data_binary = json.dumps(data).encode("utf-8")
-        this = self
-        async def patcher():
-            async with this.session.patch(
-                this.base_url + "/" + prefix, data=data_binary, headers=new_headers
+        try:
+            async with self.session.patch(
+                    self.base_url + "/" + prefix, data=data_binary, headers=new_headers
             ) as resp:
-                await check_response(resp, this.logger)
+                await check_response(resp, self.logger)
                 res = await resp.text()
             if res == "":
                 return None
             return json_loads_attrs(res)
-
-        try:
-            await patcher()
-        except:
+        except PapieaBaseException as papiea_exception:
+            raise papiea_exception
+        except ApiException as api_exception:
+            raise api_exception
+        except Exception as e:
             self.logger.debug("RENEWING SESSION")
-            await self.session.close()
-            self.session = ClientSession(timeout=ClientTimeout(total=self.timeout))
-            await patcher()
+            await self.renew_session()
+            await self.patch(prefix, data, headers)
 
     async def get(self, prefix: str, headers: dict = {}) -> Any:
         new_headers = CIMultiDict()
         new_headers.update(self.headers)
         new_headers.update(headers)
-        async with self.session.get(
-            self.base_url + "/" + prefix, headers=new_headers
-        ) as resp:
-            await check_response(resp, self.logger)
-            res = await resp.text()
-        if res == "":
-            return None
-        return json_loads_attrs(res)
+        try:
+            async with self.session.get(
+                    self.base_url + "/" + prefix, headers=new_headers
+            ) as resp:
+                await check_response(resp, self.logger)
+                res = await resp.text()
+            if res == "":
+                return None
+            return json_loads_attrs(res)
+        except PapieaBaseException as papiea_exception:
+            raise papiea_exception
+        except ApiException as api_exception:
+            raise api_exception
+        except Exception as e:
+            self.logger.debug("RENEWING SESSION")
+            await self.renew_session()
+            await self.get(prefix, headers=headers)
 
     async def delete(self, prefix: str, headers: dict = {}) -> Any:
         new_headers = CIMultiDict()
         new_headers.update(self.headers)
         new_headers.update(headers)
-        async with self.session.delete(
-            self.base_url + "/" + prefix, headers=new_headers
-        ) as resp:
-            await check_response(resp, self.logger)
-            res = await resp.text()
-        if res == "":
-            return None
-        return json_loads_attrs(res)
+        try:
+            async with self.session.delete(
+                    self.base_url + "/" + prefix, headers=new_headers
+            ) as resp:
+                await check_response(resp, self.logger)
+                res = await resp.text()
+            if res == "":
+                return None
+            return json_loads_attrs(res)
+        except PapieaBaseException as papiea_exception:
+            raise papiea_exception
+        except ApiException as api_exception:
+            raise api_exception
+        except Exception as e:
+            self.logger.debug("RENEWING SESSION")
+            await self.renew_session()
+            await self.delete(prefix, headers)
 
     async def close(self):
         await self.session.close()
+
+    async def renew_session(self):
+        await self.close()
+        self.session = ClientSession(timeout=ClientTimeout(total=self.timeout))

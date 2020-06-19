@@ -79,6 +79,7 @@ export class DiffResolver {
     }
 
     private async launchOperation(diff: Diff, metadata: Metadata, kind: Kind, spec: Spec, status: Status): Promise<[Diff, Delay]> {
+        let delay_time: number | undefined = undefined
         // This yields delay
         const result = await axios.post(diff.intentful_signature.procedure_callback, {
             metadata: metadata,
@@ -86,8 +87,12 @@ export class DiffResolver {
             status: status,
             input: diff.diff_fields
         })
+        if (result.data.delay_seconds !== undefined
+            && result.data.delay_seconds !== null && !Number.isNaN(result.data.delay_seconds)) {
+            delay_time = result.data.delay_seconds
+        }
         const delay = {
-            delay_seconds: result.data ?? kind.diff_delay ?? getRandomInt(10, 20),
+            delay_seconds: delay_time ?? kind.diff_delay ?? getRandomInt(10, 20),
             delaySetTime: new Date()
         }
         // This should be a concrete address of a handling process
@@ -119,6 +124,7 @@ export class DiffResolver {
             let metadata: Metadata | undefined, kind: Kind | undefined, spec: Spec | undefined, status: Status | undefined
             if (current_diff && current_delay) {
                 // Delay for rediffing
+                const del = (new Date().getTime() - current_delay.delaySetTime.getTime()) / 1000
                 if ((new Date().getTime() - current_delay.delaySetTime.getTime()) / 1000 > current_delay.delay_seconds) {
                     const result = await this.rediff(entry_reference)
                     if (!result) {
@@ -149,7 +155,7 @@ export class DiffResolver {
                         }
                     }
                 } else {
-                    // Time for rediff hasn't come continuing
+                    // Time for rediff hasn't come, continuing
                     continue
                 }
             }
@@ -221,7 +227,9 @@ export class DiffResolver {
         const entities = await this.specDb.list_random_intentful_specs(batch_size, intentful_kind_refs)
 
         for (let [metadata, _] of entities) {
-            this.watchlist.set(metadata.uuid, [create_entry(metadata), undefined, undefined])
+            if (!this.watchlist.has(metadata.uuid)) {
+                this.watchlist.set(metadata.uuid, [create_entry(metadata), undefined, undefined])
+            }
         }
         return this.watchlistDb.update_watchlist(this.watchlist)
     }

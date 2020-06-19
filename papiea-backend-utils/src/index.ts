@@ -3,7 +3,9 @@ import {
     LoggerFactory,
 } from './logging';
 
+import {dotnotation} from './dotnotation'
+
 export {
     LOG_LEVELS, LogLevel, logLevelFromString, LoggerOptions, Logger,
-    LoggerFactory,
+    LoggerFactory, dotnotation
 };

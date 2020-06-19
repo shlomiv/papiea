@@ -3379,11 +3379,6 @@ mnemonist@^0.30.0:
   dependencies:
     obliterator "^1.5.0"
 
-mongo-dot-notation-tool@^1.0.1:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/mongo-dot-notation-tool/-/mongo-dot-notation-tool-1.0.1.tgz#d85ab666dd0af5c7fa186c60e6140b45c308789a"
-  integrity sha1-2Fq2Zt0K9cf6GGxg5hQLRcMIeJo=
-
 mongodb@^3.1.10:
   version "3.5.7"
   resolved "https://registry.yarnpkg.com/mongodb/-/mongodb-3.5.7.tgz#6dcfff3bdbf67a53263dcca1647c265eea1d065d"
@@ -3744,7 +3739,7 @@ package-json@^4.0.0:
   version "1.0.86"
   dependencies:
     logform "^2.1.2"
-    papiea-core "file:../../../Library/Caches/Yarn/v6/npm-papiea-backend-utils-1.0.86-89c01fd6-991e-4cce-b771-e70bfa54f426-1591704139164/node_modules/papiea-core"
+    papiea-core "file:../../../../home/ubuntu/.cache/yarn/v6/npm-papiea-backend-utils-1.0.86-5d3fb6f6-ac53-4012-834f-d885d55856da-1591914710959/node_modules/papiea-core"
     winston "^3.2.1"
 
 "papiea-core@file:../papiea-core":

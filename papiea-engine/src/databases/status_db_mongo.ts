@@ -1,10 +1,9 @@
 import { Status_DB } from "./status_db_interface";
 import { Db, Collection } from "mongodb";
 import { datestringToFilter } from "./utils/date";
-import { encode } from "mongo-dot-notation-tool"
 import { Entity_Reference, Status, Metadata, Entity } from "papiea-core";
 import { SortParams } from "../entity/entity_api_impl";
-import { Logger } from "papiea-backend-utils";
+import { Logger, dotnotation } from "papiea-backend-utils";
 import { deepMerge, isEmpty } from "../utils/utils"
 import { build_filter_query } from "./utils/filtering"
 
@@ -41,12 +40,12 @@ export class Status_DB_Mongo implements Status_DB {
     }
 
     async update_status(entity_ref: Entity_Reference, status: Status): Promise<void> {
-        const partial_status_query = encode({"status": status});
+        const partial_status_query = dotnotation({"status": status});
         const result = await this.collection.updateOne({
             "metadata.uuid": entity_ref.uuid,
             "metadata.kind": entity_ref.kind
         }, {
-                $set: partial_status_query
+                $set: partial_status_query               
             });
         if (result.result.n !== 1) {
             throw new Error(`Amount of updated entries doesn't equal to 1: ${result.result.n}`)

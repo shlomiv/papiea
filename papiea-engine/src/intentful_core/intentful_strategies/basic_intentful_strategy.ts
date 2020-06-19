@@ -4,7 +4,6 @@ import { Status_DB } from "../../databases/status_db_interface"
 import { Metadata, Spec } from "papiea-core"
 import { IntentfulTask } from "../../tasks/task_interface"
 
-
 export class BasicIntentfulStrategy extends IntentfulStrategy {
     constructor(specDb: Spec_DB, statusDb: Status_DB) {
         super(specDb, statusDb)

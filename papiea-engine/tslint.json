@@ -28,7 +28,8 @@
         "no-console": [false],
         "no-var-requires": false,
         "ter-arrow-parens": [true, "as-needed"],
-        "no-shadowed-variable": false
+        "no-shadowed-variable": false,
+        "max-classes-per-file": [false, 1]
     },
     "rulesDirectory": []
 }

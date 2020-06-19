@@ -1,36 +1,35 @@
-import { PapieaResponse } from "papiea-core";
-import { EntityNotFoundError, ConflictingEntityError } from "../databases/utils/errors";
-import { ValidationError } from "./validation_error";
-import { ProcedureInvocationError } from "./procedure_invocation_error";
-import { PermissionDeniedError, UnauthorizedError } from "./permission_error";
-import { BadRequestError } from "./bad_request_error";
-import { PapieaError } from "papiea-core";
-
+import { PapieaResponse, PapieaError } from "papiea-core"
+import { EntityNotFoundError, ConflictingEntityError } from "../databases/utils/errors"
+import { ValidationError } from "./validation_error"
+import { ProcedureInvocationError } from "./procedure_invocation_error"
+import { PermissionDeniedError, UnauthorizedError } from "./permission_error"
+import { BadRequestError } from "./bad_request_error"
 
 export class PapieaErrorResponseImpl implements PapieaResponse {
     error: {
         errors: { [key: string]: any }[],
         code: number
         message: string,
-        type: PapieaError
+        type: PapieaError,
     }
 
-    constructor(code: number, errorMsg: string, type: PapieaError, errors?: { [key: string]: any }[]) {
+    constructor(code: number, errorMsg: string,
+                type: PapieaError, errors?: { [key: string]: any }[]) {
         if (errors) {
             this.error = {
                 code,
                 errors,
                 message: errorMsg,
-                type
+                type,
             }
         } else {
             this.error = {
                 code,
                 errors: [
-                    { message: errorMsg }
+                    { message: errorMsg },
                 ],
                 message: errorMsg,
-                type
+                type,
             }
         }
 
@@ -38,12 +37,16 @@ export class PapieaErrorResponseImpl implements PapieaResponse {
 
     public toString() {
         const error_details = this.error.errors.reduce((acc, current) => {
-            for (let prop in current) {
-                acc = `${acc}; 
+            for (const prop in current) {
+                if (!current.hasOwnProperty(prop)) {
+                    continue
+                }
+                // tslint:disable-next-line:no-parameter-reassignment
+                acc = `${acc};
                 Cause: ${prop} - Error: ${current[prop]}`
             }
             return acc
-        }, "")
+        },                                             "")
         return `Error msg: ${this.error.message}. Details: ${error_details}`
     }
 
@@ -56,16 +59,17 @@ export class PapieaErrorResponseImpl implements PapieaResponse {
     }
 
     static create(err: Error) {
-        let errorPayload: { message: string }[];
+        let errorPayload: { message: string }[]
         switch (err.constructor) {
             case BadRequestError:
                 return new PapieaErrorResponseImpl(400, "Bad Request", PapieaError.BadRequest,
-                    [{ message: err.message }])
+                                                   [{ message: err.message }])
             case ValidationError:
                 errorPayload = (err as ValidationError).errors.map(description => {
                     return { message: description }
                 })
-                return new PapieaErrorResponseImpl(400, "Validation failed.", PapieaError.Validation, errorPayload)
+                return new PapieaErrorResponseImpl(400, "Validation failed.",
+                                                   PapieaError.Validation, errorPayload)
             case ProcedureInvocationError:
                 return new PapieaErrorResponseImpl((err as ProcedureInvocationError).status, "Procedure invocation failed.", PapieaError.ProcedureInvocation, (err as ProcedureInvocationError).errors)
             case EntityNotFoundError:
@@ -78,10 +82,11 @@ export class PapieaErrorResponseImpl implements PapieaResponse {
             case UnauthorizedError:
                 return new PapieaErrorResponseImpl(401, "Unauthorized.", PapieaError.Unauthorized)
             case PermissionDeniedError:
-                return new PapieaErrorResponseImpl(403, "Permission denied.", PapieaError.PermissionDenied)
+                return new PapieaErrorResponseImpl(403, "Permission denied.",
+                                                   PapieaError.PermissionDenied)
             case ConflictingEntityError:
-                let conflictingError = err as ConflictingEntityError
-                let metadata = conflictingError.existing_metadata
+                const conflictingError = err as ConflictingEntityError
+                const metadata = conflictingError.existing_metadata
 
                 return new PapieaErrorResponseImpl(409, `Conflicting Entity: ${metadata.uuid}. Existing entity has version ${metadata.spec_version}`, PapieaError.ConflictingEntity)
             default:

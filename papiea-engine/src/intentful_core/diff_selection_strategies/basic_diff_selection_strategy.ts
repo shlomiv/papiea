@@ -1,6 +1,6 @@
-import { DiffSelectionStrategyInterface } from "./diff_selection_strategy_interface";
-import { Diff } from "papiea-core";
-import * as assert from "assert";
+import { DiffSelectionStrategyInterface } from "./diff_selection_strategy_interface"
+import { Diff } from "papiea-core"
+import * as assert from "assert"
 
 export class BasicDiffSelectionStrategy implements DiffSelectionStrategyInterface{
 

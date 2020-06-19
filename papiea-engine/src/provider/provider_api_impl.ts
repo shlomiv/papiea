@@ -51,23 +51,16 @@ export class ProviderAPIImpl implements ProviderAPI {
         return this.authorizer.filter(user, providers, Action.ReadProvider)
     }
 
-    async unregister_provider(
-        user: UserAuthInfo, provider_prefix: string, version: Version,
-    ): Promise<void> {
+    async unregister_provider(user: UserAuthInfo,
+                              provider_prefix: string, version: Version): Promise<void> {
         await this.authorizer.checkPermission(
-            user, { prefix: provider_prefix }, Action.UnregisterProvider,
-        )
+            user, { prefix: provider_prefix }, Action.UnregisterProvider)
         return this.providerDb.delete_provider(provider_prefix, version)
     }
 
-    async replace_status(
-        user: UserAuthInfo,
-        provider_prefix: string,
-        version: Version,
-        context: any,
-        entity_ref: Entity_Reference,
-        status: Status,
-    ): Promise<void> {
+    async replace_status(user: UserAuthInfo, provider_prefix: string,
+                         version: Version, context: any,
+                         entity_ref: Entity_Reference, status: Status): Promise<void> {
         const provider: Provider = await this.providerDb.get_provider(provider_prefix, version)
         const kind = this.providerDb.find_kind(provider, entity_ref.kind)
         const strategy = this.intentfulContext.getStatusUpdateStrategy(kind, user)
@@ -81,14 +74,8 @@ export class ProviderAPIImpl implements ProviderAPI {
         return strategy.replace(entity_ref, status)
     }
 
-    async update_status(
-        user: UserAuthInfo,
-        provider_prefix: string,
-        version: Version,
-        context: any,
-        entity_ref: Entity_Reference,
-        partialStatus: Status,
-    ): Promise<void> {
+    async update_status(user: UserAuthInfo, provider_prefix: string, version: Version, context: any,
+                        entity_ref: Entity_Reference, partialStatus: Status): Promise<void> {
         const provider: Provider = await this.providerDb.get_provider(provider_prefix, version)
         const kind = this.providerDb.find_kind(provider, entity_ref.kind)
         const strategy = this.intentfulContext.getStatusUpdateStrategy(kind, user)
@@ -109,45 +96,38 @@ export class ProviderAPIImpl implements ProviderAPI {
         return strategy.update(entity_ref, partialStatus)
     }
 
-    async update_progress(
-        user: UserAuthInfo, context: any, message: string, done_percent: number,
-    ): Promise<void> {
+    async update_progress(user: UserAuthInfo, context: any,
+                          message: string, done_percent: number): Promise<void> {
         // TODO(adolgarev)
         throw new Error("Not implemented")
     }
 
-    async power(
-        user: UserAuthInfo, provider_prefix: string, version: Version, power_state: Provider_Power,
-    ): Promise<void> {
+    async power(user: UserAuthInfo, provider_prefix: string,
+                version: Version, power_state: Provider_Power): Promise<void> {
         // TODO(adolgarev)
         throw new Error("Not implemented")
     }
 
-    private async get_provider_unchecked(
-        provider_prefix: string, provider_version: Version,
-    ): Promise<Provider> {
+    private async get_provider_unchecked(provider_prefix: string,
+                                         provider_version: Version): Promise<Provider> {
         return this.providerDb.get_provider(provider_prefix, provider_version)
     }
 
-    async get_provider(
-        user: UserAuthInfo, provider_prefix: string, provider_version: Version,
-    ): Promise<Provider> {
+    async get_provider(user: UserAuthInfo, provider_prefix: string,
+                       provider_version: Version): Promise<Provider> {
         await this.authorizer.checkPermission(
             user, { prefix: provider_prefix }, Action.ReadProvider,
         )
         return this.providerDb.get_provider(provider_prefix, provider_version)
     }
 
-    async list_providers_by_prefix(
-        user: UserAuthInfo, provider_prefix: string,
-    ): Promise<Provider[]> {
+    async list_providers_by_prefix(user: UserAuthInfo,
+                                   provider_prefix: string): Promise<Provider[]> {
         const res = await this.providerDb.find_providers(provider_prefix)
         return this.authorizer.filter(user, res, Action.ReadProvider)
     }
 
-    async get_latest_provider(
-        user: UserAuthInfo, provider_prefix: string,
-    ): Promise<Provider> {
+    async get_latest_provider(user: UserAuthInfo, provider_prefix: string): Promise<Provider> {
         return this.providerDb.get_latest_provider(provider_prefix)
     }
 
@@ -155,12 +135,10 @@ export class ProviderAPIImpl implements ProviderAPI {
         return await this.providerDb.get_latest_provider_by_kind(kind_name)
     }
 
-    async update_auth(
-        user: UserAuthInfo, provider_prefix: string, provider_version: Version, auth: any,
-    ): Promise<void> {
-        const provider: Provider = await this.get_provider_unchecked(
-            provider_prefix, provider_version,
-        )
+    async update_auth(user: UserAuthInfo, provider_prefix: string,
+                      provider_version: Version, auth: any): Promise<void> {
+        const provider: Provider = await this.get_provider_unchecked(provider_prefix,
+                                                                     provider_version)
         await this.authorizer.checkPermission(user, provider, Action.UpdateAuth)
         if (auth.authModel !== undefined) {
             provider.authModel = auth.authModel
@@ -179,14 +157,8 @@ export class ProviderAPIImpl implements ProviderAPI {
         this.eventEmitter.on("authChange", callbackfn)
     }
 
-    async create_key(
-        user: UserAuthInfo,
-        name: string,
-        owner: string,
-        provider_prefix: string,
-        user_info?: any,
-        key?: Secret,
-    ): Promise<S2S_Key> {
+    async create_key(user: UserAuthInfo, name: string, owner: string,
+                     provider_prefix: string, user_info?: any, key?: Secret): Promise<S2S_Key> {
         // - name is not mandatory, displayed in UI
         // - owner is the owner of the key (usually email),
         // it is not unique, different providers may have same owner

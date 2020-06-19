@@ -2,7 +2,7 @@ export class OnActionError extends Error {
     static ON_CREATE = "__create"
     static ON_DELETE = "__delete"
 
-    message: string;
+    message: string
 
     constructor(reason: string, procedure_name: string) {
         let message: string

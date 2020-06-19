@@ -480,9 +480,14 @@ export class Kind_Builder {
             },
             result: {
                 IntentfulOutput: {
-                    type: 'integer',
+                    type: 'object',
                     nullable: true,
-                    description: "Delay for intentful operation"
+                    properties: {
+                        delay_secs: {
+                            type: "integer"
+                        }
+                    },
+                    description: "Amount of seconds to wait before this entity will be checked again by the intent engine"
                 }
             },
             execution_strategy: Intentful_Execution_Strategy.Basic,

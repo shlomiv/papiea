@@ -53,29 +53,12 @@ async function setUpDiffResolver() {
     const intentfulListenerMongo = new IntentfulListenerMongo(statusDb, specDb, watchlist)
     intentfulListenerMongo.run(500)
 
-    const diffResolver = new DiffResolver(
-        watchlist,
-        watchlistDb,
-        specDb,
-        statusDb,
-        providerDb,
-        differ,
-        intentfulContext,
-        logger,
-        batchSize,
-    )
+    const diffResolver = new DiffResolver(watchlist, watchlistDb, specDb, statusDb,
+                                          providerDb, differ, intentfulContext, logger, batchSize)
 
-    const taskResolver = new TaskResolver(
-        specDb,
-        statusDb,
-        intentfulTaskDb,
-        providerDb,
-        intentfulListenerMongo,
-        differ,
-        diffResolver,
-        watchlist,
-        logger,
-    )
+    const taskResolver = new TaskResolver(specDb, statusDb, intentfulTaskDb, providerDb,
+                                          intentfulListenerMongo, differ, diffResolver,
+                                          watchlist, logger)
 
     console.log("Running diff resolver")
 

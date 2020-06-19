@@ -16,8 +16,7 @@ function validatePaginationParams(offset: number | undefined, limit: number | un
 }
 
 export function processPaginationParams(
-    offset: number | undefined, limit: number | undefined,
-): [number, number] {
+    offset: number | undefined, limit: number | undefined): [number, number] {
     let skip = 0
     let size = 30
     if (!offset && !limit) {

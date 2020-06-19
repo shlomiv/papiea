@@ -47,10 +47,8 @@ export class TaskResolver {
     }
 
     private static getIntersection(
-        current_diffs: Diff[],
-        task_diffs: Diff[],
-        predicate: (curr_diff: Diff, task_diff: Diff) => boolean,
-    ): Set<Diff> {
+        current_diffs: Diff[], task_diffs: Diff[],
+        predicate: (curr_diff: Diff, task_diff: Diff) => boolean): Set<Diff> {
         const intersection: Set<Diff> = new Set()
         for (const diff of current_diffs) {
             for (const task_diff of task_diffs) {
@@ -86,15 +84,13 @@ export class TaskResolver {
 
     private async rediff(entity: Entity): Promise<Diff[]> {
         const provider = await this.providerDb.get_provider(
-            entity.metadata.provider_prefix, entity.metadata.provider_version,
-        )
+            entity.metadata.provider_prefix, entity.metadata.provider_version)
         const kind = this.providerDb.find_kind(provider, entity.metadata.kind)
         return this.differ.all_diffs(kind, entity.spec, entity.status)
     }
 
     private async processOutdatedTasks(
-        tasks: IntentfulTask[], entity: Entity,
-    ): Promise<IntentfulTask[]> {
+        tasks: IntentfulTask[], entity: Entity): Promise<IntentfulTask[]> {
         const diffs = await this.rediff(entity)
         for (const task of tasks) {
             if (TaskResolver.inTerminalState(task)) {
@@ -102,10 +98,8 @@ export class TaskResolver {
             }
             assert(task.spec_version < entity.metadata.spec_version, "Outdated task has spec version equal or higher than current")
             const intersection = TaskResolver.getIntersection(
-                diffs,
-                task.diffs,
-                (diff, task_diff) => deepEqual(diff.diff_fields, task_diff.diff_fields),
-            )
+                diffs, task.diffs,
+                (diff, task_diff) => deepEqual(diff.diff_fields, task_diff.diff_fields))
             if (intersection.size === 0) {
                 task.status = IntentfulStatus.Completed_Successfully
             } else if (intersection.size < task.diffs.length) {
@@ -137,9 +131,8 @@ export class TaskResolver {
         return active
     }
 
-    private async processPendingTasks(
-        pending: IntentfulTask[], entity: Entity,
-    ): Promise<IntentfulTask[]> {
+    private async processPendingTasks(pending: IntentfulTask[],
+                                      entity: Entity): Promise<IntentfulTask[]> {
         const diffs = await this.rediff(entity)
         for (const task of pending) {
             const intersection = TaskResolver.getIntersection(
@@ -162,8 +155,7 @@ export class TaskResolver {
     private async onChange(entity: Entity) {
         try {
             const tasks = await this.intentfulTaskDb.list_tasks(
-                { entity_ref: { uuid: entity.metadata.uuid, kind: entity.metadata.kind } },
-            )
+                { entity_ref: { uuid: entity.metadata.uuid, kind: entity.metadata.kind } })
             const current_spec_version = entity.metadata.spec_version
             const latest_task = this.getLatestTask(tasks)
             if (latest_task &&

@@ -14,69 +14,39 @@ export interface ProviderAPI {
     list_providers(user: UserAuthInfo): Promise<Provider[]>
 
     // DELETE "/provider/{prefix}/{version}"
-    unregister_provider(
-        user: UserAuthInfo, provider_prefix: string, version: Version,
-    ): Promise<void>
+    unregister_provider(user: UserAuthInfo, provider_prefix: string,
+                        version: Version): Promise<void>
 
     // Replace status with a specified one
-    replace_status(
-        user: UserAuthInfo,
-        provider_prefix: string,
-        version: Version,
-        context: any,
-        entity_ref: Entity_Reference,
-        status: Status,
-    ): Promise<void>
+    replace_status(user: UserAuthInfo, provider_prefix: string, version: Version, context: any,
+                   entity_ref: Entity_Reference, status: Status): Promise<void>
 
     // POST "/provider/update_progress"
-    update_progress(
-        user: UserAuthInfo,
-        provider_prefix: string,
-        version: Version,
-        context: any,
-        message: string,
-        done_percent: number,
-    ): Promise<void>
+    update_progress(user: UserAuthInfo, provider_prefix: string, version: Version, context: any,
+                    message: string, done_percent: number): Promise<void>
 
-    power(
-        user: UserAuthInfo, provider_prefix: string, version: Version, power_state: Provider_Power,
-    ): Promise<void>
+    power(user: UserAuthInfo, provider_prefix: string,
+          version: Version, power_state: Provider_Power): Promise<void>
 
     get_latest_provider_by_kind(user: UserAuthInfo, kind_name: string): Promise<Provider>
 
-    get_provider(
-        user: UserAuthInfo, provider_prefix: string, provider_version: Version,
-    ): Promise<Provider>
+    get_provider(user: UserAuthInfo, provider_prefix: string,
+                 provider_version: Version): Promise<Provider>
 
-    list_providers_by_prefix(
-        user: UserAuthInfo, provider_prefix: string,
-    ): Promise<Provider[]>
+    list_providers_by_prefix(user: UserAuthInfo, provider_prefix: string): Promise<Provider[]>
 
     get_latest_provider(user: UserAuthInfo, provider_prefix: string): Promise<Provider>
 
-    update_auth(
-        user: UserAuthInfo, provider_prefix: string, provider_version: Version, auth: any,
-    ): Promise<void>
+    update_auth(user: UserAuthInfo, provider_prefix: string,
+                provider_version: Version, auth: any): Promise<void>
 
     on_auth_change(callbackfn: (provider: Provider) => void): void
 
-    update_status(
-        user: UserAuthInfo,
-        provider_prefix: string,
-        version: Version,
-        context: any,
-        entity_ref: Entity_Reference,
-        status: Status,
-    ): Promise<void>
+    update_status(user: UserAuthInfo, provider_prefix: string, version: Version, context: any,
+                  entity_ref: Entity_Reference, status: Status): Promise<void>
 
-    create_key(
-        user: UserAuthInfo,
-        name: string,
-        owner: string,
-        provider_prefix: string,
-        extension?: any,
-        key?: string,
-    ): Promise<S2S_Key>
+    create_key(user: UserAuthInfo, name: string, owner: string,
+               provider_prefix: string, extension?: any, key?: string): Promise<S2S_Key>
 
     get_key(user: UserAuthInfo, uuid: string): Promise<S2S_Key>
 

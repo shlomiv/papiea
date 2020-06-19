@@ -122,12 +122,8 @@ export class ValidatorImpl {
         }
     }
 
-    public validate(
-        data: any,
-        model: any | undefined,
-        models: any, allowExtraProps: boolean,
-        schemaName: string, procedureName?: string,
-    ) {
+    public validate(data: any, model: any | undefined, models: any, allowExtraProps: boolean,
+                    schemaName: string, procedureName?: string) {
         const validatorDenyExtraProps = !allowExtraProps
         const allowBlankTarget = false
         if (modelIsEmpty(model)) {

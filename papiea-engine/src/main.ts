@@ -19,8 +19,9 @@ import { SessionKeyAPI, SessionKeyUserAuthInfoExtractor } from "./auth/session_k
 import { IntentfulContext } from "./intentful_core/intentful_context"
 import { AuditLogger } from "./audit_logging"
 import { BasicDiffer } from "./intentful_core/differ_impl"
-import createAPIDocsRouter from "./api_docs/api_docs_routes"
 import { ApiDocsGenerator } from "./api_docs/api_docs_generator"
+import { createProviderAPIRouter } from "./provider/provider_routes"
+import { createAPIDocsRouter } from "./api_docs/api_docs_routes"
 
 const cookieParser = require("cookie-parser")
 
@@ -66,23 +67,10 @@ async function setUpApplication(): Promise<express.Express> {
     const sessionKeyDb = await mongoConnection.get_session_key_db(logger)
     const watchlistDb = await mongoConnection.get_watchlist_db(logger)
     const validator = new ValidatorImpl()
-    const intentfulContext = new IntentfulContext(
-        specDb,
-        statusDb,
-        differ,
-        intentfulTaskDb,
-        watchlistDb,
-    )
-    const providerApi = new ProviderAPIImpl(
-        logger,
-        providerDb,
-        statusDb,
-        s2skeyDb,
-        watchlistDb,
-        intentfulContext,
-        new AdminAuthorizer(),
-        validator,
-    )
+    const intentfulContext = new IntentfulContext(specDb, statusDb, differ,
+                                                  intentfulTaskDb, watchlistDb)
+    const providerApi = new ProviderAPIImpl(logger, providerDb, statusDb, s2skeyDb, watchlistDb,
+                                            intentfulContext, new AdminAuthorizer(), validator)
     const sessionKeyApi = new SessionKeyAPI(sessionKeyDb)
     const userAuthInfoExtractor = new CompositeUserAuthInfoExtractor([
         new AdminUserAuthInfoExtractor(adminKey),
@@ -92,21 +80,11 @@ async function setUpApplication(): Promise<express.Express> {
     app.use(createAuthnRouter(logger, userAuthInfoExtractor))
     app.use(createOAuth2Router(logger, oauth2RedirectUri, providerDb, sessionKeyApi))
     const entityApiAuthorizer: Authorizer = new PerProviderAuthorizer(
-        logger,
-        providerApi,
-        new ProviderCasbinAuthorizerFactory(logger),
-    )
+        logger, providerApi, new ProviderCasbinAuthorizerFactory(logger))
+    app.use("/provider", createProviderAPIRouter(providerApi))
     app.use("/services", createEntityAPIRouter(
-        new EntityAPIImpl(
-            logger,
-            statusDb,
-            specDb,
-            providerDb,
-            intentfulTaskDb,
-            entityApiAuthorizer,
-            validator,
-            intentfulContext,
-        ),
+        new EntityAPIImpl(logger, statusDb, specDb, providerDb, intentfulTaskDb,
+                          entityApiAuthorizer, validator, intentfulContext),
     ))
     app.use("/api-docs", createAPIDocsRouter(
         "/api-docs", new ApiDocsGenerator(providerDb), providerDb),

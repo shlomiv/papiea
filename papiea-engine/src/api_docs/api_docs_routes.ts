@@ -8,7 +8,7 @@ import { resolve } from "path";
 
 const admin_swagger = readFileSync(resolve(__dirname, 'admin_swagger.json'), 'utf8');
 
-export default function createAPIDocsRouter(urlPrefix: string, apiDocsGenerator: ApiDocsGenerator, providerDb: Provider_DB) {
+export function createAPIDocsRouter(urlPrefix: string, apiDocsGenerator: ApiDocsGenerator, providerDb: Provider_DB) {
     const apiDocsRouter = Router();
 
     apiDocsRouter.use('/', serve);

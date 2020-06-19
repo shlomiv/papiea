@@ -48,8 +48,7 @@ export class IntentfulTaskMapper {
     }
 
     public static filter(
-        intentfulTasks: IntentfulTask[], entities: [Metadata, Spec][],
-    ): IntentfulTask[] {
+        intentfulTasks: IntentfulTask[], entities: [Metadata, Spec][]): IntentfulTask[] {
         const tasks: IntentfulTask[] = []
         entities.forEach(entity => {
             intentfulTasks.forEach(task => {

@@ -20,17 +20,24 @@ interface PaginatedResult {
 export function createEntityAPIRouter(entity_api: EntityAPI): Router {
     const router = Router()
 
-    const paginateEntities = async function (entities: any, skip: number, size: number): Promise<PaginatedResult> {
+    const paginateEntities = async (entities: any, skip: number,
+                                    size: number): Promise<PaginatedResult> => {
         const totalEntities: number = entities.length
         const pageEntities = entities.slice(skip, skip + size)
 
         return { results: pageEntities, entity_count: totalEntities }
     }
 
-    const filterEntities = async function (user: UserAuthInfo, kind_name: string, filter: any, skip: number, size: number, exactMatch: boolean, sortParams?: SortParams): Promise<any> {
-        const resultSpecs: any[] = await entity_api.filter_entity_spec(user, kind_name, filter, exactMatch, sortParams)
+    const filterEntities = async (user: UserAuthInfo, kind_name: string,
+                                  filter: any, skip: number, size: number,
+                                  exactMatch: boolean, sortParams?: SortParams): Promise<any> => {
+        const resultSpecs: any[] = await entity_api.filter_entity_spec(user, kind_name,
+                                                                       filter, exactMatch,
+                                                                       sortParams)
 
-        const resultStatuses: any[] = await entity_api.filter_entity_status(user, kind_name, filter, exactMatch, sortParams)
+        const resultStatuses: any[] = await entity_api.filter_entity_status(user, kind_name,
+                                                                            filter, exactMatch,
+                                                                            sortParams)
 
         const uuidToEntity: { [key: string]: any } = {}
 
@@ -48,9 +55,11 @@ export function createEntityAPIRouter(entity_api: EntityAPI): Router {
         return paginateEntities(entities, skip, size)
     }
 
-    router.post("/:prefix/:version/check_permission", CheckNoQueryParams, asyncHandler(async (req, res) => {
-        res.json(await entity_api.check_permission(req.user, req.params.prefix, req.params.version, req.body))
-    }))
+    router.post("/:prefix/:version/check_permission",
+                CheckNoQueryParams, asyncHandler(async (req, res) => {
+                    res.json(await entity_api.check_permission(req.user, req.params.prefix,
+                                                               req.params.version, req.body))
+                }))
 
     router.get("/intentful_task/:id", CheckNoQueryParams, asyncHandler(async (req, res) => {
         res.json(await entity_api.get_intentful_task(req.user, req.params.id))
@@ -116,14 +125,18 @@ export function createEntityAPIRouter(entity_api: EntityAPI): Router {
         filter.status = JSON.parse(queryToString(req.query.status) ?? "{}")
         filter.metadata = JSON.parse(queryToString(req.query.metadata) ?? "{}")
 
-        res.json(await filterEntities(req.user, req.params.kind, filter, skip, size, exactMatch, sortParams))
+        res.json(await filterEntities(req.user, req.params.kind,
+                                      filter, skip, size, exactMatch, sortParams))
     }))
 
-    router.get("/:prefix/:version/:kind/:uuid", CheckNoQueryParams, asyncHandler(async (req, res) => {
-        const [metadata, spec] = await entity_api.get_entity_spec(req.user, req.params.kind, req.params.uuid)
-        const [_, status] = await entity_api.get_entity_status(req.user, req.params.kind, req.params.uuid)
-        res.json({ metadata: metadata, spec: spec, status: status })
-    }))
+    router.get("/:prefix/:version/:kind/:uuid",
+               CheckNoQueryParams, asyncHandler(async (req, res) => {
+                   const [metadata, spec] = await entity_api.get_entity_spec(
+                       req.user, req.params.kind, req.params.uuid)
+                   const [_, status] = await entity_api.get_entity_status(
+                       req.user, req.params.kind, req.params.uuid)
+                   res.json({ metadata, spec, status })
+               }))
 
     router.post("/:prefix/:version/:kind/filter", check_request({
         allowed_query_params: ["offset", "limit", "sort", "exact"],
@@ -152,7 +165,8 @@ export function createEntityAPIRouter(entity_api: EntityAPI): Router {
             filter.metadata = {}
         }
 
-        res.json(await filterEntities(req.user, req.params.kind, filter, skip, size, exactMatch, sortParams))
+        res.json(await filterEntities(req.user, req.params.kind,
+                                      filter, skip, size, exactMatch, sortParams))
     }))
 
     router.put("/:prefix/:version/:kind/:uuid", check_request({
@@ -160,8 +174,11 @@ export function createEntityAPIRouter(entity_api: EntityAPI): Router {
         allowed_body_params: ["metadata", "spec"],
     }),        asyncHandler(async (req, res) => {
         const request_metadata = req.body.metadata
-        const task = await entity_api.update_entity_spec(req.user, req.params.uuid, req.params.prefix, request_metadata.spec_version, request_metadata.extension, req.params.kind, req.params.version, req.body.spec)
-        res.json({ task: task })
+        const task = await entity_api.update_entity_spec(
+            req.user, req.params.uuid,
+            req.params.prefix, request_metadata.spec_version,
+            request_metadata.extension, req.params.kind, req.params.version, req.body.spec)
+        res.json({ task })
     }))
 
     router.post("/:prefix/:version/:kind", check_request({
@@ -169,34 +186,52 @@ export function createEntityAPIRouter(entity_api: EntityAPI): Router {
         allowed_body_params: ["metadata", "spec"],
     }),         asyncHandler(async (req, res) => {
         if (req.params.status) {
-            const [metadata, spec] = await entity_api.save_entity(req.user, req.params.prefix, req.params.kind, req.params.version, req.body.spec, req.body.metadata)
-            res.json({ metadata: metadata, spec: spec })
+            const [metadata, spec] = await entity_api.save_entity(
+                req.user, req.params.prefix,
+                req.params.kind, req.params.version, req.body.spec, req.body.metadata)
+            res.json({ metadata, spec })
         } else {
             // Spec only entity
-            const [metadata, spec] = await entity_api.save_entity(req.user, req.params.prefix, req.params.kind, req.params.version, req.body.spec, req.body.metadata)
-            res.json({ metadata: metadata, spec: spec })
+            const [metadata, spec] = await entity_api.save_entity(
+                req.user, req.params.prefix,
+                req.params.kind, req.params.version, req.body.spec, req.body.metadata)
+            res.json({ metadata, spec })
         }
     }))
 
-    router.delete("/:prefix/:version/:kind/:uuid", CheckNoQueryParams, asyncHandler(async (req, res) => {
-        await entity_api.delete_entity_spec(req.user, req.params.prefix, req.params.version, req.params.kind, req.params.uuid)
-        res.json("OK")
-    }))
+    router.delete("/:prefix/:version/:kind/:uuid",
+                  CheckNoQueryParams, asyncHandler(async (req, res) => {
+                      await entity_api.delete_entity_spec(
+                          req.user, req.params.prefix,
+                          req.params.version, req.params.kind, req.params.uuid)
+                      res.json("OK")
+                  }))
 
-    router.post("/:prefix/:version/:kind/:uuid/procedure/:procedure_name", CheckProcedureCallParams, asyncHandler(async (req, res) => {
-        const result: any = await entity_api.call_procedure(req.user, req.params.prefix, req.params.kind, req.params.version, req.params.uuid, req.params.procedure_name, req.body.input)
-        res.json(result)
-    }))
+    router.post("/:prefix/:version/:kind/:uuid/procedure/:procedure_name",
+                CheckProcedureCallParams, asyncHandler(async (req, res) => {
+                    const result: any = await entity_api.call_procedure(
+                        req.user, req.params.prefix,
+                        req.params.kind, req.params.version,
+                        req.params.uuid, req.params.procedure_name, req.body.input)
+                    res.json(result)
+                }))
 
-    router.post("/:prefix/:version/:kind/procedure/:procedure_name", CheckProcedureCallParams, asyncHandler(async (req, res) => {
-        const result: any = await entity_api.call_kind_procedure(req.user, req.params.prefix, req.params.kind, req.params.version, req.params.procedure_name, req.body.input)
-        res.json(result)
-    }))
+    router.post("/:prefix/:version/:kind/procedure/:procedure_name",
+                CheckProcedureCallParams, asyncHandler(async (req, res) => {
+                    const result: any = await entity_api.call_kind_procedure(
+                        req.user, req.params.prefix,
+                        req.params.kind, req.params.version,
+                        req.params.procedure_name, req.body.input)
+                    res.json(result)
+                }))
 
-    router.post("/:prefix/:version/procedure/:procedure_name", CheckProcedureCallParams, asyncHandler(async (req, res) => {
-        const result: any = await entity_api.call_provider_procedure(req.user, req.params.prefix, req.params.version, req.params.procedure_name, req.body.input)
-        res.json(result)
-    }))
+    router.post("/:prefix/:version/procedure/:procedure_name",
+                CheckProcedureCallParams, asyncHandler(async (req, res) => {
+                    const result: any = await entity_api.call_provider_procedure(
+                        req.user, req.params.prefix,
+                        req.params.version, req.params.procedure_name, req.body.input)
+                    res.json(result)
+                }))
 
     return router
 }

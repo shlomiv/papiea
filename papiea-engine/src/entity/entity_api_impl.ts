@@ -69,11 +69,8 @@ export class EntityAPIImpl implements EntityAPI {
         return IntentfulTaskMapper.toResponse(intentful_task)
     }
 
-    async filter_intentful_task(
-        user: UserAuthInfo,
-        fields: any,
-        sortParams?: SortParams,
-    ): Promise<Partial<IntentfulTask>[]> {
+    async filter_intentful_task(user: UserAuthInfo, fields: any,
+                                sortParams?: SortParams): Promise<Partial<IntentfulTask>[]> {
         const intentful_tasks = await this.intentful_task_db.list_tasks(fields, sortParams)
         const entities = await this.spec_db.get_specs_by_ref(
             intentful_tasks.map(task => task.entity_ref),
@@ -86,18 +83,14 @@ export class EntityAPIImpl implements EntityAPI {
     }
 
     async save_entity(
-        user: UserAuthInfo,
-        prefix: string,
-        kind_name: string,
-        version: Version,
+        user: UserAuthInfo, prefix: string,
+        kind_name: string, version: Version,
         spec_description: Spec,
-        request_metadata: Metadata = {} as Metadata,
-    ): Promise<[Metadata, Spec]> {
+        request_metadata: Metadata = {} as Metadata): Promise<[Metadata, Spec]> {
         const provider = await this.get_provider(prefix, version)
         const kind = this.providerDb.find_kind(provider, kind_name)
-        this.validator.validate_metadata_extension(
-            provider.extension_structure, request_metadata, provider.allowExtraProps,
-        )
+        this.validator.validate_metadata_extension(provider.extension_structure,
+                                                   request_metadata, provider.allowExtraProps)
         this.validator.validate_spec(spec_description, kind, provider.allowExtraProps)
         if (!request_metadata.uuid) {
             if (kind.uuid_validation_pattern === undefined) {
@@ -127,18 +120,16 @@ export class EntityAPIImpl implements EntityAPI {
         return [metadata, spec]
     }
 
-    async get_entity_spec(
-        user: UserAuthInfo, kind_name: string, entity_uuid: uuid4,
-    ): Promise<[Metadata, Spec]> {
+    async get_entity_spec(user: UserAuthInfo, kind_name: string,
+                          entity_uuid: uuid4): Promise<[Metadata, Spec]> {
         const entity_ref: Entity_Reference = { kind: kind_name, uuid: entity_uuid }
         const [metadata, spec] = await this.spec_db.get_spec(entity_ref)
         await this.authorizer.checkPermission(user, { metadata }, Action.Read)
         return [metadata, spec]
     }
 
-    async get_entity_status(
-        user: UserAuthInfo, kind_name: string, entity_uuid: uuid4,
-    ): Promise<[Metadata, Status]> {
+    async get_entity_status(user: UserAuthInfo, kind_name: string,
+                            entity_uuid: uuid4): Promise<[Metadata, Status]> {
         const entity_ref: Entity_Reference = { kind: kind_name, uuid: entity_uuid }
         const [metadata, status] = await this.status_db.get_status(entity_ref)
         await this.authorizer.checkPermission(user, { metadata }, Action.Read)
@@ -146,12 +137,8 @@ export class EntityAPIImpl implements EntityAPI {
     }
 
     async filter_entity_spec(
-        user: UserAuthInfo,
-        kind_name: string,
-        fields: any,
-        exact_match: boolean,
-        sortParams?: SortParams,
-    ): Promise<[Metadata, Spec][]> {
+        user: UserAuthInfo, kind_name: string, fields: any,
+        exact_match: boolean, sortParams?: SortParams): Promise<[Metadata, Spec][]> {
         fields.metadata.kind = kind_name
         const res = await this.spec_db.list_specs(fields, exact_match, sortParams)
         const filteredRes = await this.authorizer.filter(
@@ -161,12 +148,8 @@ export class EntityAPIImpl implements EntityAPI {
     }
 
     async filter_entity_status(
-        user: UserAuthInfo,
-        kind_name: string,
-        fields: any,
-        exact_match: boolean,
-        sortParams?: SortParams,
-    ): Promise<[Metadata, Status][]> {
+        user: UserAuthInfo, kind_name: string, fields: any,
+        exact_match: boolean, sortParams?: SortParams): Promise<[Metadata, Status][]> {
         fields.metadata.kind = kind_name
         const res = await this.status_db.list_status(fields, exact_match, sortParams)
         const filteredRes = await this.authorizer.filter(
@@ -176,15 +159,10 @@ export class EntityAPIImpl implements EntityAPI {
     }
 
     async update_entity_spec(
-        user: UserAuthInfo,
-        uuid: uuid4,
-        prefix: string,
-        spec_version: number,
-        extension: {[key: string]: any},
-        kind_name: string,
-        version: Version,
-        spec_description: Spec,
-    ): Promise<IntentfulTask | null> {
+        user: UserAuthInfo, uuid: uuid4,
+        prefix: string, spec_version: number,
+        extension: {[key: string]: any}, kind_name: string,
+        version: Version, spec_description: Spec): Promise<IntentfulTask | null> {
         const provider = await this.get_provider(prefix, version)
         const kind = this.providerDb.find_kind(provider, kind_name)
         this.validator.validate_spec(spec_description, kind, provider.allowExtraProps)
@@ -199,9 +177,9 @@ export class EntityAPIImpl implements EntityAPI {
         return task
     }
 
-    async delete_entity_spec(
-        user: UserAuthInfo, prefix: string, version: Version, kind_name: string, entity_uuid: uuid4,
-    ): Promise<void> {
+    async delete_entity_spec(user: UserAuthInfo, prefix: string,
+                             version: Version, kind_name: string,
+                             entity_uuid: uuid4): Promise<void> {
         const provider = await this.get_provider(prefix, version)
         const kind = this.providerDb.find_kind(provider, kind_name)
         const entity_ref: Entity_Reference = { kind: kind_name, uuid: entity_uuid }
@@ -212,14 +190,9 @@ export class EntityAPIImpl implements EntityAPI {
     }
 
     async call_procedure(
-        user: UserAuthInfo,
-        prefix: string,
-        kind_name: string,
-        version: Version,
-        entity_uuid: uuid4,
-        procedure_name: string,
-        input: any,
-    ): Promise<any> {
+        user: UserAuthInfo, prefix: string, kind_name: string,
+        version: Version, entity_uuid: uuid4,
+        procedure_name: string, input: any): Promise<any> {
         const provider = await this.get_provider(prefix, version)
         const kind = this.providerDb.find_kind(provider, kind_name)
         const entity_spec: [Metadata, Spec] = await this.get_entity_spec(
@@ -238,8 +211,7 @@ export class EntityAPIImpl implements EntityAPI {
         try {
             this.validator.validate(
                 input, Object.values(procedure.argument)[0], schemas,
-                provider.allowExtraProps, Object.keys(procedure.argument)[0], procedure_name,
-            )
+                provider.allowExtraProps, Object.keys(procedure.argument)[0], procedure_name)
         } catch (err) {
             throw ProcedureInvocationError.fromError(err, 400)
         }
@@ -256,22 +228,17 @@ export class EntityAPIImpl implements EntityAPI {
                     headers: user,
                 })
             this.validator.validate(
-                data,
-                Object.values(procedure.result)[0],
-                schemas,
-                provider.allowExtraProps,
-                Object.keys(procedure.argument)[0],
-                procedure_name,
-            )
+                data, Object.values(procedure.result)[0],
+                schemas, provider.allowExtraProps,
+                Object.keys(procedure.argument)[0], procedure_name)
             return data
         } catch (err) {
             throw ProcedureInvocationError.fromError(err)
         }
     }
 
-    async call_provider_procedure(
-        user: UserAuthInfo, prefix: string, version: Version, procedure_name: string, input: any,
-    ): Promise<any> {
+    async call_provider_procedure(user: UserAuthInfo, prefix: string, version: Version,
+                                  procedure_name: string, input: any): Promise<any> {
         const provider = await this.get_provider(prefix, version)
         if (provider.procedures === undefined) {
             throw new Error(`Procedure ${procedure_name} not found for provider ${prefix}`)
@@ -286,8 +253,7 @@ export class EntityAPIImpl implements EntityAPI {
         try {
             this.validator.validate(
                 input, Object.values(procedure.argument)[0], schemas,
-                provider.allowExtraProps, Object.keys(procedure.argument)[0], procedure_name,
-            )
+                provider.allowExtraProps, Object.keys(procedure.argument)[0], procedure_name)
         } catch (err) {
             throw ProcedureInvocationError.fromError(err, 400)
         }
@@ -302,8 +268,7 @@ export class EntityAPIImpl implements EntityAPI {
                 })
             this.validator.validate(
                 data, Object.values(procedure.result)[0], schemas,
-                provider.allowExtraProps, Object.keys(procedure.argument)[0], procedure_name,
-            )
+                provider.allowExtraProps, Object.keys(procedure.argument)[0], procedure_name)
             return data
         } catch (err) {
             throw ProcedureInvocationError.fromError(err)
@@ -311,13 +276,9 @@ export class EntityAPIImpl implements EntityAPI {
     }
 
     async call_kind_procedure(
-        user: UserAuthInfo,
-        prefix: string,
-        kind_name: string,
-        version: Version,
-        procedure_name: string,
-        input: any,
-    ): Promise<any> {
+        user: UserAuthInfo, prefix: string,
+        kind_name: string, version: Version,
+        procedure_name: string, input: any): Promise<any> {
         const provider = await this.get_provider(prefix, version)
         const kind = this.providerDb.find_kind(provider, kind_name)
         const procedure: Procedural_Signature | undefined = kind.kind_procedures[procedure_name]
@@ -330,8 +291,7 @@ export class EntityAPIImpl implements EntityAPI {
         try {
             this.validator.validate(
                 input, Object.values(procedure.argument)[0], schemas,
-                provider.allowExtraProps, Object.keys(procedure.argument)[0], procedure_name,
-            )
+                provider.allowExtraProps, Object.keys(procedure.argument)[0], procedure_name)
         } catch (err) {
             throw ProcedureInvocationError.fromError(err, 400)
         }
@@ -344,14 +304,9 @@ export class EntityAPIImpl implements EntityAPI {
                 {
                     headers: user,
                 })
-            this.validator.validate(
-                data,
-                Object.values(procedure.result)[0],
-                schemas,
-                provider.allowExtraProps,
-                Object.keys(procedure.argument)[0],
-                procedure_name,
-            )
+            this.validator.validate(data, Object.values(procedure.result)[0], schemas,
+                                    provider.allowExtraProps, Object.keys(procedure.argument)[0],
+                                    procedure_name)
             return data
         } catch (err) {
             throw ProcedureInvocationError.fromError(err)
@@ -359,11 +314,8 @@ export class EntityAPIImpl implements EntityAPI {
     }
 
     async check_permission(
-        user: UserAuthInfo,
-        prefix: string,
-        version: Version,
-        entityAction: [Action, Entity_Reference][],
-    ): Promise<OperationSuccess> {
+        user: UserAuthInfo, prefix: string,
+        version: Version, entityAction: [Action, Entity_Reference][]): Promise<OperationSuccess> {
         if (entityAction.length === 1) {
             return await this.check_single_permission(user, prefix, version, entityAction[0])
         }
@@ -371,11 +323,8 @@ export class EntityAPIImpl implements EntityAPI {
     }
 
     async check_single_permission(
-        user: UserAuthInfo,
-        prefix: string,
-        version: Version,
-        entityAction: [Action, Entity_Reference],
-    ): Promise<OperationSuccess> {
+        user: UserAuthInfo, prefix: string,
+        version: Version, entityAction: [Action, Entity_Reference]): Promise<OperationSuccess> {
         const [action, entityRef] = entityAction
         if (action === Action.Create) {
             const has_perm = await this.has_permission(user, entityRef as Metadata, action)
@@ -394,11 +343,8 @@ export class EntityAPIImpl implements EntityAPI {
     }
 
     async check_multiple_permissions(
-        user: UserAuthInfo,
-        prefix: string,
-        version: Version,
-        entityAction: [Action, Entity_Reference][],
-    ): Promise<OperationSuccess> {
+        user: UserAuthInfo, prefix: string,
+        version: Version, entityAction: [Action, Entity_Reference][]): Promise<OperationSuccess> {
         const checkPromises: Promise<boolean>[] = []
         for (const [action, entityRef] of entityAction) {
             if (action === Action.Create) {
@@ -424,9 +370,8 @@ export class EntityAPIImpl implements EntityAPI {
         }
     }
 
-    private async get_existing_entities(
-        provider: Provider, uuid: string,
-    ): Promise<[Metadata, Spec, Status] | []> {
+    private async get_existing_entities(provider: Provider,
+                                        uuid: string): Promise<[Metadata, Spec, Status] | []> {
         try {
             const result_spec = await this.spec_db.list_specs(
                 {

@@ -1,5 +1,3 @@
-import { ValidationError } from "../errors/validation_error"
-import { isEmpty } from "../utils/utils"
 import {
     Entity_Reference,
     Provider,
@@ -10,8 +8,10 @@ import {
     Data_Description,
     Metadata,
 } from "papiea-core"
-import { SFSCompiler } from "../intentful_core/sfs_compiler"
 import * as uuid_validate from "uuid-validate"
+import { ValidationError } from "../errors/validation_error"
+import { isEmpty } from "../utils/utils"
+import { SFSCompiler } from "../intentful_core/sfs_compiler"
 
 // We can receive model in 2 forms:
 // As user specified in definition, which means it has "properties" field ( { properties: {} } } )
@@ -87,28 +87,28 @@ export class ValidatorImpl {
                 message: "Metadata extension is not specified",
             }])
         }
-        const schemas: any = Object.assign({}, extension_structure)
+        const schemas: any = { ...extension_structure }
         this.validate(metadata.extension, Object.values(extension_structure)[0], schemas,
-                      allowExtraProps, Object.keys(extension_structure)[0])
+            allowExtraProps, Object.keys(extension_structure)[0])
     }
 
     public validate_spec(spec: Spec, kind: Kind, allowExtraProps: boolean) {
-        const schemas: any = Object.assign({}, kind.kind_structure)
+        const schemas: any = { ...kind.kind_structure }
         this.validate(spec, Object.values(kind.kind_structure)[0], schemas,
-                      allowExtraProps, Object.keys(kind.kind_structure)[0])
+            allowExtraProps, Object.keys(kind.kind_structure)[0])
     }
 
     public async validate_status(provider: Provider, entity_ref: Entity_Reference, status: Status) {
         const kind = provider.kinds.find(
             (provider_kind: Kind) => provider_kind.name === entity_ref.kind,
         )
-        const allowExtraProps = provider.allowExtraProps
+        const { allowExtraProps } = provider
         if (kind === undefined) {
             throw new Error("Kind not found")
         }
-        const schemas: any = Object.assign({}, kind.kind_structure)
+        const schemas: any = { ...kind.kind_structure }
         this.validate(status, Object.values(kind.kind_structure)[0], schemas,
-                      allowExtraProps, Object.keys(kind.kind_structure)[0])
+            allowExtraProps, Object.keys(kind.kind_structure)[0])
     }
 
     public validate_sfs(provider: Provider) {
@@ -116,14 +116,14 @@ export class ValidatorImpl {
             if (kind.intentful_behaviour === IntentfulBehaviour.Differ) {
                 // Throws an exception if it fails
                 kind.intentful_signatures.forEach(
-                    sig => SFSCompiler.try_parse_sfs(sig.signature, kind.name),
+                    (sig) => SFSCompiler.try_parse_sfs(sig.signature, kind.name),
                 )
             }
         }
     }
 
     public validate(data: any, model: any | undefined, models: any, allowExtraProps: boolean,
-                    schemaName: string, procedureName?: string) {
+        schemaName: string, procedureName?: string) {
         const validatorDenyExtraProps = !allowExtraProps
         const allowBlankTarget = false
         if (modelIsEmpty(model)) {
@@ -133,8 +133,8 @@ export class ValidatorImpl {
             throw new ValidationError([{
                 name: "Error",
                 message: procedureName !== undefined
-                    ? `${ procedureName } with schema ${ schemaName } was expecting empty object`
-                    : `${ schemaName } was expecting empty object`,
+                    ? `${procedureName} with schema ${schemaName} was expecting empty object`
+                    : `${schemaName} was expecting empty object`,
             }])
         }
         if (model !== undefined && model !== null) {
@@ -145,18 +145,17 @@ export class ValidatorImpl {
                 throw new ValidationError(res.errors)
             }
             return res
-        } else {
-            if (data !== undefined &&
-                data !== null &&
-                data !== "" &&
-                !(Object.entries(data).length === 0 && data.constructor === Object)) {
-                throw new ValidationError([{
-                    name: "Error",
-                    message: procedureName !== undefined
-                        ? `${ procedureName } with schema ${ schemaName } was expecting type void`
-                        : `${ schemaName } was expecting type void`,
-                }])
-            }
+        }
+        if (data !== undefined
+                && data !== null
+                && data !== ""
+                && !(Object.entries(data).length === 0 && data.constructor === Object)) {
+            throw new ValidationError([{
+                name: "Error",
+                message: procedureName !== undefined
+                    ? `${procedureName} with schema ${schemaName} was expecting type void`
+                    : `${schemaName} was expecting type void`,
+            }])
         }
     }
 }

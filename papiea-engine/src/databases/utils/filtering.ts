@@ -1,5 +1,5 @@
 import { deepMerge, isEmpty } from "../../utils/utils"
-import { encode } from "mongo-dot-notation-tool"
+import { dotnotation } from "papiea-backend-utils"
 import { datestringToFilter } from "./date"
 
 export function build_filter_query(fields_map: any, exact_match: boolean) {
@@ -25,18 +25,18 @@ export function build_filter_query(fields_map: any, exact_match: boolean) {
     } else if (fields_map.spec && fields_map.status) {
         filter = deepMerge(
             filter,
-            encode({spec: fields_map.spec}),
-            encode({status: fields_map.status})
+            dotnotation({spec: fields_map.spec}),
+            dotnotation({status: fields_map.status})
         )
     } else if (fields_map.spec) {
         filter = deepMerge(
             filter,
-            encode({spec: fields_map.spec}),
+            dotnotation({spec: fields_map.spec}),
         )
     } else if (fields_map.status) {
         filter = deepMerge(
             filter,
-            encode({status: fields_map.status})
+            dotnotation({status: fields_map.status})
         )
     }
     return filter

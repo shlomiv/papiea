@@ -32,8 +32,8 @@ describe("SFS Tests", () => {
     test("Run the sfs '[a,d]' on spec:{a:1, d:2} status:{a:3, d:4}", () => {
         let sfs = sfs_compiler("[a,d]");
         let r = run_compiled_sfs(sfs, { "a": 1, "d": 2 }, { "a": 3, "d": 4 });
-        expect(r).toEqual([ { keys: {}, key: 'a', 'spec-val': [ 1 ], 'status-val': [ 3 ] },
-        { keys: {}, key: 'd', 'spec-val': [ 2 ], 'status-val': [ 4 ] } ]);
+        expect(r).toEqual([ { keys: {}, key: 'a', 'spec': [ 1 ], 'status': [ 3 ] },
+        { keys: {}, key: 'd', 'spec': [ 2 ], 'status': [ 4 ] } ]);
     });
     test("Run the sfs 'a.{id}.[a,d]' on spec:{a:1, d:2} status:{a:3, d:4}", () => {
         let sfs = sfs_compiler("a.{id}.[a,d]");
@@ -48,12 +48,12 @@ describe("SFS Tests", () => {
             });
         expect(r).toEqual([ { keys: { id: 1 },
             key: 'a',
-            'spec-val': [ 1 ],
-            'status-val': [ 2 ] },
+            'spec': [ 1 ],
+            'status': [ 2 ] },
           { keys: { id: 1 },
             key: 'd',
-            'spec-val': [ 2 ],
-            'status-val': [ 3 ] } ]);
+            'spec': [ 2 ],
+            'status': [ 3 ] } ]);
     });
     test("Run the sfs 'a.{id}.[a,d]' on spec:{a:1, d:2} status:{a:3, d:4}", () => {
         let sfs = sfs_compiler("a.{id}.[a,d]");
@@ -68,11 +68,11 @@ describe("SFS Tests", () => {
             });
         expect(r).toEqual([ { keys: { id: 1 },
             key: 'a',
-            'spec-val': [ 1 ],
-            'status-val': [ 2 ] },
+            'spec': [ 1 ],
+            'status': [ 2 ] },
             { keys: { id: 1 },
                 key: 'd',
-                'spec-val': [ 2 ],
-                'status-val': [ 3 ] } ]);
+                'spec': [ 2 ],
+                'status': [ 3 ] } ]);
     });
 })

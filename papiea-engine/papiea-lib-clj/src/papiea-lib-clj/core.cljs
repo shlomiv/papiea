@@ -1,6 +1,7 @@
 (ns papiea-lib-clj.core
   (:require [cljs.nodejs :as nodejs]
-            [instaparse.core :as insta]))
+            [instaparse.core :as insta])
+  (:use [clojure.set :only (rename-keys)]))
 
 (nodejs/enable-util-print!)
 
@@ -198,11 +199,14 @@
     (if (fn? sfs-fn) sfs-fn {:error-compiling-sfs :sfs-fn
                              :sfs-signature sfs-signature})))
 
+(defn truncate-val-postfix [result]
+  (map #(rename-keys % {:spec-val :spec, :status-val :status}) result))
+
 (defn ^:export run_compiled_sfs[compiled-sfs-fn spec status]
   (let [spec (js->clj spec)
         status (js->clj status)
         results (prepare spec status)]
-    (clj->js (compiled-sfs-fn results)))) 
+    (clj->js (truncate-val-postfix (compiled-sfs-fn results)))))
 
 (defn -main [& args]
   (println "Hello world"))

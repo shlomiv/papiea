@@ -259,14 +259,14 @@ export interface SessionKey {
 }
 
 export enum PapieaError {
-    Validation,
-    BadRequest,
-    ProcedureInvocation,
-    EntityNotFound,
-    Unauthorized,
-    PermissionDenied,
-    ConflictingEntity,
-    ServerError
+    Validation = "validation_error",
+    BadRequest = "bad_request_error",
+    ProcedureInvocation = "procedure_invocation_error",
+    EntityNotFound = "entity_not_found_error",
+    Unauthorized = "unauthorized_error",
+    PermissionDenied = "permission_denied_error",
+    ConflictingEntity = "conflicting_entity_error",
+    ServerError = "server_error"
 }
 
 export interface PapieaResponse {

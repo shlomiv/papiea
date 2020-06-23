@@ -197,6 +197,12 @@ export interface Procedural_Signature {
     // The representation of the data to be passed to this entity_procedure
     argument: Data_Description;
 
+    // Description of what the procedure does
+    description?: string
+
+    // Error description in OpenAPI format
+    error_description?: Data_Description
+
     // The representation of the data to be returned from this entity_procedure
     result: Data_Description;
 

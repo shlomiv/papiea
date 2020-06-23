@@ -402,7 +402,7 @@ export default class ApiDocsGenerator {
 
     callKindProcedure(provider: Provider, kind: Kind, procedure: Procedural_Signature) {
         const procedural_def = {
-            "description": `Calls a procedure ${ procedure.name }`,
+            "description": `${ procedure.description }`,
             "operationId": `call${ provider.prefix }${ procedure.name }`,
             "tags": [`${ provider.prefix }/${ provider.version }/${ kind.name }/procedure`],
             "requestBody": {
@@ -439,7 +439,7 @@ export default class ApiDocsGenerator {
 
     callEntityProcedure(provider: Provider, kind: Kind, procedure: Procedural_Signature) {
         const procedural_def = {
-            "description": `Calls a procedure ${ procedure.name }`,
+            "description": `${ procedure.description }`,
             "operationId": `call${ provider.prefix }${ procedure.name }`,
             "tags": [`${ provider.prefix }/${ provider.version }/${ kind.name }/procedure`],
             "parameters": [
@@ -488,7 +488,7 @@ export default class ApiDocsGenerator {
 
     callProviderProcedure(provider: Provider, procedure: Procedural_Signature) {
         const procedural_def = {
-            "description": `Calls a procedure ${ procedure.name }`,
+            "description": `${ procedure.description }`,
             "operationId": `call${ provider.prefix }${ procedure.name }`,
             "tags": [`${ provider.prefix }/${ provider.version }/procedure`],
             "requestBody": {

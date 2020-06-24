@@ -6,7 +6,8 @@ export class BasicDiffer implements Differ {
     public* diffs(kind: Kind, spec: Spec, status: Status): Generator<Diff, any, undefined> {
         for (let sig of kind.intentful_signatures) {
             const compiled_signature = SFSCompiler.try_compile_sfs(sig.signature, kind.name)
-            if (SFSCompiler.run_sfs(compiled_signature, spec, status) !== null) {
+            const result = SFSCompiler.run_sfs(compiled_signature, spec, status)
+            if (result != null && result.length > 0) {
                 yield {
                     kind: kind.name,
                     intentful_signature: sig,
@@ -28,6 +29,6 @@ export class BasicDiffer implements Differ {
                     diff_fields: diff_fields
                 }
             }
-        ).filter(diff => diff.diff_fields !== null)
+        ).filter(diff => diff.diff_fields !== null && diff.diff_fields.length > 0)
     }
 }

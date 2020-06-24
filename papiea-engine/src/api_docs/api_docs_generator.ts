@@ -1,5 +1,6 @@
-import { Provider_DB } from "../databases/provider_db_interface";
-import { Provider, Kind, Procedural_Signature } from "papiea-core";
+import { Provider_DB } from "../databases/provider_db_interface"
+import { Kind, Procedural_Signature, Provider } from "papiea-core"
+import { deepMerge } from "../utils/utils"
 
 export default class ApiDocsGenerator {
     providerDb: Provider_DB;
@@ -400,9 +401,56 @@ export default class ApiDocsGenerator {
         return proc_def
     }
 
+    processCustomErrorDescriptions(proc_def: any, sig: Procedural_Signature) {
+        const get_error_response = (description: string, structure: any) => {
+            return {
+                "description": description,
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "required": [
+                                "error",
+                            ],
+                            "properties": {
+                                "error": {
+                                    "type": "object",
+                                    "required": [
+                                        "errors",
+                                        "code",
+                                        "message"
+                                    ],
+                                    "properties": {
+                                        "errors": {
+                                            "type": "array",
+                                            "items": structure
+                                        },
+                                        "code": {
+                                            "type": "integer"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        if (sig.error_descriptions) {
+            for (let [key, val] of Object.entries(sig.error_descriptions)) {
+                if (proc_def.responses[key] === undefined) {
+                    proc_def.responses[key] = get_error_response(val.description, val.structure)
+                }
+            }
+        }
+    }
+
     callKindProcedure(provider: Provider, kind: Kind, procedure: Procedural_Signature) {
+        const default_description = `Calls a procedure ${ procedure.name }`
         const procedural_def = {
-            "description": `${ procedure.description }`,
+            "description": `${ procedure.description ?? default_description }`,
             "operationId": `call${ provider.prefix }${ procedure.name }`,
             "tags": [`${ provider.prefix }/${ provider.version }/${ kind.name }/procedure`],
             "requestBody": {
@@ -434,12 +482,14 @@ export default class ApiDocsGenerator {
                 "default": this.getDefaultResponse()
             }
         };
+        this.processCustomErrorDescriptions(procedural_def, procedure)
         return this.processEmptyValidation(procedural_def, procedure)
     }
 
     callEntityProcedure(provider: Provider, kind: Kind, procedure: Procedural_Signature) {
+        const default_description = `Calls a procedure ${ procedure.name }`
         const procedural_def = {
-            "description": `${ procedure.description }`,
+            "description": `${ procedure.description ?? default_description }`,
             "operationId": `call${ provider.prefix }${ procedure.name }`,
             "tags": [`${ provider.prefix }/${ provider.version }/${ kind.name }/procedure`],
             "parameters": [
@@ -483,12 +533,14 @@ export default class ApiDocsGenerator {
                 "default": this.getDefaultResponse()
             }
         };
+        this.processCustomErrorDescriptions(procedural_def, procedure)
         return this.processEmptyValidation(procedural_def, procedure)
     }
 
     callProviderProcedure(provider: Provider, procedure: Procedural_Signature) {
+        const default_description = `Calls a procedure ${ procedure.name }`
         const procedural_def = {
-            "description": `${ procedure.description }`,
+            "description": `${ procedure.description ?? default_description }`,
             "operationId": `call${ provider.prefix }${ procedure.name }`,
             "tags": [`${ provider.prefix }/${ provider.version }/procedure`],
             "requestBody": {
@@ -522,6 +574,7 @@ export default class ApiDocsGenerator {
                 "default": this.getDefaultResponse()
             }
         };
+        this.processCustomErrorDescriptions(procedural_def, procedure)
         return this.processEmptyValidation(procedural_def, procedure)
     }
 

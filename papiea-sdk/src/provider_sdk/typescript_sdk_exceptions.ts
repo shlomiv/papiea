@@ -5,7 +5,7 @@ export class InvocationError extends Error {
     message: any
     errors: any[]
 
-    protected constructor(status_code: number, message: any, errors: any[], stack?: string) {
+    public constructor(status_code: number, message: any, errors: any[], stack?: string) {
         super(message)
         Object.setPrototypeOf(this, InvocationError.prototype)
         this.status_code = status_code

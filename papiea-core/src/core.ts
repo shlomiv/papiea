@@ -190,6 +190,19 @@ export interface SpecOnlyEntityKind extends Kind {
 export enum Procedural_Execution_Strategy {Halt_Intentful};
 export enum Intentful_Execution_Strategy {Basic};
 
+// Error descriptions in format:
+// Map<code, {description, structure}> where code is an error status code as string
+// description is a string description of an error
+// structure is an OpenAPI object describing internal error structure
+// Beware that an Error that user gets in the end is still of
+// a PapieaErrorResponse type
+export type ErrorDescriptions = {
+    [ key: string ]: {
+        description: string,
+        structure: any
+    }
+}
+
 export interface Procedural_Signature {
     // The name of the entity_procedure to be exported by the engine.
     name: string;
@@ -200,8 +213,12 @@ export interface Procedural_Signature {
     // Description of what the procedure does
     description?: string
 
-    // Error description in OpenAPI format
-    error_description?: Data_Description
+    // Error description in format:
+    // Map<code, Data_Description> where code is an error status code as string
+    // Data_Description is an OpenAPI object describing error value
+    // Beware that an Error that user gets in the end is still of
+    // a PapieaErrorResponse type
+    error_descriptions?: ErrorDescriptions
 
     // The representation of the data to be returned from this entity_procedure
     result: Data_Description;

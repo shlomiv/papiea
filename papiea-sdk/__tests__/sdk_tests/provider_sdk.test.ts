@@ -10,6 +10,7 @@ import uuid = require("uuid");
 import { Logger, LoggerFactory } from "papiea-backend-utils";
 import { ProviderClient } from "papiea-client";
 import { Kind_Builder, ProceduralCtx_Interface, ProviderSdk, SecurityApi } from "../../src/provider_sdk/typescript_sdk";
+import { InvocationError } from "../../src/provider_sdk/typescript_sdk_exceptions"
 
 
 declare var process: {
@@ -476,6 +477,52 @@ describe("Provider Sdk tests", () => {
             await axios.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }/procedure/moveX`, { input: 5 });
             const result = await entityApi.get(`${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`)
             expect(result.data.status["v"]).toEqual({e: 15})
+        } finally {
+            sdk.server.close();
+        }
+    });
+
+    test("Provider with kind level procedures with error description and description should" +
+                 " be" +
+             " registered", async () => {
+        expect.hasAssertions();
+        const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
+        const location = sdk.new_kind(location_yaml);
+        sdk.version(provider_version);
+        sdk.prefix("location_provider_description");
+        location.kind_procedure(
+            "computeGeolocation",
+            {}, Procedural_Execution_Strategy.Halt_Intentful,
+            loadYamlFromTestFactoryDir("./test_data/procedure_geolocation_compute_input.yml"),
+            loadYamlFromTestFactoryDir("./test_data/procedure_geolocation_compute_input.yml"), async (ctx, input) => {
+                let cluster_location = "us.west.";
+                const some_error_condition = false
+                if (some_error_condition) {
+                    throw new InvocationError(410, "It is an error", [{
+                        sample_prop: "It's an error :("
+                    }])
+                }
+                cluster_location += input;
+                return cluster_location
+            },
+            "Sample procedure description for checking that description works",
+            { "410": {
+                    "description": `I am error 410!`,
+                    "structure": {
+                        "type": "object",
+                        "properties": {
+                            "sample_prop": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }}
+        );
+        await sdk.register();
+        const kind_name = sdk.provider.kinds[0].name;
+        try {
+            const res: any = await axios.post(`${sdk.entity_url}/${sdk.provider.prefix}/${sdk.provider.version}/${kind_name}/procedure/computeGeolocation`, { input: "2" });
+            expect(res.data).toBe("us.west.2");
         } finally {
             sdk.server.close();
         }

@@ -482,9 +482,7 @@ describe("Provider Sdk tests", () => {
         }
     });
 
-    test("Provider with kind level procedures with error description and description should" +
-                 " be" +
-             " registered", async () => {
+    test("Provider with kind level procedures with error description and description should be registered", async () => {
         expect.hasAssertions();
         const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
         const location = sdk.new_kind(location_yaml);

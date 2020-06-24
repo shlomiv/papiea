@@ -167,7 +167,7 @@ describe("Intentful Task tests", () => {
         })
         expect(task.status).toEqual(IntentfulStatus.Pending)
         expect(task.diffs[0].diff_fields[0]["spec"][0]).toEqual(20)
-        expect(task.diffs[1].diff_fields[0]["spec"][0]).toEqual(110)
+        expect(task.diffs[1].diff_fields[0].spec[0]).toEqual(110)
         expect(task.diffs[0].diff_fields[0]["status"][0]).toEqual(null)
         expect(task.diffs[1].diff_fields[0]["status"][0]).toEqual(null)
         createdTask = task

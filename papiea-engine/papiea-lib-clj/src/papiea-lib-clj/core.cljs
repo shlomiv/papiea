@@ -1,7 +1,7 @@
 (ns papiea-lib-clj.core
   (:require [cljs.nodejs :as nodejs]
-            [instaparse.core :as insta])
-  (:use [clojure.set :only (rename-keys)]))
+            [instaparse.core :as insta]
+            [clojure.set :as set :refer [rename-keys]]))
 
 (nodejs/enable-util-print!)
 
@@ -200,7 +200,7 @@
                              :sfs-signature sfs-signature})))
 
 (defn truncate-val-postfix [result]
-  (map #(rename-keys % {:spec-val :spec, :status-val :status}) result))
+  (map #(set/rename-keys % {:spec-val :spec, :status-val :status}) result))
 
 (defn ^:export run_compiled_sfs[compiled-sfs-fn spec status]
   (let [spec (js->clj spec)

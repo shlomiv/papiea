@@ -144,6 +144,7 @@ export class DiffResolver {
                             entries[uuid][2] = delay
                             continue
                         } catch (e) {
+                            console.log(e)
                             this.logger.debug(`Couldn't invoke retry handler for entity with uuid ${metadata!.uuid}: ${e}`)
                             entries[uuid][2] = {
                                 delay_seconds: getRandomInt(10, 20),
@@ -204,6 +205,7 @@ export class DiffResolver {
             this.logger.info(`Starting to resolve diff for entity with uuid: ${metadata!.uuid}`)
             return [executing_diff, execution_delay]
         } catch (e) {
+            console.log(e)
             this.logger.debug(`Couldn't invoke handler for entity with uuid ${metadata!.uuid}: ${e}`)
             const delay = {
                 delay_seconds: getRandomInt(10, 20),

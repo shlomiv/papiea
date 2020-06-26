@@ -341,18 +341,25 @@ class Provider_Server_Manager {
         this.app.use(express.json())
     }
 
+    private escape_sfs_path(path: string) {
+        const replaced_once = path.replace(/[*+?()]/g, '\\$&') // $& means the whole matched string
+        return replaced_once.replace(/[:$]/g, '\[$&]')
+    }
+
+    // Beware this escapes special Express JS symbols
+    // So no /task/:id will work!
     register_handler(route: string, handler: RequestHandler) {
         if (!this.should_run) {
             this.should_run = true;
         }
-        this.app.post(route, asyncHandler(handler))
+        this.app.post(this.escape_sfs_path(encodeURI(route)), asyncHandler(handler))
     }
 
     register_healthcheck() {
         if (!this.should_run) {
             this.should_run = true;
         }
-        this.app.get("healthcheck", asyncHandler(async (req, res) => {
+        this.app.get("/healthcheck", asyncHandler(async (req, res) => {
             res.status(200).json({ status: "Available" })
         }))
     }

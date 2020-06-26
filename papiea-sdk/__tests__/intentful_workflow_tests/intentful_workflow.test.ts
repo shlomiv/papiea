@@ -3,6 +3,9 @@ import axios from "axios"
 import { timeout } from "../../../papiea-engine/src/utils/utils"
 import { IntentfulStatus, Version, Metadata } from "papiea-core"
 import { ProviderSdk } from "../../src/provider_sdk/typescript_sdk";
+import { load } from "js-yaml"
+import { readFileSync } from "fs"
+import { resolve } from "path"
 
 declare var process: {
     env: {
@@ -40,6 +43,7 @@ const providerApiAdmin = axios.create({
 describe("Intentful Workflow tests", () => {
 
     const locationDataDescription = getDifferLocationDataDescription()
+    const locationDataDescriptionArraySfs = load(readFileSync(resolve(__dirname, "../test_data/location_kind_test_data_array_sfs.yml"), "utf-8"));
     let provider_prefix: string
     let provider_version: Version = "0.1.0"
     let to_delete_entites: Metadata[] = []
@@ -279,6 +283,72 @@ describe("Intentful Workflow tests", () => {
                 await timeout(12000)
                 res = await entityApi.get(`/intentful_task/${ task.uuid }`)
                 expect(res.data.status).toBe(IntentfulStatus.Completed_Successfully)
+            } catch (e) {
+                console.log(`Couldn't get entity: ${e}`)
+            }
+        } finally {
+            sdk.server.close();
+        }
+    })
+
+    test("Change single array sfs field differ resolver should pass", async () => {
+        expect.assertions(2);
+        const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
+        try {
+            provider_prefix = "location_provider_intentful_4"
+            const location = sdk.new_kind(locationDataDescriptionArraySfs);
+            sdk.version(provider_version);
+            sdk.prefix(provider_prefix);
+            location.on("x.+{ip}", {}, async (ctx, entity, input) => {
+                await providerApiAdmin.post(`/${sdk.provider.prefix}/${sdk.provider.version}/update_status`, {
+                    context: "some context",
+                    entity_ref: {
+                        uuid: entity.metadata.uuid,
+                        kind: entity.metadata.kind
+                    },
+                    status: entity.spec
+                })
+            })
+            location.on_create(async (ctx, entity) => {
+                const { metadata, spec } = entity
+                await ctx.update_status(metadata!, spec!)
+            })
+            await sdk.register();
+            const kind_name = sdk.provider.kinds[0].name;
+            const { data: { metadata, spec } } = await entityApi.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }`, {
+                spec: {
+                    x: [{
+                        ip: "1"
+                    }],
+                    y: 11
+                }
+            })
+            to_delete_entites.push(metadata)
+            await timeout(5000)
+            const { data: { task } } = await entityApi.put(`/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`, {
+                spec: {
+                    x: [
+                        { ip: "1" },
+                        { ip: "2" }
+                    ],
+                    y: 11
+                },
+                metadata: {
+                    spec_version: 1
+                }
+            })
+            let retries = 5
+            try {
+                for (let i = 1; i <= retries; i++) {
+                    const res = await entityApi.get(`/intentful_task/${ task.uuid }`)
+                    if (res.data.status === IntentfulStatus.Completed_Successfully) {
+                        expect(res.data.status).toBe(IntentfulStatus.Completed_Successfully)
+                        const result = await entityApi.get(`/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`)
+                        expect(result.data.status.x.length).toEqual(2)
+                        return
+                    }
+                    await timeout(5000)
+                }
             } catch (e) {
                 console.log(`Couldn't get entity: ${e}`)
             }

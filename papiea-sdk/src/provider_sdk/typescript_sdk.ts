@@ -29,6 +29,7 @@ import {
 } from "papiea-core"
 import { LoggerFactory } from 'papiea-backend-utils'
 import { InvocationError, SecurityApiError } from "./typescript_sdk_exceptions"
+import { validate_error_descriptions } from "./typescript_sdk_utils"
 
 class SecurityApiImpl implements SecurityApi {
     readonly provider: ProviderSdk;
@@ -233,6 +234,7 @@ export class ProviderSdk implements ProviderImpl {
                        error_descriptions?: ErrorDescriptions): ProviderSdk {
         const procedure_callback_url = this._server_manager.procedure_callback_url(name);
         const callback_url = this._server_manager.callback_url();
+        validate_error_descriptions(error_descriptions)
         const procedural_signature: Procedural_Signature = {
             name,
             argument: input_desc,
@@ -432,6 +434,7 @@ export class Kind_Builder {
                      error_descriptions?: ErrorDescriptions): Kind_Builder {
         const procedure_callback_url = this.server_manager.procedure_callback_url(name, this.kind.name);
         const callback_url = this.server_manager.callback_url(this.kind.name);
+        validate_error_descriptions(error_descriptions)
         const procedural_signature: Procedural_Signature = {
             name,
             argument: input_desc,
@@ -542,6 +545,7 @@ export class Kind_Builder {
                    error_descriptions?: ErrorDescriptions): Kind_Builder {
         const procedure_callback_url = this.server_manager.procedure_callback_url(name, this.kind.name);
         const callback_url = this.server_manager.callback_url(this.kind.name);
+        validate_error_descriptions(error_descriptions)
         const procedural_signature: Procedural_Signature = {
             name,
             argument: input_desc,

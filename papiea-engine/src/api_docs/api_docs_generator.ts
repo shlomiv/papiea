@@ -429,6 +429,9 @@ export default class ApiDocsGenerator {
                                         },
                                         "message": {
                                             "type": "string"
+                                        },
+                                        "type": {
+                                            "type": "string"
                                         }
                                     }
                                 }
@@ -674,6 +677,9 @@ export default class ApiDocsGenerator {
                                         "type": "integer"
                                     },
                                     "message": {
+                                        "type": "string"
+                                    },
+                                    "type": {
                                         "type": "string"
                                     }
                                 }

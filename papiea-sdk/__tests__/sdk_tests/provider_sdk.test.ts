@@ -526,6 +526,44 @@ describe("Provider Sdk tests", () => {
         }
     });
 
+    test("Provider error description fail validation", async () => {
+        expect.hasAssertions();
+        const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
+        const location = sdk.new_kind(location_yaml);
+        sdk.version(provider_version);
+        sdk.prefix("location_provider_description");
+        expect(() => {
+            location.kind_procedure(
+                "computeGeolocation",
+                {}, Procedural_Execution_Strategy.Halt_Intentful,
+                loadYamlFromTestFactoryDir("./test_data/procedure_geolocation_compute_input.yml"),
+                loadYamlFromTestFactoryDir("./test_data/procedure_geolocation_compute_input.yml"), async (ctx, input) => {
+                    let cluster_location = "us.west.";
+                    const some_error_condition = false
+                    if (some_error_condition) {
+                        throw new InvocationError(201, "It is an error", [{
+                            sample_prop: "It's an error :("
+                        }])
+                    }
+                    cluster_location += input;
+                    return cluster_location
+                },
+                "Sample procedure description for checking that description works",
+                { "201": {
+                        "description": `I am error 201 which isn't an error status!`,
+                        "structure": {
+                            "type": "object",
+                            "properties": {
+                                "sample_prop": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }}
+            );
+        }).toThrow("Error description should feature status code in 4xx or 5xx")
+    });
+
     test("Provider with kind level procedures should be executed", async () => {
         expect.hasAssertions();
         const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);

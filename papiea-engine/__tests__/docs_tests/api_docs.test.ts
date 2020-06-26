@@ -237,6 +237,9 @@ describe("API docs test entity", () => {
                         },
                         "message": {
                             "type": "string"
+                        },
+                        "type": {
+                            "type": "string"
                         }
                     }
                 }

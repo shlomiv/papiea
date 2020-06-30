@@ -10,7 +10,7 @@ papiea-packages = core client backend-utils engine sdk
 run-tests: run-papiea
 	cd ./papiea-engine; \
 	docker-compose exec papiea-engine yarn run test; \
-	docker-compose exec papiea-engine bash -c 'cd /code/papiea-sdk && npm test'
+	docker-compose exec papiea-engine bash -c 'cd /code/papiea-sdk/typescript && npm test'
 
 
 run-benchmark: build_main
@@ -69,22 +69,22 @@ papiea-engine/__benchmarks__/node_modules: build_main
 	yarn --cwd papiea-engine/__benchmarks__
 
 
-build_main: node_modules_main papiea-engine/build papiea-sdk/build
+build_main: node_modules_main papiea-engine/build papiea-sdk/typescript/build
 
 
-papiea-sdk/build:
-	yarn --cwd papiea-sdk run build
+papiea-sdk/typescript/build:
+	yarn --cwd papiea-sdk/typescript run build
 
 
 papiea-engine/build:
 	yarn --cwd papiea-engine run build
 
 
-node_modules_main: build_deps papiea-engine/node_modules papiea-sdk/node_modules
+node_modules_main: build_deps papiea-engine/node_modules papiea-sdk/typescript/node_modules
 
 
-papiea-sdk/node_modules:
-	yarn --cwd papiea-sdk
+papiea-sdk/typescript/node_modules:
+	yarn --cwd papiea-sdk/typescript
 
 
 papiea-engine/node_modules:

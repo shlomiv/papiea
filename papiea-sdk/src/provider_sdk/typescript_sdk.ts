@@ -24,10 +24,12 @@ import {
     Secret,
     SpecOnlyEntityKind,
     UserInfo,
-    Version
+    Version,
+    ErrorDescriptions
 } from "papiea-core"
 import { LoggerFactory } from 'papiea-backend-utils'
 import { InvocationError, SecurityApiError } from "./typescript_sdk_exceptions"
+import { validate_error_descriptions } from "./typescript_sdk_utils"
 
 class SecurityApiImpl implements SecurityApi {
     readonly provider: ProviderSdk;
@@ -227,16 +229,21 @@ export class ProviderSdk implements ProviderImpl {
                        strategy: Procedural_Execution_Strategy,
                        input_desc: any,
                        output_desc: any,
-                       handler: (ctx: ProceduralCtx_Interface, input: any) => Promise<any>): ProviderSdk {
+                       handler: (ctx: ProceduralCtx_Interface, input: any) => Promise<any>,
+                       description?: string,
+                       error_descriptions?: ErrorDescriptions): ProviderSdk {
         const procedure_callback_url = this._server_manager.procedure_callback_url(name);
         const callback_url = this._server_manager.callback_url();
+        validate_error_descriptions(error_descriptions)
         const procedural_signature: Procedural_Signature = {
             name,
             argument: input_desc,
             result: output_desc,
             execution_strategy: strategy,
             procedure_callback: procedure_callback_url,
-            base_callback: callback_url
+            base_callback: callback_url,
+            error_descriptions: error_descriptions,
+            description: description
         };
         this._procedures[name] = procedural_signature;
         this._server_manager.register_handler("/" + name, async (req, res) => {
@@ -422,16 +429,21 @@ export class Kind_Builder {
                      strategy: Procedural_Execution_Strategy,
                      input_desc: any,
                      output_desc: any,
-                     handler: (ctx: ProceduralCtx_Interface, entity: Entity, input: any) => Promise<any>): Kind_Builder {
+                     handler: (ctx: ProceduralCtx_Interface, entity: Entity, input: any) => Promise<any>,
+                     description?: string,
+                     error_descriptions?: ErrorDescriptions): Kind_Builder {
         const procedure_callback_url = this.server_manager.procedure_callback_url(name, this.kind.name);
         const callback_url = this.server_manager.callback_url(this.kind.name);
+        validate_error_descriptions(error_descriptions)
         const procedural_signature: Procedural_Signature = {
             name,
             argument: input_desc,
             result: output_desc,
             execution_strategy: strategy,
             procedure_callback: procedure_callback_url,
-            base_callback: callback_url
+            base_callback: callback_url,
+            error_descriptions: error_descriptions,
+            description: description
         };
         this.kind.entity_procedures[name] = procedural_signature;
         this.server_manager.register_handler(`/${this.kind.name}/${name}`, async (req, res) => {
@@ -528,16 +540,21 @@ export class Kind_Builder {
                    strategy: Procedural_Execution_Strategy,
                    input_desc: any,
                    output_desc: any,
-                   handler: (ctx: ProceduralCtx_Interface, input: any) => Promise<any>): Kind_Builder {
+                   handler: (ctx: ProceduralCtx_Interface, input: any) => Promise<any>,
+                   description?: string,
+                   error_descriptions?: ErrorDescriptions): Kind_Builder {
         const procedure_callback_url = this.server_manager.procedure_callback_url(name, this.kind.name);
         const callback_url = this.server_manager.callback_url(this.kind.name);
+        validate_error_descriptions(error_descriptions)
         const procedural_signature: Procedural_Signature = {
             name,
             argument: input_desc,
             result: output_desc,
             execution_strategy: strategy,
             procedure_callback: procedure_callback_url,
-            base_callback: callback_url
+            base_callback: callback_url,
+            error_descriptions: error_descriptions,
+            description: description
         };
         this.kind.kind_procedures[name] = procedural_signature;
         this.server_manager.register_handler(`/${this.kind.name}/${name}`, async (req, res) => {

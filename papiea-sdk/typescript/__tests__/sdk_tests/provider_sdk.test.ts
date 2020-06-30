@@ -2,7 +2,7 @@ import "jest"
 import { load } from "js-yaml";
 import { resolve } from "path";
 import { plural } from "pluralize"
-import { loadYamlFromTestFactoryDir, OAuth2Server, ProviderBuilder } from "../../../papiea-engine/__tests__/test_data_factory";
+import { loadYamlFromTestFactoryDir, OAuth2Server, ProviderBuilder } from "../../../../papiea-engine/__tests__/test_data_factory";
 import axios from "axios"
 import { readFileSync } from "fs";
 import { Metadata, Procedural_Execution_Strategy, Provider, Spec, Action, Entity_Reference, Entity } from "papiea-core";

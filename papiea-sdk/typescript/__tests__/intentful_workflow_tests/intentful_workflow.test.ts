@@ -1,6 +1,6 @@
-import { getDifferLocationDataDescription } from "../../../papiea-engine/__tests__/test_data_factory"
+import { getDifferLocationDataDescription } from "../../../../papiea-engine/__tests__/test_data_factory"
 import axios from "axios"
-import { timeout } from "../../../papiea-engine/src/utils/utils"
+import { timeout } from "../../../../papiea-engine/src/utils/utils"
 import { IntentfulStatus, Version, Metadata } from "papiea-core"
 import { ProviderSdk } from "../../src/provider_sdk/typescript_sdk";
 import { load } from "js-yaml"

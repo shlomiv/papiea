@@ -4,7 +4,7 @@ default: build_all
 node_modules_main node_modules_deps clean-node-modules clean clean-all build_main build_deps \
 build_all run-papiea-debug
 
-papiea-packages = core client backend-utils engine sdk
+papiea-packages = core client backend-utils engine sdk/typescript
 
 
 run-tests: run-papiea

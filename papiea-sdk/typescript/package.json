@@ -19,9 +19,9 @@
     "express": "^4.17.0",
     "express-async-handler": "^1.1.4",
     "js-yaml": "^3.12.0",
-    "papiea-backend-utils": "file:../papiea-backend-utils",
-    "papiea-client": "file:../papiea-client",
-    "papiea-core": "file:../papiea-core",
+    "papiea-backend-utils": "file:../../papiea-backend-utils",
+    "papiea-client": "file:../../papiea-client",
+    "papiea-core": "file:../../papiea-core",
     "pluralize": "^7.0.0",
     "swagger-model-validator": "^3.0.6",
     "uuid": "^3.3.2"

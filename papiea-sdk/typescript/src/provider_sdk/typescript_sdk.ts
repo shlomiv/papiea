@@ -1,6 +1,6 @@
 import {
     IntentfulCtx_Interface,
-    ProceduralCtx_Interface,
+    ProceduralCtx_Interface, ProcedureDescription,
     Provider as ProviderImpl,
     Provider_Power,
     SecurityApi
@@ -225,25 +225,21 @@ export class ProviderSdk implements ProviderImpl {
         return this
     }
 
-    provider_procedure(name: string, rbac: any,
-                       strategy: Procedural_Execution_Strategy,
-                       input_desc: any,
-                       output_desc: any,
-                       handler: (ctx: ProceduralCtx_Interface, input: any) => Promise<any>,
-                       description?: string,
-                       error_descriptions?: ErrorDescriptions): ProviderSdk {
+    provider_procedure(name: string,
+                       description: ProcedureDescription,
+                       handler: (ctx: ProceduralCtx_Interface, input: any) => Promise<any>): ProviderSdk {
         const procedure_callback_url = this._server_manager.procedure_callback_url(name);
         const callback_url = this._server_manager.callback_url();
-        validate_error_descriptions(error_descriptions)
+        validate_error_descriptions(description.error_descriptions)
         const procedural_signature: Procedural_Signature = {
             name,
-            argument: input_desc,
-            result: output_desc,
-            execution_strategy: strategy,
+            argument: description.input_desc ?? {},
+            result: description.output_desc ?? {},
+            execution_strategy: Intentful_Execution_Strategy.Basic,
             procedure_callback: procedure_callback_url,
             base_callback: callback_url,
-            error_descriptions: error_descriptions,
-            description: description
+            error_descriptions: description.error_descriptions,
+            description: description.description
         };
         this._procedures[name] = procedural_signature;
         this._server_manager.register_handler("/" + name, async (req, res) => {
@@ -425,25 +421,21 @@ export class Kind_Builder {
         this.allowExtraProps = allowExtraProps
     }
 
-    entity_procedure(name: string, rbac: any,
-                     strategy: Procedural_Execution_Strategy,
-                     input_desc: any,
-                     output_desc: any,
-                     handler: (ctx: ProceduralCtx_Interface, entity: Entity, input: any) => Promise<any>,
-                     description?: string,
-                     error_descriptions?: ErrorDescriptions): Kind_Builder {
+    entity_procedure(name: string,
+                     description: ProcedureDescription,
+                     handler: (ctx: ProceduralCtx_Interface, entity: Entity, input: any) => Promise<any>): Kind_Builder {
         const procedure_callback_url = this.server_manager.procedure_callback_url(name, this.kind.name);
         const callback_url = this.server_manager.callback_url(this.kind.name);
-        validate_error_descriptions(error_descriptions)
+        validate_error_descriptions(description.error_descriptions)
         const procedural_signature: Procedural_Signature = {
             name,
-            argument: input_desc,
-            result: output_desc,
-            execution_strategy: strategy,
+            argument: description.input_desc ?? {},
+            result: description.output_desc ?? {},
+            execution_strategy: Intentful_Execution_Strategy.Basic,
             procedure_callback: procedure_callback_url,
             base_callback: callback_url,
-            error_descriptions: error_descriptions,
-            description: description
+            error_descriptions: description.error_descriptions,
+            description: description.description
         };
         this.kind.entity_procedures[name] = procedural_signature;
         this.server_manager.register_handler(`/${this.kind.name}/${name}`, async (req, res) => {
@@ -468,7 +460,7 @@ export class Kind_Builder {
         return this
     }
 
-    on(sfs_signature: string, rbac: any,
+    on(sfs_signature: string,
        handler: (ctx: IntentfulCtx_Interface, entity: Entity, input: any) => Promise<any>): Kind_Builder {
         const procedure_callback_url = this.server_manager.procedure_callback_url(sfs_signature, this.kind.name);
         const callback_url = this.server_manager.callback_url(this.kind.name);
@@ -536,25 +528,21 @@ export class Kind_Builder {
         return this
     }
 
-    kind_procedure(name: string, rbac: any,
-                   strategy: Procedural_Execution_Strategy,
-                   input_desc: any,
-                   output_desc: any,
-                   handler: (ctx: ProceduralCtx_Interface, input: any) => Promise<any>,
-                   description?: string,
-                   error_descriptions?: ErrorDescriptions): Kind_Builder {
+    kind_procedure(name: string,
+                   description: ProcedureDescription,
+                   handler: (ctx: ProceduralCtx_Interface, input: any) => Promise<any>): Kind_Builder {
         const procedure_callback_url = this.server_manager.procedure_callback_url(name, this.kind.name);
         const callback_url = this.server_manager.callback_url(this.kind.name);
-        validate_error_descriptions(error_descriptions)
+        validate_error_descriptions(description.error_descriptions)
         const procedural_signature: Procedural_Signature = {
             name,
-            argument: input_desc,
-            result: output_desc,
-            execution_strategy: strategy,
+            argument: description.input_desc ?? {},
+            result: description.output_desc ?? {},
+            execution_strategy: Intentful_Execution_Strategy.Basic,
             procedure_callback: procedure_callback_url,
             base_callback: callback_url,
-            error_descriptions: error_descriptions,
-            description: description
+            error_descriptions: description.error_descriptions,
+            description: description.description
         };
         this.kind.kind_procedures[name] = procedural_signature;
         this.server_manager.register_handler(`/${this.kind.name}/${name}`, async (req, res) => {
@@ -580,7 +568,7 @@ export class Kind_Builder {
         const loggerFactory = new LoggerFactory({logPath: name})
         const logger = loggerFactory.createLogger()
         logger.info("You are registering on create handler. Note, this is a post create handler. The behaviour is due to change")
-        this.kind_procedure(name, {}, 0, {}, {}, handler)
+        this.kind_procedure(name, {}, handler)
         return this
     }
 
@@ -589,9 +577,9 @@ export class Kind_Builder {
         const loggerFactory = new LoggerFactory({logPath: name})
         const logger = loggerFactory.createLogger()
         logger.info("You are registering on delete handler. Note, this is a pre delete handler. The behaviour is due to change")
-        this.kind_procedure(name, {}, 0, {}, {}, handler)
+        this.kind_procedure(name, {}, handler)
         return this
     }
 }
 
-export {Version, Kind, Procedural_Signature, Provider, Data_Description, Procedural_Execution_Strategy, Entity, ProceduralCtx_Interface, Provider_Power, IntentfulCtx_Interface, UserInfo, S2S_Key, SecurityApi}
+export {Version, Kind, Procedural_Signature, Provider, Data_Description, Procedural_Execution_Strategy, Entity, ProceduralCtx_Interface, Provider_Power, IntentfulCtx_Interface, UserInfo, S2S_Key, SecurityApi, ProcedureDescription}

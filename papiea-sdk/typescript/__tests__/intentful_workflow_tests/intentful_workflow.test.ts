@@ -64,7 +64,7 @@ describe("Intentful Workflow tests", () => {
             const location = sdk.new_kind(locationDataDescription);
             sdk.version(provider_version);
             sdk.prefix(provider_prefix);
-            location.on("x", {}, async (ctx, entity, input) => {
+            location.on("x", async (ctx, entity, input) => {
                 await providerApiAdmin.patch(`/${sdk.provider.prefix}/${sdk.provider.version}/update_status`, {
                     context: "some context",
                     entity_ref: {
@@ -125,7 +125,7 @@ describe("Intentful Workflow tests", () => {
             const location = sdk.new_kind(locationDataDescription);
             sdk.version(provider_version);
             sdk.prefix(provider_prefix);
-            location.on("x", {}, async (ctx, entity, input) => {
+            location.on("x", async (ctx, entity, input) => {
                 throw new Error("Error in handler")
             })
             location.on_create(async (ctx, entity) => {
@@ -178,7 +178,7 @@ describe("Intentful Workflow tests", () => {
             const location = sdk.new_kind(locationDataDescription);
             sdk.version(provider_version);
             sdk.prefix(provider_prefix);
-            location.on("x", {}, async (ctx, entity, input) => {
+            location.on("x", async (ctx, entity, input) => {
                 await providerApiAdmin.patch(`/${sdk.provider.prefix}/${sdk.provider.version}/update_status`, {
                     context: "some context",
                     entity_ref: {
@@ -234,7 +234,7 @@ describe("Intentful Workflow tests", () => {
             const location = sdk.new_kind(locationDataDescription);
             sdk.version(provider_version);
             sdk.prefix(provider_prefix);
-            location.on("x", {}, async (ctx, entity, input) => {
+            location.on("x", async (ctx, entity, input) => {
                 times_requested++
                 if (times_requested === 2) {
                     await providerApiAdmin.patch(`/${sdk.provider.prefix}/${sdk.provider.version}/update_status`, {
@@ -299,7 +299,7 @@ describe("Intentful Workflow tests", () => {
             const location = sdk.new_kind(locationDataDescriptionArraySfs);
             sdk.version(provider_version);
             sdk.prefix(provider_prefix);
-            location.on("x.+{ip}", {}, async (ctx, entity, input) => {
+            location.on("x.+{ip}", async (ctx, entity, input) => {
                 await providerApiAdmin.post(`/${sdk.provider.prefix}/${sdk.provider.version}/update_status`, {
                     context: "some context",
                     entity_ref: {
@@ -373,7 +373,7 @@ describe("Intentful Workflow test sfs validation", () => {
             const location = sdk.new_kind(locationDataDescription);
             sdk.version(provider_version);
             sdk.prefix(provider_prefix);
-            location.on("wrong, wrong2", {}, async (ctx, entity, input) => {
+            location.on("wrong, wrong2", async (ctx, entity, input) => {
                 await providerApiAdmin.patch(`/${ sdk.provider.prefix }/${ sdk.provider.version }/update_status`, {
                     context: "some context",
                     entity_ref: {

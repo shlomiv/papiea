@@ -441,8 +441,8 @@ export default class ApiDocsGenerator {
                 }
             }
         }
-        if (sig.error_descriptions) {
-            for (let [key, val] of Object.entries(sig.error_descriptions)) {
+        if (sig.errors_schemas) {
+            for (let [key, val] of Object.entries(sig.errors_schemas)) {
                 if (proc_def.responses[key] === undefined) {
                     proc_def.responses[key] = get_error_response(val.description, val.structure)
                 }

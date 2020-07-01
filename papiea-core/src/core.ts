@@ -196,7 +196,7 @@ export enum Intentful_Execution_Strategy {Basic};
 // structure is an OpenAPI object describing internal error structure
 // Beware that an Error that user gets in the end is still of
 // a PapieaErrorResponse type
-export type ErrorDescriptions = {
+export type ErrorSchemas = {
     [ key: string ]: {
         description: string,
         structure: any
@@ -214,11 +214,11 @@ export interface Procedural_Signature {
     description?: string
 
     // Error description in format:
-    // Map<code, Data_Description> where code is an error status code as string
-    // Data_Description is an OpenAPI object describing error value
+    // Map<code, ErrorSchemas> where code is an error status code as string
+    // ErrorSchemas structure is an OpenAPI object describing error value
     // Beware that an Error that user gets in the end is still of
     // a PapieaErrorResponse type
-    error_descriptions?: ErrorDescriptions
+    errors_schemas?: ErrorSchemas
 
     // The representation of the data to be returned from this entity_procedure
     result: Data_Description;

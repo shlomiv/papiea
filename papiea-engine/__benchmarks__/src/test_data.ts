@@ -40,14 +40,14 @@ export async function setUpTestProvider(papiea_url: string, public_host: string,
     const location = sdk.new_kind(location_desc);
     sdk.version(provider_version);
     sdk.prefix(provider_prefix);
-    location.entity_procedure("moveX", {input_desc: loadYamlFromTestFactoryDir("../__tests__/test_data/procedure_move_input.yml"), output_desc: loadYamlFromTestFactoryDir("../__tests__/test_data/location_kind_test_data.yml")}, async (ctx, entity, input) => {
+    location.entity_procedure("moveX", {input_schema: loadYamlFromTestFactoryDir("../__tests__/test_data/procedure_move_input.yml"), output_schema: loadYamlFromTestFactoryDir("../__tests__/test_data/location_kind_test_data.yml")}, async (ctx, entity, input) => {
         entity.spec.x += input;
         return entity.spec;
     });
     location.kind_procedure(
         "computeGeolocation",
-        {input_desc: loadYamlFromTestFactoryDir("../__tests__/test_data/procedure_geolocation_compute_input.yml"),
-         output_desc: loadYamlFromTestFactoryDir("../__tests__/test_data/procedure_geolocation_compute_input.yml")}, async (ctx, input) => {
+        {input_schema: loadYamlFromTestFactoryDir("../__tests__/test_data/procedure_geolocation_compute_input.yml"),
+         output_schema: loadYamlFromTestFactoryDir("../__tests__/test_data/procedure_geolocation_compute_input.yml")}, async (ctx, input) => {
             let cluster_location = "us.west.";
             cluster_location += input;
             return cluster_location
@@ -55,8 +55,8 @@ export async function setUpTestProvider(papiea_url: string, public_host: string,
     );
     sdk.provider_procedure(
         "computeSum",
-        {input_desc: loadYamlFromTestFactoryDir("../__tests__/test_data/procedure_sum_input.yml"),
-         output_desc: loadYamlFromTestFactoryDir("../__tests__/test_data/procedure_sum_output.yml")},
+        {input_schema: loadYamlFromTestFactoryDir("../__tests__/test_data/procedure_sum_input.yml"),
+         output_schema: loadYamlFromTestFactoryDir("../__tests__/test_data/procedure_sum_output.yml")},
         async (ctx, input) => {
             return input.a + input.b;
         }

@@ -1,6 +1,6 @@
 // [[file:~/work/papiea-js/Papiea-design.org::*Typescript:%20/src/provider_sdk/typescript_sdk_interface][Typescript: /src/provider_sdk/typescript_sdk_interface:1]]
 import { Kind_Builder } from "./typescript_sdk";
-import { Data_Description, Version, Status, Entity, Entity_Reference, S2S_Key, UserInfo, Action, Secret, ErrorDescriptions } from "papiea-core";
+import { Data_Description, Version, Status, Entity, Entity_Reference, S2S_Key, UserInfo, Action, Secret, ErrorSchemas } from "papiea-core";
 import {
     LOG_LEVELS, LogLevel, LoggerOptions, Logger, LoggerFactory,
 } from 'papiea-backend-utils';
@@ -77,10 +77,10 @@ export interface IntentfulCtx_Interface {
 }
 
 export interface ProcedureDescription {
-    input_desc?: any,
-    output_desc?: any,
-    description?: string,
-    error_descriptions?: ErrorDescriptions
+    input_schema?: any,            // openapi schema representing input
+    output_schema?: any,           // openapi schema representing output
+    errors_schemas?: ErrorSchemas, // map of error-code to openapi schema representing error
+    description?: string           // textual description of the procedure
 }
 
 // For the time being these are equal. Later they may differ

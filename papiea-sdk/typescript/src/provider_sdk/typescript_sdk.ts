@@ -25,11 +25,10 @@ import {
     SpecOnlyEntityKind,
     UserInfo,
     Version,
-    ErrorDescriptions
 } from "papiea-core"
 import { LoggerFactory } from 'papiea-backend-utils'
 import { InvocationError, SecurityApiError } from "./typescript_sdk_exceptions"
-import { validate_error_descriptions } from "./typescript_sdk_utils"
+import { validate_error_codes } from "./typescript_sdk_utils"
 
 class SecurityApiImpl implements SecurityApi {
     readonly provider: ProviderSdk;
@@ -230,15 +229,15 @@ export class ProviderSdk implements ProviderImpl {
                        handler: (ctx: ProceduralCtx_Interface, input: any) => Promise<any>): ProviderSdk {
         const procedure_callback_url = this._server_manager.procedure_callback_url(name);
         const callback_url = this._server_manager.callback_url();
-        validate_error_descriptions(description.error_descriptions)
+        validate_error_codes(description.errors_schemas)
         const procedural_signature: Procedural_Signature = {
             name,
-            argument: description.input_desc ?? {},
-            result: description.output_desc ?? {},
+            argument: description.input_schema ?? {},
+            result: description.output_schema ?? {},
             execution_strategy: Intentful_Execution_Strategy.Basic,
             procedure_callback: procedure_callback_url,
             base_callback: callback_url,
-            error_descriptions: description.error_descriptions,
+            errors_schemas: description.errors_schemas,
             description: description.description
         };
         this._procedures[name] = procedural_signature;
@@ -426,15 +425,15 @@ export class Kind_Builder {
                      handler: (ctx: ProceduralCtx_Interface, entity: Entity, input: any) => Promise<any>): Kind_Builder {
         const procedure_callback_url = this.server_manager.procedure_callback_url(name, this.kind.name);
         const callback_url = this.server_manager.callback_url(this.kind.name);
-        validate_error_descriptions(description.error_descriptions)
+        validate_error_codes(description.errors_schemas)
         const procedural_signature: Procedural_Signature = {
             name,
-            argument: description.input_desc ?? {},
-            result: description.output_desc ?? {},
+            argument: description.input_schema ?? {},
+            result: description.output_schema ?? {},
             execution_strategy: Intentful_Execution_Strategy.Basic,
             procedure_callback: procedure_callback_url,
             base_callback: callback_url,
-            error_descriptions: description.error_descriptions,
+            errors_schemas: description.errors_schemas,
             description: description.description
         };
         this.kind.entity_procedures[name] = procedural_signature;
@@ -533,15 +532,15 @@ export class Kind_Builder {
                    handler: (ctx: ProceduralCtx_Interface, input: any) => Promise<any>): Kind_Builder {
         const procedure_callback_url = this.server_manager.procedure_callback_url(name, this.kind.name);
         const callback_url = this.server_manager.callback_url(this.kind.name);
-        validate_error_descriptions(description.error_descriptions)
+        validate_error_codes(description.errors_schemas)
         const procedural_signature: Procedural_Signature = {
             name,
-            argument: description.input_desc ?? {},
-            result: description.output_desc ?? {},
+            argument: description.input_schema ?? {},
+            result: description.output_schema ?? {},
             execution_strategy: Intentful_Execution_Strategy.Basic,
             procedure_callback: procedure_callback_url,
             base_callback: callback_url,
-            error_descriptions: description.error_descriptions,
+            errors_schemas: description.errors_schemas,
             description: description.description
         };
         this.kind.kind_procedures[name] = procedural_signature;

@@ -6,12 +6,23 @@ from typing import Any, Optional, Type
 from aiohttp import ClientSession, ClientTimeout
 from multidict import CIMultiDict
 
-from papiea.python_sdk_exceptions import check_response, PapieaBaseException, ApiException
+from papiea.python_sdk_exceptions import (
+    ApiException,
+    PapieaBaseException,
+    check_response,
+)
 from papiea.utils import json_loads_attrs
 
 
 class ApiInstance(object):
-    def __init__(self, base_url: str, timeout: int = 5000, headers: dict = {}, *, logger: logging.Logger):
+    def __init__(
+        self,
+        base_url: str,
+        timeout: int = 5000,
+        headers: dict = {},
+        *,
+        logger: logging.Logger
+    ):
         self.base_url = base_url
         self.headers = headers
         self.timeout = timeout
@@ -29,7 +40,7 @@ class ApiInstance(object):
     ) -> None:
         await self.close()
 
-    async def check_result(self, res: Any) -> Any:
+    def check_result(self, res: Any) -> Any:
         if res == "":
             return None
         return json_loads_attrs(res)
@@ -44,35 +55,35 @@ class ApiInstance(object):
         # and sadly there are no macro in python
         if method == "get":
             async with self.session.get(
-                    self.base_url + "/" + prefix, headers=new_headers
+                self.base_url + "/" + prefix, headers=new_headers
             ) as resp:
                 await check_response(resp, self.logger)
                 res = await resp.text()
             return self.check_result(res)
         elif method == "post":
             async with self.session.post(
-                    self.base_url + "/" + prefix, data=data_binary, headers=new_headers
+                self.base_url + "/" + prefix, data=data_binary, headers=new_headers
             ) as resp:
                 await check_response(resp, self.logger)
                 res = await resp.text()
             return self.check_result(res)
         elif method == "put":
             async with self.session.put(
-                    self.base_url + "/" + prefix, data=data_binary, headers=new_headers
+                self.base_url + "/" + prefix, data=data_binary, headers=new_headers
             ) as resp:
                 await check_response(resp, self.logger)
                 res = await resp.text()
             return self.check_result(res)
         elif method == "patch":
             async with self.session.patch(
-                    self.base_url + "/" + prefix, data=data_binary, headers=new_headers
+                self.base_url + "/" + prefix, data=data_binary, headers=new_headers
             ) as resp:
                 await check_response(resp, self.logger)
                 res = await resp.text()
             return self.check_result(res)
         elif method == "delete":
             async with self.session.delete(
-                    self.base_url + "/" + prefix, headers=new_headers
+                self.base_url + "/" + prefix, headers=new_headers
             ) as resp:
                 await check_response(resp, self.logger)
                 res = await resp.text()

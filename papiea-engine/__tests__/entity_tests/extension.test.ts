@@ -1,6 +1,7 @@
 import { ProviderBuilder } from "../test_data_factory";
 import axios from "axios";
 import { Metadata, Spec } from "papiea-core";
+import uuid = require("uuid")
 
 declare var process: {
     env: {
@@ -53,6 +54,50 @@ describe("Entity API with metadata extension tests", () => {
                 spec: {
                     x: 100,
                     y: 11
+                }
+            });
+        } catch (err) {
+            const res = err.response;
+            expect(res.status).toEqual(400);
+            expect(res.data.error.errors.length).toEqual(1);
+            expect(res.data.error.errors[0].message).toEqual('Metadata extension is not specified')
+
+        }
+    });
+
+    test("Create entity with missing metadata extension but metadata being present in req body", async () => {
+        expect.hasAssertions();
+        try {
+            await entityApi.post(`/${providerPrefix}/${providerVersion}/${kind_name}`, {
+                spec: {
+                    x: 100,
+                    y: 11
+                },
+                metadata: {
+
+                }
+            });
+        } catch (err) {
+            const res = err.response;
+            expect(res.status).toEqual(400);
+            expect(res.data.error.errors.length).toEqual(1);
+            expect(res.data.error.errors[0].message).toEqual('Metadata extension is not specified')
+
+        }
+    });
+
+    test("Create entity with missing metadata extension but metadata being present in req body with additional props", async () => {
+        expect.hasAssertions();
+        try {
+            await entityApi.post(`/${providerPrefix}/${providerVersion}/${kind_name}`, {
+                spec: {
+                    x: 100,
+                    y: 11
+                },
+                metadata: {
+                    uuid: uuid(),
+                    kind: "",
+                    spec_version: 0,
                 }
             });
         } catch (err) {

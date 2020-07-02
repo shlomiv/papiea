@@ -55,7 +55,7 @@ export class ValidatorImpl {
         if (isEmpty(extension_structure)) {
             return
         }
-        if (isEmpty(metadata)) {
+        if (metadata.extension === undefined || metadata.extension === null) {
             throw new ValidationError([{"name": "Error", message: "Metadata extension is not specified"}])
         }
         const schemas: any = Object.assign({}, extension_structure);

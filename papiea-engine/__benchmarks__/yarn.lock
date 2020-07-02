@@ -685,31 +685,31 @@ pako@^1.0.3:
   integrity sha512-4hLB8Py4zZce5s4yd9XzopqwVv/yGNhV1Bl8NTmCq1763HeK2+EwVTv+leGeL13Dnh2wfbqowVPXCIO0z4taYw==
 
 "papiea-backend-utils@file:../../papiea-backend-utils":
-  version "1.0.84"
+  version "1.0.89"
   dependencies:
     logform "^2.1.2"
-    papiea-core "file:../../../../Library/Caches/Yarn/v6/npm-papiea-backend-utils-1.0.84-448c94aa-628e-4054-a666-c59725c648bf-1590661517118/node_modules/papiea-core"
+    papiea-core "file:../../../../Library/Caches/Yarn/v6/npm-papiea-backend-utils-1.0.89-6c919170-597b-465a-a5a9-0ef91faea3b1-1593514835837/node_modules/papiea-core"
     winston "^3.2.1"
 
 "papiea-client@file:../../papiea-client":
-  version "1.0.84"
+  version "1.0.89"
   dependencies:
     axios "^0.18.1"
-    papiea-core "file:../../../../Library/Caches/Yarn/v6/npm-papiea-client-1.0.84-42016f6f-4820-4c17-a0de-f25e2fda0a9c-1590661516579/node_modules/papiea-core"
+    papiea-core "file:../../../../Library/Caches/Yarn/v6/npm-papiea-client-1.0.89-42c0c60c-2276-4af2-8def-42e2756b213c-1593514835790/node_modules/papiea-core"
 
 "papiea-core@file:../../papiea-core":
-  version "1.0.84"
+  version "1.0.89"
 
-"papiea-sdk@file:../../papiea-sdk":
-  version "1.0.84"
+"papiea-sdk@file:../../papiea-sdk/typescript":
+  version "1.0.89"
   dependencies:
     axios "^0.18.1"
     express "^4.17.0"
     express-async-handler "^1.1.4"
     js-yaml "^3.12.0"
-    papiea-backend-utils "file:../../../../Library/Caches/Yarn/v6/npm-papiea-sdk-1.0.84-b559b5bf-eda0-4577-bc93-9bbed83b5929-1590661517093/node_modules/papiea-backend-utils"
-    papiea-client "file:../../../../Library/Caches/Yarn/v6/npm-papiea-sdk-1.0.84-b559b5bf-eda0-4577-bc93-9bbed83b5929-1590661517093/node_modules/papiea-client"
-    papiea-core "file:../../../../Library/Caches/Yarn/v6/npm-papiea-sdk-1.0.84-b559b5bf-eda0-4577-bc93-9bbed83b5929-1590661517093/node_modules/papiea-core"
+    papiea-backend-utils "file:../../../../Library/Caches/Yarn/v6/npm-papiea-sdk-1.0.89-e8ca5f57-ec2a-43bb-8937-aecf5913d2cd-1593514835800/papiea-backend-utils"
+    papiea-client "file:../../../../Library/Caches/Yarn/v6/npm-papiea-sdk-1.0.89-e8ca5f57-ec2a-43bb-8937-aecf5913d2cd-1593514835800/papiea-client"
+    papiea-core "file:../../../../Library/Caches/Yarn/v6/npm-papiea-sdk-1.0.89-e8ca5f57-ec2a-43bb-8937-aecf5913d2cd-1593514835800/papiea-core"
     pluralize "^7.0.0"
     swagger-model-validator "^3.0.6"
     uuid "^3.3.2"

@@ -17,7 +17,7 @@
   "license": "ISC",
   "dependencies": {
     "papiea-client": "file:../../papiea-client",
-    "papiea-sdk": "file:../../papiea-sdk",
+    "papiea-sdk": "file:../../papiea-sdk/typescript",
     "papiea-core": "file:../../papiea-core",
     "autocannon": "^4.6.0",
     "axios": "^0.19.2"

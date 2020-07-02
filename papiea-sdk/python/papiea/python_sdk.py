@@ -18,11 +18,11 @@ from .core import (
     S2S_Key,
     Secret,
     UserInfo,
-    Version,
+    Version, ProcedureDescription,
 )
 from .python_sdk_context import IntentfulCtx, ProceduralCtx
 from .python_sdk_exceptions import InvocationError, SecurityApiError
-from .utils import json_loads_attrs
+from .utils import json_loads_attrs, validate_error_codes
 
 
 class ProviderServerManager(object):
@@ -263,20 +263,21 @@ class ProviderSdk(object):
     def provider_procedure(
         self,
         name: str,
-        strategy: ProceduralExecutionStrategy,
-        input_desc: Any,
-        output_desc: Any,
+        procedure_description: ProcedureDescription,
         handler: Callable[[ProceduralCtx, Any], Any],
     ) -> "ProviderSdk":
         procedure_callback_url = self._server_manager.procedure_callback_url(name)
         callback_url = self._server_manager.callback_url()
+        validate_error_codes(procedure_description.get("errors_schemas"))
         procedural_signature = ProceduralSignature(
             name=name,
-            argument=input_desc,
-            result=output_desc,
-            execution_strategy=strategy,
+            argument=procedure_description.get("input_schema"),
+            result=procedure_description.get("output_schema"),
+            execution_strategy=IntentfulExecutionStrategy.Basic,
             procedure_callback=procedure_callback_url,
+            errors_schemas=procedure_description.get("errors_schemas"),
             base_callback=callback_url,
+            description=procedure_description.get("description")
         )
         self._procedures[name] = procedural_signature
         prefix = self.get_prefix()
@@ -389,22 +390,23 @@ class KindBuilder(object):
     def entity_procedure(
         self,
         name: str,
-        strategy: ProceduralExecutionStrategy,
-        input_desc: Any,
-        output_desc: Any,
+        procedure_description: ProcedureDescription,
         handler: Callable[[ProceduralCtx, Entity, Any], Any],
     ) -> "KindBuilder":
         procedure_callback_url = self.server_manager.procedure_callback_url(
             name, self.kind.name
         )
         callback_url = self.server_manager.callback_url(self.kind.name)
+        validate_error_codes(procedure_description.get("errors_schemas"))
         procedural_signature = ProceduralSignature(
             name=name,
-            argument=input_desc,
-            result=output_desc,
-            execution_strategy=strategy,
+            argument=procedure_description.get("input_schema"),
+            result=procedure_description.get("output_schema"),
+            execution_strategy=IntentfulExecutionStrategy.Basic,
             procedure_callback=procedure_callback_url,
+            errors_schemas=procedure_description.get("errors_schemas"),
             base_callback=callback_url,
+            description=procedure_description.get("description")
         )
         self.kind.entity_procedures[name] = procedural_signature
         prefix = self.get_prefix()
@@ -437,22 +439,23 @@ class KindBuilder(object):
     def kind_procedure(
         self,
         name: str,
-        strategy: ProceduralExecutionStrategy,
-        input_desc: Any,
-        output_desc: Any,
+        procedure_description: ProcedureDescription,
         handler: Callable[[ProceduralCtx, Any], Any],
     ) -> "KindBuilder":
         procedure_callback_url = self.server_manager.procedure_callback_url(
             name, self.kind.name
         )
         callback_url = self.server_manager.callback_url(self.kind.name)
+        validate_error_codes(procedure_description.get("errors_schemas"))
         procedural_signature = ProceduralSignature(
             name=name,
-            argument=input_desc,
-            result=output_desc,
-            execution_strategy=strategy,
+            argument=procedure_description.get("input_schema"),
+            result=procedure_description.get("output_schema"),
+            execution_strategy=IntentfulExecutionStrategy.Basic,
             procedure_callback=procedure_callback_url,
+            errors_schemas=procedure_description.get("errors_schemas"),
             base_callback=callback_url,
+            description=procedure_description.get("description")
         )
         self.kind.kind_procedures[name] = procedural_signature
         prefix = self.get_prefix()

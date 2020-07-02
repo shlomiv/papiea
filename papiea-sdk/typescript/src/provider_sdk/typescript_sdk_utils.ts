@@ -1,6 +1,6 @@
-import { ErrorDescriptions } from "papiea-core"
+import { ErrorSchemas } from "papiea-core"
 
-export function validate_error_descriptions(error_desc: ErrorDescriptions | undefined) {
+export function validate_error_codes(error_desc: ErrorSchemas | undefined) {
     if (error_desc) {
         for (let code of Object.keys(error_desc)) {
             const parsed_code = Number(code)

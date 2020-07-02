@@ -36,7 +36,7 @@ jobs:
           name: Run unit tests
           command: |
             docker-compose exec papiea-engine npm run test-ci
-            docker-compose exec papiea-engine bash -c 'cd /code/papiea-sdk && npm test'
+            docker-compose exec papiea-engine bash -c 'cd /code/papiea-sdk/typescript && npm test'
             docker cp papiea-engine:/code/papiea-engine/reports . || echo .
             docker cp papiea-engine:/code/papiea-engine/coverage . || echo .
             docker cp papiea-engine:/code/papiea-engine/src/logs . || echo .

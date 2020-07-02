@@ -5,7 +5,8 @@
   "main": "build/entity_client.js",
   "scripts": {
     "clean": "rm -rf build",
-    "build": "yarn run tsc"
+    "build": "yarn run tsc",
+    "test": "jest --runInBand --coverage"
   },
   "author": "Shlomi Vaknin",
   "license": "ISC",
@@ -14,7 +15,11 @@
     "papiea-core": "file:../papiea-core"
   },
   "devDependencies": {
+    "@types/jest": "^26.0.3",
     "@types/node": "^12.0.2",
+    "jest": "^26.1.0",
+    "jest-junit": "^11.0.1",
+    "ts-jest": "^26.1.1",
     "typescript": "^3.8.3"
   }
 }

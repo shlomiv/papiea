@@ -68,6 +68,20 @@ describe("Pagination tests", () => {
         expect(res.data.entity_count).toBe(70);
     });
 
+    test("Wrong pagination should raise error", async () => {
+        expect.assertions(1)
+        try {
+            let res = await entityApi.post(`${ providerPrefix }/${ providerVersion }/${ kind_name }?offset=1&limit=100&spec=`, {
+                spec: {
+                    x: 10,
+                    y: 11
+                }
+            });
+        } catch (e) {
+            expect(e).toBeDefined()
+        }
+    });
+
     test("Pagination test with limit", async () => {
         expect.assertions(2);
         let res = await entityApi.post(`${ providerPrefix }/${ providerVersion }/${ kind_name }/filter?limit=10`, {

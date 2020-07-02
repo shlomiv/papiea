@@ -1,5 +1,6 @@
 import enum
-from typing import Any
+from typing import Any, Optional, Dict
+from typing import TypedDict
 
 
 class AttributeDict(dict):
@@ -61,6 +62,26 @@ class IntentfulExecutionStrategy(str):
     Basic = "basic"
     SpecOnly = "spec-only"
     Differ = "differ"
+
+
+# Error description in format:
+# Map<code, ErrorSchemas> where code is an error status code as string
+# ErrorSchemas structure is an OpenAPI object describing error value
+# Beware that an Error that user gets in the end is still of
+#  a PapieaErrorResponse type
+class ErrorSchema(TypedDict):
+    description: Optional[str]
+    structure: Optional[Any]
+
+
+ErrorSchemas = Dict[str, ErrorSchema]
+
+
+class ProcedureDescription(TypedDict):
+    input_schema: Optional[Any]  # openapi schema representing input
+    output_schema: Optional[Any]  # openapi schema representing output
+    errors_schemas: Optional[ErrorSchemas]  # map of error-code to openapi schema representing error
+    description: Optional[str]  # textual description of the procedure
 
 
 ProviderPower = str

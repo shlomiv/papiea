@@ -109,7 +109,6 @@ export async function filter_entity(provider: string, kind: string, version: str
 
 export async function iter_filter(url: string, data: any, config?: AxiosRequestConfig) {
     return (async function* iter(batch_size?: number, offset?: number): AsyncGenerator<any, undefined, any> {
-        console.log(offset)
         if (!batch_size) {
             batch_size = BATCH_SIZE
         }
@@ -154,6 +153,8 @@ export interface EntityCRUD {
 
     filter_iter(filter: any): Promise<(batch_size?: number, offset?: number) => AsyncGenerator<any, undefined, any>>
 
+    list_iter(): Promise<(batch_size?: number, offset?: number) => AsyncGenerator<any, undefined, any>>
+
     invoke_procedure(procedure_name: string, entity_reference: Entity_Reference, input: any): Promise<any>
 
     invoke_kind_procedure(procedure_name: string, input: any): Promise<any>
@@ -169,6 +170,7 @@ export function kind_client(papiea_url: string, provider: string, kind: string, 
         delete: (entity_reference: Entity_Reference) => delete_entity(provider, kind, version, entity_reference, papiea_url, the_s2skey),
         filter: (filter: any) => filter_entity(provider, kind, version, filter, papiea_url, the_s2skey),
         filter_iter: (filter: any) => filter_entity_iter(provider, kind, version, filter, papiea_url, the_s2skey),
+        list_iter: () => filter_entity_iter(provider, kind, version, {}, papiea_url, the_s2skey),
         invoke_procedure: (proc_name: string, entity_reference: Entity_Reference, input: any) => invoke_entity_procedure(provider, kind, version, proc_name, input, entity_reference, papiea_url, the_s2skey),
         invoke_kind_procedure: (proc_name: string, input: any) => invoke_kind_procedure(provider, kind, version, proc_name, input, papiea_url, the_s2skey)
     }

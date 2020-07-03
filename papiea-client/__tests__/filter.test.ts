@@ -82,4 +82,28 @@ describe("Entity API tests", () => {
         }
         await Promise.all(promises)
     })
+
+    test("List async iterators should work correctly", async () => {
+        const uuids: string[] = []
+        const location_client = kind_client("http://localhost:3000", providerPrefix, kind_name, providerVersion, '')
+        let promises = []
+        const specs = [1,2,3,4]
+        for (let i of specs) {
+            promises.push(location_client.create({x: i, y: i}))
+        }
+        const res = await Promise.all<EntitySpec>(promises)
+        res.map(entity => uuids.push(entity.metadata.uuid))
+        let entity_count = 0
+        const iterator = await location_client.list_iter()
+        for await (const entity of iterator(2)) {
+            expect(specs).toContain(entity.spec.x)
+            entity_count++
+        }
+        expect(entity_count).toBe(4)
+        promises = []
+        for (const uuid of uuids) {
+            promises.push(location_client.delete({uuid, kind: kind_name}))
+        }
+        await Promise.all(promises)
+    })
 })

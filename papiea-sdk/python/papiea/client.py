@@ -1,12 +1,13 @@
 import logging
 from types import TracebackType
-from typing import Any, Optional, Type
+from typing import Any, Optional, Type, Callable, AsyncGenerator
 
 from .api import ApiInstance
 from .core import AttributeDict, Entity, EntityReference, EntitySpec, Metadata, Spec
 
 FilterResults = AttributeDict
 
+BATCH_SIZE = 20
 
 class EntityCRUD(object):
     def __init__(
@@ -63,6 +64,25 @@ class EntityCRUD(object):
     async def filter(self, filter_obj: Any) -> FilterResults:
         res = await self.api_instance.post("filter", filter_obj)
         return res.data
+
+    async def filter_iter(self, filter_obj: Any) -> Callable[[Optional[int], Optional[int]], AsyncGenerator[Any, None]]:
+        async def iter_func(batch_size: Optional[int], offset: Optional[int]):
+            if not batch_size:
+                batch_size = BATCH_SIZE
+            res = await self.api_instance.post(f"filter?limit={batch_size}&offset={offset or ''}", filter_obj)
+            if len(res.data.results) == 0:
+                return
+            else:
+                for entity in res.data.results:
+                    yield entity
+                offset = offset or 0
+                async for val in iter_func(batch_size, offset):
+                    yield val
+                return
+        return iter_func
+
+    async def list_iter(self) -> Callable[[Optional[int], Optional[int]], AsyncGenerator[Any, None]]:
+        return await self.filter_iter({})
 
     async def invoke_procedure(
         self, procedure_name: str, entity_reference: EntityReference, input_: Any

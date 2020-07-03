@@ -66,7 +66,7 @@ class EntityCRUD(object):
         return res.data
 
     async def filter_iter(self, filter_obj: Any) -> Callable[[Optional[int], Optional[int]], AsyncGenerator[Any, None]]:
-        async def iter_func(batch_size: Optional[int], offset: Optional[int]):
+        async def iter_func(batch_size: Optional[int] = None, offset: Optional[int] = None):
             if not batch_size:
                 batch_size = BATCH_SIZE
             res = await self.api_instance.post(f"filter?limit={batch_size}&offset={offset or ''}", filter_obj)

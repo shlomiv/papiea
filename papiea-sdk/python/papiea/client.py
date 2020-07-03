@@ -70,7 +70,7 @@ class EntityCRUD(object):
             if not batch_size:
                 batch_size = BATCH_SIZE
             res = await self.api_instance.post(f"filter?limit={batch_size}&offset={offset or ''}", filter_obj)
-            print(res)
+            print(f"RESULT: {res}")
             if len(res.data.results) == 0:
                 return
             else:

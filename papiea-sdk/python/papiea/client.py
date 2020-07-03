@@ -76,7 +76,7 @@ class EntityCRUD(object):
                 for entity in res.results:
                     yield entity
                 offset = offset or 0
-                async for val in iter_func(batch_size, offset):
+                async for val in iter_func(batch_size, offset + batch_size):
                     yield val
                 return
         return iter_func

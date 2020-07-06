@@ -51,11 +51,11 @@ export function createEntityAPIRouter(entity_api: Entity_API): Router {
         res.json(await entity_api.check_permission(req.user, req.params.prefix, req.params.version, req.body))
     }));
 
-    router.get("/intentful_task/:id", CheckNoQueryParams, asyncHandler(async (req, res) => {
-        res.json(await entity_api.get_intentful_task(req.user, req.params.id))
+    router.get("/intent_watcher/:id", CheckNoQueryParams, asyncHandler(async (req, res) => {
+        res.json(await entity_api.get_intent_watcher(req.user, req.params.id))
     }))
 
-    router.get("/intentful_task", check_request({
+    router.get("/intent_watcher", check_request({
         allowed_query_params: ['offset', 'limit', 'sort', 'entity_ref', 'created_at', 'status']
     }), asyncHandler(async (req, res) => {
         const filter: any = {};
@@ -73,11 +73,11 @@ export function createEntityAPIRouter(entity_api: Entity_API): Router {
         if (req.query.status) {
             filter.status = req.query.status
         }
-        const intentful_tasks = await entity_api.filter_intentful_task(req.user, filter, sortParams)
-        res.json(await paginateEntities(intentful_tasks, skip, size))
+        const intent_watchers = await entity_api.filter_intent_watcher(req.user, filter, sortParams)
+        res.json(await paginateEntities(intent_watchers, skip, size))
     }))
 
-    router.post("/intentful_task/filter", check_request({
+    router.post("/intent_watcher/filter", check_request({
         allowed_query_params: ['offset', 'limit', 'sort'],
         allowed_body_params: ['entity_ref', 'created_at', 'status']
     }), asyncHandler(async (req, res) => {
@@ -96,8 +96,8 @@ export function createEntityAPIRouter(entity_api: Entity_API): Router {
         if (req.body.status) {
             filter.status = req.body.status
         }
-        const intentful_tasks = await entity_api.filter_intentful_task(req.user, filter, sortParams)
-        res.json(await paginateEntities(intentful_tasks, skip, size))
+        const intent_watchers = await entity_api.filter_intent_watcher(req.user, filter, sortParams)
+        res.json(await paginateEntities(intent_watchers, skip, size))
     }))
 
     router.get("/:prefix/:version/:kind", check_request({

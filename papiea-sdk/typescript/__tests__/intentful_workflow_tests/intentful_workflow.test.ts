@@ -100,7 +100,7 @@ describe("Intentful Workflow tests", () => {
             let retries = 5
             try {
                 for (let i = 1; i <= retries; i++) {
-                    const res = await entityApi.get(`/intentful_task/${ task.uuid }`)
+                    const res = await entityApi.get(`/intent_watcher/${ task.uuid }`)
                     if (res.data.status === IntentfulStatus.Completed_Successfully) {
                         expect(res.data.status).toBe(IntentfulStatus.Completed_Successfully)
                         const result = await entityApi.get(`/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`)
@@ -154,7 +154,7 @@ describe("Intentful Workflow tests", () => {
             let retries = 10
             try {
                 for (let i = 1; i <= retries; i++) {
-                    const res = await entityApi.get(`/intentful_task/${ task.uuid }`)
+                    const res = await entityApi.get(`/intent_watcher/${ task.uuid }`)
                     if (res.data.status === IntentfulStatus.Active && res.data.times_failed > 1) {
                         expect(res.data.times_failed).toBeGreaterThan(1)
                         expect(res.data.last_handler_error).toEqual("Error in handler")
@@ -212,7 +212,7 @@ describe("Intentful Workflow tests", () => {
                 }
             })
             try {
-                const res = await entityApi.get(`/intentful_task/${ task.uuid }`)
+                const res = await entityApi.get(`/intent_watcher/${ task.uuid }`)
                 if (res.data.status === IntentfulStatus.Failed) {
                     expect(res.data.status).toBe(IntentfulStatus.Failed)
                     return
@@ -275,13 +275,13 @@ describe("Intentful Workflow tests", () => {
             })
             try {
                 await timeout(2000)
-                let res = await entityApi.get(`/intentful_task/${ task.uuid }`)
+                let res = await entityApi.get(`/intent_watcher/${ task.uuid }`)
                 expect(res.data.status).toBe(IntentfulStatus.Active)
                 await timeout(4000)
-                res = await entityApi.get(`/intentful_task/${ task.uuid }`)
+                res = await entityApi.get(`/intent_watcher/${ task.uuid }`)
                 expect(res.data.status).toBe(IntentfulStatus.Active)
                 await timeout(12000)
-                res = await entityApi.get(`/intentful_task/${ task.uuid }`)
+                res = await entityApi.get(`/intent_watcher/${ task.uuid }`)
                 expect(res.data.status).toBe(IntentfulStatus.Completed_Successfully)
             } catch (e) {
                 console.log(`Couldn't get entity: ${e}`)
@@ -340,7 +340,7 @@ describe("Intentful Workflow tests", () => {
             let retries = 5
             try {
                 for (let i = 1; i <= retries; i++) {
-                    const res = await entityApi.get(`/intentful_task/${ task.uuid }`)
+                    const res = await entityApi.get(`/intent_watcher/${ task.uuid }`)
                     if (res.data.status === IntentfulStatus.Completed_Successfully) {
                         expect(res.data.status).toBe(IntentfulStatus.Completed_Successfully)
                         const result = await entityApi.get(`/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`)

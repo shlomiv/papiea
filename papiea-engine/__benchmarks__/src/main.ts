@@ -41,7 +41,7 @@ async function main() {
         const intentful_benchmarks = new IntentfulBenchmarks(PAPIEA_URL, intentful_provider.prefix, intentful_provider.version, intentful_kind)
         intentful_benchmarks.setOpts({ amount: 5 })
         await intentful_benchmarks.runIntentfulCAS()
-        await intentful_benchmarks.runIntentfulTask()
+        await intentful_benchmarks.runIntentWatcher()
     } catch (e) {
         console.log(e)
     } finally {

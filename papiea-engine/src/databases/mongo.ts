@@ -7,7 +7,7 @@ import { Provider_DB_Mongo } from "./provider_db_mongo";
 import { S2S_Key_DB_Mongo } from "./s2skey_db_mongo";
 import { SessionKeyDbMongo } from "./session_key_db_mongo"
 import { Logger } from 'papiea-backend-utils'
-import { IntentfulTask_DB_Mongo } from "./intentful_task_db_mongo"
+import { IntentWatcher_DB_Mongo } from "./intent_watcher_db_mongo"
 import { Watchlist_Db_Mongo } from "./watchlist_db_mongo";
 import { timeout } from "../utils/utils";
 const fs = require('fs'),
@@ -25,7 +25,7 @@ export class MongoConnection {
     statusDb: Status_DB_Mongo | undefined;
     s2skeyDb: S2S_Key_DB_Mongo | undefined;
     sessionKeyDb: SessionKeyDbMongo | undefined
-    intentfulTaskDb: IntentfulTask_DB_Mongo | undefined
+    intentWatcherDb: IntentWatcher_DB_Mongo | undefined
     watchlistDb: Watchlist_Db_Mongo | undefined;
 
     constructor(url: string, dbName: string) {
@@ -42,7 +42,7 @@ export class MongoConnection {
         this.providerDb = undefined;
         this.statusDb = undefined;
         this.s2skeyDb = undefined;
-        this.intentfulTaskDb = undefined
+        this.intentWatcherDb = undefined
     }
 
     async download_rds_cert(): Promise<void> {
@@ -127,14 +127,14 @@ export class MongoConnection {
         return this.sessionKeyDb;
     }
 
-    async get_intentful_task_db(logger: Logger): Promise<IntentfulTask_DB_Mongo> {
-        if (this.intentfulTaskDb !== undefined)
-            return this.intentfulTaskDb;
+    async get_intent_watcher_db(logger: Logger): Promise<IntentWatcher_DB_Mongo> {
+        if (this.intentWatcherDb !== undefined)
+            return this.intentWatcherDb;
         if (this.db === undefined)
             throw new Error("Not connected");
-        this.intentfulTaskDb = new IntentfulTask_DB_Mongo(logger, this.db);
-        await this.intentfulTaskDb.init();
-        return this.intentfulTaskDb;
+        this.intentWatcherDb = new IntentWatcher_DB_Mongo(logger, this.db);
+        await this.intentWatcherDb.init();
+        return this.intentWatcherDb;
     }
 
     async get_watchlist_db(logger: Logger): Promise<Watchlist_Db_Mongo> {

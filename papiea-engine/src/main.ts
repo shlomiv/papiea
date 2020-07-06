@@ -64,11 +64,11 @@ async function setUpApplication(): Promise<express.Express> {
     const specDb = await mongoConnection.get_spec_db(logger);
     const statusDb = await mongoConnection.get_status_db(logger);
     const s2skeyDb = await mongoConnection.get_s2skey_db(logger);
-    const intentfulTaskDb = await mongoConnection.get_intentful_task_db(logger)
+    const intentWatcherDB = await mongoConnection.get_intent_watcher_db(logger)
     const sessionKeyDb = await mongoConnection.get_session_key_db(logger)
     const watchlistDb = await mongoConnection.get_watchlist_db(logger)
     const validator = new ValidatorImpl()
-    const intentfulContext = new IntentfulContext(specDb, statusDb, differ, intentfulTaskDb, watchlistDb)
+    const intentfulContext = new IntentfulContext(specDb, statusDb, differ, intentWatcherDB, watchlistDb)
     const providerApi = new Provider_API_Impl(logger, providerDb, statusDb, s2skeyDb, watchlistDb, intentfulContext, new AdminAuthorizer(), validator);
     const sessionKeyApi = new SessionKeyAPI(sessionKeyDb)
     const userAuthInfoExtractor = new CompositeUserAuthInfoExtractor([
@@ -80,7 +80,7 @@ async function setUpApplication(): Promise<express.Express> {
     app.use(createOAuth2Router(logger, oauth2RedirectUri, providerDb, sessionKeyApi));
     const entityApiAuthorizer: Authorizer = new PerProviderAuthorizer(logger, providerApi, new ProviderCasbinAuthorizerFactory(logger));
     app.use('/provider', createProviderAPIRouter(providerApi));
-    app.use('/services', createEntityAPIRouter(new Entity_API_Impl(logger, statusDb, specDb, providerDb, intentfulTaskDb, entityApiAuthorizer, validator, intentfulContext)));
+    app.use('/services', createEntityAPIRouter(new Entity_API_Impl(logger, statusDb, specDb, providerDb, intentWatcherDB, entityApiAuthorizer, validator, intentfulContext)));
     app.use('/api-docs', createAPIDocsRouter('/api-docs', new ApiDocsGenerator(providerDb), providerDb));
     app.use(function (err: any, req: any, res: any, next: any) {
         if (res.headersSent) {

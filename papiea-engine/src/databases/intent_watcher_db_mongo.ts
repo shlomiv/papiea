@@ -1,10 +1,10 @@
 import { Collection, Db } from "mongodb"
 import { SortParams } from "../entity/entity_api_impl"
 import { Logger } from 'papiea-backend-utils'
-import { IntentfulTask_DB } from "./intentful_task_db_interface"
-import { IntentfulTask } from "../tasks/task_interface"
+import { IntentWatcher_DB } from "./intent_watcher_db_interface"
+import { IntentWatcher } from "../intents/intent_interface"
 
-export class IntentfulTask_DB_Mongo implements IntentfulTask_DB {
+export class IntentWatcher_DB_Mongo implements IntentWatcher_DB {
     collection: Collection;
     logger: Logger;
 
@@ -24,13 +24,13 @@ export class IntentfulTask_DB_Mongo implements IntentfulTask_DB {
         }
     }
 
-    async save_task(task: IntentfulTask): Promise<void> {
+    async save_task(task: IntentWatcher): Promise<void> {
         task.created_at = new Date()
         await this.collection.insertOne(task);
     }
 
-    async get_task(uuid: string): Promise<IntentfulTask> {
-        const result: IntentfulTask | null = await this.collection.findOne({
+    async get_task(uuid: string): Promise<IntentWatcher> {
+        const result: IntentWatcher | null = await this.collection.findOne({
             "uuid": uuid,
         });
         if (result === null) {
@@ -39,7 +39,7 @@ export class IntentfulTask_DB_Mongo implements IntentfulTask_DB {
         return result;
     }
 
-    async update_task(uuid: string, delta: Partial<IntentfulTask>): Promise<void> {
+    async update_task(uuid: string, delta: Partial<IntentWatcher>): Promise<void> {
         const result = await this.collection.updateOne({
             uuid
         }, {
@@ -54,7 +54,7 @@ export class IntentfulTask_DB_Mongo implements IntentfulTask_DB {
     }
 
 
-    async list_tasks(fields_map: any, sortParams?: SortParams): Promise<IntentfulTask[]> {
+    async list_tasks(fields_map: any, sortParams?: SortParams): Promise<IntentWatcher[]> {
         const filter: any = Object.assign({}, fields_map);
         if (sortParams) {
             return await this.collection.find(filter).sort(sortParams).toArray();

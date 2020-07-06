@@ -11,10 +11,10 @@ import { SessionKeyDb } from "../../src/databases/session_key_db_interface"
 import { Entity, Intentful_Signature, SessionKey, IntentfulStatus } from "papiea-core"
 import { Logger, LoggerFactory } from 'papiea-backend-utils';
 import uuid = require("uuid")
-import { IntentfulTask } from "../../src/tasks/task_interface"
-import { IntentfulTask_DB } from "../../src/databases/intentful_task_db_interface"
+import { IntentWatcher } from "../../src/intents/intent_interface"
+import { IntentWatcher_DB } from "../../src/databases/intent_watcher_db_interface"
 import { Watchlist_DB } from "../../src/databases/watchlist_db_interface";
-import { Watchlist } from "../../src/tasks/watchlist";
+import { Watchlist } from "../../src/intents/watchlist";
 
 declare var process: {
     env: {
@@ -432,8 +432,8 @@ describe("MongoDb tests", () => {
 
     test("Delete task", async () => {
         expect.assertions(1);
-        const taskDb: IntentfulTask_DB = await connection.get_intentful_task_db(logger);
-        const task: IntentfulTask = {
+        const taskDb: IntentWatcher_DB = await connection.get_intent_watcher_db(logger);
+        const task: IntentWatcher = {
             uuid: uuid4(),
             diffs: [{
                 kind: "dummy",
@@ -456,8 +456,8 @@ describe("MongoDb tests", () => {
 
     test("Create and get task", async () => {
         expect.hasAssertions()
-        const taskDb: IntentfulTask_DB = await connection.get_intentful_task_db(logger);
-        const task: IntentfulTask = {
+        const taskDb: IntentWatcher_DB = await connection.get_intent_watcher_db(logger);
+        const task: IntentWatcher = {
             uuid: uuid4(),
             diffs: [{
                 kind: "dummy",
@@ -470,7 +470,7 @@ describe("MongoDb tests", () => {
             times_failed: 0
         };
         await taskDb.save_task(task);
-        const res: IntentfulTask = await taskDb.get_task(task.uuid);
+        const res: IntentWatcher = await taskDb.get_task(task.uuid);
         expect(res.status).toEqual(task.status);
         expect(res.diffs).toEqual(task.diffs);
         expect(res.uuid).toEqual(task.uuid);
@@ -479,8 +479,8 @@ describe("MongoDb tests", () => {
 
     test("Duplicate task should throw an error", async () => {
         expect.assertions(1);
-        const taskDb: IntentfulTask_DB = await connection.get_intentful_task_db(logger);
-        const task: IntentfulTask = {
+        const taskDb: IntentWatcher_DB = await connection.get_intent_watcher_db(logger);
+        const task: IntentWatcher = {
             uuid: uuid4(),
             diffs: [{
                 kind: "dummy",
@@ -501,10 +501,10 @@ describe("MongoDb tests", () => {
         await taskDb.delete_task(task.uuid)
     });
 
-    test("List tasks", async () => {
+    test("List intents", async () => {
         expect.hasAssertions();
-        const taskDb: IntentfulTask_DB = await connection.get_intentful_task_db(logger);
-        const task: IntentfulTask = {
+        const taskDb: IntentWatcher_DB = await connection.get_intent_watcher_db(logger);
+        const task: IntentWatcher = {
             uuid: uuid4(),
             diffs: [{
                 kind: "dummy",
@@ -517,15 +517,15 @@ describe("MongoDb tests", () => {
             times_failed: 0
         };
         await taskDb.save_task(task);
-        const res = (await taskDb.list_tasks({ uuid: task.uuid }) as IntentfulTask[])[0]
+        const res = (await taskDb.list_tasks({ uuid: task.uuid }) as IntentWatcher[])[0]
         expect(res.uuid).toEqual(task.uuid);
         await taskDb.delete_task(task.uuid)
     });
 
     test("Update task", async () => {
         expect.assertions(1);
-        const taskDb: IntentfulTask_DB = await connection.get_intentful_task_db(logger);
-        const task: IntentfulTask = {
+        const taskDb: IntentWatcher_DB = await connection.get_intent_watcher_db(logger);
+        const task: IntentWatcher = {
             uuid: uuid4(),
             diffs: [{
                 kind: "dummy",

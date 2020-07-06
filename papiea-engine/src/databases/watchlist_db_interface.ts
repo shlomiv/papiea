@@ -1,4 +1,4 @@
-import { Watchlist } from "../tasks/watchlist"
+import { Watchlist } from "../intents/watchlist"
 
 export interface Watchlist_DB {
 

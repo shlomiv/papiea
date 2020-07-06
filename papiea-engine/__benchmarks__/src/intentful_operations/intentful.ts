@@ -68,14 +68,14 @@ export class IntentfulBenchmarks extends Benchmarks {
         console.log(`CAS average time: ${avg} seconds`)
     }
 
-    async runIntentfulTask() {
+    async runIntentWatcher() {
         let completedIn = []
         let startTime = new Date()
         let tasks = new Set([...this.tasks])
-        // Timeout 120 seconds OR all tasks finished
+        // Timeout 120 seconds OR all intents finished
         while (((new Date().getTime() - startTime.getTime()) / 1000) < 120 && completedIn.length !== this.tasks.length) {
             for (let uuid of tasks) {
-                const resp = await axios.get(`${ this.papiea_url }/services/intentful_task/${ uuid }`)
+                const resp = await axios.get(`${ this.papiea_url }/services/intent_watcher/${ uuid }`)
                 if (resp.data.status === IntentfulStatus.Completed_Successfully) {
                     completedIn.push((new Date().getTime() - startTime.getTime())/ 1000)
                     tasks.delete(uuid)

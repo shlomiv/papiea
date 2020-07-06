@@ -1,11 +1,11 @@
 import { Spec_DB } from "../databases/spec_db_interface";
 import { Status_DB } from "../databases/status_db_interface";
-import { IntentfulTask_DB } from "../databases/intentful_task_db_interface";
+import { IntentWatcher_DB } from "../databases/intent_watcher_db_interface";
 import { Provider_DB } from "../databases/provider_db_interface";
 import { Handler, IntentfulListener } from "./intentful_listener_interface";
 import { EntryReference, Watchlist } from "./watchlist";
 import { IntentfulStatus, Diff, Differ, Entity } from "papiea-core";
-import { IntentfulTask } from "./task_interface";
+import { IntentWatcher } from "./intent_interface";
 import * as assert from "assert";
 import { timeout } from "../utils/utils";
 import { DiffResolver } from "./diff_resolver";
@@ -15,7 +15,7 @@ import deepEqual = require("deep-equal");
 export class TaskResolver {
     private readonly specDb: Spec_DB
     private readonly statusDb: Status_DB
-    private readonly intentfulTaskDb: IntentfulTask_DB
+    private readonly intentWatcherDb: IntentWatcher_DB
     private readonly providerDb: Provider_DB
 
     private intentfulListener: IntentfulListener
@@ -25,7 +25,7 @@ export class TaskResolver {
     private watchlist: Watchlist;
 
     constructor(specDb: Spec_DB, statusDb: Status_DB,
-                intentfulTaskDb: IntentfulTask_DB, providerDb: Provider_DB,
+                intentfulTaskDb: IntentWatcher_DB, providerDb: Provider_DB,
                 intentfulListener: IntentfulListener, differ: Differ,
                 diffResolver: DiffResolver, watchlist: Watchlist,
                 logger: Logger)
@@ -33,7 +33,7 @@ export class TaskResolver {
         this.specDb = specDb
         this.statusDb = statusDb
         this.providerDb = providerDb
-        this.intentfulTaskDb = intentfulTaskDb
+        this.intentWatcherDb = intentfulTaskDb
         this.logger = logger
 
         this.onChange = this.onChange.bind(this)
@@ -59,17 +59,17 @@ export class TaskResolver {
         return intersection
     }
 
-    private static inTerminalState(task: IntentfulTask): boolean {
+    private static inTerminalState(task: IntentWatcher): boolean {
         const terminal_states = [IntentfulStatus.Completed_Partially, IntentfulStatus.Completed_Successfully, IntentfulStatus.Outdated, IntentfulStatus.Failed]
         return terminal_states.includes(task.status)
     }
 
     private async clearTerminalStateTasks(taskExpirySeconds: number) {
-        const tasks = await this.intentfulTaskDb.list_tasks({})
+        const tasks = await this.intentWatcherDb.list_tasks({})
         for (let task of tasks) {
             if (TaskResolver.inTerminalState(task)) {
                 if (task.last_status_changed && (new Date().getTime() - task.last_status_changed.getTime()) / 1000 > taskExpirySeconds) {
-                    await this.intentfulTaskDb.delete_task(task.uuid)
+                    await this.intentWatcherDb.delete_task(task.uuid)
                 }
             }
         }
@@ -81,7 +81,7 @@ export class TaskResolver {
         return this.differ.all_diffs(kind, entity.spec, entity.status)
     }
 
-    private async processOutdatedTasks(tasks: IntentfulTask[], entity: Entity): Promise<IntentfulTask[]> {
+    private async processOutdatedTasks(tasks: IntentWatcher[], entity: Entity): Promise<IntentWatcher[]> {
         const diffs = await this.rediff(entity)
         for (let task of tasks) {
             if (TaskResolver.inTerminalState(task)) {
@@ -96,35 +96,35 @@ export class TaskResolver {
             } else if (intersection.size >= task.diffs.length) {
                 task.status = IntentfulStatus.Outdated
             }
-            await this.intentfulTaskDb.update_task(task.uuid, { status: task.status, last_status_changed: new Date() })
+            await this.intentWatcherDb.update_task(task.uuid, { status: task.status, last_status_changed: new Date() })
         }
         return tasks
     }
 
-    private async processActiveTask(active: IntentfulTask, entity: Entity): Promise<IntentfulTask> {
+    private async processActiveTask(active: IntentWatcher, entity: Entity): Promise<IntentWatcher> {
         const diffs = await this.rediff(entity)
         const intersection = TaskResolver.getIntersection(diffs, active.diffs, (diff, task_diff) => deepEqual(diff.diff_fields, task_diff.diff_fields))
         if (intersection.size === 0) {
             active.status = IntentfulStatus.Completed_Successfully
-            await this.intentfulTaskDb.update_task(active.uuid, { status: active.status })
+            await this.intentWatcherDb.update_task(active.uuid, { status: active.status })
         } else if (intersection.size < active.diffs.length) {
             active.diffs = [...intersection]
-            await this.intentfulTaskDb.update_task(active.uuid, { diffs: active.diffs })
+            await this.intentWatcherDb.update_task(active.uuid, { diffs: active.diffs })
         }
         return active
     }
 
-    private async processPendingTasks(pending: IntentfulTask[], entity: Entity): Promise<IntentfulTask[]> {
+    private async processPendingTasks(pending: IntentWatcher[], entity: Entity): Promise<IntentWatcher[]> {
         const diffs = await this.rediff(entity)
         for (let task of pending) {
             const intersection = TaskResolver.getIntersection(diffs, task.diffs, (diff, task_diff) => deepEqual(diff.diff_fields, task_diff.diff_fields))
             if (intersection.size === 0) {
                 task.status = IntentfulStatus.Completed_Successfully
-                await this.intentfulTaskDb.update_task(task.uuid, { status: task.status })
+                await this.intentWatcherDb.update_task(task.uuid, { status: task.status })
             } else if (intersection.size < task.diffs.length) {
                 task.status = IntentfulStatus.Active
                 task.diffs = [...intersection]
-                await this.intentfulTaskDb.update_task(task.uuid, { diffs: task.diffs })
+                await this.intentWatcherDb.update_task(task.uuid, { diffs: task.diffs })
             }
         }
         return pending
@@ -132,12 +132,12 @@ export class TaskResolver {
 
     private async onChange(entity: Entity) {
         try {
-            const tasks = await this.intentfulTaskDb.list_tasks({ entity_ref: { uuid: entity.metadata.uuid, kind: entity.metadata.kind } })
+            const tasks = await this.intentWatcherDb.list_tasks({ entity_ref: { uuid: entity.metadata.uuid, kind: entity.metadata.kind } })
             const current_spec_version = entity.metadata.spec_version
             const latest_task = this.getLatestTask(tasks)
             if (latest_task && latest_task.spec_version === current_spec_version && latest_task.status === IntentfulStatus.Pending) {
                 latest_task.status = IntentfulStatus.Active
-                await this.intentfulTaskDb.update_task(latest_task.uuid, { status: latest_task.status })
+                await this.intentWatcherDb.update_task(latest_task.uuid, { status: latest_task.status })
                 await this.processActiveTask(latest_task, entity)
                 const rest = tasks.filter(task => task.spec_version !== current_spec_version)
                 await this.processOutdatedTasks(rest, entity)
@@ -151,8 +151,8 @@ export class TaskResolver {
         }
     }
 
-    private getLatestTask(tasks: IntentfulTask[]): IntentfulTask | null {
-        let latest_task: IntentfulTask | null = null
+    private getLatestTask(tasks: IntentWatcher[]): IntentWatcher | null {
+        let latest_task: IntentWatcher | null = null
         for (let task of tasks) {
             if (!latest_task) {
                 latest_task = task
@@ -165,12 +165,12 @@ export class TaskResolver {
     }
 
     private async onIntentfulHandlerFail(entity: EntryReference, error_msg?: string) {
-        const tasks = await this.intentfulTaskDb.list_tasks({ entity_ref: entity.entity_reference })
+        const tasks = await this.intentWatcherDb.list_tasks({ entity_ref: entity.entity_reference })
         const active_task = tasks.find(task => task.status === IntentfulStatus.Active)
         if (active_task) {
             active_task.times_failed += 1
             active_task.last_handler_error = error_msg
-            await this.intentfulTaskDb.update_task(active_task.uuid, { times_failed: active_task.times_failed, last_handler_error: active_task.last_handler_error })
+            await this.intentWatcherDb.update_task(active_task.uuid, { times_failed: active_task.times_failed, last_handler_error: active_task.last_handler_error })
         }
     }
 
@@ -178,7 +178,7 @@ export class TaskResolver {
         let entries = this.watchlist.entries();
         for (let uuid in entries) {
             const [entry_ref, diff, delay] = entries[uuid]
-            const tasks = await this.intentfulTaskDb.list_tasks({ entity_ref: entry_ref.entity_reference })
+            const tasks = await this.intentWatcherDb.list_tasks({ entity_ref: entry_ref.entity_reference })
             if (tasks.length !== 0) {
                 try {
                     const [metadata, spec] = await this.specDb.get_spec(entry_ref.entity_reference)

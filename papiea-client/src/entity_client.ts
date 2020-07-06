@@ -11,7 +11,9 @@ import {
     ValidationError
 } from "./errors/errors";
 
-function make_request<T = any>(f: (url: string, data?: any, config?: AxiosRequestConfig) => AxiosPromise<T>, url: string, data?: any, config?: AxiosRequestConfig): AxiosPromise<T> {
+const BATCH_SIZE = 20
+
+function make_request<T = any, Y = AxiosPromise<T>>(f: (url: string, data?: any, config?: AxiosRequestConfig) => Y, url: string, data?: any, config?: AxiosRequestConfig): Y {
     try {
         return f(url, data, config)
     } catch (e) {
@@ -95,9 +97,30 @@ export interface FilterResults {
     results: Entity[]
 }
 
+export async function filter_entity_iter(provider: string, kind: string, version: string, filter: any, papiea_url: string, s2skey: string): Promise<(batch_size?: number, offset?: number) => AsyncGenerator<any, undefined, any>> {
+    const iter_func = await make_request(iter_filter, `${ papiea_url }/services/${ provider }/${ version }/${ kind }/filter`, filter, { headers: { "Authorization": `Bearer ${ s2skey }` } });
+    return iter_func
+}
+
 export async function filter_entity(provider: string, kind: string, version: string, filter: any, papiea_url: string, s2skey: string): Promise<FilterResults> {
-    const res = await make_request(axios.post, `${ papiea_url }/services/${ provider }/${ version }/${ kind }/filter/`, filter, { headers: { "Authorization": `Bearer ${ s2skey }` } });
+    const res = await make_request(axios.post, `${ papiea_url }/services/${ provider }/${ version }/${ kind }/filter`, filter, { headers: { "Authorization": `Bearer ${ s2skey }` } });
     return res.data
+}
+
+export async function iter_filter(url: string, data: any, config?: AxiosRequestConfig) {
+    return (async function* iter(batch_size?: number, offset?: number): AsyncGenerator<any, undefined, any> {
+        if (!batch_size) {
+            batch_size = BATCH_SIZE
+        }
+        let res = await axios.post<FilterResults>(`${url}?limit=${batch_size}&offset=${offset ?? ''}`, data, config)
+        if (res.data.results.length === 0) {
+            return
+        } else {
+            yield* res.data.results
+            yield* iter(batch_size, (offset ?? 0) + batch_size)
+            return
+        }
+    })
 }
 
 export interface ProviderClient {
@@ -128,6 +151,10 @@ export interface EntityCRUD {
 
     filter(filter: any): Promise<FilterResults>
 
+    filter_iter(filter: any): Promise<(batch_size?: number, offset?: number) => AsyncGenerator<any, undefined, any>>
+
+    list_iter(): Promise<(batch_size?: number, offset?: number) => AsyncGenerator<any, undefined, any>>
+
     invoke_procedure(procedure_name: string, entity_reference: Entity_Reference, input: any): Promise<any>
 
     invoke_kind_procedure(procedure_name: string, input: any): Promise<any>
@@ -142,6 +169,8 @@ export function kind_client(papiea_url: string, provider: string, kind: string, 
         update: (metadata: Metadata, spec: Spec) => update_entity(provider, kind, version, spec, metadata, papiea_url, the_s2skey),
         delete: (entity_reference: Entity_Reference) => delete_entity(provider, kind, version, entity_reference, papiea_url, the_s2skey),
         filter: (filter: any) => filter_entity(provider, kind, version, filter, papiea_url, the_s2skey),
+        filter_iter: (filter: any) => filter_entity_iter(provider, kind, version, filter, papiea_url, the_s2skey),
+        list_iter: () => filter_entity_iter(provider, kind, version, {}, papiea_url, the_s2skey),
         invoke_procedure: (proc_name: string, entity_reference: Entity_Reference, input: any) => invoke_entity_procedure(provider, kind, version, proc_name, input, entity_reference, papiea_url, the_s2skey),
         invoke_kind_procedure: (proc_name: string, input: any) => invoke_kind_procedure(provider, kind, version, proc_name, input, papiea_url, the_s2skey)
     }

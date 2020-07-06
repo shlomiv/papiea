@@ -6,7 +6,7 @@ async function main() {
     const kind_name = 'location'
 
     console.log("Create an api for location kind")
-    const location_client = kind_client("http://papiea:3000/services", "location_provider", "Location", "0.0.3")
+    const location_client = kind_client("http://papiea:3000", "location_provider", "Location", "0.0.3")
 
     {
         console.log("\nCreate a new location...")

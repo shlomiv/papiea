@@ -18,11 +18,11 @@ export type Secret = string
 
 export enum IntentfulStatus {
 
-    // A spec change or a scheduled diffing created this intentful Task,
+    // A spec change or a scheduled diffing created this intent watcher,
     // it is not yet active
     Pending = "Pending",
 
-    // Intentful Task is currently waiting for a diff to be resolved
+    // Intent Watcher is currently waiting for a diff to be resolved
     Active = "Active",
 
     // All fields were set to the spec value at some point after the spec change was issued
@@ -171,7 +171,7 @@ export interface Diff {
     // If the URL returns 404 we know that the task was dropped (say, provider crashed).
     // It will use the specific node's IP and not a load balancer IP.
     // This will direct us to the exact location where the task is running.
-    // provider handler url with an id to cache the task it is assigned to, serves as an identifier for a type of task being executed
+    // provider handler url with an id to cache the watcher it is assigned to, serves as an identifier for a type of task being executed
     handler_url?: string
 }
 // Diff-interface ends here

@@ -26,11 +26,11 @@ export class IntentfulContext {
     private readonly diffSelectionStrategyMap: DiffSelectionStrategyMap
     private readonly statusUpdateStrategyMap: StatusUpdateStrategyMap
 
-    constructor(specDb: Spec_DB, statusDb: Status_DB, differ: Differ, intentfulTaskDb: IntentWatcher_DB, watchlistDb: Watchlist_DB) {
+    constructor(specDb: Spec_DB, statusDb: Status_DB, differ: Differ, intentWatcherDb: IntentWatcher_DB, watchlistDb: Watchlist_DB) {
         this.behaviourStrategyMap = new Map()
         this.behaviourStrategyMap.set(IntentfulBehaviour.Basic, new BasicIntentfulStrategy(specDb, statusDb))
         this.behaviourStrategyMap.set(IntentfulBehaviour.SpecOnly, new SpecOnlyIntentfulStrategy(specDb, statusDb))
-        this.behaviourStrategyMap.set(IntentfulBehaviour.Differ, new DifferIntentfulStrategy(specDb, statusDb, differ, intentfulTaskDb, watchlistDb))
+        this.behaviourStrategyMap.set(IntentfulBehaviour.Differ, new DifferIntentfulStrategy(specDb, statusDb, differ, intentWatcherDb, watchlistDb))
 
         this.diffSelectionStrategyMap = new Map()
         this.diffSelectionStrategyMap.set(DiffSelectionStrategy.Basic, new BasicDiffSelectionStrategy())

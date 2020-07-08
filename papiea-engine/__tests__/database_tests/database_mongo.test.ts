@@ -11,10 +11,10 @@ import { SessionKeyDb } from "../../src/databases/session_key_db_interface"
 import { Entity, Intentful_Signature, SessionKey, IntentfulStatus } from "papiea-core"
 import { Logger, LoggerFactory } from 'papiea-backend-utils';
 import uuid = require("uuid")
-import { IntentWatcher } from "../../src/intents/intent_interface"
+import { IntentWatcher } from "../../src/intentful_engine/intent_interface"
 import { IntentWatcher_DB } from "../../src/databases/intent_watcher_db_interface"
 import { Watchlist_DB } from "../../src/databases/watchlist_db_interface";
-import { Watchlist } from "../../src/intents/watchlist";
+import { Watchlist } from "../../src/intentful_engine/watchlist";
 
 declare var process: {
     env: {
@@ -430,10 +430,10 @@ describe("MongoDb tests", () => {
         }
     });
 
-    test("Delete task", async () => {
+    test("Delete watcher", async () => {
         expect.assertions(1);
-        const taskDb: IntentWatcher_DB = await connection.get_intent_watcher_db(logger);
-        const task: IntentWatcher = {
+        const watcherDb: IntentWatcher_DB = await connection.get_intent_watcher_db(logger);
+        const watcher: IntentWatcher = {
             uuid: uuid4(),
             diffs: [{
                 kind: "dummy",
@@ -445,19 +445,19 @@ describe("MongoDb tests", () => {
             entity_ref: {} as Entity_Reference,
             times_failed: 0
         };
-        await taskDb.save_task(task)
-        await taskDb.delete_task(task.uuid)
+        await watcherDb.save_watcher(watcher)
+        await watcherDb.delete_watcher(watcher.uuid)
         try {
-            await taskDb.get_task(task.uuid);
+            await watcherDb.get_watcher(watcher.uuid);
         } catch(e) {
             expect(e).toBeDefined();
         }
     });
 
-    test("Create and get task", async () => {
+    test("Create and get watcher", async () => {
         expect.hasAssertions()
-        const taskDb: IntentWatcher_DB = await connection.get_intent_watcher_db(logger);
-        const task: IntentWatcher = {
+        const watcherDb: IntentWatcher_DB = await connection.get_intent_watcher_db(logger);
+        const watcher: IntentWatcher = {
             uuid: uuid4(),
             diffs: [{
                 kind: "dummy",
@@ -469,18 +469,18 @@ describe("MongoDb tests", () => {
             entity_ref: {} as Entity_Reference,
             times_failed: 0
         };
-        await taskDb.save_task(task);
-        const res: IntentWatcher = await taskDb.get_task(task.uuid);
-        expect(res.status).toEqual(task.status);
-        expect(res.diffs).toEqual(task.diffs);
-        expect(res.uuid).toEqual(task.uuid);
-        await taskDb.delete_task(task.uuid)
+        await watcherDb.save_watcher(watcher);
+        const res: IntentWatcher = await watcherDb.get_watcher(watcher.uuid);
+        expect(res.status).toEqual(watcher.status);
+        expect(res.diffs).toEqual(watcher.diffs);
+        expect(res.uuid).toEqual(watcher.uuid);
+        await watcherDb.delete_watcher(watcher.uuid)
     });
 
-    test("Duplicate task should throw an error", async () => {
+    test("Duplicate watcher should throw an error", async () => {
         expect.assertions(1);
-        const taskDb: IntentWatcher_DB = await connection.get_intent_watcher_db(logger);
-        const task: IntentWatcher = {
+        const watcherDb: IntentWatcher_DB = await connection.get_intent_watcher_db(logger);
+        const watcher: IntentWatcher = {
             uuid: uuid4(),
             diffs: [{
                 kind: "dummy",
@@ -492,19 +492,19 @@ describe("MongoDb tests", () => {
             entity_ref: {} as Entity_Reference,
             times_failed: 0
         };
-        await taskDb.save_task(task);
+        await watcherDb.save_watcher(watcher);
         try {
-            await taskDb.save_task(task);
+            await watcherDb.save_watcher(watcher);
         } catch(e) {
             expect(e).toBeDefined();
         }
-        await taskDb.delete_task(task.uuid)
+        await watcherDb.delete_watcher(watcher.uuid)
     });
 
-    test("List intents", async () => {
+    test("List intentful_engine", async () => {
         expect.hasAssertions();
-        const taskDb: IntentWatcher_DB = await connection.get_intent_watcher_db(logger);
-        const task: IntentWatcher = {
+        const watcherDb: IntentWatcher_DB = await connection.get_intent_watcher_db(logger);
+        const watcher: IntentWatcher = {
             uuid: uuid4(),
             diffs: [{
                 kind: "dummy",
@@ -516,16 +516,16 @@ describe("MongoDb tests", () => {
             entity_ref: {} as Entity_Reference,
             times_failed: 0
         };
-        await taskDb.save_task(task);
-        const res = (await taskDb.list_tasks({ uuid: task.uuid }) as IntentWatcher[])[0]
-        expect(res.uuid).toEqual(task.uuid);
-        await taskDb.delete_task(task.uuid)
+        await watcherDb.save_watcher(watcher);
+        const res = (await watcherDb.list_watchers({ uuid: watcher.uuid }) as IntentWatcher[])[0]
+        expect(res.uuid).toEqual(watcher.uuid);
+        await watcherDb.delete_watcher(watcher.uuid)
     });
 
-    test("Update task", async () => {
+    test("Update watcher", async () => {
         expect.assertions(1);
-        const taskDb: IntentWatcher_DB = await connection.get_intent_watcher_db(logger);
-        const task: IntentWatcher = {
+        const watcherDb: IntentWatcher_DB = await connection.get_intent_watcher_db(logger);
+        const watcher: IntentWatcher = {
             uuid: uuid4(),
             diffs: [{
                 kind: "dummy",
@@ -537,11 +537,11 @@ describe("MongoDb tests", () => {
             entity_ref: {} as Entity_Reference,
             times_failed: 0
         };
-        await taskDb.save_task(task)
-        await taskDb.update_task(task.uuid, { status: IntentfulStatus.Completed_Successfully })
-        const updatedTask = await taskDb.get_task(task.uuid);
-        expect(updatedTask.status).toEqual(IntentfulStatus.Completed_Successfully)
-        await taskDb.delete_task(task.uuid)
+        await watcherDb.save_watcher(watcher)
+        await watcherDb.update_watcher(watcher.uuid, { status: IntentfulStatus.Completed_Successfully })
+        const updatedWatcher = await watcherDb.get_watcher(watcher.uuid);
+        expect(updatedWatcher.status).toEqual(IntentfulStatus.Completed_Successfully)
+        await watcherDb.delete_watcher(watcher.uuid)
     });
 
     test("Get watchlist", async () => {

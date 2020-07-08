@@ -22,7 +22,7 @@ import { PermissionDeniedError } from "../errors/permission_error";
 import { Logger } from "papiea-backend-utils";
 import { IntentfulContext } from "../intentful_core/intentful_context"
 import { Provider_DB } from "../databases/provider_db_interface"
-import { IntentWatcher, IntentWatcherMapper } from "../intents/intent_interface"
+import { IntentWatcher, IntentWatcherMapper } from "../intentful_engine/intent_interface"
 import { IntentWatcher_DB } from "../databases/intent_watcher_db_interface"
 import { ConflictingEntityError } from "../databases/utils/errors"
 
@@ -54,18 +54,18 @@ export class Entity_API_Impl implements Entity_API {
     }
 
     async get_intent_watcher(user: UserAuthInfo, id: string): Promise<Partial<IntentWatcher>> {
-        const intent_watcher = await this.intent_watcher_db.get_task(id)
+        const intent_watcher = await this.intent_watcher_db.get_watcher(id)
         const [metadata, _] = await this.spec_db.get_spec(intent_watcher.entity_ref)
         await this.authorizer.checkPermission(user, { "metadata": metadata }, Action.Update);
         return IntentWatcherMapper.toResponse(intent_watcher)
     }
 
     async filter_intent_watcher(user: UserAuthInfo, fields: any, sortParams?: SortParams): Promise<Partial<IntentWatcher>[]> {
-        const intent_watchers = await this.intent_watcher_db.list_tasks(fields, sortParams)
-        const entities = await this.spec_db.get_specs_by_ref(intent_watchers.map(task => task.entity_ref))
+        const intent_watchers = await this.intent_watcher_db.list_watchers(fields, sortParams)
+        const entities = await this.spec_db.get_specs_by_ref(intent_watchers.map(watcher => watcher.entity_ref))
         const filteredRes = await this.authorizer.filter(user, entities, Action.Update, x => { return { "metadata": x[0] } });
-        const filteredTasks = IntentWatcherMapper.filter(intent_watchers, filteredRes)
-        return IntentWatcherMapper.toResponses(filteredTasks)
+        const filteredWatchers = IntentWatcherMapper.filter(intent_watchers, filteredRes)
+        return IntentWatcherMapper.toResponses(filteredWatchers)
     }
 
     async save_entity(user: UserAuthInfo, prefix: string, kind_name: string, version: Version, spec_description: Spec, request_metadata: Metadata = {} as Metadata): Promise<[Metadata, Spec]> {
@@ -138,8 +138,8 @@ export class Entity_API_Impl implements Entity_API {
         metadata.provider_prefix = prefix
         metadata.provider_version = version
         const strategy = this.intentfulCtx.getIntentfulStrategy(kind, user)
-        const task = await strategy.update(metadata, spec_description)
-        return task;
+        const watcher = await strategy.update(metadata, spec_description)
+        return watcher;
     }
 
     async delete_entity_spec(user: UserAuthInfo, prefix: string, version: Version, kind_name: string, entity_uuid: uuid4): Promise<void> {

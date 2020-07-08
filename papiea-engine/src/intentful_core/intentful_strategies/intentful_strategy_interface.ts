@@ -3,7 +3,7 @@ import { Spec_DB } from "../../databases/spec_db_interface"
 import { Status_DB } from "../../databases/status_db_interface"
 import { UserAuthInfo } from "../../auth/authn"
 import axios from "axios"
-import { IntentWatcher } from "../../intents/intent_interface"
+import { IntentWatcher } from "../../intentful_engine/intent_interface"
 import { OnActionError } from "../../errors/on_action_error";
 
 export abstract class IntentfulStrategy {

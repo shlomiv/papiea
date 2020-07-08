@@ -2,14 +2,14 @@ import { Collection, Db } from "mongodb"
 import { SortParams } from "../entity/entity_api_impl"
 import { Logger } from 'papiea-backend-utils'
 import { IntentWatcher_DB } from "./intent_watcher_db_interface"
-import { IntentWatcher } from "../intents/intent_interface"
+import { IntentWatcher } from "../intentful_engine/intent_interface"
 
 export class IntentWatcher_DB_Mongo implements IntentWatcher_DB {
     collection: Collection;
     logger: Logger;
 
     constructor(logger: Logger, db: Db) {
-        this.collection = db.collection("task");
+        this.collection = db.collection("watcher");
         this.logger = logger;
     }
 
@@ -24,12 +24,12 @@ export class IntentWatcher_DB_Mongo implements IntentWatcher_DB {
         }
     }
 
-    async save_task(task: IntentWatcher): Promise<void> {
-        task.created_at = new Date()
-        await this.collection.insertOne(task);
+    async save_watcher(watcher: IntentWatcher): Promise<void> {
+        watcher.created_at = new Date()
+        await this.collection.insertOne(watcher);
     }
 
-    async get_task(uuid: string): Promise<IntentWatcher> {
+    async get_watcher(uuid: string): Promise<IntentWatcher> {
         const result: IntentWatcher | null = await this.collection.findOne({
             "uuid": uuid,
         });
@@ -39,22 +39,22 @@ export class IntentWatcher_DB_Mongo implements IntentWatcher_DB {
         return result;
     }
 
-    async update_task(uuid: string, delta: Partial<IntentWatcher>): Promise<void> {
+    async update_watcher(uuid: string, delta: Partial<IntentWatcher>): Promise<void> {
         const result = await this.collection.updateOne({
             uuid
         }, {
             $set: delta
         })
         if (result.result.n === undefined || result.result.ok !== 1) {
-            throw new Error("Failed update task");
+            throw new Error("Failed update intent watcher");
         }
         if (result.result.n !== 1 && result.result.n !== 0) {
-            throw new Error(`Amount of task updated must be 0 or 1, found: ${result.result.n}`);
+            throw new Error(`Amount of intent watchers updated must be 0 or 1, found: ${result.result.n}`);
         }
     }
 
 
-    async list_tasks(fields_map: any, sortParams?: SortParams): Promise<IntentWatcher[]> {
+    async list_watchers(fields_map: any, sortParams?: SortParams): Promise<IntentWatcher[]> {
         const filter: any = Object.assign({}, fields_map);
         if (sortParams) {
             return await this.collection.find(filter).sort(sortParams).toArray();
@@ -63,15 +63,15 @@ export class IntentWatcher_DB_Mongo implements IntentWatcher_DB {
         }
     }
 
-    async delete_task(uuid: string): Promise<void> {
+    async delete_watcher(uuid: string): Promise<void> {
         const result = await this.collection.deleteOne({
             uuid
         })
         if (result.result.n === undefined || result.result.ok !== 1) {
-            throw new Error("Failed to delete a task");
+            throw new Error("Failed to delete a intent watcher");
         }
         if (result.result.n !== 1 && result.result.n !== 0) {
-            throw new Error(`Amount of deleted task must be 0 or 1, found: ${result.result.n}`);
+            throw new Error(`Amount of deleted intent watchers must be 0 or 1, found: ${result.result.n}`);
         }
         return;
     }

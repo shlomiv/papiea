@@ -1,4 +1,4 @@
-import { Watchlist } from "../intents/watchlist"
+import { Watchlist } from "../intentful_engine/watchlist"
 
 export interface Watchlist_DB {
 

@@ -6,7 +6,7 @@ import { IntentfulBehaviour, Kind, Differ, DiffSelectionStrategy } from "papiea-
 import { SpecOnlyIntentfulStrategy } from "./intentful_strategies/spec_only_intentful_strategy"
 import { UserAuthInfo } from "../auth/authn"
 import { DifferIntentfulStrategy } from "./intentful_strategies/differ_intentful_strategy"
-import { IntentfulTask_DB } from "../databases/intentful_task_db_interface"
+import { IntentWatcher_DB } from "../databases/intent_watcher_db_interface"
 import { BasicDiffSelectionStrategy } from "./diff_selection_strategies/basic_diff_selection_strategy";
 import { DiffSelectionStrategyInterface } from "./diff_selection_strategies/diff_selection_strategy_interface";
 import { RandomDiffSelectionStrategy } from "./diff_selection_strategies/random_diff_selection_strategy";
@@ -26,11 +26,11 @@ export class IntentfulContext {
     private readonly diffSelectionStrategyMap: DiffSelectionStrategyMap
     private readonly statusUpdateStrategyMap: StatusUpdateStrategyMap
 
-    constructor(specDb: Spec_DB, statusDb: Status_DB, differ: Differ, intentfulTaskDb: IntentfulTask_DB, watchlistDb: Watchlist_DB) {
+    constructor(specDb: Spec_DB, statusDb: Status_DB, differ: Differ, intentWatcherDb: IntentWatcher_DB, watchlistDb: Watchlist_DB) {
         this.behaviourStrategyMap = new Map()
         this.behaviourStrategyMap.set(IntentfulBehaviour.Basic, new BasicIntentfulStrategy(specDb, statusDb))
         this.behaviourStrategyMap.set(IntentfulBehaviour.SpecOnly, new SpecOnlyIntentfulStrategy(specDb, statusDb))
-        this.behaviourStrategyMap.set(IntentfulBehaviour.Differ, new DifferIntentfulStrategy(specDb, statusDb, differ, intentfulTaskDb, watchlistDb))
+        this.behaviourStrategyMap.set(IntentfulBehaviour.Differ, new DifferIntentfulStrategy(specDb, statusDb, differ, intentWatcherDb, watchlistDb))
 
         this.diffSelectionStrategyMap = new Map()
         this.diffSelectionStrategyMap.set(DiffSelectionStrategy.Basic, new BasicDiffSelectionStrategy())

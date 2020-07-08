@@ -4,8 +4,8 @@ import { Logger, LoggerFactory } from 'papiea-backend-utils';
 import { plural } from "pluralize"
 import axios from "axios"
 import { MongoConnection } from "../../src/databases/mongo"
-import { IntentfulTask_DB } from "../../src/databases/intentful_task_db_interface"
-import { IntentfulTask } from "../../src/tasks/task_interface"
+import { IntentWatcher_DB } from "../../src/databases/intent_watcher_db_interface"
+import { IntentWatcher } from "../../src/intentful_engine/intent_interface"
 import { Intentful_Execution_Strategy, Metadata, Provider } from "papiea-core"
 
 declare var process: {
@@ -37,7 +37,7 @@ const providerApiAdmin = axios.create({
     }
 });
 
-describe("Intentful Task tests", () => {
+describe("Intent Watcher tests", () => {
 
     const locationDataDescription = getDifferLocationDataDescription()
     const name = Object.keys(locationDataDescription)[0]
@@ -92,14 +92,14 @@ describe("Intentful Task tests", () => {
     const mongoDb = process.env.MONGO_DB || 'papiea';
     const mongoConnection: MongoConnection = new MongoConnection(mongoUrl, mongoDb);
     const intentfulWorkflowTestLogger = LoggerFactory.makeLogger({level: "info"});
-    let intentfulTaskDb: IntentfulTask_DB
-    let createdTask: IntentfulTask
+    let intentWatcherDb: IntentWatcher_DB
+    let createdWatcher: IntentWatcher
     let to_delete_metadata: Metadata
     let provider: Provider
 
     beforeAll(async () => {
         await mongoConnection.connect();
-        intentfulTaskDb = await mongoConnection.get_intentful_task_db(intentfulWorkflowTestLogger)
+        intentWatcherDb = await mongoConnection.get_intent_watcher_db(intentfulWorkflowTestLogger)
     });
 
     afterAll(async () => {
@@ -107,12 +107,12 @@ describe("Intentful Task tests", () => {
     });
 
     afterEach(async () => {
-        await intentfulTaskDb.delete_task(createdTask.uuid)
+        await intentWatcherDb.delete_watcher(createdWatcher.uuid)
         await entityApi.delete(`${provider.prefix}/${provider.version}/${to_delete_metadata.kind}/${to_delete_metadata.uuid}`)
         await providerApiAdmin.delete(`${provider.prefix}/${provider.version}`)
     })
 
-    test("Intentful task created through updating the spec", async () => {
+    test("Intent watcher created through updating the spec", async () => {
         expect.hasAssertions()
         provider = new ProviderBuilder()
             .withVersion("0.1.0")
@@ -126,7 +126,7 @@ describe("Intentful Task tests", () => {
             }
         });
         to_delete_metadata = metadata
-        const { data: { task } } = await entityApi.put(`/${ provider.prefix }/${ provider.version }/${ locationDifferKind.name }/${ metadata.uuid }`, {
+        const { data: { watcher } } = await entityApi.put(`/${ provider.prefix }/${ provider.version }/${ locationDifferKind.name }/${ metadata.uuid }`, {
             spec: {
                 x: 20,
                 y: 11
@@ -135,13 +135,13 @@ describe("Intentful Task tests", () => {
                 spec_version: 1
             }
         })
-        expect(task.status).toEqual(IntentfulStatus.Pending)
-        expect(task.diffs[0].diff_fields[0]["spec"][0]).toEqual(20)
-        expect(task.diffs[0].diff_fields[0]["status"][0]).toEqual(null)
-        createdTask = task
+        expect(watcher.status).toEqual(IntentfulStatus.Pending)
+        expect(watcher.diffs[0].diff_fields[0]["spec"][0]).toEqual(20)
+        expect(watcher.diffs[0].diff_fields[0]["status"][0]).toEqual(null)
+        createdWatcher = watcher
     })
 
-    test("Intentful task created through updating the spec with multiple diffs", async () => {
+    test("Intent watcher created through updating the spec with multiple diffs", async () => {
         expect.hasAssertions()
         provider = new ProviderBuilder()
             .withVersion("0.1.0")
@@ -156,7 +156,7 @@ describe("Intentful Task tests", () => {
         });
         to_delete_metadata = metadata
         await entityApi.get(`/${ provider.prefix }/${ provider.version }/${ locationDifferKind.name }/${ metadata.uuid }`)
-        const { data: { task } } = await entityApi.put(`/${ provider.prefix }/${ provider.version }/${ locationDifferKind.name }/${ metadata.uuid }`, {
+        const { data: { watcher } } = await entityApi.put(`/${ provider.prefix }/${ provider.version }/${ locationDifferKind.name }/${ metadata.uuid }`, {
             spec: {
                 x: 20,
                 y: 110
@@ -165,15 +165,15 @@ describe("Intentful Task tests", () => {
                 spec_version: 1
             }
         })
-        expect(task.status).toEqual(IntentfulStatus.Pending)
-        expect(task.diffs[0].diff_fields[0]["spec"][0]).toEqual(20)
-        expect(task.diffs[1].diff_fields[0].spec[0]).toEqual(110)
-        expect(task.diffs[0].diff_fields[0]["status"][0]).toEqual(null)
-        expect(task.diffs[1].diff_fields[0]["status"][0]).toEqual(null)
-        createdTask = task
+        expect(watcher.status).toEqual(IntentfulStatus.Pending)
+        expect(watcher.diffs[0].diff_fields[0]["spec"][0]).toEqual(20)
+        expect(watcher.diffs[1].diff_fields[0].spec[0]).toEqual(110)
+        expect(watcher.diffs[0].diff_fields[0]["status"][0]).toEqual(null)
+        expect(watcher.diffs[1].diff_fields[0]["status"][0]).toEqual(null)
+        createdWatcher = watcher
     })
 
-    test("Intentful task created through updating the spec and queried via API", async () => {
+    test("Intent watcher created through updating the spec and queried via API", async () => {
         expect.hasAssertions()
         provider = new ProviderBuilder()
             .withVersion("0.1.0")
@@ -187,7 +187,7 @@ describe("Intentful Task tests", () => {
             }
         });
         to_delete_metadata = metadata
-        const { data: { task } } = await entityApi.put(`/${ provider.prefix }/${ provider.version }/${ locationDifferKind.name }/${ metadata.uuid }`, {
+        const { data: { watcher } } = await entityApi.put(`/${ provider.prefix }/${ provider.version }/${ locationDifferKind.name }/${ metadata.uuid }`, {
             spec: {
                 x: 20,
                 y: 11
@@ -197,13 +197,13 @@ describe("Intentful Task tests", () => {
             }
         })
 
-        const result = await entityApi.get(`/intentful_task/${ task.uuid }`)
+        const result = await entityApi.get(`/intent_watcher/${ watcher.uuid }`)
         expect(result.data.status).toEqual(IntentfulStatus.Pending)
         expect(result.data.diffs).toBeUndefined()
-        createdTask = task
+        createdWatcher = watcher
     })
 
-    test("Intentful task created through updating the spec and queried as list via API", async () => {
+    test("Intent watcher created through updating the spec and queried as list via API", async () => {
         expect.hasAssertions()
         provider = new ProviderBuilder()
             .withVersion("0.1.0")
@@ -217,7 +217,7 @@ describe("Intentful Task tests", () => {
             }
         });
         to_delete_metadata = metadata
-        const { data: { task } } = await entityApi.put(`/${ provider.prefix }/${ provider.version }/${ locationDifferKind.name }/${ metadata.uuid }`, {
+        const { data: { watcher } } = await entityApi.put(`/${ provider.prefix }/${ provider.version }/${ locationDifferKind.name }/${ metadata.uuid }`, {
             spec: {
                 x: 20,
                 y: 11
@@ -227,12 +227,12 @@ describe("Intentful Task tests", () => {
             }
         })
 
-        const result = await entityApi.get(`/intentful_task`)
+        const result = await entityApi.get(`/intent_watcher`)
         expect(result.data.results.length).toBeGreaterThanOrEqual(1)
-        createdTask = task
+        createdWatcher = watcher
     })
 
-    test("Intentful task created through updating the spec and queried as list via POST API", async () => {
+    test("Intent watcher created through updating the spec and queried as list via POST API", async () => {
         expect.hasAssertions()
         provider = new ProviderBuilder()
             .withVersion("0.1.0")
@@ -246,7 +246,7 @@ describe("Intentful Task tests", () => {
             }
         });
         to_delete_metadata = metadata
-        const { data: { task } } = await entityApi.put(`/${ provider.prefix }/${ provider.version }/${ locationDifferKind.name }/${ metadata.uuid }`, {
+        const { data: { watcher } } = await entityApi.put(`/${ provider.prefix }/${ provider.version }/${ locationDifferKind.name }/${ metadata.uuid }`, {
             spec: {
                 x: 20,
                 y: 11
@@ -256,8 +256,8 @@ describe("Intentful Task tests", () => {
             }
         })
 
-        const result = await entityApi.post(`/intentful_task/filter`)
+        const result = await entityApi.post(`/intent_watcher/filter`)
         expect(result.data.results.length).toBeGreaterThanOrEqual(1)
-        createdTask = task
+        createdWatcher = watcher
     })
 })

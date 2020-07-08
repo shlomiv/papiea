@@ -1,11 +1,11 @@
 import { logLevelFromString, LoggerFactory } from "papiea-backend-utils"
 import { MongoConnection } from "./databases/mongo"
-import { Watchlist } from "./tasks/watchlist"
-import { DiffResolver } from "./tasks/diff_resolver"
+import { Watchlist } from "./intentful_engine/watchlist"
+import { DiffResolver } from "./intentful_engine/diff_resolver"
 import { BasicDiffer } from "./intentful_core/differ_impl";
 import { IntentfulContext } from "./intentful_core/intentful_context";
-import { TaskResolver } from "./tasks/task_resolver";
-import { IntentfulListenerMongo } from "./tasks/intentful_listener_mongo_simple";
+import { IntentResolver } from "./intentful_engine/intent_resolver";
+import { IntentfulListenerMongo } from "./intentful_engine/intentful_listener_mongo_simple";
 
 declare var process: {
     env: {
@@ -17,7 +17,7 @@ declare var process: {
         PAPIEA_ADMIN_S2S_KEY: string,
         LOGGING_LEVEL: string
         PAPIEA_DEBUG: string,
-        DELETED_TASK_PERSIST_SECONDS: number,
+        DELETED_WATCHER_PERSIST_SECONDS: number,
         RANDOM_ENTITY_BATCH_SIZE: number,
     },
     title: string;
@@ -27,7 +27,7 @@ const mongoUrl = process.env.MONGO_URL || 'mongodb://mongo:27017';
 const mongoDb = process.env.MONGO_DB || 'papiea';
 const loggingLevel = logLevelFromString(process.env.LOGGING_LEVEL) ?? 'debug';
 const batchSize = process.env.RANDOM_ENTITY_BATCH_SIZE ?? 5
-const deletedTaskPersists = process.env.DELETED_TASK_PERSIST_SECONDS ?? 100
+const deletedWatcherPersists = process.env.DELETED_WATCHER_PERSIST_SECONDS ?? 100
 
 async function setUpDiffResolver() {
     const logger = LoggerFactory.makeLogger({level: loggingLevel});
@@ -37,11 +37,11 @@ async function setUpDiffResolver() {
     const specDb = await mongoConnection.get_spec_db(logger);
     const statusDb = await mongoConnection.get_status_db(logger);
     const providerDb = await mongoConnection.get_provider_db(logger);
-    const intentfulTaskDb = await mongoConnection.get_intentful_task_db(logger)
+    const intentWatcherDB = await mongoConnection.get_intent_watcher_db(logger)
     const watchlistDb = await mongoConnection.get_watchlist_db(logger)
 
     const differ = new BasicDiffer()
-    const intentfulContext = new IntentfulContext(specDb, statusDb, differ, intentfulTaskDb, watchlistDb)
+    const intentfulContext = new IntentfulContext(specDb, statusDb, differ, intentWatcherDB, watchlistDb)
     const watchlist: Watchlist = new Watchlist()
 
     const intentfulListenerMongo = new IntentfulListenerMongo(statusDb, specDb, watchlist)
@@ -49,11 +49,11 @@ async function setUpDiffResolver() {
 
     const diffResolver = new DiffResolver(watchlist, watchlistDb, specDb, statusDb, providerDb, differ, intentfulContext, logger, batchSize)
 
-    const taskResolver = new TaskResolver(specDb, statusDb, intentfulTaskDb, providerDb, intentfulListenerMongo, differ, diffResolver, watchlist, logger)
+    const intentResolver = new IntentResolver(specDb, statusDb, intentWatcherDB, providerDb, intentfulListenerMongo, differ, diffResolver, watchlist, logger)
 
     console.log("Running diff resolver")
 
-    taskResolver.run(10000, deletedTaskPersists)
+    intentResolver.run(10000, deletedWatcherPersists)
     await diffResolver.run(3000)
 }
 

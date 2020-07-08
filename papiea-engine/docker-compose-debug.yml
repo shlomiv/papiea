@@ -19,4 +19,3 @@ services:
                         - PAPIEA_DEBUG=true
         mongo:
                 image: mongo:4.1
-                command: /bin/bash -c 'mongod --replSet rs0 --bind_ip_all & pid=$$! && sleep 5 && mongo --eval "rs.initiate()" && wait $$pid'

@@ -349,7 +349,7 @@ class Provider_Server_Manager {
     }
 
     // Beware this escapes special Express JS symbols
-    // So no /task/:id will work!
+    // So no /watcher/:id will work!
     register_handler(route: string, handler: RequestHandler) {
         if (!this.should_run) {
             this.should_run = true;

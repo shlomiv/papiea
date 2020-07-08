@@ -5,7 +5,7 @@ import { timeout } from "../../../src/utils/utils";
 
 export class IntentfulBenchmarks extends Benchmarks {
     private entities: string[]
-    private tasks: string[]
+    private intents: string[]
     private intentful_opts: { amount: number };
 
     constructor(papiea_url: string, provider_prefix: string, provider_version: Version, kind_name: string) {
@@ -14,7 +14,7 @@ export class IntentfulBenchmarks extends Benchmarks {
         this.papiea_url = papiea_url
         this.intentful_opts = { amount: 2 }
         this.entities = []
-        this.tasks = []
+        this.intents = []
     }
 
     async runIntentfulCAS() {
@@ -62,35 +62,35 @@ export class IntentfulBenchmarks extends Benchmarks {
             promises.push(promise)
         }
         const res = await Promise.all(promises)
-        this.tasks = res.map(result => result.data.task.uuid)
+        this.intents = res.map(result => result.data.watcher.uuid)
         const sum = durations.reduce((acc, c) => acc + c, 0)
         const avg = sum / durations.length
         console.log(`CAS average time: ${avg} seconds`)
     }
 
-    async runIntentfulTask() {
+    async runIntentWatcher() {
         let completedIn = []
         let startTime = new Date()
-        let tasks = new Set([...this.tasks])
-        // Timeout 120 seconds OR all tasks finished
-        while (((new Date().getTime() - startTime.getTime()) / 1000) < 120 && completedIn.length !== this.tasks.length) {
-            for (let uuid of tasks) {
-                const resp = await axios.get(`${ this.papiea_url }/services/intentful_task/${ uuid }`)
+        let intent_watchers = new Set([...this.intents])
+        // Timeout 120 seconds OR all intentful_engine finished
+        while (((new Date().getTime() - startTime.getTime()) / 1000) < 120 && completedIn.length !== this.intents.length) {
+            for (let uuid of intent_watchers) {
+                const resp = await axios.get(`${ this.papiea_url }/services/intent_watcher/${ uuid }`)
                 if (resp.data.status === IntentfulStatus.Completed_Successfully) {
                     completedIn.push((new Date().getTime() - startTime.getTime())/ 1000)
-                    tasks.delete(uuid)
+                    intent_watchers.delete(uuid)
                 }
             }
         }
         if (completedIn.length === 0) {
-            throw new Error("Couldn't complete intentful task benchmarks")
+            throw new Error("Couldn't complete intentful benchmarks")
         }
-        if (completedIn.length !== this.tasks.length) {
+        if (completedIn.length !== this.intents.length) {
             console.log("Not all intentful operations resolved successfully")
         }
         const sum = completedIn.reduce((acc, c) => acc + c, 0)
         const avg = sum / completedIn.length
-        console.log(`Wait til intentful task is completed average time: ${avg} seconds`)
+        console.log(`Wait til intent watcher is completed average time: ${avg} seconds`)
         await this.deleteEntities(this.full_url, this.entities)
     }
 

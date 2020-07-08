@@ -3,7 +3,7 @@ import { Status_DB } from "../../databases/status_db_interface";
 import { UserAuthInfo } from "../../auth/authn";
 import { Spec_DB } from "../../databases/spec_db_interface";
 import { Watchlist_DB } from "../../databases/watchlist_db_interface";
-import { create_entry } from "../../tasks/watchlist";
+import { create_entry } from "../../intentful_engine/watchlist";
 
 export abstract class StatusUpdateStrategy {
     statusDb: Status_DB

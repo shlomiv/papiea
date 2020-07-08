@@ -1,7 +1,7 @@
 import { Collection, Db } from "mongodb";
 import { Logger } from "papiea-backend-utils";
 import { Watchlist_DB } from "./watchlist_db_interface";
-import { SerializedWatchlist, Watchlist } from "../tasks/watchlist";
+import { SerializedWatchlist, Watchlist } from "../intentful_engine/watchlist";
 
 type WatchlistResult = {
     id: number

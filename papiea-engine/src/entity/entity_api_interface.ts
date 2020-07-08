@@ -1,24 +1,24 @@
 import { UserAuthInfo } from "../auth/authn";
 import { Version, Spec, Metadata, uuid4, Status, Entity_Reference, Action } from "papiea-core";
 import { SortParams } from "./entity_api_impl";
-import { IntentfulTask } from "../tasks/task_interface"
+import { IntentWatcher } from "../intentful_engine/intent_interface"
 
 export interface Entity_API {
     save_entity(user: UserAuthInfo, prefix: string, kind_name: string, version: Version, spec_description: Spec, request_metadata: Metadata): Promise<[Metadata, Spec]>
 
     get_entity_spec(user: UserAuthInfo, kind_name: string, entity_uuid: uuid4): Promise<[Metadata, Spec]>
 
-    get_intentful_task(user: UserAuthInfo, id: string): Promise<Partial<IntentfulTask>>
+    get_intent_watcher(user: UserAuthInfo, id: string): Promise<Partial<IntentWatcher>>
 
     get_entity_status(user: UserAuthInfo, kind_name: string, entity_uuid: uuid4): Promise<[Metadata, Status]>
 
-    filter_intentful_task(user: UserAuthInfo, fields: any, sortParams?: SortParams): Promise<Partial<IntentfulTask>[]>
+    filter_intent_watcher(user: UserAuthInfo, fields: any, sortParams?: SortParams): Promise<Partial<IntentWatcher>[]>
 
     filter_entity_spec(user: UserAuthInfo, kind_name: string, fields: any, exact_match: boolean, sortParams?: SortParams): Promise<[Metadata, Spec][]>
 
     filter_entity_status(user: UserAuthInfo, kind_name: string, fields: any, exact_match: boolean, sortParams?: SortParams): Promise<[Metadata, Status][]>
 
-    update_entity_spec(user: UserAuthInfo, uuid: uuid4, prefix: string, spec_version: number, extension: {[key: string]: any}, kind_name: string, version: Version, spec_description: Spec): Promise<IntentfulTask | null>
+    update_entity_spec(user: UserAuthInfo, uuid: uuid4, prefix: string, spec_version: number, extension: {[key: string]: any}, kind_name: string, version: Version, spec_description: Spec): Promise<IntentWatcher | null>
 
     delete_entity_spec(user: UserAuthInfo, prefix: string, version: Version, kind_name: string, entity_uuid: uuid4): Promise<void>
 

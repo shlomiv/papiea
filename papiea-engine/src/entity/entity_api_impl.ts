@@ -22,8 +22,8 @@ import { PermissionDeniedError } from "../errors/permission_error";
 import { Logger } from "papiea-backend-utils";
 import { IntentfulContext } from "../intentful_core/intentful_context"
 import { Provider_DB } from "../databases/provider_db_interface"
-import { IntentfulTask, IntentfulTaskMapper } from "../tasks/task_interface"
-import { IntentfulTask_DB } from "../databases/intentful_task_db_interface"
+import { IntentWatcher, IntentWatcherMapper } from "../intentful_engine/intent_interface"
+import { IntentWatcher_DB } from "../databases/intent_watcher_db_interface"
 import { ConflictingEntityError } from "../databases/utils/errors"
 
 export type SortParams = { [key: string]: number };
@@ -31,14 +31,14 @@ export type SortParams = { [key: string]: number };
 export class Entity_API_Impl implements Entity_API {
     private status_db: Status_DB;
     private spec_db: Spec_DB;
-    private intentful_task_db: IntentfulTask_DB
+    private intent_watcher_db: IntentWatcher_DB
     private authorizer: Authorizer;
     private logger: Logger;
     private validator: Validator
     private readonly intentfulCtx: IntentfulContext
     private providerDb: Provider_DB
 
-    constructor(logger: Logger, status_db: Status_DB, spec_db: Spec_DB, provider_db: Provider_DB, intentful_task_db: IntentfulTask_DB, authorizer: Authorizer, validator: Validator, intentfulCtx: IntentfulContext) {
+    constructor(logger: Logger, status_db: Status_DB, spec_db: Spec_DB, provider_db: Provider_DB, intent_watcher_db: IntentWatcher_DB, authorizer: Authorizer, validator: Validator, intentfulCtx: IntentfulContext) {
         this.status_db = status_db;
         this.spec_db = spec_db;
         this.providerDb = provider_db;
@@ -46,26 +46,26 @@ export class Entity_API_Impl implements Entity_API {
         this.logger = logger;
         this.validator = validator;
         this.intentfulCtx = intentfulCtx
-        this.intentful_task_db = intentful_task_db
+        this.intent_watcher_db = intent_watcher_db
     }
 
     private async get_provider(prefix: string, version: Version): Promise<Provider> {
         return this.providerDb.get_provider(prefix, version);
     }
 
-    async get_intentful_task(user: UserAuthInfo, id: string): Promise<Partial<IntentfulTask>> {
-        const intentful_task = await this.intentful_task_db.get_task(id)
-        const [metadata, _] = await this.spec_db.get_spec(intentful_task.entity_ref)
+    async get_intent_watcher(user: UserAuthInfo, id: string): Promise<Partial<IntentWatcher>> {
+        const intent_watcher = await this.intent_watcher_db.get_watcher(id)
+        const [metadata, _] = await this.spec_db.get_spec(intent_watcher.entity_ref)
         await this.authorizer.checkPermission(user, { "metadata": metadata }, Action.Update);
-        return IntentfulTaskMapper.toResponse(intentful_task)
+        return IntentWatcherMapper.toResponse(intent_watcher)
     }
 
-    async filter_intentful_task(user: UserAuthInfo, fields: any, sortParams?: SortParams): Promise<Partial<IntentfulTask>[]> {
-        const intentful_tasks = await this.intentful_task_db.list_tasks(fields, sortParams)
-        const entities = await this.spec_db.get_specs_by_ref(intentful_tasks.map(task => task.entity_ref))
+    async filter_intent_watcher(user: UserAuthInfo, fields: any, sortParams?: SortParams): Promise<Partial<IntentWatcher>[]> {
+        const intent_watchers = await this.intent_watcher_db.list_watchers(fields, sortParams)
+        const entities = await this.spec_db.get_specs_by_ref(intent_watchers.map(watcher => watcher.entity_ref))
         const filteredRes = await this.authorizer.filter(user, entities, Action.Update, x => { return { "metadata": x[0] } });
-        const filteredTasks = IntentfulTaskMapper.filter(intentful_tasks, filteredRes)
-        return IntentfulTaskMapper.toResponses(filteredTasks)
+        const filteredWatchers = IntentWatcherMapper.filter(intent_watchers, filteredRes)
+        return IntentWatcherMapper.toResponses(filteredWatchers)
     }
 
     async save_entity(user: UserAuthInfo, prefix: string, kind_name: string, version: Version, spec_description: Spec, request_metadata: Metadata = {} as Metadata): Promise<[Metadata, Spec]> {
@@ -127,7 +127,7 @@ export class Entity_API_Impl implements Entity_API {
         return filteredRes;
     }
 
-    async update_entity_spec(user: UserAuthInfo, uuid: uuid4, prefix: string, spec_version: number, extension: {[key: string]: any}, kind_name: string, version: Version, spec_description: Spec): Promise<IntentfulTask | null> {
+    async update_entity_spec(user: UserAuthInfo, uuid: uuid4, prefix: string, spec_version: number, extension: {[key: string]: any}, kind_name: string, version: Version, spec_description: Spec): Promise<IntentWatcher | null> {
         const provider = await this.get_provider(prefix, version);
         const kind = this.providerDb.find_kind(provider, kind_name);
         this.validator.validate_spec(spec_description, kind, provider.allowExtraProps);
@@ -138,8 +138,8 @@ export class Entity_API_Impl implements Entity_API {
         metadata.provider_prefix = prefix
         metadata.provider_version = version
         const strategy = this.intentfulCtx.getIntentfulStrategy(kind, user)
-        const task = await strategy.update(metadata, spec_description)
-        return task;
+        const watcher = await strategy.update(metadata, spec_description)
+        return watcher;
     }
 
     async delete_entity_spec(user: UserAuthInfo, prefix: string, version: Version, kind_name: string, entity_uuid: uuid4): Promise<void> {

@@ -51,8 +51,9 @@ export class DifferIntentfulStrategy extends IntentfulStrategy {
         }
         await this.intentWatcherDb.save_watcher(watcher)
         const watchlist = await this.watchlistDb.get_watchlist()
-        if (!watchlist.has(metadata.uuid)) {
-            watchlist.set(metadata.uuid, [create_entry(metadata), undefined, undefined])
+        const ent = create_entry(metadata)
+        if (!watchlist.has(ent)) {
+            watchlist.set([ent, undefined, undefined])
             await this.watchlistDb.update_watchlist(watchlist)
         }
         try {
@@ -67,8 +68,9 @@ export class DifferIntentfulStrategy extends IntentfulStrategy {
     async create(metadata: Metadata, spec: Spec): Promise<[Metadata, Spec]> {
         const [created_metadata, created_spec] = await super.create(metadata, spec)
         const watchlist = await this.watchlistDb.get_watchlist()
-        if (!watchlist.has(created_metadata.uuid)) {
-            watchlist.set(created_metadata.uuid, [create_entry(created_metadata), undefined, undefined])
+        const ent = create_entry(created_metadata)
+        if (!watchlist.has(ent)) {
+            watchlist.set([ent, undefined, undefined])
             await this.watchlistDb.update_watchlist(watchlist)
         }
         return [created_metadata, created_spec]

@@ -70,8 +70,9 @@ export class DifferUpdateStrategy extends StatusUpdateStrategy {
             diffs.push(diff)
         }
         const watchlist = await this.watchlistDb.get_watchlist()
-        if (!watchlist.has(metadata.uuid)) {
-            watchlist.set(metadata.uuid, [create_entry(metadata), undefined, undefined])
+        const ent = create_entry(metadata)
+        if (!watchlist.has(ent)) {
+            watchlist.set([ent, undefined, undefined])
             await this.watchlistDb.update_watchlist(watchlist)
         }
         await super.update(entity_ref, status)

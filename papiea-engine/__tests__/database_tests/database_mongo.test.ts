@@ -544,7 +544,7 @@ describe("MongoDb tests", () => {
         await watcherDb.delete_watcher(watcher.uuid)
     });
 
-    test("Get watchlist", async () => {
+    /*test("Get watchlist", async () => {
         expect.assertions(1);
         const watchlistDb: Watchlist_DB = await connection.get_watchlist_db(logger);
         const watchlist = new Watchlist()
@@ -565,4 +565,5 @@ describe("MongoDb tests", () => {
         expect(watchlistUpdated.get(uuid)![2]!.delay_seconds).toBe(120)
         await watchlistDb.update_watchlist(new Watchlist())
     });
+    */
 });

@@ -176,9 +176,9 @@ export class DiffResolver {
                 }
             }
             // Check if we have already rediffed this entity
-            if (! rediff) {
+            if (!rediff) {
                 rediff = await this.rediff(entry_reference)
-                if (! rediff) {
+                if (!rediff) {
                     await this.removeFromWatchlist(entry_reference)
                     continue
                 }

@@ -544,7 +544,6 @@ describe("MongoDb tests", () => {
         await watcherDb.delete_watcher(watcher.uuid)
     });
 
-    /* // TODO: Fix this!
     test("Get watchlist", async () => {
         expect.assertions(1);
         const watchlistDb: Watchlist_DB = await connection.get_watchlist_db(logger);
@@ -559,12 +558,10 @@ describe("MongoDb tests", () => {
                 kind: "test_kind"
             }
         }
-        const uuid = uuid4()
-        watchlist.set(uuid, [entry_ref, undefined, { delay_seconds: 120, delaySetTime: new Date() }])
+        watchlist.set([entry_ref, undefined, { delay_seconds: 120, delaySetTime: new Date() }])
         await watchlistDb.update_watchlist(watchlist)
         const watchlistUpdated = await watchlistDb.get_watchlist()
-        expect(watchlistUpdated.get(uuid)![2]!.delay_seconds).toBe(120)
+        expect(watchlistUpdated.get(entry_ref)![2]!.delay_seconds).toBe(120)
         await watchlistDb.update_watchlist(new Watchlist())
     });
-    */
 });

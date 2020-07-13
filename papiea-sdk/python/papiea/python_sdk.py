@@ -542,7 +542,7 @@ class KindBuilder(object):
     def on_create(self, handler: Callable[[ProceduralCtx, Any], Any],) -> "KindBuilder":
         name = "__create"
         self.kind_procedure(
-            name, ProceduralExecutionStrategy.HaltIntentful, {}, {}, handler
+            name, {}, handler
         )
         return self
 
@@ -552,6 +552,6 @@ class KindBuilder(object):
     ) -> "KindBuilder":
         name = "__delete"
         self.kind_procedure(
-            name, ProceduralExecutionStrategy.HaltIntentful, {}, {}, handler
+            name, {}, handler
         )
         return self

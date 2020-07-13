@@ -130,25 +130,25 @@ describe("Intentful Workflow tests", () => {
         }
     })
 
-    test.only("Differ resolver with 2 providers and entities with same uuid should pass", async () => {
-        let test_result = false
+    test("Differ resolver with 2 providers and entities with same uuid should pass", async () => {
         expect.hasAssertions();
+        let test_result = false
         const sdk1 = ProviderSdk.create_provider(
             papieaUrl, adminKey, server_config.host, server_config.port);
         const sdk2 = ProviderSdk.create_provider(
             papieaUrl, adminKey, server_config_2nd_provider.host, server_config_2nd_provider.port);
         try {
-            const first_provider_prefix = "location_provider_intentful_1"
-            const second_provider_prefix = "2nd_location_provider_intentful_1"
+            first_provider_prefix = "location_provider_intentful_1"
+            second_provider_prefix = "2nd_location_provider_intentful_1"
             const first_location = sdk1.new_kind(locationDataDescription);
             const second_location = sdk2.new_kind(locationDataDescription);
             sdk1.version(provider_version);
             sdk1.prefix(first_provider_prefix);
-            sdk1.prefix(second_provider_prefix);
-            sdk1.version(provider_version);
+            sdk2.prefix(second_provider_prefix);
+            sdk2.version(provider_version);
             const intentful_handler = (sdk: ProviderSdk) => {
                 return async (ctx: any, entity: any, input: any) => {
-                    await providerApiAdmin.patch(`/${sdk.provider.prefix}/${sdk.provider.version}/update_status`, {
+                    await providerApiAdmin.patch(`/${ sdk.provider.prefix }/${ sdk.provider.version }/update_status`, {
                         context: "some context",
                         entity_ref: {
                             uuid: entity.metadata.uuid,
@@ -197,28 +197,27 @@ describe("Intentful Workflow tests", () => {
             second_provider_to_delete_entites.push(second_result.data.metadata)
             await timeout(5000)
 
-
             const first_watcher_result = await entityApi.put(
                 `/${ sdk1.provider.prefix }/${ sdk1.provider.version }/${ first_kind_name }/${ first_result.data.metadata.uuid }`, {
-                spec: {
-                    x: 20,
-                    y: 11
-                },
-                metadata: {
-                    spec_version: 1
-                }
-            })
+                    spec: {
+                        x: 20,
+                        y: 11
+                    },
+                    metadata: {
+                        spec_version: 1
+                    }
+                })
 
             const second_watcher_result = await entityApi.put(
                 `/${ sdk2.provider.prefix }/${ sdk2.provider.version }/${ second_kind_name }/${ second_result.data.metadata.uuid }`, {
-                spec: {
-                    x: 20,
-                    y: 11
-                },
-                metadata: {
-                    spec_version: 1
-                }
-            })
+                    spec: {
+                        x: 20,
+                        y: 11
+                    },
+                    metadata: {
+                        spec_version: 1
+                    }
+                })
             const first_watcher = first_watcher_result.data.watcher
             const second_watcher = second_watcher_result.data.watcher
             const watchers = [first_watcher, second_watcher]
@@ -237,9 +236,11 @@ describe("Intentful Workflow tests", () => {
                     await timeout(5000)
                 }
             } catch (e) {
-                console.log(`Couldn't get entity: ${e}`)
+                console.log(`Couldn't get entity: ${ e }`)
                 expect(e).toBeUndefined()
             }
+        } catch (e) {
+            console.log(`Error: ${e}`)
         } finally {
             sdk1.server.close();
             sdk2.server.close();

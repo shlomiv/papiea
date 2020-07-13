@@ -5,6 +5,7 @@ import { Provider_DB } from "../databases/provider_db_interface";
 import { Provider } from "papiea-core";
 import { readFileSync } from "fs";
 import { resolve } from "path";
+import { asyncHandler } from "../auth/authn"
 
 const admin_swagger = readFileSync(resolve(__dirname, 'admin_swagger.json'), 'utf8');
 
@@ -13,33 +14,33 @@ export default function createAPIDocsRouter(urlPrefix: string, apiDocsGenerator:
 
     apiDocsRouter.use('/', serve);
 
-    apiDocsRouter.get('*/swagger-ui-init.js', async (req: Request, res: Response, next: NextFunction) => {
+    apiDocsRouter.get('*/swagger-ui-init.js', asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
         res.redirect(`${urlPrefix}/swagger-ui-init.js`);
-    });
+    }))
     
-    apiDocsRouter.get('*/swagger-ui-bundle.js', async (req: Request, res: Response, next: NextFunction) => {
+    apiDocsRouter.get('*/swagger-ui-bundle.js', asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
         res.redirect(`${urlPrefix}/swagger-ui-bundle.js`);
-    });
+    }));
     
-    apiDocsRouter.get('*/swagger-ui-standalone-preset.js', async (req: Request, res: Response, next: NextFunction) => {
+    apiDocsRouter.get('*/swagger-ui-standalone-preset.js', asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
         res.redirect(`${urlPrefix}/swagger-ui-standalone-preset.js`);
-    });
+    }));
     
-    apiDocsRouter.get('*/swagger-ui.css', async (req: Request, res: Response, next: NextFunction) => {
+    apiDocsRouter.get('*/swagger-ui.css', asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
         res.redirect(`${urlPrefix}/swagger-ui.css`);
-    });
+    }));
 
-    apiDocsRouter.get('/admin', async (req: Request, res: Response, next: NextFunction) => {
+    apiDocsRouter.get('/admin', asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
         res.send(admin_swagger)
-    });
+    }));
 
-    apiDocsRouter.get('/:provider/:version', async (req: Request, res: Response, next: NextFunction) => {
+    apiDocsRouter.get('/:provider/:version', asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
         const provider: Provider = await providerDb.get_provider(req.params.provider, req.params.version);
         const apiDocJson: any = await apiDocsGenerator.getApiDocs(provider);
         res.send(JSON.stringify(apiDocJson));
-    });
+    }));
 
-    apiDocsRouter.get('/', async (req: Request, res: Response, next: NextFunction) => {
+    apiDocsRouter.get('/', asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
         const options: any = {
             explorer: true,
             customCss: '.swagger-ui .url { display: none }',
@@ -61,7 +62,7 @@ export default function createAPIDocsRouter(urlPrefix: string, apiDocsGenerator:
             })
         }
         res.send(generateHTML(null, options));
-    });
+    }));
 
     return apiDocsRouter;
 }

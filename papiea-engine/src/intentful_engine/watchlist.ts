@@ -72,8 +72,8 @@ export class Watchlist {
         return this._entries
     }
 
-    entries(): WatchlistEntries {
-        return Object.keys(this._entries).map(k => this._entries[k]);
+    entries(): SerializedWatchlist {
+        return this._entries
     }
 
     has(ref: EntryReference): boolean {

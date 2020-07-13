@@ -93,21 +93,21 @@ export class DiffResolver {
 
     private async launchOperation({diff, metadata, provider, kind, spec, status}: DiffWithContext): Promise<[Diff, Delay]> {
         let delay_time: number | undefined = undefined
-        // This yields delay
-        console.log(`launchOperation`, diff.intentful_signature.procedure_callback,
+        this.logger.debug("launchOperation", diff.intentful_signature.procedure_callback,
             { metadata: metadata,
                 spec: spec,
                 status: status,
                 input: diff.diff_fields})
+        // This yields delay
         const result = await axios.post(diff.intentful_signature.procedure_callback, {
             metadata: metadata,
             spec: spec,
             status: status,
             input: diff.diff_fields
         })
-        if (result.data.delay_seconds !== undefined
-            && result.data.delay_seconds !== null && !Number.isNaN(result.data.delay_seconds)) {
-            delay_time = result.data.delay_seconds
+        if (result.data.delay_secs !== undefined
+            && result.data.delay_secs !== null && !Number.isNaN(result.data.delay_secs)) {
+            delay_time = result.data.delay_secs
         }
         const delay = {
             delay_seconds: delay_time ?? kind.diff_delay ?? getRandomInt(10, 20),
@@ -135,13 +135,15 @@ export class DiffResolver {
     private async resolveDiffs() {
         const entries = this.watchlist.entries()
 
-        for (let uuid in entries) {
-            let [entry_reference, current_diff, current_delay] = entries[uuid]
+        for (let key in entries) {
+            if (!entries.hasOwnProperty(key)) {
+                continue
+            }
+            let [entry_reference, current_diff, current_delay] = entries[key]
             this.logger.debug(`Diff engine processing ${entry_reference.provider_reference.provider_prefix}/${entry_reference.provider_reference.provider_version}/${entry_reference.entity_reference.kind} entity with uuid: ${entry_reference.entity_reference.uuid}`)
             let rediff: RediffResult | null = null
             if (current_diff && current_delay) {
                 // Delay for rediffing
-                const del = (new Date().getTime() - current_delay.delaySetTime.getTime()) / 1000
                 if ((new Date().getTime() - current_delay.delaySetTime.getTime()) / 1000 > current_delay.delay_seconds) {
                     rediff = await this.rediff(entry_reference)
                     if (!rediff) {
@@ -157,11 +159,11 @@ export class DiffResolver {
                             }
                             this.logger.info(`Starting to retry resolving diff for entity with uuid: ${rediff.metadata!.uuid}`)
                             const [, delay] = await this.launchOperation({diff: rediff.diffs[diff_index], ...rediff})
-                            entries[uuid][2] = delay
+                            entries[key][2] = delay
                             continue
                         } catch (e) {
                             this.logger.debug(`Couldn't invoke retry handler for entity with uuid ${rediff.metadata!.uuid}: ${e}`)
-                            entries[uuid][2] = {
+                            entries[key][2] = {
                                 delay_seconds: getRandomInt(10, 20),
                                 delaySetTime: new Date()
                             }
@@ -195,8 +197,8 @@ export class DiffResolver {
             }
             const new_diff = result![0]
             const new_delay = result![1]
-            entries[uuid][1] = new_diff
-            entries[uuid][2] = new_delay
+            entries[key][1] = new_diff
+            entries[key][2] = new_delay
         }
         await this.watchlistDb.update_watchlist(this.watchlist)
     }

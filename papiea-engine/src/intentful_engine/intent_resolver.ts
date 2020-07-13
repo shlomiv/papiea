@@ -176,8 +176,11 @@ export class IntentResolver {
 
     private async updateWatchersStatuses() {
         let entries = this.watchlist.entries();
-        for (let uuid in entries) {
-            const [entry_ref, diff, delay] = entries[uuid]
+        for (let key in entries) {
+            if (!entries.hasOwnProperty(key)) {
+                continue
+            }
+            const [entry_ref, diff, delay] = entries[key]
             const watchers = await this.intentWatcherDb.list_watchers({ entity_ref: entry_ref.entity_reference })
             if (watchers.length !== 0) {
                 try {

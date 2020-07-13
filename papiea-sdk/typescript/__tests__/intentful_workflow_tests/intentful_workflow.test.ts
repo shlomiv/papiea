@@ -225,7 +225,6 @@ describe("Intentful Workflow tests", () => {
         }
     })
 
-    /* // TODO: FIX THIS
     test("Delay to intentful operations should be awaited", async () => {
         expect.assertions(3);
         const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
@@ -246,6 +245,7 @@ describe("Intentful Workflow tests", () => {
                         },
                         status: { x: entity.spec.x }
                     })
+                    return {"delay_secs": 2}
                 } else {
                     // 12 seconds delay
                     return {"delay_secs": 12}
@@ -286,12 +286,12 @@ describe("Intentful Workflow tests", () => {
                 expect(res.data.status).toBe(IntentfulStatus.Completed_Successfully)
             } catch (e) {
                 console.log(`Couldn't get entity: ${e}`)
+                expect(e).toBeUndefined()
             }
         } finally {
             sdk.server.close();
         }
     })
-    */
 
     test("Change single array sfs field differ resolver should pass", async () => {
         expect.assertions(2);

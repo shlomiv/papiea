@@ -24,3 +24,5 @@ ProceduralSignature:
       type: string
     base_callback:
       type: string
+    signature:
+      type: string

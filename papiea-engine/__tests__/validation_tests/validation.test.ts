@@ -9,7 +9,7 @@ describe("Validation tests", () => {
     const locationDataDescription = getLocationDataDescription();
     const trimmedLocationDataDescription = Object.assign({}, locationDataDescription);
     const maybeLocation = Object.values(locationDataDescription)[0];
-    const validator = new ValidatorImpl()
+    const validator = ValidatorImpl.create()
 
     test("Basic validation should succeed", (done) => {
         const entity = {

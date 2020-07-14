@@ -43,6 +43,7 @@ export class Provider_API_Impl implements Provider_API {
 
     async register_provider(user: UserAuthInfo, provider: Provider): Promise<void> {
         await this.authorizer.checkPermission(user, provider, Action.RegisterProvider);
+        this.validator.validate_provider(provider)
         this.validator.validate_sfs(provider)
         return this.providerDb.save_provider(provider);
     }

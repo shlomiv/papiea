@@ -6,7 +6,7 @@ Provider:
     - version
     - kinds
     - procedures
-    - extension_strucutre
+    - extension_structure
     - allowExtraProps
   properties:
     prefix:

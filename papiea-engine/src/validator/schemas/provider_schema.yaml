@@ -1,0 +1,54 @@
+Provider:
+  description: Provider schema for validation during creation time
+  type: object
+  required:
+    - prefix
+    - version
+    - kinds
+    - procedures
+    - extension_strucutre
+    - allowExtraProps
+  properties:
+    prefix:
+      type: string
+    version:
+      type: string
+    kinds:
+      type: array
+      items:
+        type: object
+        required:
+          - name
+          - kind_structure
+          - intentful_behaviour
+          - intentful_signatures
+          - entity_procedures
+          - kind_procedures
+        properties:
+          name:
+            type: string
+          kind_structure:
+            type: object
+          intentful_behaviour:
+            type: string
+          intentful_signatures:
+            type: array
+            items:
+              type: object
+          entity_procedures:
+            type: object
+          kind_procedures:
+            type: object
+    procedures:
+      type: object
+    extension_structure:
+      type: object
+    policy:
+      type: string
+    oauth2:
+      type: {}
+    authModel:
+      type: string
+    allowExtraProps:
+      type: boolean
+

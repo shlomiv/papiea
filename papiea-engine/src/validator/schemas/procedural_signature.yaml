@@ -1,0 +1,26 @@
+ProceduralSignature:
+  type: object
+  required:
+    - name
+    - argument
+    - result
+    - procedure_callback
+    - execution_strategy
+    - base_callback
+  properties:
+    name:
+      type: string
+    argument:
+      type: object
+    errors_schemas:
+      type: object
+    result:
+      type: object
+    description:
+      type: string
+    execution_strategy:
+      type: number
+    procedure_callback:
+      type: string
+    base_callback:
+      type: string

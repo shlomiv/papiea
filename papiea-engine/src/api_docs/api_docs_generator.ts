@@ -1,6 +1,5 @@
 import { Provider_DB } from "../databases/provider_db_interface"
 import { Kind, Procedural_Signature, Provider } from "papiea-core"
-import { deepMerge } from "../utils/utils"
 
 export default class ApiDocsGenerator {
     providerDb: Provider_DB;

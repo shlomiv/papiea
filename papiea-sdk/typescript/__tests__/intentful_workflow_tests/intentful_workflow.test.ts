@@ -6,6 +6,7 @@ import { ProviderSdk } from "../../src/provider_sdk/typescript_sdk";
 import { load } from "js-yaml"
 import { readFileSync } from "fs"
 import { resolve } from "path"
+import uuid = require("uuid")
 
 declare var process: {
     env: {
@@ -20,6 +21,11 @@ const papieaUrl = 'http://127.0.0.1:3000';
 const server_config = {
     host: "127.0.0.1",
     port: 9000
+};
+
+const server_config_2nd_provider = {
+    host: "127.0.0.1",
+    port: 9011
 };
 
 const entityApi = axios.create({
@@ -43,27 +49,43 @@ const providerApiAdmin = axios.create({
 describe("Intentful Workflow tests", () => {
 
     const locationDataDescription = getDifferLocationDataDescription()
+    const locationDataDescriptionDuplicate = getDifferLocationDataDescription()
     const locationDataDescriptionArraySfs = load(readFileSync(resolve(__dirname, "../test_data/location_kind_test_data_array_sfs.yml"), "utf-8"));
-    let provider_prefix: string
+    let first_provider_prefix: string
+    let second_provider_prefix: string
     let provider_version: Version = "0.1.0"
-    let to_delete_entites: Metadata[] = []
+    let first_provider_to_delete_entites: Metadata[] = []
+    let second_provider_to_delete_entites: Metadata[] = []
+    const location_yaml = load(readFileSync(resolve(__dirname, "../test_data/location_kind_test_data.yml"), "utf-8"))
+    location_yaml["Location"]["x-papiea-entity"] = "differ"
 
     afterEach(async () => {
-        for (let metadata of to_delete_entites) {
-            await entityApi.delete(`${provider_prefix}/${provider_version}/${metadata.kind}/${metadata.uuid}`)
+        for (let metadata of first_provider_to_delete_entites) {
+            await entityApi.delete(`${first_provider_prefix}/${provider_version}/${metadata.kind}/${metadata.uuid}`)
         }
-        to_delete_entites = []
-        await providerApiAdmin.delete(`${provider_prefix}/${provider_version}`)
+        try {
+            for (let metadata of second_provider_to_delete_entites) {
+                await entityApi.delete(`${ second_provider_prefix }/${ provider_version }/${ metadata.kind }/${ metadata.uuid }`)
+            }
+        } catch (e) {
+        }
+        first_provider_to_delete_entites = []
+        second_provider_to_delete_entites = []
+        await providerApiAdmin.delete(`${first_provider_prefix}/${provider_version}`)
+        try {
+            await providerApiAdmin.delete(`${ second_provider_prefix }/${ provider_version }`)
+        } catch (e) {
+        }
     })
 
     test("Change single field differ resolver should pass", async () => {
         expect.assertions(2);
         const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
         try {
-            provider_prefix = "location_provider_intentful_1"
+            first_provider_prefix = "location_provider_intentful_1"
             const location = sdk.new_kind(locationDataDescription);
             sdk.version(provider_version);
-            sdk.prefix(provider_prefix);
+            sdk.prefix(first_provider_prefix);
             location.on("x", async (ctx, entity, input) => {
                 await providerApiAdmin.patch(`/${sdk.provider.prefix}/${sdk.provider.version}/update_status`, {
                     context: "some context",
@@ -86,7 +108,7 @@ describe("Intentful Workflow tests", () => {
                     y: 11
                 }
             })
-            to_delete_entites.push(metadata)
+            first_provider_to_delete_entites.push(metadata)
             await timeout(5000)
             const { data: { watcher } } = await entityApi.put(`/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`, {
                 spec: {
@@ -117,14 +139,354 @@ describe("Intentful Workflow tests", () => {
         }
     })
 
+    test("Differ resolver with 2 kinds and shared uuid entities should pass", async () => {
+        expect.hasAssertions();
+        let test_result = false
+        const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
+        try {
+            first_provider_prefix = "location_provider_intentful_1_kinds"
+            const first_location = sdk.new_kind(locationDataDescription)
+            const second_location = sdk.new_kind(locationDataDescriptionDuplicate)
+            sdk.version(provider_version)
+            sdk.prefix(first_provider_prefix)
+            const intentful_handler = () => {
+                return async (ctx: any, entity: any, input: any) => {
+                    await providerApiAdmin.patch(`/${ sdk.provider.prefix }/${ sdk.provider.version }/update_status`, {
+                        context: "some context",
+                        entity_ref: {
+                            uuid: entity.metadata.uuid,
+                            kind: entity.metadata.kind
+                        },
+                        status: { x: entity.spec.x }
+                    })
+                }
+            }
+            first_location.on("x", intentful_handler())
+            second_location.on("x", intentful_handler())
+            const on_create_handler = () => {
+                return async (ctx: any, entity: any) => {
+                    const { metadata, spec } = entity
+                    await ctx.update_status(metadata!, spec!)
+                }
+            }
+            first_location.on_create(on_create_handler())
+            second_location.on_create(on_create_handler())
+            await sdk.register();
+            const first_kind_name = sdk.provider.kinds[0].name;
+            const second_kind_name = sdk.provider.kinds[1].name;
+
+            const shared_uuid = uuid()
+
+            const first_result = await entityApi.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ first_kind_name }`, {
+                spec: {
+                    x: 10,
+                    y: 11
+                },
+                metadata: {
+                    uuid: shared_uuid
+                }
+            })
+            const second_result = await entityApi.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ second_kind_name }`, {
+                spec: {
+                    x: 10,
+                    y: 11
+                },
+                metadata: {
+                    uuid: shared_uuid
+                }
+            })
+            first_provider_to_delete_entites.push(first_result.data.metadata)
+            first_provider_to_delete_entites.push(second_result.data.metadata)
+            await timeout(5000)
+            const first_watcher_result = await entityApi.put(`/${ sdk.provider.prefix }/${ sdk.provider.version }/${ first_kind_name }/${ first_result.data.metadata.uuid }`, {
+                spec: {
+                    x: 20,
+                    y: 11
+                },
+                metadata: {
+                    spec_version: 1
+                }
+            })
+            const second_watcher_result = await entityApi.put(`/${ sdk.provider.prefix }/${ sdk.provider.version }/${ second_kind_name }/${ second_result.data.metadata.uuid }`, {
+                spec: {
+                    x: 20,
+                    y: 11
+                },
+                metadata: {
+                    spec_version: 1
+                }
+            })
+            const first_watcher = first_watcher_result.data.watcher
+            const second_watcher = second_watcher_result.data.watcher
+            const watchers = [first_watcher, second_watcher]
+            let retries = 5
+            try {
+                for (let i = 1; i <= retries; i++) {
+                    const promises = watchers.map(watcher => entityApi.get(`/intent_watcher/${ watcher.uuid }`))
+                    const results = await Promise.all(promises)
+                    if (results.every(res => res.data.status === IntentfulStatus.Completed_Successfully)) {
+                        const first_res = await entityApi.get(`/${ sdk.provider.prefix }/${ sdk.provider.version }/${ first_kind_name }/${ first_result.data.metadata.uuid }`)
+                        expect(first_res.data.status.x).toEqual(20)
+                        const second_res = await entityApi.get(`/${ sdk.provider.prefix }/${ sdk.provider.version }/${ second_kind_name }/${ second_result.data.metadata.uuid }`)
+                        expect(second_res.data.status.x).toEqual(20)
+                        test_result = true
+                    }
+                    await timeout(5000)
+                }
+            } catch (e) {
+                console.log(`Couldn't get entity: ${ e }`)
+                expect(e).toBeUndefined()
+            }
+        } finally {
+            sdk.server.close();
+            expect(test_result).toBeTruthy()
+        }
+    })
+
+    test("Differ resolver with 2 providers and entities with same uuid should pass", async () => {
+        expect.hasAssertions();
+        let test_result = false
+        const sdk1 = ProviderSdk.create_provider(
+            papieaUrl, adminKey, server_config.host, server_config.port);
+        const sdk2 = ProviderSdk.create_provider(
+            papieaUrl, adminKey, server_config_2nd_provider.host, server_config_2nd_provider.port);
+        try {
+            first_provider_prefix = "location_provider_intentful_1"
+            second_provider_prefix = "2nd_location_provider_intentful_1"
+            const first_location = sdk1.new_kind(locationDataDescription);
+            const second_location = sdk2.new_kind(locationDataDescription);
+            sdk1.version(provider_version);
+            sdk1.prefix(first_provider_prefix);
+            sdk2.prefix(second_provider_prefix);
+            sdk2.version(provider_version);
+            const intentful_handler = (sdk: ProviderSdk) => {
+                return async (ctx: any, entity: any, input: any) => {
+                    await providerApiAdmin.patch(`/${ sdk.provider.prefix }/${ sdk.provider.version }/update_status`, {
+                        context: "some context",
+                        entity_ref: {
+                            uuid: entity.metadata.uuid,
+                            kind: entity.metadata.kind
+                        },
+                        status: { x: entity.spec.x }
+                    })
+                }
+            }
+            first_location.on("x", intentful_handler(sdk1))
+            second_location.on("x", intentful_handler(sdk2))
+            const on_create_handler = () => {
+                return async (ctx: any, entity: any) => {
+                    const { metadata, spec } = entity
+                    await ctx.update_status(metadata!, spec!)
+                }
+            }
+            first_location.on_create(on_create_handler())
+            second_location.on_create(on_create_handler())
+            await sdk1.register();
+            await sdk2.register();
+            const first_kind_name = sdk1.provider.kinds[0].name;
+            const second_kind_name = sdk2.provider.kinds[0].name;
+
+            const shared_uuid = uuid()
+
+            const first_result = await entityApi.post(`${ sdk1.entity_url }/${ sdk1.provider.prefix }/${ sdk1.provider.version }/${ first_kind_name }`, {
+                spec: {
+                    x: 10,
+                    y: 11
+                },
+                metadata: {
+                    uuid: shared_uuid
+                }
+            })
+            first_provider_to_delete_entites.push(first_result.data.metadata)
+            const second_result = await entityApi.post(`${ sdk2.entity_url }/${ sdk2.provider.prefix }/${ sdk2.provider.version }/${ second_kind_name }`, {
+                spec: {
+                    x: 10,
+                    y: 11
+                },
+                metadata: {
+                    uuid: shared_uuid
+                }
+            })
+            second_provider_to_delete_entites.push(second_result.data.metadata)
+            await timeout(5000)
+
+            const first_watcher_result = await entityApi.put(
+                `/${ sdk1.provider.prefix }/${ sdk1.provider.version }/${ first_kind_name }/${ first_result.data.metadata.uuid }`, {
+                    spec: {
+                        x: 20,
+                        y: 11
+                    },
+                    metadata: {
+                        spec_version: 1
+                    }
+                })
+
+            const second_watcher_result = await entityApi.put(
+                `/${ sdk2.provider.prefix }/${ sdk2.provider.version }/${ second_kind_name }/${ second_result.data.metadata.uuid }`, {
+                    spec: {
+                        x: 20,
+                        y: 11
+                    },
+                    metadata: {
+                        spec_version: 1
+                    }
+                })
+            const first_watcher = first_watcher_result.data.watcher
+            const second_watcher = second_watcher_result.data.watcher
+            const watchers = [first_watcher, second_watcher]
+            let retries = 5
+            try {
+                for (let i = 1; i <= retries; i++) {
+                    const promises = watchers.map(watcher => entityApi.get(`/intent_watcher/${ watcher.uuid }`))
+                    const results = await Promise.all(promises)
+                    if (results.every(res => res.data.status === IntentfulStatus.Completed_Successfully)) {
+                        const first_res = await entityApi.get(`/${ sdk1.provider.prefix }/${ sdk1.provider.version }/${ first_kind_name }/${ first_result.data.metadata.uuid }`)
+                        expect(first_res.data.status.x).toEqual(20)
+                        const second_res = await entityApi.get(`/${ sdk2.provider.prefix }/${ sdk2.provider.version }/${ second_kind_name }/${ second_result.data.metadata.uuid }`)
+                        expect(second_res.data.status.x).toEqual(20)
+                        test_result = true
+                    }
+                    await timeout(5000)
+                }
+            } catch (e) {
+                console.log(`Couldn't get entity: ${ e }`)
+                expect(e).toBeUndefined()
+            }
+        } catch (e) {
+            console.log(`Error: ${e}`)
+        } finally {
+            sdk1.server.close();
+            sdk2.server.close();
+            expect(test_result).toBeTruthy()
+        }
+    })
+
+    test("Differ resolver with 2 providers, same kinds and entities with same uuid should pass", async () => {
+        expect.hasAssertions();
+        let test_result = false
+        const sdk1 = ProviderSdk.create_provider(
+            papieaUrl, adminKey, server_config.host, server_config.port);
+        const sdk2 = ProviderSdk.create_provider(
+            papieaUrl, adminKey, server_config_2nd_provider.host, server_config_2nd_provider.port);
+        try {
+            first_provider_prefix = "location_provider_intentful_1_same_kind"
+            second_provider_prefix = "2nd_location_provider_intentful_1_same_kind"
+            const first_location = sdk1.new_kind(JSON.parse(JSON.stringify(location_yaml)));
+            const second_location = sdk2.new_kind(JSON.parse(JSON.stringify(location_yaml)));
+            sdk1.version(provider_version);
+            sdk1.prefix(first_provider_prefix);
+            sdk2.prefix(second_provider_prefix);
+            sdk2.version(provider_version);
+            const intentful_handler = (sdk: ProviderSdk) => {
+                return async (ctx: any, entity: any, input: any) => {
+                    await providerApiAdmin.patch(`/${ sdk.provider.prefix }/${ sdk.provider.version }/update_status`, {
+                        context: "some context",
+                        entity_ref: {
+                            uuid: entity.metadata.uuid,
+                            kind: entity.metadata.kind
+                        },
+                        status: { x: entity.spec.x }
+                    })
+                }
+            }
+            first_location.on("x", intentful_handler(sdk1))
+            second_location.on("x", intentful_handler(sdk2))
+            const on_create_handler = () => {
+                return async (ctx: any, entity: any) => {
+                    const { metadata, spec } = entity
+                    await ctx.update_status(metadata!, spec!)
+                }
+            }
+            first_location.on_create(on_create_handler())
+            second_location.on_create(on_create_handler())
+            await sdk1.register();
+            await sdk2.register();
+            const first_kind_name = sdk1.provider.kinds[0].name;
+            const second_kind_name = sdk2.provider.kinds[0].name;
+
+            const shared_uuid = uuid()
+
+            const first_result = await entityApi.post(`${ sdk1.entity_url }/${ sdk1.provider.prefix }/${ sdk1.provider.version }/${ first_kind_name }`, {
+                spec: {
+                    x: 10,
+                    y: 11
+                },
+                metadata: {
+                    uuid: shared_uuid
+                }
+            })
+            first_provider_to_delete_entites.push(first_result.data.metadata)
+            const second_result = await entityApi.post(`${ sdk2.entity_url }/${ sdk2.provider.prefix }/${ sdk2.provider.version }/${ second_kind_name }`, {
+                spec: {
+                    x: 10,
+                    y: 11
+                },
+                metadata: {
+                    uuid: shared_uuid
+                }
+            })
+            second_provider_to_delete_entites.push(second_result.data.metadata)
+            await timeout(5000)
+
+            const first_watcher_result = await entityApi.put(
+                `/${ sdk1.provider.prefix }/${ sdk1.provider.version }/${ first_kind_name }/${ first_result.data.metadata.uuid }`, {
+                    spec: {
+                        x: 20,
+                        y: 11
+                    },
+                    metadata: {
+                        spec_version: 1
+                    }
+                })
+
+            const second_watcher_result = await entityApi.put(
+                `/${ sdk2.provider.prefix }/${ sdk2.provider.version }/${ second_kind_name }/${ second_result.data.metadata.uuid }`, {
+                    spec: {
+                        x: 20,
+                        y: 11
+                    },
+                    metadata: {
+                        spec_version: 1
+                    }
+                })
+            const first_watcher = first_watcher_result.data.watcher
+            const second_watcher = second_watcher_result.data.watcher
+            const watchers = [first_watcher, second_watcher]
+            let retries = 5
+            try {
+                for (let i = 1; i <= retries; i++) {
+                    const promises = watchers.map(watcher => entityApi.get(`/intent_watcher/${ watcher.uuid }`))
+                    const results = await Promise.all(promises)
+                    if (results.every(res => res.data.status === IntentfulStatus.Completed_Successfully)) {
+                        const first_res = await entityApi.get(`/${ sdk1.provider.prefix }/${ sdk1.provider.version }/${ first_kind_name }/${ first_result.data.metadata.uuid }`)
+                        expect(first_res.data.status.x).toEqual(20)
+                        const second_res = await entityApi.get(`/${ sdk2.provider.prefix }/${ sdk2.provider.version }/${ second_kind_name }/${ second_result.data.metadata.uuid }`)
+                        expect(second_res.data.status.x).toEqual(20)
+                        test_result = true
+                    }
+                    await timeout(5000)
+                }
+            } catch (e) {
+                console.log(`Couldn't get entity: ${ e }`)
+                expect(e).toBeUndefined()
+            }
+        } catch (e) {
+            console.log(`Error: ${e}`)
+        } finally {
+            sdk1.server.close();
+            sdk2.server.close();
+            expect(test_result).toBeTruthy()
+        }
+    })
+
     test("Change single field differ resolver should fail because of handler error", async () => {
         expect.assertions(2);
         const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
         try {
-            provider_prefix = "location_provider_intentful_2"
+            first_provider_prefix = "location_provider_intentful_2"
             const location = sdk.new_kind(locationDataDescription);
             sdk.version(provider_version);
-            sdk.prefix(provider_prefix);
+            sdk.prefix(first_provider_prefix);
             location.on("x", async (ctx, entity, input) => {
                 throw new Error("Error in handler")
             })
@@ -140,7 +502,7 @@ describe("Intentful Workflow tests", () => {
                     y: 11
                 }
             })
-            to_delete_entites.push(metadata)
+            first_provider_to_delete_entites.push(metadata)
             await timeout(5000)
             const { data: { watcher } } = await entityApi.put(`/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`, {
                 spec: {
@@ -174,10 +536,10 @@ describe("Intentful Workflow tests", () => {
         expect.assertions(1);
         const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
         try {
-            provider_prefix = "location_provider_intentful_1"
+            first_provider_prefix = "location_provider_intentful_1"
             const location = sdk.new_kind(locationDataDescription);
             sdk.version(provider_version);
-            sdk.prefix(provider_prefix);
+            sdk.prefix(first_provider_prefix);
             location.on("x", async (ctx, entity, input) => {
                 await providerApiAdmin.patch(`/${sdk.provider.prefix}/${sdk.provider.version}/update_status`, {
                     context: "some context",
@@ -200,7 +562,7 @@ describe("Intentful Workflow tests", () => {
                     y: 11
                 }
             })
-            to_delete_entites.push(metadata)
+            first_provider_to_delete_entites.push(metadata)
             await timeout(5000)
             const { data: { watcher } } = await entityApi.put(`/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`, {
                 spec: {
@@ -230,10 +592,10 @@ describe("Intentful Workflow tests", () => {
         const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
         try {
             let times_requested = 0
-            provider_prefix = "location_provider_intentful_3"
+            first_provider_prefix = "location_provider_intentful_3"
             const location = sdk.new_kind(locationDataDescription);
             sdk.version(provider_version);
-            sdk.prefix(provider_prefix);
+            sdk.prefix(first_provider_prefix);
             location.on("x", async (ctx, entity, input) => {
                 times_requested++
                 if (times_requested === 2) {
@@ -263,7 +625,7 @@ describe("Intentful Workflow tests", () => {
                     y: 11
                 }
             })
-            to_delete_entites.push(metadata)
+            first_provider_to_delete_entites.push(metadata)
             await timeout(5000)
             const { data: { watcher } } = await entityApi.put(`/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`, {
                 spec: {
@@ -297,10 +659,10 @@ describe("Intentful Workflow tests", () => {
         expect.assertions(2);
         const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
         try {
-            provider_prefix = "location_provider_intentful_4"
+            first_provider_prefix = "location_provider_intentful_4"
             const location = sdk.new_kind(locationDataDescriptionArraySfs);
             sdk.version(provider_version);
-            sdk.prefix(provider_prefix);
+            sdk.prefix(first_provider_prefix);
             location.on("x.+{ip}", async (ctx, entity, input) => {
                 await providerApiAdmin.post(`/${sdk.provider.prefix}/${sdk.provider.version}/update_status`, {
                     context: "some context",
@@ -325,7 +687,7 @@ describe("Intentful Workflow tests", () => {
                     y: 11
                 }
             })
-            to_delete_entites.push(metadata)
+            first_provider_to_delete_entites.push(metadata)
             await timeout(5000)
             const { data: { watcher } } = await entityApi.put(`/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`, {
                 spec: {

@@ -21,7 +21,8 @@ export class Spec_DB_Mongo implements Spec_DB {
     async init(): Promise<void> {
         try {
             await this.collection.createIndex(
-                { "metadata.uuid": 1, "metadata.provider_prefix": 1 },
+                { "metadata.uuid": 1, "metadata.provider_version": 1,
+                    "metadata.kind": 1, "metadata.provider_prefix": 1 },
                 { name: "provider_specific_entity_uuid", unique: true },
             );
         } catch (err) {

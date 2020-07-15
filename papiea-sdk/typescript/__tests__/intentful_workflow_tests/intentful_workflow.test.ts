@@ -139,109 +139,109 @@ describe("Intentful Workflow tests", () => {
         }
     })
 
-    // test("Differ resolver with 2 kinds and shared uuid entities should pass", async () => {
-    //     expect.hasAssertions();
-    //     let test_result = false
-    //     const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
-    //     try {
-    //         first_provider_prefix = "location_provider_intentful_1_kinds"
-    //         const first_location = sdk.new_kind(locationDataDescription)
-    //         const second_location = sdk.new_kind(locationDataDescriptionDuplicate)
-    //         sdk.version(provider_version)
-    //         sdk.prefix(first_provider_prefix)
-    //         const intentful_handler = () => {
-    //             return async (ctx: any, entity: any, input: any) => {
-    //                 await providerApiAdmin.patch(`/${ sdk.provider.prefix }/${ sdk.provider.version }/update_status`, {
-    //                     context: "some context",
-    //                     entity_ref: {
-    //                         uuid: entity.metadata.uuid,
-    //                         kind: entity.metadata.kind
-    //                     },
-    //                     status: { x: entity.spec.x }
-    //                 })
-    //             }
-    //         }
-    //         first_location.on("x", intentful_handler())
-    //         second_location.on("x", intentful_handler())
-    //         const on_create_handler = () => {
-    //             return async (ctx: any, entity: any) => {
-    //                 const { metadata, spec } = entity
-    //                 await ctx.update_status(metadata!, spec!)
-    //             }
-    //         }
-    //         first_location.on_create(on_create_handler())
-    //         second_location.on_create(on_create_handler())
-    //         await sdk.register();
-    //         const first_kind_name = sdk.provider.kinds[0].name;
-    //         const second_kind_name = sdk.provider.kinds[1].name;
-    //
-    //         const shared_uuid = uuid()
-    //
-    //         const first_result = await entityApi.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ first_kind_name }`, {
-    //             spec: {
-    //                 x: 10,
-    //                 y: 11
-    //             },
-    //             metadata: {
-    //                 uuid: shared_uuid
-    //             }
-    //         })
-    //         const second_result = await entityApi.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ first_kind_name }`, {
-    //             spec: {
-    //                 x: 10,
-    //                 y: 11
-    //             },
-    //             metadata: {
-    //                 uuid: shared_uuid
-    //             }
-    //         })
-    //         first_provider_to_delete_entites.push(first_result.data.metadata)
-    //         first_provider_to_delete_entites.push(second_result.data.metadata)
-    //         await timeout(5000)
-    //         const first_watcher_result = await entityApi.put(`/${ sdk.provider.prefix }/${ sdk.provider.version }/${ first_kind_name }/${ first_result.data.metadata.uuid }`, {
-    //             spec: {
-    //                 x: 20,
-    //                 y: 11
-    //             },
-    //             metadata: {
-    //                 spec_version: 1
-    //             }
-    //         })
-    //         const second_watcher_result = await entityApi.put(`/${ sdk.provider.prefix }/${ sdk.provider.version }/${ second_kind_name }/${ second_result.data.metadata.uuid }`, {
-    //             spec: {
-    //                 x: 20,
-    //                 y: 11
-    //             },
-    //             metadata: {
-    //                 spec_version: 1
-    //             }
-    //         })
-    //         const first_watcher = first_watcher_result.data.watcher
-    //         const second_watcher = second_watcher_result.data.watcher
-    //         const watchers = [first_watcher, second_watcher]
-    //         let retries = 5
-    //         try {
-    //             for (let i = 1; i <= retries; i++) {
-    //                 const promises = watchers.map(watcher => entityApi.get(`/intent_watcher/${ watcher.uuid }`))
-    //                 const results = await Promise.all(promises)
-    //                 if (results.every(res => res.data.status === IntentfulStatus.Completed_Successfully)) {
-    //                     const first_res = await entityApi.get(`/${ sdk.provider.prefix }/${ sdk.provider.version }/${ first_kind_name }/${ first_result.data.metadata.uuid }`)
-    //                     expect(first_res.data.status.x).toEqual(20)
-    //                     const second_res = await entityApi.get(`/${ sdk.provider.prefix }/${ sdk.provider.version }/${ second_kind_name }/${ second_result.data.metadata.uuid }`)
-    //                     expect(second_res.data.status.x).toEqual(20)
-    //                     test_result = true
-    //                 }
-    //                 await timeout(5000)
-    //             }
-    //         } catch (e) {
-    //             console.log(`Couldn't get entity: ${ e }`)
-    //             expect(e).toBeUndefined()
-    //         }
-    //     } finally {
-    //         sdk.server.close();
-    //         expect(test_result).toBeTruthy()
-    //     }
-    // })
+    test("Differ resolver with 2 kinds and shared uuid entities should pass", async () => {
+        expect.hasAssertions();
+        let test_result = false
+        const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
+        try {
+            first_provider_prefix = "location_provider_intentful_1_kinds"
+            const first_location = sdk.new_kind(locationDataDescription)
+            const second_location = sdk.new_kind(locationDataDescriptionDuplicate)
+            sdk.version(provider_version)
+            sdk.prefix(first_provider_prefix)
+            const intentful_handler = () => {
+                return async (ctx: any, entity: any, input: any) => {
+                    await providerApiAdmin.patch(`/${ sdk.provider.prefix }/${ sdk.provider.version }/update_status`, {
+                        context: "some context",
+                        entity_ref: {
+                            uuid: entity.metadata.uuid,
+                            kind: entity.metadata.kind
+                        },
+                        status: { x: entity.spec.x }
+                    })
+                }
+            }
+            first_location.on("x", intentful_handler())
+            second_location.on("x", intentful_handler())
+            const on_create_handler = () => {
+                return async (ctx: any, entity: any) => {
+                    const { metadata, spec } = entity
+                    await ctx.update_status(metadata!, spec!)
+                }
+            }
+            first_location.on_create(on_create_handler())
+            second_location.on_create(on_create_handler())
+            await sdk.register();
+            const first_kind_name = sdk.provider.kinds[0].name;
+            const second_kind_name = sdk.provider.kinds[1].name;
+
+            const shared_uuid = uuid()
+
+            const first_result = await entityApi.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ first_kind_name }`, {
+                spec: {
+                    x: 10,
+                    y: 11
+                },
+                metadata: {
+                    uuid: shared_uuid
+                }
+            })
+            const second_result = await entityApi.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ second_kind_name }`, {
+                spec: {
+                    x: 10,
+                    y: 11
+                },
+                metadata: {
+                    uuid: shared_uuid
+                }
+            })
+            first_provider_to_delete_entites.push(first_result.data.metadata)
+            first_provider_to_delete_entites.push(second_result.data.metadata)
+            await timeout(5000)
+            const first_watcher_result = await entityApi.put(`/${ sdk.provider.prefix }/${ sdk.provider.version }/${ first_kind_name }/${ first_result.data.metadata.uuid }`, {
+                spec: {
+                    x: 20,
+                    y: 11
+                },
+                metadata: {
+                    spec_version: 1
+                }
+            })
+            const second_watcher_result = await entityApi.put(`/${ sdk.provider.prefix }/${ sdk.provider.version }/${ second_kind_name }/${ second_result.data.metadata.uuid }`, {
+                spec: {
+                    x: 20,
+                    y: 11
+                },
+                metadata: {
+                    spec_version: 1
+                }
+            })
+            const first_watcher = first_watcher_result.data.watcher
+            const second_watcher = second_watcher_result.data.watcher
+            const watchers = [first_watcher, second_watcher]
+            let retries = 5
+            try {
+                for (let i = 1; i <= retries; i++) {
+                    const promises = watchers.map(watcher => entityApi.get(`/intent_watcher/${ watcher.uuid }`))
+                    const results = await Promise.all(promises)
+                    if (results.every(res => res.data.status === IntentfulStatus.Completed_Successfully)) {
+                        const first_res = await entityApi.get(`/${ sdk.provider.prefix }/${ sdk.provider.version }/${ first_kind_name }/${ first_result.data.metadata.uuid }`)
+                        expect(first_res.data.status.x).toEqual(20)
+                        const second_res = await entityApi.get(`/${ sdk.provider.prefix }/${ sdk.provider.version }/${ second_kind_name }/${ second_result.data.metadata.uuid }`)
+                        expect(second_res.data.status.x).toEqual(20)
+                        test_result = true
+                    }
+                    await timeout(5000)
+                }
+            } catch (e) {
+                console.log(`Couldn't get entity: ${ e }`)
+                expect(e).toBeUndefined()
+            }
+        } finally {
+            sdk.server.close();
+            expect(test_result).toBeTruthy()
+        }
+    })
 
     test("Differ resolver with 2 providers and entities with same uuid should pass", async () => {
         expect.hasAssertions();

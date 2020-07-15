@@ -68,7 +68,7 @@ export class Provider_API_Impl implements Provider_API {
         }
         await this.authorizer.checkPermission(user, provider, Action.UpdateStatus);
         await this.validator.validate_status(provider, entity_ref, status);
-        return strategy.replace(entity_ref, status)
+        return strategy.replace({provider_prefix: provider_prefix, provider_version: version, ...entity_ref}, status)
     }
 
     async update_status(user: UserAuthInfo, provider_prefix: string, version: Version, context: any, entity_ref: Entity_Reference, partialStatus: Status): Promise<void> {
@@ -86,10 +86,10 @@ export class Provider_API_Impl implements Provider_API {
         // e.g. partial status update: {name: {last: 'BBB'}}
         // Thus we get the merged version and validate it
         // Only after that we transform partial status into mongo dot notation query
-        const [,currentStatus] = await this.statusDb.get_status(entity_ref)
+        const [,currentStatus] = await this.statusDb.get_status({provider_prefix: provider_prefix, provider_version: version, ...entity_ref})
         const mergedStatus = {...currentStatus, ...partialStatus}
         await this.validator.validate_status(provider, entity_ref, mergedStatus);
-        return strategy.update(entity_ref, partialStatus)
+        return strategy.update({provider_prefix: provider_prefix, provider_version: version, ...entity_ref}, partialStatus)
     }
 
     async update_progress(user: UserAuthInfo, context: any, message: string, done_percent: number): Promise<void> {

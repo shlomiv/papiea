@@ -1,5 +1,5 @@
 // [[file:~/work/papiea-js/Papiea-design.org::*/src/databases/status_db_interface.ts][/src/databases/status_db_interface.ts:1]]
-import { Entity_Reference, Status, Metadata } from "papiea-core";
+import { Entity_Reference, Provider_Entity_Reference, Status, Metadata } from "papiea-core";
 import { SortParams } from "../entity/entity_api_impl";
 
 // [[file:~/work/papiea-js/Papiea-design.org::#h-Interface-548][status-db-interface]]
@@ -8,14 +8,14 @@ export interface Status_DB {
 
     // Update the status in the status db. As long as the input is
     // correct this always succeeds.
-    replace_status(entity_ref: Entity_Reference, status: Status): Promise<void>;
+    replace_status(entity_ref: Provider_Entity_Reference, status: Status): Promise<void>;
 
     // Gets the status of a particular entity from the db. Returns
     // both current metadata and status of the entity.
-    get_status(entity_ref: Entity_Reference): Promise<[Metadata, Status]>;
+    get_status(entity_ref: Provider_Entity_Reference): Promise<[Metadata, Status]>;
 
     // Get statuses by their entity references
-    get_statuses_by_ref(entity_refs: Entity_Reference[]): Promise<[Metadata, Status][]>
+    get_statuses_by_ref(entity_refs: Provider_Entity_Reference[]): Promise<[Metadata, Status][]>
 
     // List all status that have their fields match the ones given in
     // fields_map. E.g. we could look for all statuses for `vm` kind that
@@ -30,9 +30,9 @@ export interface Status_DB {
 
     list_status_in(filter_list: any[], field_name?: string): Promise<([Metadata, Status])[]>
 
-    delete_status(entity_ref: Entity_Reference): Promise<void>
+    delete_status(entity_ref: Provider_Entity_Reference): Promise<void>
 
-    update_status(entity_ref: Entity_Reference, status: Status): Promise<void>
+    update_status(entity_ref: Provider_Entity_Reference, status: Status): Promise<void>
 }
 
 // status-db-interface ends here

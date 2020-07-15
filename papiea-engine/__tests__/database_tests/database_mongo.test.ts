@@ -6,7 +6,7 @@ import { Provider_DB } from "../../src/databases/provider_db_interface";
 import { S2S_Key_DB } from "../../src/databases/s2skey_db_interface";
 import { v4 as uuid4 } from 'uuid';
 import { ConflictingEntityError } from "../../src/databases/utils/errors";
-import { Metadata, Spec, Entity_Reference, Status, Kind, Provider, S2S_Key, IntentfulBehaviour } from "papiea-core";
+import { Metadata, Spec, Provider_Entity_Reference, Entity_Reference, Status, Kind, Provider, S2S_Key, IntentfulBehaviour } from "papiea-core";
 import { SessionKeyDb } from "../../src/databases/session_key_db_interface"
 import { Entity, Intentful_Signature, SessionKey, IntentfulStatus } from "papiea-core"
 import { Logger, LoggerFactory } from 'papiea-backend-utils';
@@ -146,14 +146,16 @@ describe("MongoDb tests", () => {
 
     test("Insert Status", async () => {
         const statusDb: Status_DB = await connection.get_status_db(logger);
-        const entity_ref: Entity_Reference = { uuid: entityA_uuid, kind: "test" };
+        const entity_ref: Provider_Entity_Reference = { uuid: entityA_uuid, kind: "test",
+            provider_prefix: "test_prefix", provider_version: "test_version" };
         const status: Status = { a: "A" };
         await statusDb.replace_status(entity_ref, status);
     });
 
     test("Update Status", async () => {
         const statusDb: Status_DB = await connection.get_status_db(logger);
-        const entity_ref: Entity_Reference = { uuid: entityA_uuid, kind: "test" };
+        const entity_ref: Provider_Entity_Reference = { uuid: entityA_uuid, kind: "test",
+            provider_prefix: "test_prefix", provider_version: "test_version" };
         const status: Status = { a: "A1" };
         await statusDb.replace_status(entity_ref, status);
     });
@@ -161,7 +163,8 @@ describe("MongoDb tests", () => {
     test("Get Status", async () => {
         expect.assertions(3);
         const statusDb: Status_DB = await connection.get_status_db(logger);
-        const entity_ref: Entity_Reference = { uuid: entityA_uuid, kind: "test" };
+        const entity_ref: Provider_Entity_Reference = { uuid: entityA_uuid, kind: "test",
+            provider_prefix: "test_prefix", provider_version: "test_version" };
         const res = await statusDb.get_status(entity_ref);
         expect(res).not.toBeNull();
         if (res === null) {
@@ -175,7 +178,8 @@ describe("MongoDb tests", () => {
     test("Partially update Status", async () => {
         expect.assertions(4);
         const statusDb: Status_DB = await connection.get_status_db(logger);
-        const entity_ref: Entity_Reference = { uuid: entityA_uuid, kind: "test" };
+        const entity_ref: Provider_Entity_Reference = { uuid: entityA_uuid, kind: "test",
+            provider_prefix: "test_prefix", provider_version: "test_version" };
         const initial_status: Status = { b: "A3" };
         await statusDb.update_status(entity_ref, initial_status);
         const res = await statusDb.get_status(entity_ref);
@@ -192,7 +196,8 @@ describe("MongoDb tests", () => {
     test("Get Status for non existing entity should fail", async () => {
         expect.assertions(1);
         const statusDb: Status_DB = await connection.get_status_db(logger);
-        const entity_ref: Entity_Reference = { uuid: uuid4(), kind: "test" };
+        const entity_ref: Provider_Entity_Reference = { uuid: uuid4(), kind: "test",
+            provider_prefix: "test_prefix", provider_version: "test_version" };
         try {
             await statusDb.get_status(entity_ref);
         } catch (err) {

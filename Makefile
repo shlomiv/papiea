@@ -60,63 +60,51 @@ build_all: build_main papiea-engine/__benchmarks__/build
 
 papiea-engine/__benchmarks__/build: papiea-engine/__benchmarks__/node_modules
 	yarn --cwd papiea-engine/__benchmarks__ run build
-.PHONY: papiea-engine/__benchmarks__/build
 
 papiea-engine/__benchmarks__/node_modules: build_main
 	yarn --cwd papiea-engine/__benchmarks__
-.PHONY: papiea-engine/__benchmarks__/node_modules
 
 build_main: node_modules_main papiea-engine/build papiea-sdk/typescript/build
 .PHONY: build_main
 
 papiea-sdk/typescript/build:
 	yarn --cwd papiea-sdk/typescript run build
-.PHONY: papiea-sdk/typescript/build
 
 papiea-engine/build:
 	yarn --cwd papiea-engine run build
-.PHONY: papiea-engine/build
 
 node_modules_main: build_deps papiea-engine/node_modules papiea-sdk/typescript/node_modules
 .PHONY: node_modules_main
 
 papiea-sdk/typescript/node_modules:
 	yarn --cwd papiea-sdk/typescript
-.PHONY: papiea-sdk/typescript/node_modules # TODO fix dependencies
 
 papiea-engine/node_modules:
 	yarn --cwd papiea-engine
-.PHONY: papiea-engine/node_modules
 
 build_deps: node_modules_deps papiea-backend-utils/build papiea-client/build
 .PHONY: build_deps
 
 papiea-client/build:
 	yarn --cwd papiea-client run build
-.PHONY: papiea-client/build
 
 papiea-backend-utils/build:
 	yarn --cwd papiea-backend-utils run build
-.PHONY: papiea-backend-utils/build
 
 node_modules_deps: papiea-core/build papiea-backend-utils/node_modules papiea-client/node_modules
 .PHONY: node_modules_deps
 
 papiea-backend-utils/node_modules:
 	yarn --cwd papiea-backend-utils
-.PHONY: papiea-backend-utils/node_modules
 
 papiea-client/node_modules:
 	yarn --cwd papiea-client
-.PHONY: papiea-client/node_modules # TODO: Fix up this and other node_modules targets dependencies
 
 papiea-core/build: papiea-core/node_modules
 	yarn --cwd papiea-core run build
-.PHONY: papiea-core/build
 
 papiea-core/node_modules:
 	yarn --cwd papiea-core
-.PHONY: papiea-core/node_modules
 
 clean-all: clean-node-modules clean
 .PHONY: clean-all

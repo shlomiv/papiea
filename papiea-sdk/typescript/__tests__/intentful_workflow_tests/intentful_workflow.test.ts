@@ -139,6 +139,74 @@ describe("Intentful Workflow tests", () => {
         }
     })
 
+    test("Delay to intentful operations should be awaited", async () => {
+        expect.assertions(3);
+        const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
+        try {
+            let times_requested = 0
+            first_provider_prefix = "location_provider_intentful_3"
+            const location = sdk.new_kind(locationDataDescription);
+            sdk.version(provider_version);
+            sdk.prefix(first_provider_prefix);
+            location.on("x", async (ctx, entity, input) => {
+                times_requested++
+                if (times_requested === 2) {
+                    await providerApiAdmin.patch(`/${sdk.provider.prefix}/${sdk.provider.version}/update_status`, {
+                        context: "some context",
+                        entity_ref: {
+                            uuid: metadata.uuid,
+                            kind: kind_name
+                        },
+                        status: { x: entity.spec.x }
+                    })
+                    return {"delay_secs": 2}
+                } else {
+                    // 12 seconds delay
+                    return {"delay_secs": 12}
+                }
+            })
+            location.on_create(async (ctx, entity) => {
+                const { metadata, spec } = entity
+                await ctx.update_status(metadata!, spec!)
+            })
+            await sdk.register();
+            const kind_name = sdk.provider.kinds[0].name;
+            const { data: { metadata, spec } } = await entityApi.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }`, {
+                spec: {
+                    x: 10,
+                    y: 11
+                }
+            })
+            first_provider_to_delete_entites.push(metadata)
+            await timeout(5000)
+            const { data: { watcher } } = await entityApi.put(`/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`, {
+                spec: {
+                    x: 30,
+                    y: 11
+                },
+                metadata: {
+                    spec_version: 1
+                }
+            })
+            try {
+                await timeout(5000)
+                let res = await entityApi.get(`/intent_watcher/${ watcher.uuid }`)
+                expect(res.data.status).toBe(IntentfulStatus.Active)
+                await timeout(3000)
+                res = await entityApi.get(`/intent_watcher/${ watcher.uuid }`)
+                expect(res.data.status).toBe(IntentfulStatus.Active)
+                await timeout(15000)
+                res = await entityApi.get(`/intent_watcher/${ watcher.uuid }`)
+                expect(res.data.status).toBe(IntentfulStatus.Completed_Successfully)
+            } catch (e) {
+                console.log(`Couldn't get entity: ${e}`)
+                expect(e).toBeUndefined()
+            }
+        } finally {
+            sdk.server.close();
+        }
+    })
+
     test("Differ resolver with 2 kinds and shared uuid entities should pass", async () => {
         expect.hasAssertions();
         let test_result = false
@@ -581,74 +649,6 @@ describe("Intentful Workflow tests", () => {
                 }
             } catch (e) {
                 console.log(`Couldn't get entity: ${e}`)
-            }
-        } finally {
-            sdk.server.close();
-        }
-    })
-
-    test("Delay to intentful operations should be awaited", async () => {
-        expect.assertions(3);
-        const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
-        try {
-            let times_requested = 0
-            first_provider_prefix = "location_provider_intentful_3"
-            const location = sdk.new_kind(locationDataDescription);
-            sdk.version(provider_version);
-            sdk.prefix(first_provider_prefix);
-            location.on("x", async (ctx, entity, input) => {
-                times_requested++
-                if (times_requested === 2) {
-                    await providerApiAdmin.patch(`/${sdk.provider.prefix}/${sdk.provider.version}/update_status`, {
-                        context: "some context",
-                        entity_ref: {
-                            uuid: metadata.uuid,
-                            kind: kind_name
-                        },
-                        status: { x: entity.spec.x }
-                    })
-                    return {"delay_secs": 2}
-                } else {
-                    // 12 seconds delay
-                    return {"delay_secs": 12}
-                }
-            })
-            location.on_create(async (ctx, entity) => {
-                const { metadata, spec } = entity
-                await ctx.update_status(metadata!, spec!)
-            })
-            await sdk.register();
-            const kind_name = sdk.provider.kinds[0].name;
-            const { data: { metadata, spec } } = await entityApi.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }`, {
-                spec: {
-                    x: 10,
-                    y: 11
-                }
-            })
-            first_provider_to_delete_entites.push(metadata)
-            await timeout(5000)
-            const { data: { watcher } } = await entityApi.put(`/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`, {
-                spec: {
-                    x: 30,
-                    y: 11
-                },
-                metadata: {
-                    spec_version: 1
-                }
-            })
-            try {
-                await timeout(2000)
-                let res = await entityApi.get(`/intent_watcher/${ watcher.uuid }`)
-                expect(res.data.status).toBe(IntentfulStatus.Active)
-                await timeout(6000)
-                res = await entityApi.get(`/intent_watcher/${ watcher.uuid }`)
-                expect(res.data.status).toBe(IntentfulStatus.Active)
-                await timeout(15000)
-                res = await entityApi.get(`/intent_watcher/${ watcher.uuid }`)
-                expect(res.data.status).toBe(IntentfulStatus.Completed_Successfully)
-            } catch (e) {
-                console.log(`Couldn't get entity: ${e}`)
-                expect(e).toBeUndefined()
             }
         } finally {
             sdk.server.close();

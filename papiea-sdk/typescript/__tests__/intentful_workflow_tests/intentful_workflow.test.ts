@@ -119,7 +119,7 @@ describe("Intentful Workflow tests", () => {
                     spec_version: 1
                 }
             })
-            let retries = 5
+            let retries = 10
             try {
                 for (let i = 1; i <= retries; i++) {
                     const res = await entityApi.get(`/intent_watcher/${ watcher.uuid }`)
@@ -219,7 +219,7 @@ describe("Intentful Workflow tests", () => {
             const first_watcher = first_watcher_result.data.watcher
             const second_watcher = second_watcher_result.data.watcher
             const watchers = [first_watcher, second_watcher]
-            let retries = 5
+            let retries = 10
             try {
                 for (let i = 1; i <= retries; i++) {
                     const promises = watchers.map(watcher => entityApi.get(`/intent_watcher/${ watcher.uuid }`))
@@ -334,7 +334,7 @@ describe("Intentful Workflow tests", () => {
             const first_watcher = first_watcher_result.data.watcher
             const second_watcher = second_watcher_result.data.watcher
             const watchers = [first_watcher, second_watcher]
-            let retries = 5
+            let retries = 10
             try {
                 for (let i = 1; i <= retries; i++) {
                     const promises = watchers.map(watcher => entityApi.get(`/intent_watcher/${ watcher.uuid }`))
@@ -452,7 +452,7 @@ describe("Intentful Workflow tests", () => {
             const first_watcher = first_watcher_result.data.watcher
             const second_watcher = second_watcher_result.data.watcher
             const watchers = [first_watcher, second_watcher]
-            let retries = 5
+            let retries = 10
             try {
                 for (let i = 1; i <= retries; i++) {
                     const promises = watchers.map(watcher => entityApi.get(`/intent_watcher/${ watcher.uuid }`))
@@ -640,10 +640,10 @@ describe("Intentful Workflow tests", () => {
                 await timeout(2000)
                 let res = await entityApi.get(`/intent_watcher/${ watcher.uuid }`)
                 expect(res.data.status).toBe(IntentfulStatus.Active)
-                await timeout(4000)
+                await timeout(6000)
                 res = await entityApi.get(`/intent_watcher/${ watcher.uuid }`)
                 expect(res.data.status).toBe(IntentfulStatus.Active)
-                await timeout(12000)
+                await timeout(15000)
                 res = await entityApi.get(`/intent_watcher/${ watcher.uuid }`)
                 expect(res.data.status).toBe(IntentfulStatus.Completed_Successfully)
             } catch (e) {
@@ -701,7 +701,7 @@ describe("Intentful Workflow tests", () => {
                     spec_version: 1
                 }
             })
-            let retries = 5
+            let retries = 10
             try {
                 for (let i = 1; i <= retries; i++) {
                     const res = await entityApi.get(`/intent_watcher/${ watcher.uuid }`)

@@ -1,4 +1,4 @@
-import { Diff, Entity_Reference, Version, Metadata } from "papiea-core"
+import { Diff, Entity_Reference, Version, Metadata, Entity } from "papiea-core"
 
 // I don't like the provider being necessary here too much, maybe rethink this
 export interface EntryReference {
@@ -8,6 +8,12 @@ export interface EntryReference {
     },
     entity_reference: Entity_Reference
 }
+const stringifyEntryRef = (r: EntryReference) => [
+    r.provider_reference.provider_prefix,
+    r.provider_reference.provider_version,
+    r.entity_reference.kind,
+    r.entity_reference.uuid,
+].join('/')
 
 export interface Delay {
     delaySetTime: Date
@@ -27,7 +33,9 @@ export function create_entry(metadata: Metadata): EntryReference {
     }
 }
 
-export type SerializedWatchlist = { [key: string]: [EntryReference, Diff | undefined, Delay | undefined] }
+export type SerializedWatchlist = {[key: string]: Watch}
+export type WatchlistEntries = Watch[]
+type Watch = [EntryReference, Diff | undefined, Delay | undefined]
 
 export class Watchlist {
     private _entries: SerializedWatchlist
@@ -36,24 +44,23 @@ export class Watchlist {
         this._entries = watchlist ?? {}
     }
 
-
-    get(uuid: string): [EntryReference, Diff | undefined, Delay | undefined] | undefined {
-        return this._entries[uuid]
+    get(ref: EntryReference): Watch | undefined {
+        return this._entries[stringifyEntryRef(ref)]
     }
 
-    set(uuid: string, value: [EntryReference, (Diff | undefined), (Delay | undefined)]): this {
-        this._entries[uuid] = value
+    set(value: Watch): this {
+        this._entries[stringifyEntryRef(value[0])] = value
         return this
     }
 
-    delete(uuid: string): boolean {
+    delete(ref: EntryReference): boolean {
         let exists: boolean
-        if (this._entries[uuid]) {
+        if (this._entries[stringifyEntryRef(ref)]) {
             exists = true
         } else {
             exists = false
         }
-        delete this._entries[uuid]
+        delete this._entries[stringifyEntryRef(ref)]
         return exists
     }
 
@@ -69,8 +76,8 @@ export class Watchlist {
         return this._entries
     }
 
-    has(uuid: string): boolean {
-        const item = this._entries[uuid]
+    has(ref: EntryReference): boolean {
+        const item = this._entries[stringifyEntryRef(ref)]
         return item !== undefined;
     }
 }

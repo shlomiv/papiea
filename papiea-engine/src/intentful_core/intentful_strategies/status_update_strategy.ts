@@ -4,6 +4,7 @@ import { UserAuthInfo } from "../../auth/authn";
 import { Spec_DB } from "../../databases/spec_db_interface";
 import { Watchlist_DB } from "../../databases/watchlist_db_interface";
 import { create_entry } from "../../intentful_engine/watchlist";
+import { Provider_Entity_Reference } from "../../../../papiea-core/src/core"
 
 export abstract class StatusUpdateStrategy {
     statusDb: Status_DB
@@ -14,11 +15,11 @@ export abstract class StatusUpdateStrategy {
         this.statusDb = statusDb
     }
 
-    async update(entity_ref: Entity_Reference, status: Status): Promise<any> {
+    async update(entity_ref: Provider_Entity_Reference, status: Status): Promise<any> {
         return this.statusDb.update_status(entity_ref, status);
     }
 
-    async replace(entity_ref: Entity_Reference, status: Status): Promise<any> {
+    async replace(entity_ref: Provider_Entity_Reference, status: Status): Promise<any> {
         return this.statusDb.replace_status(entity_ref, status);
     }
 
@@ -63,21 +64,22 @@ export class DifferUpdateStrategy extends StatusUpdateStrategy {
         this.watchlistDb = watchlistDb
     }
 
-    async update(entity_ref: Entity_Reference, status: Status): Promise<void> {
+    async update(entity_ref: Provider_Entity_Reference, status: Status): Promise<void> {
         let diffs: Diff[] = []
         const [metadata, spec] = await this.specDb.get_spec(entity_ref)
         for (let diff of this.differ.diffs(this.kind!, spec, status)) {
             diffs.push(diff)
         }
         const watchlist = await this.watchlistDb.get_watchlist()
-        if (!watchlist.has(metadata.uuid)) {
-            watchlist.set(metadata.uuid, [create_entry(metadata), undefined, undefined])
+        const ent = create_entry(metadata)
+        if (!watchlist.has(ent)) {
+            watchlist.set([ent, undefined, undefined])
             await this.watchlistDb.update_watchlist(watchlist)
         }
         await super.update(entity_ref, status)
     }
 
-    async replace(entity_ref: Entity_Reference, status: Status) {
+    async replace(entity_ref: Provider_Entity_Reference, status: Status) {
         return this.statusDb.replace_status(entity_ref, status);
     }
 }

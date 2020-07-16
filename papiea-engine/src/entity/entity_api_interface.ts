@@ -10,7 +10,7 @@ export interface Entity_API {
 
     get_intent_watcher(user: UserAuthInfo, id: string): Promise<Partial<IntentWatcher>>
 
-    get_entity_status(user: UserAuthInfo, kind_name: string, entity_uuid: uuid4): Promise<[Metadata, Status]>
+    get_entity_status(user: UserAuthInfo, prefix: string, version: Version, kind_name: string, entity_uuid: uuid4): Promise<[Metadata, Status]>
 
     filter_intent_watcher(user: UserAuthInfo, fields: any, sortParams?: SortParams): Promise<Partial<IntentWatcher>[]>
 

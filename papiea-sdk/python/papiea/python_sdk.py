@@ -449,8 +449,8 @@ class KindBuilder(object):
         validate_error_codes(procedure_description.get("errors_schemas"))
         procedural_signature = ProceduralSignature(
             name=name,
-            argument=procedure_description.get("input_schema"),
-            result=procedure_description.get("output_schema"),
+            argument=procedure_description.get("input_schema") or {},
+            result=procedure_description.get("output_schema") or {},
             execution_strategy=IntentfulExecutionStrategy.Basic,
             procedure_callback=procedure_callback_url,
             errors_schemas=procedure_description.get("errors_schemas"),

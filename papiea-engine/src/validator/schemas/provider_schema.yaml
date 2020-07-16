@@ -46,7 +46,7 @@ Provider:
     policy:
       type: string
     oauth2:
-      type: {}
+      type: object
     authModel:
       type: string
     allowExtraProps:

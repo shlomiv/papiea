@@ -1,11 +1,10 @@
 import { Status_DB } from "./status_db_interface";
 import { Db, Collection } from "mongodb";
-import { datestringToFilter } from "./utils/date";
 import { Entity_Reference, Status, Metadata, Entity } from "papiea-core";
 import { SortParams } from "../entity/entity_api_impl";
 import { Logger, dotnotation } from "papiea-backend-utils";
-import { deepMerge, isEmpty } from "../utils/utils"
 import { build_filter_query } from "./utils/filtering"
+import { Provider_Entity_Reference } from "../../../papiea-core/src/core"
 
 export class Status_DB_Mongo implements Status_DB {
     collection: Collection;
@@ -20,8 +19,12 @@ export class Status_DB_Mongo implements Status_DB {
 
     }
 
-    async replace_status(entity_ref: Entity_Reference, status: Status): Promise<void> {
+    async replace_status(entity_ref: Provider_Entity_Reference, status: Status): Promise<void> {
+        console.log("Entity Reference")
+        console.dir(entity_ref)
         const result = await this.collection.updateOne({
+            "metadata.provider_prefix": entity_ref.provider_prefix,
+            "metadata.provider_version": entity_ref.provider_version,
             "metadata.uuid": entity_ref.uuid,
             "metadata.kind": entity_ref.kind
         }, {
@@ -39,9 +42,11 @@ export class Status_DB_Mongo implements Status_DB {
         }
     }
 
-    async update_status(entity_ref: Entity_Reference, status: Status): Promise<void> {
+    async update_status(entity_ref: Provider_Entity_Reference, status: Status): Promise<void> {
         const partial_status_query = dotnotation({"status": status});
         const result = await this.collection.updateOne({
+            "metadata.provider_prefix": entity_ref.provider_prefix,
+            "metadata.provider_version": entity_ref.provider_version,
             "metadata.uuid": entity_ref.uuid,
             "metadata.kind": entity_ref.kind
         }, {
@@ -52,8 +57,10 @@ export class Status_DB_Mongo implements Status_DB {
         }
     }
 
-    async get_status(entity_ref: Entity_Reference): Promise<[Metadata, Status]> {
+    async get_status(entity_ref: Provider_Entity_Reference): Promise<[Metadata, Status]> {
         const result: Entity | null = await this.collection.findOne({
+            "metadata.provider_prefix": entity_ref.provider_prefix,
+            "metadata.provider_version": entity_ref.provider_version,
             "metadata.uuid": entity_ref.uuid,
             "metadata.kind": entity_ref.kind
         });
@@ -63,7 +70,7 @@ export class Status_DB_Mongo implements Status_DB {
         return [result.metadata, result.status]
     }
 
-    async get_statuses_by_ref(entity_refs: Entity_Reference[]): Promise<[Metadata, Status][]> {
+    async get_statuses_by_ref(entity_refs: Provider_Entity_Reference[]): Promise<[Metadata, Status][]> {
         const ids = entity_refs.map(ref => ref.uuid)
         const result = await this.collection.find({
             "metadata.uuid": {
@@ -107,8 +114,10 @@ export class Status_DB_Mongo implements Status_DB {
         });
     }
 
-    async delete_status(entity_ref: Entity_Reference): Promise<void> {
+    async delete_status(entity_ref: Provider_Entity_Reference): Promise<void> {
         const result = await this.collection.updateOne({
+            "metadata.provider_prefix": entity_ref.provider_prefix,
+            "metadata.provider_version": entity_ref.provider_version,
             "metadata.uuid": entity_ref.uuid,
             "metadata.kind": entity_ref.kind
         }, {

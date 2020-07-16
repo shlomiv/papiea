@@ -15,6 +15,7 @@ import {
     uuid4,
     Version,
     Action,
+    Provider_Entity_Reference
 } from "papiea-core";
 import { ProcedureInvocationError } from "../errors/procedure_invocation_error";
 import uuid = require("uuid");
@@ -80,7 +81,7 @@ export class Entity_API_Impl implements Entity_API {
                 throw new Error("Uuid is not provided, but supposed to be since validation pattern is specified")
             }
         } else {
-            const result = await this.get_existing_entities(provider, request_metadata.uuid)
+            const result = await this.get_existing_entities(provider, request_metadata.uuid, request_metadata.kind)
             if (result.length !== 0) {
                 const [metadata, spec, status] = result
                 throw new ConflictingEntityError("An entity with this uuid already exists", metadata, spec, status)
@@ -106,8 +107,9 @@ export class Entity_API_Impl implements Entity_API {
         return [metadata, spec];
     }
 
-    async get_entity_status(user: UserAuthInfo, kind_name: string, entity_uuid: uuid4): Promise<[Metadata, Status]> {
-        const entity_ref: Entity_Reference = { kind: kind_name, uuid: entity_uuid };
+    async get_entity_status(user: UserAuthInfo, prefix: string, version: Version, kind_name: string, entity_uuid: uuid4): Promise<[Metadata, Status]> {
+        const entity_ref: Provider_Entity_Reference = { provider_prefix: prefix, provider_version: version,
+            kind: kind_name, uuid: entity_uuid };
         const [metadata, status] = await this.status_db.get_status(entity_ref);
         await this.authorizer.checkPermission(user, { "metadata": metadata }, Action.Read);
         return [metadata, status];
@@ -156,7 +158,8 @@ export class Entity_API_Impl implements Entity_API {
         const provider = await this.get_provider(prefix, version);
         const kind = this.providerDb.find_kind(provider, kind_name);
         const entity_spec: [Metadata, Spec] = await this.get_entity_spec(user, kind_name, entity_uuid);
-        const entity_status: [Metadata, Status] = await this.get_entity_status(user, kind_name, entity_uuid);
+        const entity_status: [Metadata, Status] = await this.get_entity_status(
+            user, prefix, version, kind_name, entity_uuid);
         const procedure: Procedural_Signature | undefined = kind.entity_procedures[procedure_name];
         if (procedure === undefined) {
             throw new Error(`Procedure ${procedure_name} not found for kind ${kind.name}`);
@@ -307,10 +310,10 @@ export class Entity_API_Impl implements Entity_API {
         }
     }
 
-    private async get_existing_entities(provider: Provider, uuid: string): Promise<[Metadata, Spec, Status] | []> {
+    private async get_existing_entities(provider: Provider, uuid: string, kind_name: string): Promise<[Metadata, Spec, Status] | []> {
         try {
-            const result_spec = await this.spec_db.list_specs({ metadata: { uuid: uuid, provider_version: provider.version, provider_prefix: provider.prefix, deleted_at: null } }, false)
-            const result_status = await this.status_db.list_status({ metadata: { uuid: uuid, provider_version: provider.version, provider_prefix: provider.prefix, deleted_at: null } }, false)
+            const result_spec = await this.spec_db.list_specs({ metadata: { uuid: uuid, kind: kind_name, provider_version: provider.version, provider_prefix: provider.prefix, deleted_at: null } }, false)
+            const result_status = await this.status_db.list_status({ metadata: { uuid: uuid, kind: kind_name, provider_version: provider.version, provider_prefix: provider.prefix, deleted_at: null } }, false)
             if (result_spec.length !== 0 || result_status.length !== 0) {
                 return [result_spec[0][0], result_spec[0][1], result_status[0][1]]
             } else {

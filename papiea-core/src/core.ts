@@ -38,14 +38,17 @@ export enum IntentfulStatus {
     Outdated = "Outdated",
 }
 
+export interface Provider_Entity_Reference extends Entity_Reference {
+    provider_prefix: string;
+    provider_version: Version
+}
+
 // [[file:~/work/papiea-js/Papiea-design.org::#h-Metadata-350][metadata-struct]]
-export interface Metadata extends Entity_Reference {
+export interface Metadata extends Provider_Entity_Reference {
     // Identity fields
     uuid: uuid4;
     kind: string;
     spec_version: number;
-    provider_prefix: string;
-    provider_version: Version
 
     // Additional fields
     created_at: Date;

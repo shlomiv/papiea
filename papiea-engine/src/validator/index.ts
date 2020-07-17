@@ -3,6 +3,9 @@ import { isEmpty } from "../utils/utils"
 import { Entity_Reference, Provider, Status, Kind, Spec, IntentfulBehaviour, Data_Description, Metadata } from "papiea-core"
 import { SFSCompiler } from "../intentful_core/sfs_compiler"
 import * as uuid_validate from "uuid-validate"
+import { load } from "js-yaml"
+import { readFileSync } from "fs"
+import { resolve } from "path"
 
 // We can receive model in 2 forms:
 // As user specified in definition, which means it has "properties" field ( { properties: {} } } )
@@ -25,13 +28,20 @@ export interface Validator {
     validate_spec(spec: Spec, kind: Kind, allowExtraProps: boolean): void
     validate_sfs(provider: Provider): void
     validate_status(provider: Provider, entity_ref: Entity_Reference, status: Status): void
+    validate_provider(provider: Provider): void
     validate(data: any, model: any | undefined, models: any, allowExtraProps: boolean, schemaName: string, procedureName?: string): void
 }
 
 export class ValidatorImpl {
     private validator = new SwaggerModelValidator();
 
-    constructor() {
+    protected constructor(private procedural_signature_schema: Data_Description, private provider_schema: Data_Description) {
+    }
+
+    public static create() {
+        const procedural_signature_schema = loadSchema("./schemas/procedural_signature.yaml")
+        const provider_schema = loadSchema("./schemas/provider_schema.yaml")
+        return new ValidatorImpl(procedural_signature_schema, provider_schema)
     }
 
     public validate_uuid(kind: Kind, uuid: string) {
@@ -89,9 +99,46 @@ export class ValidatorImpl {
         }
     }
 
-    public validate(data: any, model: any | undefined, models: any, allowExtraProps: boolean, schemaName: string, procedureName?: string) {
+    public validate_provider(provider: Provider) {
+        const schemas = {}
+        Object.assign(schemas, this.provider_schema)
+        Object.assign(schemas, this.procedural_signature_schema)
+        this.validate(
+            provider, Object.values(this.provider_schema)[0],
+            schemas, true, Object.keys(this.provider_schema)[0], undefined, true)
+        Object.values(provider.procedures).forEach(proc => {
+            this.validate(
+                proc, Object.values(this.procedural_signature_schema)[0],
+                schemas, true, proc.name,
+                undefined, true)
+        })
+        provider.kinds.forEach(kind => {
+            Object.values(kind.kind_procedures).forEach(proc => {
+                this.validate(
+                    proc, Object.values(this.procedural_signature_schema)[0],
+                    schemas, true, proc.name,
+                    undefined, true)
+            })
+            Object.values(kind.entity_procedures).forEach(proc => {
+                this.validate(
+                    proc, Object.values(this.procedural_signature_schema)[0],
+                    schemas, true, proc.name,
+                    undefined, true)
+            })
+            Object.values(kind.intentful_signatures).forEach(proc => {
+                this.validate(
+                    proc, Object.values(this.procedural_signature_schema)[0],
+                    schemas, true, proc.name,
+                    undefined, true)
+            })
+        })
+    }
+
+    public validate(
+        data: any, model: any | undefined, models: any,
+        allowExtraProps: boolean, schemaName: string,
+        procedureName?: string, allowBlankTarget: boolean = false) {
         const validatorDenyExtraProps = !allowExtraProps
-        const allowBlankTarget = false
         if (modelIsEmpty(model)) {
             if (isEmpty(data)) {
                 return {valid: true}
@@ -121,4 +168,8 @@ export class ValidatorImpl {
             }
         }
     }
+}
+
+function loadSchema(schemaPath: string): any {
+    return load(readFileSync(resolve(__dirname, schemaPath), "utf-8"));
 }

@@ -41,6 +41,31 @@ describe("Provider API tests", () => {
         providerApi.post('/', provider).then(() => done()).catch(done.fail);
     });
 
+    test("Register provider with missing prefix", done => {
+        const provider: any = { version: providerVersion, kinds: [], procedures: {}, extension_structure: {}, allowExtraProps: false };
+        providerApi.post('/', provider).then(() => done.fail()).catch(() => done());
+    });
+
+    test("Register provider with malformed procedures", done => {
+        const provider: any = { version: providerVersion, prefix: providerPrefix, kinds: [], procedures: {"argument": {malformed_field: "test" }}, extension_structure: {}, allowExtraProps: false };
+        providerApi.post('/', provider).then(() => done.fail()).catch(() => done());
+    });
+
+    test("Register provider with malformed kind procedures", done => {
+        const provider: any = { version: providerVersion, prefix: providerPrefix, kinds: [ {kind_procedures: {"argument": {malformed_field: "test" }}}], procedures: {}, extension_structure: {}, allowExtraProps: false };
+        providerApi.post('/', provider).then(() => done.fail()).catch(() => done());
+    });
+
+    test("Register provider with malformed entity procedures", done => {
+        const provider: any = { version: providerVersion, prefix: providerPrefix, kinds: [ {entity_procedures: {"argument": {malformed_field: "test" }}}], procedures: {}, extension_structure: {}, allowExtraProps: false };
+        providerApi.post('/', provider).then(() => done.fail()).catch(() => done());
+    });
+
+    test("Register provider with malformed intentful definitions", done => {
+        const provider: any = { version: providerVersion, prefix: providerPrefix, kinds: [ {intentful_signature: [{"sfs": "wrong_sfs", "argument": {malformed_field: "test" }}]}], procedures: {}, extension_structure: {}, allowExtraProps: false };
+        providerApi.post('/', provider).then(() => done.fail()).catch(() => done());
+    });
+
     test("Register malformed provider", done => {
         providerApi.post('/', {}).then(() => done.fail()).catch(() => done());
     });

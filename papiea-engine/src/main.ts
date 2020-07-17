@@ -67,7 +67,7 @@ async function setUpApplication(): Promise<express.Express> {
     const intentWatcherDB = await mongoConnection.get_intent_watcher_db(logger)
     const sessionKeyDb = await mongoConnection.get_session_key_db(logger)
     const watchlistDb = await mongoConnection.get_watchlist_db(logger)
-    const validator = new ValidatorImpl()
+    const validator = ValidatorImpl.create()
     const intentfulContext = new IntentfulContext(specDb, statusDb, differ, intentWatcherDB, watchlistDb)
     const providerApi = new Provider_API_Impl(logger, providerDb, statusDb, s2skeyDb, watchlistDb, intentfulContext, new AdminAuthorizer(), validator);
     const sessionKeyApi = new SessionKeyAPI(sessionKeyDb)

@@ -54,6 +54,13 @@ export function getClusterDataDescription(): Data_Description {
     return randomizedLocationDataDescription;
 }
 
+export function getClusterWithNullableFieldsDataDescription(): Data_Description {
+    let locationDataDescription = loadYamlFromTestFactoryDir("./test_data/cluster_kind_with_nullable_fields_test_data.yml");
+    let randomizedLocationDataDescription: any = {};
+    randomizedLocationDataDescription["Cluster" + randomString(5)] = locationDataDescription["Cluster"];
+    return randomizedLocationDataDescription;
+}
+
 export function getMetadataDescription(): Data_Description {
     let MetadataDescription = loadYamlFromTestFactoryDir("./test_data/metadata_extension.yml");
     return MetadataDescription;
@@ -78,6 +85,23 @@ export function getSpecOnlyKind(): SpecOnlyEntityKind {
 
 export function getClusterKind(): Kind {
     const clusterDataDescription = getClusterDataDescription()
+    const name = Object.keys(clusterDataDescription)[0]
+    const kind = {
+        name,
+        name_plural: plural(name),
+        kind_structure: clusterDataDescription,
+        intentful_signatures: [],
+        dependency_tree: new Map(),
+        kind_procedures: {},
+        entity_procedures: {},
+        differ: undefined,
+        intentful_behaviour: IntentfulBehaviour.Basic
+    }
+    return kind
+}
+
+export function getClusterKindWithNullableFields(): Kind {
+    const clusterDataDescription = getClusterWithNullableFieldsDataDescription()
     const name = Object.keys(clusterDataDescription)[0]
     const kind = {
         name,

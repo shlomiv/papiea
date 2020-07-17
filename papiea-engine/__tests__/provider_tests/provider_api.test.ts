@@ -1,6 +1,11 @@
 import "jest"
 import axios from "axios"
-import { getClusterKind, loadYamlFromTestFactoryDir, ProviderBuilder } from "../test_data_factory"
+import {
+    getClusterKind,
+    getClusterKindWithNullableFields,
+    loadYamlFromTestFactoryDir,
+    ProviderBuilder
+} from "../test_data_factory"
 import { Provider } from "papiea-core";
 
 declare var process: {
@@ -31,6 +36,7 @@ describe("Provider API tests", () => {
     const providerPrefix = "test_provider";
     const providerVersion = "0.1.0";
     const clusterKinds = [getClusterKind()]
+    const nullableClusterKinds = [getClusterKindWithNullableFields()]
 
     test("Non-existent route", done => {
         providerApi.delete(`/abc`).then(() => done.fail()).catch(() => done());
@@ -110,6 +116,31 @@ describe("Provider API tests", () => {
 
         const res = await entityApi.get(`/${ provider.prefix }/${provider.version}/${ kind_name }/${ metadata.uuid }`);
         expect(res.data.status).toEqual(newStatus);
+    });
+
+    test("Update status with undefined values", async () => {
+        const provider: Provider = new ProviderBuilder().withVersion("0.1.0").withKinds(nullableClusterKinds).build();
+        await providerApi.post('/', provider);
+        const kind_name = provider.kinds[0].name;
+        const { data: { metadata, spec } } = await entityApi.post(`/${ provider.prefix }/${provider.version}/${ kind_name }`, {
+            spec: {
+                host: "small",
+                ip: "0.0.0.0"
+            }
+        });
+
+        const newStatus = { ip: null, name: null };
+        await providerApi.patch(`/${provider.prefix}/${provider.version}/update_status`, {
+            context: "some context",
+            entity_ref: {
+                uuid: metadata.uuid,
+                kind: kind_name
+            },
+            status: newStatus
+        });
+
+        const res = await entityApi.get(`/${ provider.prefix }/${provider.version}/${ kind_name }/${ metadata.uuid }`);
+        expect(res.data.status).toEqual({host: "small", ...newStatus});
     });
 
     test("Update status with malformed status should fail validation", async () => {

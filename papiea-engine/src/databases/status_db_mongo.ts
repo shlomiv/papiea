@@ -20,8 +20,6 @@ export class Status_DB_Mongo implements Status_DB {
     }
 
     async replace_status(entity_ref: Provider_Entity_Reference, status: Status): Promise<void> {
-        console.log("Entity Reference")
-        console.dir(entity_ref)
         const result = await this.collection.updateOne({
             "metadata.provider_prefix": entity_ref.provider_prefix,
             "metadata.provider_version": entity_ref.provider_version,

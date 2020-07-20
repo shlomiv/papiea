@@ -119,6 +119,7 @@ describe("Provider API tests", () => {
     });
 
     test("Update status with undefined values error should be meaningful", async () => {
+        expect.assertions(3)
         const provider: Provider = new ProviderBuilder().withVersion("0.1.0").withKinds(clusterKinds).build();
         await providerApi.post('/', provider);
         const kind_name = provider.kinds[0].name;
@@ -140,11 +141,14 @@ describe("Provider API tests", () => {
                 status: newStatus
             });
         } catch (e) {
-
+            expect(e).toBeDefined()
+            expect(e.response.data.error.message).toEqual("Validation failed.")
+            expect(e.response.data.error.errors[0].message).toEqual("Status body is undefined, please use null fields instead")
         }
     });
 
     test("Partial Update status with undefined values should be meaningful", async () => {
+        expect.assertions(2)
         const provider: Provider = new ProviderBuilder().withVersion("0.1.0").withKinds(nullableClusterKinds).build();
         await providerApi.post('/', provider);
         const kind_name = provider.kinds[0].name;
@@ -155,18 +159,20 @@ describe("Provider API tests", () => {
             }
         });
 
-        const newStatus = { ip: null, name: null };
-        await providerApi.patch(`/${provider.prefix}/${provider.version}/update_status`, {
-            context: "some context",
-            entity_ref: {
-                uuid: metadata.uuid,
-                kind: kind_name
-            },
-            status: newStatus
-        });
-
-        const res = await entityApi.get(`/${ provider.prefix }/${provider.version}/${ kind_name }/${ metadata.uuid }`);
-        expect(res.data.status).toEqual({host: "small", ...newStatus});
+        const newStatus = { ip: undefined, name: undefined };
+        try {
+            await providerApi.patch(`/${ provider.prefix }/${ provider.version }/update_status`, {
+                context: "some context",
+                entity_ref: {
+                    uuid: metadata.uuid,
+                    kind: kind_name
+                },
+                status: newStatus
+            });
+        } catch (e) {
+            expect(e).toBeDefined()
+            expect(e.response.data.error.message).toEqual("Error parsing update query. Update body might be 'undefined', if this is expected, please use 'null'.")
+        }
     });
 
     test("Partial Update status with null values", async () => {

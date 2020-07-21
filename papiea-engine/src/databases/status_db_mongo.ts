@@ -1,5 +1,5 @@
 import { Status_DB } from "./status_db_interface";
-import { Db, Collection } from "mongodb";
+import { Db, Collection, UpdateWriteOpResult } from "mongodb"
 import { Entity_Reference, Status, Metadata, Entity } from "papiea-core";
 import { SortParams } from "../entity/entity_api_impl";
 import { Logger, dotnotation } from "papiea-backend-utils";
@@ -20,8 +20,6 @@ export class Status_DB_Mongo implements Status_DB {
     }
 
     async replace_status(entity_ref: Provider_Entity_Reference, status: Status): Promise<void> {
-        console.log("Entity Reference")
-        console.dir(entity_ref)
         const result = await this.collection.updateOne({
             "metadata.provider_prefix": entity_ref.provider_prefix,
             "metadata.provider_version": entity_ref.provider_version,
@@ -43,15 +41,22 @@ export class Status_DB_Mongo implements Status_DB {
     }
 
     async update_status(entity_ref: Provider_Entity_Reference, status: Status): Promise<void> {
+        let result: UpdateWriteOpResult
         const partial_status_query = dotnotation({"status": status});
-        const result = await this.collection.updateOne({
-            "metadata.provider_prefix": entity_ref.provider_prefix,
-            "metadata.provider_version": entity_ref.provider_version,
-            "metadata.uuid": entity_ref.uuid,
-            "metadata.kind": entity_ref.kind
-        }, {
-                $set: partial_status_query               
-            });
+        try {
+            result = await this.collection.updateOne(
+                {
+                    "metadata.provider_prefix": entity_ref.provider_prefix,
+                    "metadata.provider_version": entity_ref.provider_version,
+                    "metadata.uuid": entity_ref.uuid,
+                    "metadata.kind": entity_ref.kind
+                }, { $set: partial_status_query });
+        } catch (e) {
+            if (e.code === 9) {
+                throw new Error(`Error parsing update query. Update body might be 'undefined', if this is expected, please use 'null'.`)
+            }
+            throw e
+        }
         if (result.result.n !== 1) {
             throw new Error(`Amount of updated entries doesn't equal to 1: ${result.result.n}`)
         }

@@ -80,6 +80,9 @@ export class ValidatorImpl {
     }
 
     public async validate_status(provider: Provider, entity_ref: Entity_Reference, status: Status) {
+        if (status === undefined || isEmpty(status)) {
+            throw new ValidationError([new Error(`Status body is undefined, please use null fields instead`)])
+        }
         const kind = provider.kinds.find((kind: Kind) => kind.name === entity_ref.kind);
         const allowExtraProps = provider.allowExtraProps;
         if (kind === undefined) {

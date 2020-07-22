@@ -74,7 +74,7 @@ export abstract class IntentfulStrategy {
     }
 
     async delete(metadata: Metadata): Promise<void> {
-        await this.dispatch(`__${metadata.kind}_create`, { metadata })
+        await this.dispatch(`__${metadata.kind}_delete`, { metadata })
         return this.delete_entity(metadata)
     }
 }

@@ -58,10 +58,14 @@ class PapieaError(enum.Enum):
     ServerError = "server_error"
 
 
-class IntentfulExecutionStrategy(str):
+class IntentfulBehaviour(str):
     Basic = "basic"
     SpecOnly = "spec-only"
     Differ = "differ"
+
+
+class IntentfulExecutionStrategy(int):
+    Basic = 0
 
 
 # Error description in format:

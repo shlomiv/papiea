@@ -207,6 +207,69 @@ describe("Intentful Workflow tests", () => {
         }
     })
 
+    test("Delay of null should be eligible", async () => {
+        expect.hasAssertions();
+        const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
+        try {
+            first_provider_prefix = "location_provider_intentful_null_delay"
+            const location = sdk.new_kind(locationDataDescription);
+            sdk.version(provider_version);
+            sdk.prefix(first_provider_prefix);
+            location.on("x", async (ctx, entity, input) => {
+                await providerApiAdmin.patch(`/${sdk.provider.prefix}/${sdk.provider.version}/update_status`, {
+                    context: "some context",
+                    entity_ref: {
+                        uuid: metadata.uuid,
+                        kind: kind_name
+                    },
+                    status: { x: entity.spec.x }
+                })
+                return null
+            })
+            location.on_create(async (ctx, entity) => {
+                const { metadata, spec } = entity
+                await ctx.update_status(metadata!, spec!)
+            })
+            await sdk.register();
+            const kind_name = sdk.provider.kinds[0].name;
+            const { data: { metadata, spec } } = await entityApi.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }`, {
+                spec: {
+                    x: 10,
+                    y: 11
+                }
+            })
+            first_provider_to_delete_entites.push(metadata)
+            await timeout(5000)
+            const { data: { watcher } } = await entityApi.put(`/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`, {
+                spec: {
+                    x: 30,
+                    y: 11
+                },
+                metadata: {
+                    spec_version: 1
+                }
+            })
+            let retries = 10
+            try {
+                for (let i = 1; i <= retries; i++) {
+                    const res = await entityApi.get(`/intent_watcher/${ watcher.uuid }`)
+                    if (res.data.status === IntentfulStatus.Completed_Successfully) {
+                        expect(res.data.status).toBe(IntentfulStatus.Completed_Successfully)
+                        const result = await entityApi.get(`/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`)
+                        expect(result.data.status.x).toEqual(30)
+                        return
+                    }
+                    await timeout(5000)
+                }
+            } catch (e) {
+                console.log(`Couldn't get entity: ${e}`)
+                expect(e).toBeUndefined()
+            }
+        } finally {
+            sdk.server.close();
+        }
+    })
+
     test("Differ resolver with 2 kinds and shared uuid entities should pass", async () => {
         expect.hasAssertions();
         let test_result = false

@@ -105,7 +105,7 @@ export class DiffResolver {
             status: status,
             input: diff.diff_fields
         })
-        if (result.data.delay_secs !== undefined
+        if (result.data !== null && result.data !== undefined && result.data.delay_secs !== undefined
             && result.data.delay_secs !== null && !Number.isNaN(result.data.delay_secs)) {
             delay_time = result.data.delay_secs
         }

@@ -41,7 +41,7 @@ export abstract class IntentfulStrategy {
 
     async create(metadata: Metadata, spec: Spec): Promise<[Metadata, Spec]> {
         const entity = this.create_entity(metadata, spec)
-        await this.dispatch("__create", { metadata, spec })
+        await this.dispatch(`__${metadata.kind}_create`, { metadata, spec })
         return entity
     }
 
@@ -49,7 +49,7 @@ export abstract class IntentfulStrategy {
         if (this.kind) {
             if (this.kind.kind_procedures[procedure_name]) {
                 if (this.user === undefined) {
-                    throw new OnActionError("User not specified", procedure_name)
+                    throw OnActionError.create("User not specified", procedure_name, this.kind.name)
                 }
                 try {
                     const { data } =  await axios.post(this.kind.kind_procedures[procedure_name].procedure_callback, {
@@ -57,11 +57,11 @@ export abstract class IntentfulStrategy {
                     }, { headers: this.user })
                     return data
                 } catch (e) {
-                    throw new OnActionError(e.response.data.message, procedure_name)
+                    throw OnActionError.create(e.response.data.message, procedure_name, this.kind.name)
                 }
             }
         } else {
-            throw new OnActionError("Insufficient params specified", procedure_name)
+            throw OnActionError.create("Insufficient params specified", procedure_name)
         }
     }
 
@@ -74,7 +74,7 @@ export abstract class IntentfulStrategy {
     }
 
     async delete(metadata: Metadata): Promise<void> {
-        await this.dispatch("__delete", { metadata })
+        await this.dispatch(`__${metadata.kind}_delete`, { metadata })
         return this.delete_entity(metadata)
     }
 }

@@ -563,7 +563,8 @@ export class Kind_Builder {
     }
 
     on_create(handler: (ctx: ProceduralCtx_Interface, entity: Partial<Entity>) => Promise<any>): Kind_Builder {
-        const name = "__create"
+        const name = `__${this.kind.name}_create`
+        console.log(name)
         const loggerFactory = new LoggerFactory({logPath: name})
         const logger = loggerFactory.createLogger()
         logger.info("You are registering on create handler. Note, this is a post create handler. The behaviour is due to change")
@@ -572,7 +573,8 @@ export class Kind_Builder {
     }
 
     on_delete(handler: (ctx: ProceduralCtx_Interface, entity: Partial<Entity>) => Promise<any>): Kind_Builder {
-        const name = "__delete"
+        const name = `__${this.kind.name}_delete`
+        console.log(name)
         const loggerFactory = new LoggerFactory({logPath: name})
         const logger = loggerFactory.createLogger()
         logger.info("You are registering on delete handler. Note, this is a pre delete handler. The behaviour is due to change")

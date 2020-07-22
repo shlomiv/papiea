@@ -1350,6 +1350,9 @@ describe("SDK callback tests", () => {
     let provider: Provider
     const provider_version = "0.1.0";
     const location_yaml = load(readFileSync(resolve(__dirname, "../test_data/location_kind_test_data_callback.yml"), "utf-8"));
+    let location_yaml_duplicate = load(readFileSync(resolve(__dirname, "../test_data/location_kind_test_data_callback.yml"), "utf-8"));
+    location_yaml_duplicate["Location1"] = JSON.parse(JSON.stringify(location_yaml_duplicate["Location"]))
+    delete location_yaml_duplicate["Location"]
     let kind_name: string
     let prefix: string
 
@@ -1426,6 +1429,59 @@ describe("SDK callback tests", () => {
                 }
             })
             await entityApi.delete(`/${ prefix }/${ provider_version }/${ kind_name }/${ metadata.uuid }`, {
+                headers: {
+                    'Authorization': `Bearer ${ adminKey }`
+                }
+            })
+        } finally {
+            sdk.server.close();
+        }
+    });
+
+    test("On create 2 callbacks for different kinds should be called", async () => {
+        expect.assertions(2)
+        const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
+        const location = sdk.new_kind(location_yaml);
+        const location_duplicate = sdk.new_kind(location_yaml_duplicate);
+        prefix = "provider_on_create_2_callbacks"
+        sdk.version(provider_version);
+        sdk.prefix(prefix);
+        location.on_create(async (ctx, input) => {
+            expect(input).toBeDefined()
+        })
+        location_duplicate.on_create(async (ctx, input) => {
+            expect(input).toBeDefined()
+        })
+        try {
+            await sdk.register()
+            kind_name = sdk.provider.kinds[0].name
+            const duplicate_kind_name = sdk.provider.kinds[1].name
+            const { data: { metadata } } = await entityApi.post(`/${ prefix }/${ provider_version }/${ kind_name }`, {
+                spec: {
+                    x: 10,
+                    y: 11
+                }
+            }, {
+                headers: {
+                    'Authorization': `Bearer ${ adminKey }`
+                }
+            })
+            const result = await entityApi.post(`/${ prefix }/${ provider_version }/${ duplicate_kind_name }`, {
+                spec: {
+                    x: 10,
+                    y: 11
+                }
+            }, {
+                headers: {
+                    'Authorization': `Bearer ${ adminKey }`
+                }
+            })
+            await entityApi.delete(`/${ prefix }/${ provider_version }/${ kind_name }/${ metadata.uuid }`, {
+                headers: {
+                    'Authorization': `Bearer ${ adminKey }`
+                }
+            })
+            await entityApi.delete(`/${ prefix }/${ provider_version }/${ duplicate_kind_name }/${ result.data.metadata.uuid }`, {
                 headers: {
                     'Authorization': `Bearer ${ adminKey }`
                 }

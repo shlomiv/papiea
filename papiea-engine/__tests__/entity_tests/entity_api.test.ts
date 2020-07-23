@@ -457,6 +457,42 @@ describe("Entity API tests", () => {
         }
     });
 
+    test("Can create, delete and recreate entity with same uuid", async () => {
+        expect.assertions(2);
+        const id = uuid()
+        const { data: { metadata, spec } } = await entityApi.post(`/${ providerPrefix }/${ providerVersion }/${ kind_name }`, {
+            spec: {
+                x: 10,
+                y: 11
+            },
+            metadata: {
+                uuid: id
+            }
+        });
+        await entityApi.delete(`/${ providerPrefix }/${ providerVersion }/${ kind_name }/${ metadata.uuid }`);
+        await entityApi.post(`/${ providerPrefix }/${ providerVersion }/${ kind_name }`, {
+            spec: {
+                x: 10,
+                y: 11
+            },
+            metadata: {
+                uuid: id
+            }
+        });
+        await entityApi.delete(`/${ providerPrefix }/${ providerVersion }/${ kind_name }/${ metadata.uuid }`);
+        try {
+            await entityApi.get(`/${providerPrefix}/${providerVersion}/${kind_name}/${metadata.uuid}`);
+        } catch (e) {
+            expect(e).toBeDefined();
+        }
+        const res = await entityApi.post(`${ providerPrefix }/${ providerVersion }/${ kind_name }/filter?deleted=true`, {
+            metadata: {
+                uuid: metadata.uuid,
+            }
+        });
+        expect(res.data.results.length).toEqual(2)
+    });
+
     test("Filter deleted entity", async () => {
         expect.hasAssertions();
         const { data: { metadata, spec } } = await entityApi.post(`/${ providerPrefix }/${ providerVersion }/${ kind_name }`, {

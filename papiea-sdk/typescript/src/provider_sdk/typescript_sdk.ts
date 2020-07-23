@@ -247,7 +247,7 @@ export class ProviderSdk implements ProviderImpl {
                 const result = await handler(ctx, req.body.input)
                 res.json(result);
             } catch (e) {
-                ctx.get_logger().error(e)
+                ctx.get_logger().error(JSON.stringify(e?.response?.data) ?? e)
                 if (e instanceof InvocationError) {
                     return res.status(e.status_code).json(e.toResponse())
                 }
@@ -448,7 +448,7 @@ export class Kind_Builder {
                 }, req.body.input);
                 res.json(result);
             } catch (e) {
-                ctx.get_logger().error(e)
+                ctx.get_logger().error(JSON.stringify(e?.response?.data) ?? e)
                 if (e instanceof InvocationError) {
                     return res.status(e.status_code).json(e.toResponse())
                 }
@@ -515,7 +515,7 @@ export class Kind_Builder {
                 }, req.body.input);
                 res.json(result);
             } catch (e) {
-                ctx.get_logger().error(e)
+                ctx.get_logger().error(JSON.stringify(e?.response?.data) ?? e)
                 if (e instanceof InvocationError) {
                     return res.status(e.status_code).json(e.toResponse())
                 }
@@ -551,7 +551,7 @@ export class Kind_Builder {
                 const result = await handler(ctx, req.body.input);
                 res.json(result);
             } catch (e) {
-                ctx.get_logger().error(e)
+                ctx.get_logger().error(JSON.stringify(e?.response?.data) ?? e)
                 if (e instanceof InvocationError) {
                     return res.status(e.status_code).json(e.toResponse())
                 }
@@ -564,7 +564,6 @@ export class Kind_Builder {
 
     on_create(handler: (ctx: ProceduralCtx_Interface, entity: Partial<Entity>) => Promise<any>): Kind_Builder {
         const name = `__${this.kind.name}_create`
-        console.log(name)
         const loggerFactory = new LoggerFactory({logPath: name})
         const logger = loggerFactory.createLogger()
         logger.info("You are registering on create handler. Note, this is a post create handler. The behaviour is due to change")
@@ -574,7 +573,6 @@ export class Kind_Builder {
 
     on_delete(handler: (ctx: ProceduralCtx_Interface, entity: Partial<Entity>) => Promise<any>): Kind_Builder {
         const name = `__${this.kind.name}_delete`
-        console.log(name)
         const loggerFactory = new LoggerFactory({logPath: name})
         const logger = loggerFactory.createLogger()
         logger.info("You are registering on delete handler. Note, this is a pre delete handler. The behaviour is due to change")

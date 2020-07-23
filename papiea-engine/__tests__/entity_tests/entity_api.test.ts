@@ -443,9 +443,15 @@ describe("Entity API tests", () => {
 
     test("Delete entity", async () => {
         expect.assertions(1);
-        await entityApi.delete(`/${ providerPrefix }/${ providerVersion }/${ kind_name }/${ entity_metadata.uuid }`);
+        const { data: { metadata, spec } } = await entityApi.post(`/${ providerPrefix }/${ providerVersion }/${ kind_name }`, {
+            spec: {
+                x: 10,
+                y: 11
+            }
+        });
+        await entityApi.delete(`/${ providerPrefix }/${ providerVersion }/${ kind_name }/${ metadata.uuid }`);
         try {
-            await entityApi.get(`/${providerPrefix}/${providerVersion}/${kind_name}/${entity_metadata.uuid}`);
+            await entityApi.get(`/${providerPrefix}/${providerVersion}/${kind_name}/${metadata.uuid}`);
         } catch (e) {
             expect(e).toBeDefined();
         }
@@ -467,7 +473,7 @@ describe("Entity API tests", () => {
         });
         expect(res.data.results.length).toBe(0);
         for (const deleted_at of ["papiea_one_hour_ago", "papiea_one_day_ago"]) {
-            let res = await entityApi.post(`${ providerPrefix }/${ providerVersion }/${ kind_name }/filter`, {
+            let res = await entityApi.post(`${ providerPrefix }/${ providerVersion }/${ kind_name }/filter?deleted=true`, {
                 metadata: {
                     uuid: metadata.uuid,
                     deleted_at: deleted_at

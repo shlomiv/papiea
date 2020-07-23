@@ -8,14 +8,15 @@ import { IntentfulStatus } from "papiea-core"
 import { Watchlist_DB } from "../../databases/watchlist_db_interface";
 import uuid = require("uuid")
 import { create_entry } from "../../intentful_engine/watchlist";
+import { Graveyard_DB } from "../../databases/graveyard_db_interface"
 
 export class DifferIntentfulStrategy extends IntentfulStrategy {
     protected differ: Differ
     protected intentWatcherDb: IntentWatcher_DB
     protected watchlistDb: Watchlist_DB;
 
-    constructor(specDb: Spec_DB, statusDb: Status_DB, differ: Differ, intentWatcherDb: IntentWatcher_DB, watchlistDb: Watchlist_DB) {
-        super(specDb, statusDb)
+    constructor(specDb: Spec_DB, statusDb: Status_DB, graveyardDb: Graveyard_DB, differ: Differ, intentWatcherDb: IntentWatcher_DB, watchlistDb: Watchlist_DB) {
+        super(specDb, statusDb, graveyardDb)
         this.differ = differ
         this.intentWatcherDb = intentWatcherDb
         this.watchlistDb = watchlistDb

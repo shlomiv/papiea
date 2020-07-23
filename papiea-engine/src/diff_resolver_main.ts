@@ -39,9 +39,10 @@ async function setUpDiffResolver() {
     const providerDb = await mongoConnection.get_provider_db(logger);
     const intentWatcherDB = await mongoConnection.get_intent_watcher_db(logger)
     const watchlistDb = await mongoConnection.get_watchlist_db(logger)
+    const graveyardDb = await mongoConnection.get_graveyard_db(logger)
 
     const differ = new BasicDiffer()
-    const intentfulContext = new IntentfulContext(specDb, statusDb, differ, intentWatcherDB, watchlistDb)
+    const intentfulContext = new IntentfulContext(specDb, statusDb, graveyardDb, differ, intentWatcherDB, watchlistDb)
     const watchlist: Watchlist = new Watchlist()
 
     const intentfulListenerMongo = new IntentfulListenerMongo(statusDb, specDb, watchlist)

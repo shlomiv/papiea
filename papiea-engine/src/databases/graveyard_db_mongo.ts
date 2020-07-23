@@ -59,7 +59,7 @@ export class Graveyard_DB_Mongo implements Graveyard_DB {
         try {
             await this.collection.createIndex(
                 { "metadata.uuid": 1, "metadata.provider_version": 1,
-                    "metadata.kind": 1, "metadata.provider_prefix": 1, "metadata.deletedAt": 1 },
+                    "metadata.kind": 1, "metadata.provider_prefix": 1, "metadata.deleted_at": 1 },
                 { unique: true },
             )
         } catch (err) {
@@ -78,6 +78,9 @@ export class Graveyard_DB_Mongo implements Graveyard_DB {
 
     async list_entities(fields_map: any, exact_match: boolean, sortParams?: SortParams): Promise<Entity[]> {
         const filter = build_filter_query(fields_map, exact_match)
+        if (filter["metadata.deleted_at"] === null) {
+            delete filter["metadata.deleted_at"]
+        }
         if (sortParams) {
             return await this.collection.find(filter).sort(sortParams).toArray();
         } else {

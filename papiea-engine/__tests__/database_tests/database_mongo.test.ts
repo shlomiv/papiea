@@ -15,6 +15,7 @@ import { IntentWatcher } from "../../src/intentful_engine/intent_interface"
 import { IntentWatcher_DB } from "../../src/databases/intent_watcher_db_interface"
 import { Watchlist_DB } from "../../src/databases/watchlist_db_interface";
 import { Watchlist } from "../../src/intentful_engine/watchlist";
+import { Graveyard_DB } from "../../src/databases/graveyard_db_interface"
 
 declare var process: {
     env: {
@@ -568,5 +569,60 @@ describe("MongoDb tests", () => {
         const watchlistUpdated = await watchlistDb.get_watchlist()
         expect(watchlistUpdated.get(entry_ref)![2]!.delay_seconds).toBe(120)
         await watchlistDb.update_watchlist(new Watchlist())
+    });
+
+    const entity: Entity = {
+        metadata: {
+            uuid: uuid(),
+            provider_version: "0.1.1",
+            provider_prefix: "test_pref",
+            kind: "test_kind",
+            spec_version: 1,
+            created_at: new Date(),
+            extension: {}
+        },
+        spec: {
+            test: "test"
+        },
+        status: {
+            test: "test"
+        }
+    }
+
+    test("Save and get deleted entity in graveyard, delete from graveyard afterwards", async () => {
+        expect.assertions(1);
+        const sample_entity = JSON.parse(JSON.stringify(entity))
+        const graveyardDb: Graveyard_DB = await connection.get_graveyard_db(logger);
+        await graveyardDb.save_to_graveyard(sample_entity)
+        const received = await graveyardDb.get_entity(sample_entity.metadata)
+        expect(received.spec.test).toEqual("test")
+    });
+
+    test("Save and list deleted entities in graveyard, delete from graveyard afterwards", async () => {
+        expect.assertions(2);
+        const sample_entity = JSON.parse(JSON.stringify(entity))
+        const graveyardDb: Graveyard_DB = await connection.get_graveyard_db(logger);
+        await graveyardDb.save_to_graveyard(sample_entity)
+        const received_with_date = await graveyardDb.list_entities({metadata: {deleted_at: "papiea_one_hour_ago"}, spec: {test: "test"}}, false)
+        expect(received_with_date[0].spec.test).toEqual("test")
+        const received = await graveyardDb.list_entities({spec: {test: "test"}}, false)
+        expect(received[0].spec.test).toEqual("test")
+    });
+
+    test("Dispose entity to graveyard", async () => {
+        expect.assertions(3);
+        const sample_entity = JSON.parse(JSON.stringify(entity))
+        const graveyardDb: Graveyard_DB = await connection.get_graveyard_db(logger);
+        const specDb: Spec_DB = await connection.get_spec_db(logger)
+        await specDb.update_spec(sample_entity.metadata, sample_entity.spec)
+        await graveyardDb.dispose(sample_entity)
+        try {
+            const [metadata, spec] = await specDb.get_spec(sample_entity.metadata)
+        } catch (e) {
+            expect(e).toBeDefined()
+        }
+        const received = await graveyardDb.get_entity(sample_entity.metadata)
+        expect(received.spec.test).toEqual("test")
+        expect(received.metadata.spec_version).toEqual(2)
     });
 });

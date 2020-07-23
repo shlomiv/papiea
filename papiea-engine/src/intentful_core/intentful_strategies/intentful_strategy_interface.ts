@@ -5,16 +5,19 @@ import { UserAuthInfo } from "../../auth/authn"
 import axios from "axios"
 import { IntentWatcher } from "../../intentful_engine/intent_interface"
 import { OnActionError } from "../../errors/on_action_error";
+import { Graveyard_DB } from "../../databases/graveyard_db_interface"
 
 export abstract class IntentfulStrategy {
     protected readonly specDb: Spec_DB
     protected readonly statusDb: Status_DB
+    protected readonly graveyardDb: Graveyard_DB
     protected kind?: Kind
     protected user?: UserAuthInfo
 
-    protected constructor(specDb: Spec_DB, statusDb: Status_DB) {
+    protected constructor(specDb: Spec_DB, statusDb: Status_DB, graveyardDb: Graveyard_DB) {
         this.specDb = specDb
         this.statusDb = statusDb
+        this.graveyardDb = graveyardDb
     }
 
     async update_entity(metadata: Metadata, spec: Spec): Promise<[Metadata, Spec]> {
@@ -29,9 +32,8 @@ export abstract class IntentfulStrategy {
         return [updatedMetadata, updatedSpec]
     }
 
-    async delete_entity(metadata: Metadata): Promise<void> {
-        await this.specDb.delete_spec(metadata);
-        await this.statusDb.delete_status(metadata);
+    async delete_entity(entity: Entity): Promise<void> {
+        await this.graveyardDb.dispose(entity)
     }
 
     async update(metadata: Metadata, spec: Spec): Promise<IntentWatcher | null> {
@@ -73,8 +75,8 @@ export abstract class IntentfulStrategy {
         this.user = user
     }
 
-    async delete(metadata: Metadata): Promise<void> {
-        await this.dispatch(`__${metadata.kind}_delete`, { metadata })
-        return this.delete_entity(metadata)
+    async delete(entity: Entity): Promise<void> {
+        await this.dispatch(`__${entity.metadata.kind}_delete`, { metadata: entity.metadata })
+        return this.delete_entity(entity)
     }
 }

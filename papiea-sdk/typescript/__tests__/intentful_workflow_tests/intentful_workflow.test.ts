@@ -718,6 +718,138 @@ describe("Intentful Workflow tests", () => {
         }
     })
 
+    test("Two concurrent updates with the same spec version should fail", async () => {
+        expect.assertions(4);
+        const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
+        try {
+            first_provider_prefix = "location_provider_intentful_2_concurrent_cas"
+            const location = sdk.new_kind(locationDataDescription);
+            sdk.version(provider_version);
+            sdk.prefix(first_provider_prefix);
+            location.on("x", async (ctx, entity, input) => {
+                await providerApiAdmin.patch(`/${sdk.provider.prefix}/${sdk.provider.version}/update_status`, {
+                    context: "some context",
+                    entity_ref: {
+                        uuid: metadata.uuid,
+                        kind: kind_name
+                    },
+                    status: { x: entity.spec.x }
+                })
+            })
+            location.on_create(async (ctx, entity) => {
+                const { metadata, spec } = entity
+                await ctx.update_status(metadata!, spec!)
+            })
+            await sdk.register();
+            const kind_name = sdk.provider.kinds[0].name;
+            const { data: { metadata, spec } } = await entityApi.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }`, {
+                spec: {
+                    x: 10,
+                    y: 11
+                }
+            })
+            first_provider_to_delete_entites.push(metadata)
+            await timeout(5000)
+            const promises = []
+            for (let i = 0; i < 2; i++) {
+                promises.push(entityApi.put(`/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`, {
+                    spec: {
+                        x: 20,
+                        y: 11
+                    },
+                    metadata: {
+                        spec_version: 1
+                    }
+                }))
+            }
+            const results = await Promise.all(promises)
+            try {
+                const first_watcher_result = await entityApi.get(`/intent_watcher/${ results[0].data.watcher.uuid }`)
+                const second_watcher_result = await entityApi.get(`/intent_watcher/${ results[1].data.watcher.uuid }`)
+                if (second_watcher_result.data.status === IntentfulStatus.Failed && first_watcher_result.data.status === IntentfulStatus.Pending) {
+                    expect(second_watcher_result.data.status).toBe(IntentfulStatus.Failed)
+                    expect(second_watcher_result.data.times_failed).toEqual(1)
+                    expect(second_watcher_result.data.last_handler_error).toEqual("Spec with this version already exists")
+                    expect(first_watcher_result.data.status).toBe(IntentfulStatus.Pending)
+                    return
+                }
+            } catch (e) {
+                console.log(`Couldn't get entity: ${e}`)
+            }
+        } finally {
+            sdk.server.close();
+        }
+    })
+
+    test("Two serial updates with the same spec version should fail", async () => {
+        expect.assertions(3);
+        const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
+        try {
+            first_provider_prefix = "location_provider_intentful_2_concurrent_cas_serial"
+            const location = sdk.new_kind(locationDataDescription);
+            sdk.version(provider_version);
+            sdk.prefix(first_provider_prefix);
+            location.on("x", async (ctx, entity, input) => {
+                await providerApiAdmin.patch(`/${sdk.provider.prefix}/${sdk.provider.version}/update_status`, {
+                    context: "some context",
+                    entity_ref: {
+                        uuid: metadata.uuid,
+                        kind: kind_name
+                    },
+                    status: { x: entity.spec.x }
+                })
+            })
+            location.on_create(async (ctx, entity) => {
+                const { metadata, spec } = entity
+                await ctx.update_status(metadata!, spec!)
+            })
+            await sdk.register();
+            const kind_name = sdk.provider.kinds[0].name;
+            const { data: { metadata, spec } } = await entityApi.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }`, {
+                spec: {
+                    x: 10,
+                    y: 11
+                }
+            })
+            first_provider_to_delete_entites.push(metadata)
+            await timeout(5000)
+            const first_result = await entityApi.put(`/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`, {
+                spec: {
+                    x: 20,
+                    y: 11
+                },
+                metadata: {
+                    spec_version: 1
+                }
+            })
+            await timeout(5000)
+            const second_result = await entityApi.put(`/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`, {
+                spec: {
+                    x: 20,
+                    y: 11
+                },
+                metadata: {
+                    spec_version: 1
+                }
+            })
+            try {
+                const first_watcher_result = await entityApi.get(`/intent_watcher/${ first_result.data.watcher.uuid }`)
+                const second_watcher_result = await entityApi.get(`/intent_watcher/${ second_result.data.watcher.uuid }`)
+                if (second_watcher_result.data.status === IntentfulStatus.Failed &&
+                    (first_watcher_result.data.status === IntentfulStatus.Pending || first_watcher_result.data.status === IntentfulStatus.Completed_Successfully)) {
+                    expect(second_watcher_result.data.status).toBe(IntentfulStatus.Failed)
+                    expect(second_watcher_result.data.times_failed).toEqual(1)
+                    expect(second_watcher_result.data.last_handler_error).toEqual("Spec with this version already exists")
+                    return
+                }
+            } catch (e) {
+                console.log(`Couldn't get entity: ${e}`)
+            }
+        } finally {
+            sdk.server.close();
+        }
+    })
+
     test("Change single array sfs field differ resolver should pass", async () => {
         expect.assertions(2);
         const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);

@@ -92,8 +92,10 @@ export class Entity_API_Impl implements Entity_API {
             }
         }
         this.validator.validate_uuid(kind, request_metadata.uuid)
-        if (!request_metadata.spec_version) {
-            request_metadata.spec_version = 0;
+        if (request_metadata.spec_version === undefined || request_metadata.spec_version === null) {
+            let spec_version = await this.graveyardDb.get_highest_spec_version(
+                {provider_prefix: prefix, kind: kind_name, provider_version: version, uuid: request_metadata.uuid})
+            request_metadata.spec_version = spec_version
         }
         request_metadata.kind = kind.name;
         request_metadata.provider_prefix = prefix

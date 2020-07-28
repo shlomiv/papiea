@@ -1,7 +1,7 @@
 import { ClientSession, Collection, Db, MongoClient } from "mongodb"
 import { Graveyard_DB } from "./graveyard_db_interface"
 import { Logger } from 'papiea-backend-utils'
-import { Provider_Entity_Reference, Entity } from "papiea-core";
+import { Provider_Entity_Reference, Entity, Metadata } from "papiea-core";
 import { SortParams } from "../entity/entity_api_impl"
 import { build_filter_query } from "./utils/filtering"
 
@@ -101,5 +101,37 @@ export class Graveyard_DB_Mongo implements Graveyard_DB {
             throw new Error("Entity not found");
         }
         return result;
+    }
+
+    // The function returns a maximum spec version in the graveyard
+    // If there is no corresponding record in the graveyard, function returns 0
+    async get_highest_spec_version(entity_ref: Provider_Entity_Reference): Promise<number> {
+        const result = await this.collection.find(
+            {
+                "metadata.uuid": entity_ref.uuid,
+                "metadata.provider_prefix": entity_ref.provider_prefix,
+                "metadata.provider_version": entity_ref.provider_version,
+                "metadata.kind": entity_ref.kind
+            }
+        ).sort({"metadata.spec_version": -1}).limit(1).toArray()
+        if (result[0]) {
+            return result[0].metadata.spec_version
+        } else {
+            return 0
+        }
+    }
+
+    async check_spec_version_exists(metadata: Metadata, spec_version: number): Promise<boolean> {
+        const result = await this.collection.findOne(
+            {
+                "metadata.uuid": metadata.uuid,
+                "metadata.provider_prefix": metadata.provider_prefix,
+                "metadata.provider_version": metadata.provider_version,
+                "metadata.kind": metadata.kind,
+                "metadata.spec_version": spec_version
+            }
+        );
+        return result !== null;
+
     }
 }

@@ -28,8 +28,6 @@ export function createEntityAPIRouter(entity_api: Entity_API): Router {
     }
 
     const filterEntities = async function (user: UserAuthInfo, kind_name: string, filter: any, skip: number, size: number, searchDeleted: boolean, exactMatch: boolean, sortParams?: SortParams): Promise<any> {
-        console.log(`Search deleted ${searchDeleted}`)
-
         if (searchDeleted) {
             const entities = await entity_api.filter_deleted(user, kind_name, filter, exactMatch, sortParams)
             return paginateEntities(Object.values(entities), skip, size)

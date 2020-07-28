@@ -6,6 +6,9 @@ import axios from "axios"
 import { IntentWatcher } from "../../intentful_engine/intent_interface"
 import { OnActionError } from "../../errors/on_action_error";
 import { Graveyard_DB } from "../../databases/graveyard_db_interface"
+import {
+    GraveyardConflictingEntityError
+} from "../../databases/utils/errors"
 
 export abstract class IntentfulStrategy {
     protected readonly specDb: Spec_DB
@@ -20,13 +23,25 @@ export abstract class IntentfulStrategy {
         this.graveyardDb = graveyardDb
     }
 
+    protected async check_spec_version(metadata: Metadata, spec_version: number, spec: Spec) {
+        const exists = await this.graveyardDb.check_spec_version_exists(metadata, spec_version)
+        if (exists) {
+            const highest_spec_version = await this.graveyardDb.get_highest_spec_version(metadata)
+            metadata.spec_version = spec_version
+            throw new GraveyardConflictingEntityError(metadata, spec, highest_spec_version)
+        }
+    }
+
     async update_entity(metadata: Metadata, spec: Spec): Promise<[Metadata, Spec]> {
+        await this.check_spec_version(metadata, metadata.spec_version, spec)
         const [updatedMetadata, updatedSpec] = await this.specDb.update_spec(metadata, spec);
         await this.statusDb.update_status(metadata, spec)
         return [updatedMetadata, updatedSpec]
     }
 
     async create_entity(metadata: Metadata, spec: Spec): Promise<[Metadata, Spec]> {
+        // Create increments spec version so we should check already incremented one
+        await this.check_spec_version(metadata, metadata.spec_version + 1, spec)
         const [updatedMetadata, updatedSpec] = await this.specDb.update_spec(metadata, spec);
         await this.statusDb.replace_status(metadata, spec)
         return [updatedMetadata, updatedSpec]

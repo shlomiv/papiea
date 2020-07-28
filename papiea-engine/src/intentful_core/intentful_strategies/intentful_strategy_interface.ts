@@ -6,7 +6,9 @@ import axios from "axios"
 import { IntentWatcher } from "../../intentful_engine/intent_interface"
 import { OnActionError } from "../../errors/on_action_error";
 import { Graveyard_DB } from "../../databases/graveyard_db_interface"
-import { ConflictingEntityError } from "../../databases/utils/errors"
+import {
+    GraveyardConflictingEntityError
+} from "../../databases/utils/errors"
 
 export abstract class IntentfulStrategy {
     protected readonly specDb: Spec_DB
@@ -24,9 +26,9 @@ export abstract class IntentfulStrategy {
     protected async check_spec_version(metadata: Metadata, spec_version: number, spec: Spec) {
         const exists = await this.graveyardDb.check_spec_version_exists(metadata, spec_version)
         if (exists) {
+            const highest_spec_version = await this.graveyardDb.get_highest_spec_version(metadata)
             metadata.spec_version = spec_version
-            throw new ConflictingEntityError(
-                "Deleted entity with this uuid and spec version exists", metadata, spec)
+            throw new GraveyardConflictingEntityError(metadata, spec, highest_spec_version)
         }
     }
 

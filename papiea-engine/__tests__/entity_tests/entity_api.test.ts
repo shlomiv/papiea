@@ -494,7 +494,7 @@ describe("Entity API tests", () => {
     });
 
     test("Recreate deleted entity with the same spec version should fail", async () => {
-        expect.assertions(1);
+        expect.assertions(2);
         const id = uuid()
         const { data: { metadata, spec } } = await entityApi.post(`/${ providerPrefix }/${ providerVersion }/${ kind_name }`, {
             spec: {
@@ -519,6 +519,7 @@ describe("Entity API tests", () => {
             });
         } catch (e) {
             expect(e.response.status).toEqual(409)
+            expect(e.response.data.error.message).toEqual(`Deleted entity with this uuid and spec version exists: uuid - ${id}, maximum current spec version - 2`)
         }
     });
 

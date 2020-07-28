@@ -57,7 +57,7 @@ export abstract class IntentfulStrategy {
     }
 
     async create(metadata: Metadata, spec: Spec): Promise<[Metadata, Spec]> {
-        const entity = this.create_entity(metadata, spec)
+        const entity = await this.create_entity(metadata, spec)
         await this.dispatch(`__${metadata.kind}_create`, { metadata, spec })
         return entity
     }

@@ -695,23 +695,18 @@ describe("Intentful Workflow tests", () => {
             })
             first_provider_to_delete_entites.push(metadata)
             await timeout(5000)
-            const { data: { watcher } } = await entityApi.put(`/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`, {
-                spec: {
-                    x: 20,
-                    y: 11
-                },
-                metadata: {
-                    spec_version: 0
-                }
-            })
             try {
-                const res = await entityApi.get(`/intent_watcher/${ watcher.uuid }`)
-                if (res.data.status === IntentfulStatus.Failed) {
-                    expect(res.data.status).toBe(IntentfulStatus.Failed)
-                    return
-                }
+                await entityApi.put(`/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`, {
+                    spec: {
+                        x: 20,
+                        y: 11
+                    },
+                    metadata: {
+                        spec_version: 0
+                    }
+                })
             } catch (e) {
-                console.log(`Couldn't get entity: ${e}`)
+                expect(e.response.status).toEqual(409)
             }
         } finally {
             sdk.server.close();
@@ -719,7 +714,7 @@ describe("Intentful Workflow tests", () => {
     })
 
     test("Two concurrent updates with the same spec version should fail", async () => {
-        expect.assertions(4);
+        expect.assertions(1);
         const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
         try {
             first_provider_prefix = "location_provider_intentful_2_concurrent_cas"
@@ -762,19 +757,10 @@ describe("Intentful Workflow tests", () => {
                     }
                 }))
             }
-            const results = await Promise.all(promises)
             try {
-                const first_watcher_result = await entityApi.get(`/intent_watcher/${ results[0].data.watcher.uuid }`)
-                const second_watcher_result = await entityApi.get(`/intent_watcher/${ results[1].data.watcher.uuid }`)
-                if (second_watcher_result.data.status === IntentfulStatus.Failed && first_watcher_result.data.status === IntentfulStatus.Pending) {
-                    expect(second_watcher_result.data.status).toBe(IntentfulStatus.Failed)
-                    expect(second_watcher_result.data.times_failed).toEqual(1)
-                    expect(second_watcher_result.data.last_handler_error).toEqual("Spec with this version already exists")
-                    expect(first_watcher_result.data.status).toBe(IntentfulStatus.Pending)
-                    return
-                }
+                await Promise.all(promises)
             } catch (e) {
-                console.log(`Couldn't get entity: ${e}`)
+                expect(e.response.status).toEqual(409)
             }
         } finally {
             sdk.server.close();
@@ -782,7 +768,7 @@ describe("Intentful Workflow tests", () => {
     })
 
     test("Two serial updates with the same spec version should fail", async () => {
-        expect.assertions(3);
+        expect.assertions(1);
         const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
         try {
             first_provider_prefix = "location_provider_intentful_2_concurrent_cas_serial"
@@ -813,7 +799,7 @@ describe("Intentful Workflow tests", () => {
             })
             first_provider_to_delete_entites.push(metadata)
             await timeout(5000)
-            const first_result = await entityApi.put(`/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`, {
+            await entityApi.put(`/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`, {
                 spec: {
                     x: 20,
                     y: 11
@@ -823,27 +809,18 @@ describe("Intentful Workflow tests", () => {
                 }
             })
             await timeout(5000)
-            const second_result = await entityApi.put(`/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`, {
-                spec: {
-                    x: 20,
-                    y: 11
-                },
-                metadata: {
-                    spec_version: 1
-                }
-            })
             try {
-                const first_watcher_result = await entityApi.get(`/intent_watcher/${ first_result.data.watcher.uuid }`)
-                const second_watcher_result = await entityApi.get(`/intent_watcher/${ second_result.data.watcher.uuid }`)
-                if (second_watcher_result.data.status === IntentfulStatus.Failed &&
-                    (first_watcher_result.data.status === IntentfulStatus.Pending || first_watcher_result.data.status === IntentfulStatus.Completed_Successfully)) {
-                    expect(second_watcher_result.data.status).toBe(IntentfulStatus.Failed)
-                    expect(second_watcher_result.data.times_failed).toEqual(1)
-                    expect(second_watcher_result.data.last_handler_error).toEqual("Spec with this version already exists")
-                    return
-                }
+                await entityApi.put(`/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`, {
+                    spec: {
+                        x: 20,
+                        y: 11
+                    },
+                    metadata: {
+                        spec_version: 1
+                    }
+                })
             } catch (e) {
-                console.log(`Couldn't get entity: ${e}`)
+                expect(e.response.status).toEqual(409)
             }
         } finally {
             sdk.server.close();

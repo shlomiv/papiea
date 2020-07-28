@@ -64,6 +64,7 @@ export class DifferIntentfulStrategy extends IntentfulStrategy {
             watcher.last_handler_error = e.message
             watcher.status = IntentfulStatus.Failed
             await this.intentWatcherDb.update_watcher(watcher.uuid, { ...watcher })
+            throw e
         }
         return watcher
     }

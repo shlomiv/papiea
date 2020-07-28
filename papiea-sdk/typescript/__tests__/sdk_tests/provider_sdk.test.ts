@@ -1438,6 +1438,62 @@ describe("SDK callback tests", () => {
         }
     });
 
+    test("On create callback shouldn't be called twice if entity is already created", async () => {
+        expect.hasAssertions();
+        const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
+        const location = sdk.new_kind(location_yaml);
+        prefix = "provider_on_create_callback_twice"
+        sdk.version(provider_version);
+        sdk.prefix(prefix);
+        let called_times = 0
+        location.on_create(async (ctx, input) => {
+            called_times++
+        })
+        try {
+            const id = uuid()
+            await sdk.register()
+            kind_name = sdk.provider.kinds[0].name
+            const { data: { metadata } } = await entityApi.post(`/${ prefix }/${ provider_version }/${ kind_name }`, {
+                spec: {
+                    x: 10,
+                    y: 11
+                },
+                metadata: {
+                    uuid: id
+                }
+            }, {
+                headers: {
+                    'Authorization': `Bearer ${ adminKey }`
+                }
+            })
+            try {
+                await entityApi.post(`/${ prefix }/${ provider_version }/${ kind_name }`, {
+                    spec: {
+                        x: 10,
+                        y: 11
+                    },
+                    metadata: {
+                        uuid: id
+                    }
+                }, {
+                    headers: {
+                        'Authorization': `Bearer ${ adminKey }`
+                    }
+                })
+            } catch (e) {
+
+            }
+            await entityApi.delete(`/${ prefix }/${ provider_version }/${ kind_name }/${ metadata.uuid }`, {
+                headers: {
+                    'Authorization': `Bearer ${ adminKey }`
+                }
+            })
+            expect(called_times).toEqual(1)
+        } finally {
+            sdk.server.close();
+        }
+    });
+
     test("On create 2 callbacks for different kinds should be called", async () => {
         expect.assertions(2)
         const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);

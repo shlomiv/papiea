@@ -83,6 +83,23 @@ export function getSpecOnlyKind(): SpecOnlyEntityKind {
     return locationKind;
 }
 
+export function getDifferKind(): Kind {
+    const locationDataDescription = getDifferLocationDataDescription();
+    const name = Object.keys(locationDataDescription)[0];
+    const locationKind: Kind = {
+        name,
+        name_plural: plural(name),
+        kind_structure: locationDataDescription,
+        intentful_signatures: [],
+        dependency_tree: new Map(),
+        kind_procedures: {},
+        entity_procedures: {},
+        differ: undefined,
+        intentful_behaviour: IntentfulBehaviour.Differ
+    };
+    return locationKind;
+}
+
 export function getClusterKind(): Kind {
     const clusterDataDescription = getClusterDataDescription()
     const name = Object.keys(clusterDataDescription)[0]

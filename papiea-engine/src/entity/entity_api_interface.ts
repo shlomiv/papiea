@@ -1,7 +1,6 @@
 import { UserAuthInfo } from "../auth/authn";
-import { Version, Spec, Metadata, uuid4, Status, Entity_Reference, Action, Entity } from "papiea-core";
+import { Version, Spec, Metadata, uuid4, Status, Entity_Reference, Action, Entity, IntentWatcher } from "papiea-core";
 import { SortParams } from "./entity_api_impl";
-import { IntentWatcher } from "../intentful_engine/intent_interface"
 
 export interface Entity_API {
     save_entity(user: UserAuthInfo, prefix: string, kind_name: string, version: Version, spec_description: Spec, request_metadata: Metadata): Promise<[Metadata, Spec]>

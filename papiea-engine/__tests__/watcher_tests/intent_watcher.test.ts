@@ -1,11 +1,10 @@
 import { getDifferLocationDataDescription, ProviderBuilder } from "../test_data_factory"
-import { IntentfulBehaviour, IntentfulStatus } from "papiea-core"
-import { Logger, LoggerFactory } from 'papiea-backend-utils';
+import { IntentfulBehaviour, IntentfulStatus, IntentWatcher } from "papiea-core"
+import { LoggerFactory } from 'papiea-backend-utils';
 import { plural } from "pluralize"
 import axios from "axios"
 import { MongoConnection } from "../../src/databases/mongo"
 import { IntentWatcher_DB } from "../../src/databases/intent_watcher_db_interface"
-import { IntentWatcher } from "../../src/intentful_engine/intent_interface"
 import { Intentful_Execution_Strategy, Metadata, Provider } from "papiea-core"
 
 declare var process: {

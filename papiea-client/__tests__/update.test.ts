@@ -4,6 +4,7 @@ import {
     ProviderBuilder
 } from "../../papiea-engine/__tests__/test_data_factory"
 import axios from "axios"
+import { IntentfulStatus } from "papiea-core"
 
 declare var process: {
     env: {
@@ -45,8 +46,8 @@ describe("Entity API tests", () => {
         expect.assertions(1)
         const location_client = kind_client("http://localhost:3000", providerPrefix, kind_name, providerVersion, '')
         const entity = await location_client.create({x: 10, y: 10})
-        const watcher = await location_client.update(entity.metadata, {x: 11, y: 12})
-        expect(watcher).toBeDefined()
+        const watcher = await location_client.update(entity.metadata, {x: 12, y: 10})
+        expect(watcher!.status).toEqual(IntentfulStatus.Pending)
         await location_client.delete(entity.metadata)
     })
 })

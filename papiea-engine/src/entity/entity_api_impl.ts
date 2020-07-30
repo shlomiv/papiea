@@ -16,7 +16,8 @@ import {
     Version,
     Action,
     Provider_Entity_Reference,
-    Entity
+    Entity,
+    IntentWatcher
 } from "papiea-core";
 import { ProcedureInvocationError } from "../errors/procedure_invocation_error";
 import uuid = require("uuid");
@@ -24,7 +25,7 @@ import { PermissionDeniedError } from "../errors/permission_error";
 import { Logger } from "papiea-backend-utils";
 import { IntentfulContext } from "../intentful_core/intentful_context"
 import { Provider_DB } from "../databases/provider_db_interface"
-import { IntentWatcher, IntentWatcherMapper } from "../intentful_engine/intent_interface"
+import { IntentWatcherMapper } from "../intentful_engine/intent_interface"
 import { IntentWatcher_DB } from "../databases/intent_watcher_db_interface"
 import { ConflictingEntityError } from "../databases/utils/errors"
 import { Graveyard_DB } from "../databases/graveyard_db_interface"

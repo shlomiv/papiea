@@ -8,10 +8,9 @@ import { v4 as uuid4 } from 'uuid';
 import { ConflictingEntityError } from "../../src/databases/utils/errors";
 import { Metadata, Spec, Provider_Entity_Reference, Entity_Reference, Status, Kind, Provider, S2S_Key, IntentfulBehaviour } from "papiea-core";
 import { SessionKeyDb } from "../../src/databases/session_key_db_interface"
-import { Entity, Intentful_Signature, SessionKey, IntentfulStatus } from "papiea-core"
-import { Logger, LoggerFactory } from 'papiea-backend-utils';
+import { Entity, Intentful_Signature, SessionKey, IntentfulStatus, IntentWatcher } from "papiea-core"
+import { LoggerFactory } from 'papiea-backend-utils';
 import uuid = require("uuid")
-import { IntentWatcher } from "../../src/intentful_engine/intent_interface"
 import { IntentWatcher_DB } from "../../src/databases/intent_watcher_db_interface"
 import { Watchlist_DB } from "../../src/databases/watchlist_db_interface";
 import { Watchlist } from "../../src/intentful_engine/watchlist";

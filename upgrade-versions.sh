@@ -23,6 +23,22 @@ node publish-papiea.js
 typescipt_version=$(grep -m 1 'New version' temp_version.txt | sed 's/[a-zA-Z :]*//')
 python_version=$(git rev-parse HEAD)
 
-echo "Python commit hash: $python_version ; Typescript version: $typescipt_version"
+sed -i '' "/Client\/SDK (typescript)/c\\
+| Client/SDK (typescript)  | $typescipt_version |
+" README.md
 
+sed -i '' "/Client\/SDK (python)/c\\
+| Client/SDK (python)  | $python_version |
+" README.md
 
+echo "Python commit hash: $python_version ; Typescript version: $typescipt_version. Committing"
+
+git ls-files . | grep 'package\.json' | xargs git add
+
+git add README.md
+
+git commit -m '[skip-ci] Upgrade versions'
+
+git push
+
+echo 'Versions updated successfully!'

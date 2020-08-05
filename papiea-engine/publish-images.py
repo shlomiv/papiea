@@ -20,7 +20,7 @@ with open(".dockerignore", "w") as f:
 subprocess.check_call([
     'docker', 'build',
     '-t', tag,
-    '-f', '.circleci/Dockerfile.build',
+    '-f', '.circleci/Dockerfile.publish',
     '.'])
 
 subprocess.check_call(['docker', 'push', tag])

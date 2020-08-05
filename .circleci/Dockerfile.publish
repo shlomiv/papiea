@@ -1,4 +1,4 @@
-FROM nutanix-docker.jfrog.io/papiea:yarn-base
+FROM nutanix-docker.jfrog.io/papiea:yarn-base AS builder
 
 COPY . /code
 WORKDIR /code/papiea-engine
@@ -15,7 +15,7 @@ RUN cd /code && make
 
 FROM nutanix-docker.jfrog.io/papiea:yarn-base
 
-COPY --from=0 /code/papiea-engine /code/papiea-engine
+COPY --from=builder /code/papiea-engine /code/papiea-engine
 WORKDIR /code/papiea-engine
 
 CMD /bin/bash -c "yarn run start_differ & yarn run start"

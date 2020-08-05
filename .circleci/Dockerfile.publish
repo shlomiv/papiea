@@ -13,7 +13,7 @@ ENV PATH="${PATH}:/root/.yarn/bin"
 
 RUN cd /code && make
 
-FROM nutanix-docker.jfrog.io/papiea:yarn-base
+FROM node:14
 
 COPY --from=builder /code/papiea-engine /code/papiea-engine
 WORKDIR /code/papiea-engine

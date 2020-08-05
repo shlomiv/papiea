@@ -10,6 +10,7 @@ RUN cd /code \
 # Install yarn
 RUN curl -o- -L yarnpkg.com/install.sh | bash
 ENV PATH="${PATH}:/root/.yarn/bin"
+ENV NODE_ENV=production
 
 RUN cd /code && make
 

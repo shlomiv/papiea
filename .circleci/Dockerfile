@@ -1,6 +1,6 @@
 FROM nutanix-docker.jfrog.io/papiea:yarn-base
 
-COPY . /code
+COPY ./papiea-engine /code
 WORKDIR /code/papiea-engine
 RUN cd /code \
     && apt-get update \

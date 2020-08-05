@@ -15,6 +15,7 @@ subprocess.check_call([
 with open(".dockerignore", "w") as f:
     f.write("!papiea-engine/__tests__/test_data_factory.ts")
     f.write("*/__tests__")
+    f.write("*/__benchmarks__")
 
 subprocess.check_call([
     'docker', 'build',

@@ -12,14 +12,14 @@
   "license": "ISC",
   "dependencies": {
     "axios": "^0.18.1",
-    "papiea-core": "file:../papiea-core",
-    "typescript": "^3.8.3"
+    "papiea-core": "file:../papiea-core"
   },
   "devDependencies": {
     "@types/jest": "^26.0.3",
     "@types/node": "^12.0.2",
     "jest": "^26.1.0",
     "jest-junit": "^11.0.1",
-    "ts-jest": "^26.1.1"
+    "ts-jest": "^26.1.1",
+    "typescript": "^3.8.3"
   }
 }

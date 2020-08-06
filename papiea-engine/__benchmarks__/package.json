@@ -21,12 +21,12 @@
     "papiea-core": "file:../../papiea-core",
     "autocannon": "^4.6.0",
     "axios": "^0.19.2",
-    "ts-node": "^7.0.1"
+    "ts-node": "^7.0.1",
+    "typescript": "^3.8.3"
   },
   "devDependencies": {
     "@types/node": "^10.14.7",
     "@types/autocannon": "^4.1.0",
-    "typescript": "^3.8.3"
   },
   "jest": {
     "transform": {

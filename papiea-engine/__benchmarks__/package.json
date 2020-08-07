@@ -8,8 +8,8 @@
     "src/"
   ],
   "scripts": {
-    "bench-local": "ts-node src/main.ts -- http://localhost:3000 localhost 9000",
-    "bench": "ts-node src/main.ts",
+    "bench-local": "node build/__benchmarks__/src/main.ts -- http://localhost:3000 localhost 9000",
+    "bench": "node build/__benchmarks__/src/main.ts",
     "clean": "rm -rf build",
     "build": "yarn run tsc"
   },

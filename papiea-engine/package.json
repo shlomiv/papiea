@@ -9,7 +9,8 @@
   ],
   "scripts": {
     "clean": "rm -rf build",
-    "build": "yarn run tsc",
+    "build": "yarn run tsc && yarn run copy-files",
+    "copy-files": "cpy '**/*' '!**/*.ts' ../build --cwd=src/ --no-overwrite --parents",
     "build!": "npm run clean && npm run build",
     "start": "node build/main.js",
     "start_differ": "node build/diff_resolver_main.js",
@@ -53,8 +54,7 @@
     "swagger-ui-express": "^4.0.7",
     "ts-node": "^7.0.1",
     "uuid": "^3.3.2",
-    "uuid-validate": "0.0.3",
-    "typescript": "^3.8.3"
+    "uuid-validate": "0.0.3"
   },
   "devDependencies": {
     "@types/express": "^4.16.0",
@@ -74,7 +74,10 @@
     "jest-junit": "^5.2.0",
     "nodemon": "^1.18.8",
     "swagger-parser": "^6.0.2",
-    "ts-jest": "^23.10.5"
+    "ts-jest": "^23.10.5",
+    "cpy": "^8.1.0",
+    "cpy-cli": "^2.0.0",
+    "typescript": "^3.8.3"
   },
   "jest": {
     "transform": {

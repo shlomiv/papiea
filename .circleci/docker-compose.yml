@@ -4,6 +4,7 @@ services:
                 container_name: papiea-engine
                 build:
                         dockerfile: Dockerfile
+                        target: builder
                         context: .
                 environment:
                         - JEST_JUNIT_OUTPUT=reports/junit/results.xml

@@ -1,4 +1,4 @@
-FROM nutanix-docker.jfrog.io/papiea:yarn-base
+FROM nutanix-docker.jfrog.io/papiea:yarn-base AS builder
 
 COPY . /code
 WORKDIR /code/papiea-engine
@@ -12,5 +12,16 @@ RUN curl -o- -L yarnpkg.com/install.sh | bash
 ENV PATH="${PATH}:/root/.yarn/bin"
 
 RUN cd /code && make
+
+RUN cd /code && make remove_dev_deps
+
+FROM node:14
+
+COPY --from=builder /code/papiea-engine /code/papiea-engine
+WORKDIR /code/papiea-engine
+
+# Install yarn
+RUN curl -o- -L yarnpkg.com/install.sh | bash
+ENV PATH="${PATH}:/root/.yarn/bin"
 
 CMD /bin/bash -c "yarn run start_differ & yarn run start"

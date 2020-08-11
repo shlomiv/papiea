@@ -32,10 +32,11 @@ WORKDIR /code/papiea-engine
 
 # Install node
 RUN cd /code \
-    && apt install curl \
+    && apt-get update \
+    && apt-get upgrade -y \
     && curl -sL https://deb.nodesource.com/setup_10.x -o nodesource_setup.sh \
     && bash nodesource_setup.sh \
-    && apt install nodejs
+    && apt-get install nodejs
 
 # Install yarn
 RUN curl -o- -L yarnpkg.com/install.sh | bash

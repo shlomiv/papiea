@@ -23,12 +23,18 @@ ENV PATH="${PATH}:/root/.yarn/bin"
 
 RUN cd /code && make remove_dev_deps
 
-FROM node:14
+RUN rm -rf /code/papiea-engine/__tests__ && rm -rf /code/papiea-engine/__benchmarks__
+
+FROM ubuntu:18.04
 
 COPY --from=builder /code/papiea-engine /code/papiea-engine
 WORKDIR /code/papiea-engine
 
-RUN rm -rf /code/papiea-engine/__tests__ && rm -rf /code/papiea-engine/__benchmarks__
+# Install node
+RUN cd /code \
+    && curl -sL https://deb.nodesource.com/setup_10.x -o nodesource_setup.sh \
+    && bash nodesource_setup.sh \
+    && apt install nodejs
 
 # Install yarn
 RUN curl -o- -L yarnpkg.com/install.sh | bash

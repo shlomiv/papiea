@@ -32,6 +32,7 @@ WORKDIR /code/papiea-engine
 
 # Install node
 RUN cd /code \
+    && apt install curl \
     && curl -sL https://deb.nodesource.com/setup_10.x -o nodesource_setup.sh \
     && bash nodesource_setup.sh \
     && apt install nodejs

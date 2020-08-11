@@ -28,6 +28,8 @@ FROM node:14
 COPY --from=builder /code/papiea-engine /code/papiea-engine
 WORKDIR /code/papiea-engine
 
+RUN rm -rf /code/papiea-engine/__tests__ && rm -rf /code/papiea-engine/__benchmarks__
+
 # Install yarn
 RUN curl -o- -L yarnpkg.com/install.sh | bash
 ENV PATH="${PATH}:/root/.yarn/bin"

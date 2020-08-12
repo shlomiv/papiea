@@ -2,6 +2,31 @@
 # Typescript SDK version, Python commit hash
 # You use these to update README.md section 'Papiea versions'
 
+circle_num=''
+accept=false
+
+function collect_args {
+
+   while test $# -gt 0; do
+           case "$1" in
+                -circle_num)
+                    shift
+                    circle_num=$1
+                    shift
+                    ;;
+                -y)
+                    shift
+                    accept=true
+                    shift
+                    ;;
+                *)
+                   echo "$1 is not a recognized flag!"
+                   return 1;
+                   ;;
+          esac
+  done
+}
+
 NPM_REGISTRY=$(npm config list | grep '^registry')
 YARN_REGISTRY=$(yarn config list | grep -m 1 'registry' | sed -e 's/^[ \t]*//')
 
@@ -15,6 +40,21 @@ if [ "$YARN_REGISTRY" != "registry: 'https://nutanix.jfrog.io/nutanix/api/npm/np
 then
   echo "Your yarn registry is not set to nutanix jfrog!"
   exit 1
+fi
+
+collect_args "$@"
+
+if [[ -z "${CIRCLE_BUILD_NUM}" ]]; then
+  if [ -z "$circle_num" ]; then
+    echo 'CircleCI build number not specified neither in CIRCLE_BUILD_NUM nor in -circle_num arg.'
+    exit 1
+  else
+    echo 'Using CircleCI build number specified in -circle_num arg'
+    circle_num="$1"
+  fi
+else
+  echo 'Using CircleCI build number specified in CIRCLE_BUILD_NUM'
+  circle_num="${CIRCLE_BUILD_NUM}"
 fi
 
 yarn run patch-all > temp_version.txt
@@ -31,13 +71,28 @@ sed -i '' "/Client\/SDK (python)/c\\
 | Client/SDK (python)  | $python_version |
 " README.md
 
-echo "Python commit hash: $python_version ; Typescript version: $typescipt_version. Committing"
+sed -i '' "/Engine (docker)/c\\
+| Engine (docker) | $circle_num |
+" README.md
+
+echo "Python commit hash: $python_version ; Typescript version: $typescipt_version; Circle build number: $circle_num."
+
+if [ "$accept" != true ]; then
+  while true; do
+    read -p "Commit and push? (y/n) " yn
+    case $yn in
+        [Yy]* ) break;;
+        [Nn]* ) exit 1;;
+        * ) echo "Please answer yes or no.";;
+    esac
+  done
+fi
 
 git ls-files . | grep 'package\.json' | xargs git add
 
 git add README.md
 
-git commit -m '[skip-ci] Upgrade versions'
+git commit -m "[skip-ci] Upgrade versions. Engine: $circle_num. Typescript: $typescipt_version. Python: $python_version"
 
 git push
 

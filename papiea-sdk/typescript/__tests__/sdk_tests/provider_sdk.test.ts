@@ -1438,6 +1438,50 @@ describe("SDK callback tests", () => {
         }
     });
 
+    test("Entity is deleted if on create failed", async () => {
+        expect.hasAssertions();
+        const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
+        const location = sdk.new_kind(location_yaml);
+        prefix = "provider_on_create_callback"
+        sdk.version(provider_version);
+        sdk.prefix(prefix);
+        location.on_create(async (ctx, input) => {
+            throw new Error("Constructor failed")
+        })
+        try {
+            await sdk.register()
+            kind_name = sdk.provider.kinds[ 0 ].name
+            const id = uuid()
+            try {
+                const { data: { metadata } } = await entityApi.post(`/${ prefix }/${ provider_version }/${ kind_name }`, {
+                    spec: {
+                        x: 10,
+                        y: 11
+                    },
+                    metadata: {
+                        uuid: id
+                    }
+                }, {
+                    headers: {
+                        "Authorization": `Bearer ${ adminKey }`
+                    }
+                })
+            } catch (e) {}
+            try {
+                await entityApi.get(`/${ prefix }/${ provider_version }/${ kind_name }/${ id }`, {
+                    headers: {
+                        "Authorization": `Bearer ${ adminKey }`
+                    }
+                })
+            } catch (e) {
+                console.log(e.response.data)
+                expect(e).toBeDefined()
+            }
+        } finally {
+            sdk.server.close();
+        }
+    });
+
     test("On create callback shouldn't be called twice if entity is already created", async () => {
         expect.hasAssertions();
         const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);

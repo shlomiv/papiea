@@ -57,7 +57,12 @@ export abstract class IntentfulStrategy {
 
     async create(metadata: Metadata, spec: Spec): Promise<[Metadata, Spec]> {
         const entity = await this.create_entity(metadata, spec)
-        await this.dispatch(`__${metadata.kind}_create`, { metadata, spec })
+        try {
+            await this.dispatch(`__${ metadata.kind }_create`, { metadata, spec })
+        } catch (e) {
+            await this.delete_entity({ metadata: entity[0], spec: entity[1], status: undefined })
+            throw e
+        }
         return entity
     }
 

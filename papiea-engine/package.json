@@ -9,10 +9,11 @@
   ],
   "scripts": {
     "clean": "rm -rf build",
-    "build": "yarn run tsc",
+    "build": "yarn run tsc && yarn run copy-files",
+    "copy-files": "cpy '**/*' '!**/*.ts' ../build --cwd=src/ --no-overwrite --parents",
     "build!": "npm run clean && npm run build",
-    "start": "ts-node src/main.ts",
-    "start_differ": "ts-node src/diff_resolver_main.ts",
+    "start": "node build/main.js",
+    "start_differ": "node build/diff_resolver_main.js",
     "test": "jest --runInBand --coverage",
     "test-ci": "jest --runInBand --coverage --ci --reporters=default --reporters=jest-junit",
     "dev": "./node_modules/nodemon/bin/nodemon.js",
@@ -74,6 +75,8 @@
     "nodemon": "^1.18.8",
     "swagger-parser": "^6.0.2",
     "ts-jest": "^23.10.5",
+    "cpy": "^8.1.0",
+    "cpy-cli": "^2.0.0",
     "typescript": "^3.8.3"
   },
   "jest": {

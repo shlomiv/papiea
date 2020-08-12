@@ -39,6 +39,13 @@ export function getLocationDataDescription(): Data_Description {
     return randomizedLocationDataDescription;
 }
 
+export function getLocationArrayDataDescription(): Data_Description {
+    let locationDataDescription = loadYamlFromTestFactoryDir("./test_data/location_kind_test_data_array.yml");
+    let randomizedLocationDataDescription: any = {};
+    randomizedLocationDataDescription["Location" + randomString(5)] = locationDataDescription["Location"];
+    return randomizedLocationDataDescription;
+}
+
 export function getDifferLocationDataDescription(): Data_Description {
     let locationDataDescription = loadYamlFromTestFactoryDir("./test_data/location_kind_test_data.yml");
     locationDataDescription["Location"]["x-papiea-entity"] = IntentfulBehaviour.Differ
@@ -79,6 +86,23 @@ export function getSpecOnlyKind(): SpecOnlyEntityKind {
         entity_procedures: {},
         differ: undefined,
         intentful_behaviour: IntentfulBehaviour.SpecOnly
+    };
+    return locationKind;
+}
+
+export function getSpecOnlyArrayKind(): SpecOnlyEntityKind {
+    const locationDataDescription = getLocationArrayDataDescription();
+    const name = Object.keys(locationDataDescription)[0];
+    const locationKind: SpecOnlyEntityKind = {
+        name,
+        name_plural: plural(name),
+        kind_structure: locationDataDescription,
+        intentful_signatures: [],
+        dependency_tree: new Map(),
+        kind_procedures: {},
+        entity_procedures: {},
+        differ: undefined,
+        intentful_behaviour: IntentfulBehaviour.Basic
     };
     return locationKind;
 }

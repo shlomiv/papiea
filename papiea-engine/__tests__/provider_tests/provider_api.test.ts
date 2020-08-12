@@ -2,7 +2,7 @@ import "jest"
 import axios from "axios"
 import {
     getClusterKind,
-    getClusterKindWithNullableFields,
+    getClusterKindWithNullableFields, getSpecOnlyArrayKind,
     loadYamlFromTestFactoryDir,
     ProviderBuilder
 } from "../test_data_factory"
@@ -37,6 +37,7 @@ describe("Provider API tests", () => {
     const providerVersion = "0.1.0";
     const clusterKinds = [getClusterKind()]
     const nullableClusterKinds = [getClusterKindWithNullableFields()]
+    const locationArrayKinds = [getSpecOnlyArrayKind()]
 
     test("Non-existent route", done => {
         providerApi.delete(`/abc`).then(() => done.fail()).catch(() => done());
@@ -141,6 +142,58 @@ describe("Provider API tests", () => {
 
         const res = await entityApi.get(`/${ provider.prefix }/${provider.version}/${ kind_name }/${ metadata.uuid }`);
         expect(res.data.status).toEqual(newStatus);
+    });
+
+    test("Update status replaces array values at the very top level", async () => {
+        const provider: Provider = new ProviderBuilder().withVersion("0.1.0").withKinds(locationArrayKinds).build();
+        await providerApi.post('/', provider);
+        const kind_name = provider.kinds[0].name;
+        const { data: { metadata, spec } } = await entityApi.post(`/${ provider.prefix }/${provider.version}/${ kind_name }`, {
+            spec: [{
+                x: 10,
+                y: 10
+            }]
+        });
+
+        const newStatus = [{ x: 15, y: 15 }];
+        await providerApi.patch(`/${provider.prefix}/${provider.version}/update_status`, {
+            context: "some context",
+            entity_ref: {
+                uuid: metadata.uuid,
+                kind: kind_name
+            },
+            status: newStatus
+        });
+
+        const res = await entityApi.get(`/${ provider.prefix }/${provider.version}/${ kind_name }/${ metadata.uuid }`);
+        expect(res.data.status).toEqual(newStatus);
+    });
+
+    test("Update status replaces array values inside the object", async () => {
+        const provider: Provider = new ProviderBuilder().withVersion("0.1.0").withKinds(clusterKinds).build();
+        await providerApi.post('/', provider);
+        const kind_name = provider.kinds[0].name;
+        const { data: { metadata, spec } } = await entityApi.post(`/${ provider.prefix }/${provider.version}/${ kind_name }`, {
+            spec: {
+                host: "small",
+                ip: "0.0.0.0",
+                priorities: [1, 3, 4]
+            }
+        });
+
+        const newStatus = { priorities: [2, 7, 4] };
+        await providerApi.patch(`/${provider.prefix}/${provider.version}/update_status`, {
+            context: "some context",
+            entity_ref: {
+                uuid: metadata.uuid,
+                kind: kind_name
+            },
+            status: newStatus
+        });
+
+        const res = await entityApi.get(`/${ provider.prefix }/${provider.version}/${ kind_name }/${ metadata.uuid }`);
+        expect(res.data.status.host).toEqual("small");
+        expect(res.data.status.priorities).toEqual([2, 7, 4]);
     });
 
     test("Update status with undefined values error should be meaningful", async () => {

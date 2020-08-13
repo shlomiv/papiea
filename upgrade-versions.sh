@@ -92,7 +92,7 @@ git ls-files . | grep 'package\.json' | xargs git add
 
 git add README.md
 
-git commit -m "[skip-ci] Upgrade versions. Engine: $circle_num. Typescript: $typescipt_version. Python: $python_version"
+git commit -m "[skip ci] Upgrade versions. Engine: $circle_num. Typescript: $typescipt_version. Python: $python_version"
 
 git push
 

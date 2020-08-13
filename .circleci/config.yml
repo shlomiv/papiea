@@ -59,3 +59,43 @@ jobs:
       - store_artifacts:
           path: logs
           destination: logs
+
+  release:
+    docker:
+      - image: circleci/node:10
+
+    steps:
+      - setup_remote_docker
+
+      - checkout
+
+      - run:
+          name: Login to dockerhub
+          command: ./papiea-engine/docker-login.py
+
+      - run:
+          name: Build components
+          command: |
+            cp .circleci/docker-compose.yml .
+            cp .circleci/Dockerfile .
+            docker-compose build
+
+      - run: ./papiea-engine/publish-images.py
+
+      - run: ./papiea-engine/npm-login.py
+
+      - run: ./switch-registry.sh nutanix
+
+      - run: ./upgrade-versions.sh -y
+
+workflows:
+  version: 2
+  build-and-release:
+    jobs:
+      - build
+      - release:
+          requires:
+            - build
+#          filters:
+#            branches:
+#              only: master

@@ -8,7 +8,9 @@ if not npm_token:
     print("No NPM_TOKEN found, exiting")
     sys.exit(1)
 
+home = os.path.expanduser("~")
+
 # Npm will substitute the token itself
 # Note: env variable name should be prefixed with NPM_CONFIG_
-with open("~/.npmrc", "w") as file:
+with open("{}/.npmrc".format(home), "w") as file:
     file.write('//nutanix.jfrog.io/nutanix/api/npm/npm-virtual/:_authToken=$TOKEN')

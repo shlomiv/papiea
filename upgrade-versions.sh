@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+set -e
 # This is a script that updates typescript SDK, prints out
 # Typescript SDK version, Python commit hash
 # You use these to update README.md section 'Papiea versions'
@@ -7,42 +9,43 @@ accept=false
 
 function collect_args {
 
-   while test $# -gt 0; do
+   while [[ $# -gt 0 ]]; do
            case "$1" in
                 -circle_num)
                     shift
                     circle_num=$1
-                    shift
                     ;;
                 -y)
                     shift
                     accept=true
-                    shift
                     ;;
                 *)
                    echo "$1 is not a recognized flag!"
                    return 1;
                    ;;
           esac
+          shift
   done
+
+  return 0
 }
 
 NPM_REGISTRY=$(npm config list | grep '^registry')
 YARN_REGISTRY=$(yarn config list | grep -m 1 'registry' | sed -e 's/^[ \t]*//')
 
-if [ "$NPM_REGISTRY" != 'registry = "https://nutanix.jfrog.io/nutanix/api/npm/npm-virtual/"' ]
+if [[ "$NPM_REGISTRY" != 'registry = "https://nutanix.jfrog.io/nutanix/api/npm/npm-virtual/"' ]]
 then
   echo "Your npm registry is not set to nutanix jfrog!"
   exit 1
 fi
 
-if [ "$YARN_REGISTRY" != "registry: 'https://nutanix.jfrog.io/nutanix/api/npm/npm-virtual/'," ]
+if [[ "$YARN_REGISTRY" != "registry: 'https://nutanix.jfrog.io/nutanix/api/npm/npm-virtual/'," ]]
 then
   echo "Your yarn registry is not set to nutanix jfrog!"
   exit 1
 fi
 
-collect_args "$@"
+collect_args "$@" || { echo 'Could not collect args'; exit 1; }
 
 if [[ -z "${CIRCLE_BUILD_NUM}" ]]; then
   if [ -z "$circle_num" ]; then
@@ -77,7 +80,7 @@ sed -i '' "/Engine (docker)/c\\
 
 echo "Python commit hash: $python_version ; Typescript version: $typescipt_version; Circle build number: $circle_num."
 
-if [ "$accept" != true ]; then
+if [[ "$accept" != true ]]; then
   while true; do
     read -p "Commit and push? (y/n) " yn
     case $yn in

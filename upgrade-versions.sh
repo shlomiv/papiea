@@ -31,7 +31,7 @@ function collect_args {
 }
 
 NPM_REGISTRY=$(npm config list | grep '^registry')
-YARN_REGISTRY=$(yarn config list | grep -m 1 'registry' | sed -e 's/^[ \t]*//')
+YARN_REGISTRY=$(yarn config get registry)
 
 if [[ "$NPM_REGISTRY" != 'registry = "https://nutanix.jfrog.io/nutanix/api/npm/npm-virtual/"' ]]
 then
@@ -39,7 +39,7 @@ then
   exit 1
 fi
 
-if [[ "$YARN_REGISTRY" != "registry: 'https://nutanix.jfrog.io/nutanix/api/npm/npm-virtual/'," ]]
+if [[ "$YARN_REGISTRY" != "https://nutanix.jfrog.io/nutanix/api/npm/npm-virtual/" ]]
 then
   echo "Your yarn registry is not set to nutanix jfrog!"
   exit 1

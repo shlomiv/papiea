@@ -13,5 +13,5 @@ home = os.path.expanduser("~")
 # Npm will substitute the token itself
 # Note: env variable name should be prefixed with NPM_CONFIG_
 with open("{}/.npmrc".format(home), "w") as file:
-    file.write('//nutanix.jfrog.io/nutanix/api/npm/npm-virtual/:_authToken=$TOKEN\n')
-    file.write('//nutanix.jfrog.io/nutanix/api/npm/npm-virtual/:always-auth=true\n')
+    file.write('_auth=$TOKEN\n')
+    file.write('always-auth=true\n')

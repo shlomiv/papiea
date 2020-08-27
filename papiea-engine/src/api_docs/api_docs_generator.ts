@@ -604,8 +604,8 @@ export default class ApiDocsGenerator {
 
     /**
      * Recursively removes a field from required if it has to be shown only for the opposite type.
-     * @param {number} schema - schema to remove the fields from.
-     * @param {number} fieldName - type of x-papiea value spec-only|status-only.
+     * @param schema - schema to remove the fields from.
+     * @param fieldName - type of x-papiea value spec-only|status-only.
      */
     removeRequiredField(schema: any, fieldName: string) {
         for (let prop in schema) {
@@ -636,8 +636,8 @@ export default class ApiDocsGenerator {
 
     /**
      * Recursively removes a field from properties if it has to be shown only for the opposite type.
-     * @param {number} schema - schema to remove the fields from.
-     * @param {number} fieldName - type of x-papiea value spec-only|status-only.
+     * @param schema - schema to remove the fields from.
+     * @param fieldName - type of x-papiea value spec-only|status-only.
      */
     removeSchemaField(schema: any, fieldName: string) {
         for (let prop in schema) {

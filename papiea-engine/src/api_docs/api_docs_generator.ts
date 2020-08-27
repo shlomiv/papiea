@@ -602,14 +602,55 @@ export default class ApiDocsGenerator {
         }
     }
 
+    /**
+     * Recursively removes a field from required if it has to be shown only for the opposite type.
+     * @param {number} schema - schema to remove the fields from.
+     * @param {number} fieldName - type of x-papiea value spec-only|status-only.
+     */
+    removeRequiredField(schema: any, fieldName: string) {
+        for (let prop in schema) {
+            // check that it's a object holding properties
+            if (typeof schema[prop] === 'object' && "required" in schema[prop] && "properties" in schema[prop]) {
+                const fieldsToRemove: String[] = []
+                const properties = schema[prop]["properties"]
+                for (let name in properties) {
+                    const field = properties[name]
+                    // if property has value of `fieldname` we should remove it from required
+                    if (typeof field === 'object' && field.hasOwnProperty("x-papiea") && field["x-papiea"] === fieldName) {
+                        fieldsToRemove.push(name)
+                    }
+
+                }
+                schema[prop]["required"] = schema[prop]["required"].filter((field: string) => !fieldsToRemove.includes(field))
+                if (schema[prop]["required"].length === 0 ){
+                    delete schema[prop]["required"]
+                }
+
+            }
+            if (typeof schema[prop] === 'object') {
+                // check for child objects as they may be object structures with required fields
+                this.removeRequiredField(schema[prop], fieldName);
+            }
+        }
+    }
+
+    /**
+     * Recursively removes a field from properties if it has to be shown only for the opposite type.
+     * @param {number} schema - schema to remove the fields from.
+     * @param {number} fieldName - type of x-papiea value spec-only|status-only.
+     */
     removeSchemaField(schema: any, fieldName: string) {
         for (let prop in schema) {
             if (typeof schema[prop] === 'object' && "x-papiea" in schema[prop] && schema[prop]["x-papiea"] === fieldName) {
                 delete schema[prop];
-            }
-            else if (typeof schema[prop] === 'object')
+            } else if (typeof schema[prop] === 'object')
                 this.removeSchemaField(schema[prop], fieldName);
         }
+    }
+
+    clearSchemaField(schema: any, fieldName: string) {
+        this.removeRequiredField(schema, fieldName)
+        this.removeSchemaField(schema, fieldName)
     }
 
     createSchema(schemas: any, kind: Kind, type: string) {
@@ -618,7 +659,7 @@ export default class ApiDocsGenerator {
         if (type === "spec") {
             kindSchema[ `${ schemaName }-Spec` ] = kindSchema[ schemaName ]
             delete kindSchema[ schemaName ]
-            this.removeSchemaField(kindSchema, "status-only")
+            this.clearSchemaField(kindSchema, "status-only")
         } else if (type === "metadata") {
             kindSchema[ `${ schemaName }-Metadata` ] = this.getMetadata(kind.uuid_validation_pattern)["Metadata"]
         } else {

@@ -2,7 +2,7 @@ import "jest"
 import { writeFileSync, unlinkSync } from "fs";
 import { validate } from "swagger-parser";
 import axios from "axios"
-import { loadYamlFromTestFactoryDir, ProviderBuilder } from "../test_data_factory";
+import { getSpecOnlyKind, loadYamlFromTestFactoryDir, ProviderBuilder } from "../test_data_factory";
 import { Provider_DB } from "../../src/databases/provider_db_interface";
 import { Provider, Version, Procedural_Signature, Procedural_Execution_Strategy, Kind } from "papiea-core";
 import ApiDocsGenerator from "../../src/api_docs/api_docs_generator";
@@ -276,6 +276,53 @@ describe("API docs test entity", () => {
                     "type": "number"
                 },
                 "z": {
+                    "type": "number"
+                },
+                "v": {
+                    "type": "object",
+                    "properties": {
+                        "d": {
+                            "type": "number"
+                        },
+                        "e": {
+                            "type": "number"
+                        }
+                    }
+                }
+            }
+        });
+    });
+
+    test("Provider with procedures generates correct openAPI removing all variables with 'x-papiea' - 'status_only' from properties and required of a spec", async () => {
+        expect.hasAssertions();
+        const provider = new ProviderBuilder("provider_include_all_props").withVersion("0.1.0").withKinds([getSpecOnlyKind()]).build();
+        const providerDbMock = new Provider_DB_Mock(provider);
+        const apiDocsGenerator = new ApiDocsGenerator(providerDbMock);
+        const kind_name = provider.kinds[0].name;
+        const structure = provider.kinds[0].kind_structure[kind_name];
+
+        // add 'z' to required field, so that we check it gets removed from required and fields
+        structure.required.push("z");
+
+        // add required fields to v that are marked as status-only so that we check recursive deletion works
+        structure.properties.v.required = ["h"];
+        structure.properties.v.properties["h"] = {"type": "number", "x-papiea": "status-only"};
+
+        const apiDoc = await apiDocsGenerator.getApiDocs(providerDbMock.provider);
+        const entityName = kind_name + "-Spec";
+        expect(Object.keys(apiDoc.components.schemas)).toContain(entityName);
+        const entitySchema = apiDoc.components.schemas[entityName];
+        expect(entitySchema).toEqual({
+            "type": "object",
+            "title": "X\/Y Location",
+            "description": "Stores an XY location of something",
+            "x-papiea-entity": "spec-only",
+            "required": ["x", "y"],
+            "properties": {
+                "x": {
+                    "type": "number"
+                },
+                "y": {
                     "type": "number"
                 },
                 "v": {

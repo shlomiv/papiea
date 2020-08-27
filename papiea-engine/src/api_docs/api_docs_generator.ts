@@ -604,7 +604,7 @@ export default class ApiDocsGenerator {
 
     /**
      * Recursively removes a field from required if it has to be shown only for the opposite type.
-     * @param schema - schema to remove the fields from.
+     * @param schema - schema to remove the required from.
      * @param fieldName - type of x-papiea value spec-only|status-only.
      */
     removeRequiredField(schema: any, fieldName: string) {

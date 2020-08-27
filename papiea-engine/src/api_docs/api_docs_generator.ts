@@ -610,11 +610,11 @@ export default class ApiDocsGenerator {
     removeRequiredField(schema: any, fieldName: string) {
         for (let prop in schema) {
             // check that it's a object holding properties
-            if (typeof schema[prop] === 'object' && "required" in schema[prop] && "properties" in schema[prop]) {
-                const fieldsToRemove: String[] = []
-                const properties = schema[prop]["properties"]
+            if (typeof schema[prop] === 'object' && schema[prop].hasOwnProperty("required") && schema[prop].hasOwnProperty("properties")) {
+                const fieldsToRemove: string[] = [];
+                const properties = schema[prop]["properties"];
                 for (let name in properties) {
-                    const field = properties[name]
+                    const field = properties[name];
                     // if property has value of `fieldname` we should remove it from required
                     if (typeof field === 'object' && field.hasOwnProperty("x-papiea") && field["x-papiea"] === fieldName) {
                         fieldsToRemove.push(name)

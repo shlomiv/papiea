@@ -648,18 +648,14 @@ export default class ApiDocsGenerator {
         }
     }
 
-    clearSchemaField(schema: any, fieldName: string) {
-        this.removeRequiredField(schema, fieldName)
-        this.removeSchemaField(schema, fieldName)
-    }
-
     createSchema(schemas: any, kind: Kind, type: string) {
         const kindSchema: any = JSON.parse(JSON.stringify(kind.kind_structure))
         const schemaName = Object.keys(kindSchema)[0]
         if (type === "spec") {
             kindSchema[ `${ schemaName }-Spec` ] = kindSchema[ schemaName ]
             delete kindSchema[ schemaName ]
-            this.clearSchemaField(kindSchema, "status-only")
+            this.removeRequiredField(kindSchema, "status-only")
+            this.removeSchemaField(kindSchema, "status-only")
         } else if (type === "metadata") {
             kindSchema[ `${ schemaName }-Metadata` ] = this.getMetadata(kind.uuid_validation_pattern)["Metadata"]
         } else {

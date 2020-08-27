@@ -294,27 +294,27 @@ describe("API docs test entity", () => {
     });
 
     test("Provider with procedures generates correct openAPI removing all variables with 'x-papiea' - 'status_only' from properties and required of a spec", async () => {
-        expect.hasAssertions();
-        const provider = new ProviderBuilder("provider_include_all_props").withVersion("0.1.0").withKinds([getSpecOnlyKind()]).build();
-        const providerDbMock = new Provider_DB_Mock(provider);
-        const apiDocsGenerator = new ApiDocsGenerator(providerDbMock);
-        const kind_name = provider.kinds[0].name;
-        const structure = provider.kinds[0].kind_structure[kind_name];
+        expect.hasAssertions()
+        const provider = new ProviderBuilder("provider_include_all_props").withVersion("0.1.0").withKinds([getSpecOnlyKind()]).build()
+        const providerDbMock = new Provider_DB_Mock(provider)
+        const apiDocsGenerator = new ApiDocsGenerator(providerDbMock)
+        const kind_name = provider.kinds[0].name
+        const structure = provider.kinds[0].kind_structure[kind_name]
 
         // add 'z' to required field, so that we check it gets removed from required and fields
-        structure.required.push("z");
+        structure.required.push("z")
 
         // add required fields to v that are marked as status-only so that we check recursive deletion works
-        structure.properties.v.required = ["h"];
-        structure.properties.v.properties["h"] = {"type": "number", "x-papiea": "status-only"};
+        structure.properties.v.required = ["h"]
+        structure.properties.v.properties["h"] = {"type": "number", "x-papiea": "status-only"}
 
         // set x to spec-only to see that the implementation doesn't remove it from the required fields
-        structure.properties.x["x-papiea"] = "spec-only";
+        structure.properties.x["x-papiea"] = "spec-only"
 
-        const apiDoc = await apiDocsGenerator.getApiDocs(providerDbMock.provider);
-        const entityName = kind_name + "-Spec";
-        expect(Object.keys(apiDoc.components.schemas)).toContain(entityName);
-        const entitySchema = apiDoc.components.schemas[entityName];
+        const apiDoc = await apiDocsGenerator.getApiDocs(providerDbMock.provider)
+        const entityName = kind_name + "-Spec"
+        expect(Object.keys(apiDoc.components.schemas)).toContain(entityName)
+        const entitySchema = apiDoc.components.schemas[entityName]
         expect(entitySchema).toEqual({
             "type": "object",
             "title": "X\/Y Location",
@@ -341,8 +341,8 @@ describe("API docs test entity", () => {
                     }
                 }
             }
-        });
-    });
+        })
+    })
 
     test("Provider with procedures that have no validation generate correct open api docs", async () => {
         expect.hasAssertions();

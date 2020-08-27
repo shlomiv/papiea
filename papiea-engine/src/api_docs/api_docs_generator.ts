@@ -611,10 +611,10 @@ export default class ApiDocsGenerator {
         for (let prop in schema) {
             // check that it's a object holding properties
             if (typeof schema[prop] === 'object' && schema[prop].hasOwnProperty("required") && schema[prop].hasOwnProperty("properties")) {
-                const fieldsToRemove: string[] = [];
-                const properties = schema[prop]["properties"];
+                const fieldsToRemove: string[] = []
+                const properties = schema[prop]["properties"]
                 for (let name in properties) {
-                    const field = properties[name];
+                    const field = properties[name]
                     // if property has value of `fieldname` we should remove it from required
                     if (typeof field === 'object' && field.hasOwnProperty("x-papiea") && field["x-papiea"] === fieldName) {
                         fieldsToRemove.push(name)
@@ -629,7 +629,7 @@ export default class ApiDocsGenerator {
             }
             if (typeof schema[prop] === 'object') {
                 // check for child objects as they may be object structures with required fields
-                this.removeRequiredField(schema[prop], fieldName);
+                this.removeRequiredField(schema[prop], fieldName)
             }
         }
     }
@@ -642,9 +642,9 @@ export default class ApiDocsGenerator {
     removeSchemaField(schema: any, fieldName: string) {
         for (let prop in schema) {
             if (typeof schema[prop] === 'object' && "x-papiea" in schema[prop] && schema[prop]["x-papiea"] === fieldName) {
-                delete schema[prop];
+                delete schema[prop]
             } else if (typeof schema[prop] === 'object')
-                this.removeSchemaField(schema[prop], fieldName);
+                this.removeSchemaField(schema[prop], fieldName)
         }
     }
 

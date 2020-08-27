@@ -66,17 +66,34 @@ node publish-papiea.js
 typescipt_version=$(grep -m 1 'New version' temp_version.txt | sed 's/[a-zA-Z :]*//')
 python_version=$(git rev-parse HEAD)
 
-sed -i '' "/Client\/SDK (typescript)/c\\
-| Client/SDK (typescript)  | $typescipt_version |
-" README.md
+# sed command is different in BSD (Mac OS) and Linux
+# In our case the difference is '-i' flag
+# Thus checking the OS type
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  sed -i '' "/Client\/SDK (typescript)/c\\
+  | Client/SDK (typescript)  | $typescipt_version |
+  " README.md
 
-sed -i '' "/Client\/SDK (python)/c\\
-| Client/SDK (python)  | $python_version |
-" README.md
+  sed -i '' "/Client\/SDK (python)/c\\
+  | Client/SDK (python)  | $python_version |
+  " README.md
 
-sed -i '' "/Engine (docker)/c\\
-| Engine (docker) | $circle_num |
-" README.md
+  sed -i '' "/Engine (docker)/c\\
+  | Engine (docker) | $circle_num |
+  " README.md
+else
+  sed -i "/Client\/SDK (typescript)/c\\
+  | Client/SDK (typescript)  | $typescipt_version |
+  " README.md
+
+  sed -i "/Client\/SDK (python)/c\\
+  | Client/SDK (python)  | $python_version |
+  " README.md
+
+  sed -i "/Engine (docker)/c\\
+  | Engine (docker) | $circle_num |
+  " README.md
+fi
 
 echo "Python commit hash: $python_version ; Typescript version: $typescipt_version; Circle build number: $circle_num."
 

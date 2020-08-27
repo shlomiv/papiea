@@ -308,6 +308,9 @@ describe("API docs test entity", () => {
         structure.properties.v.required = ["h"];
         structure.properties.v.properties["h"] = {"type": "number", "x-papiea": "status-only"};
 
+        // set x to spec-only to see that the implementation doesn't remove it from the required fields
+        structure.properties.x["x-papiea"] = "spec-only";
+
         const apiDoc = await apiDocsGenerator.getApiDocs(providerDbMock.provider);
         const entityName = kind_name + "-Spec";
         expect(Object.keys(apiDoc.components.schemas)).toContain(entityName);
@@ -320,7 +323,8 @@ describe("API docs test entity", () => {
             "required": ["x", "y"],
             "properties": {
                 "x": {
-                    "type": "number"
+                    "type": "number",
+                    "x-papiea": "spec-only"
                 },
                 "y": {
                     "type": "number"

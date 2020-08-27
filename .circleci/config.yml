@@ -83,7 +83,7 @@ jobs:
       - run: ./papiea-engine/publish-images.py
 
       - run:
-          name: Login to git as Update Bot
+          name: Login to git as Updater Bot
           command: |
             git config user.email "<>"
             git config user.name "Version Updater Bot"

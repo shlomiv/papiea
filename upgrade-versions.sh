@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 # This is a script that updates typescript SDK, prints out
-# Typescript SDK version, Python commit hash
+# Typescript SDK version, Python commit hash, docker image version
 # You use these to update README.md section 'Papiea versions'
 
 circle_num=''

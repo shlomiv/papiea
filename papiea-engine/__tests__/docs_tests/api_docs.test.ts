@@ -2,7 +2,7 @@ import "jest"
 import { writeFileSync, unlinkSync } from "fs";
 import { validate } from "swagger-parser";
 import axios from "axios"
-import { loadYamlFromTestFactoryDir, ProviderBuilder } from "../test_data_factory";
+import { getBasicKind, loadYamlFromTestFactoryDir, ProviderBuilder } from "../test_data_factory"
 import { Provider_DB } from "../../src/databases/provider_db_interface";
 import { Provider, Version, Procedural_Signature, Procedural_Execution_Strategy, Kind } from "papiea-core";
 import ApiDocsGenerator from "../../src/api_docs/api_docs_generator";
@@ -146,10 +146,6 @@ describe("API Docs Tests", () => {
                 "y": {
                     "type": "number"
                 },
-                "z": {
-                    "x-papiea": "status-only",
-                    "type": "number"
-                },
                 "v": {
                     "type": "object",
                     "properties": {
@@ -249,14 +245,10 @@ describe("API docs test entity", () => {
 
     test("Provider with procedures generates correct openAPI emitting all variables without 'x-papiea' - 'status_only' property", async () => {
         expect.hasAssertions();
-        const provider = new ProviderBuilder("provider_include_all_props").withVersion("0.1.0").withKinds().build();
+        const provider = new ProviderBuilder("provider_include_all_props").withVersion("0.1.0").withKinds([getBasicKind()]).build();
         const providerDbMock = new Provider_DB_Mock(provider);
         const apiDocsGenerator = new ApiDocsGenerator(providerDbMock);
         const kind_name = provider.kinds[0].name;
-        const structure = provider.kinds[0].kind_structure[kind_name];
-
-        // remove x-papiea prop so 'z' could be included in entity schema
-        delete structure.properties.z["x-papiea"];
 
         const apiDoc = await apiDocsGenerator.getApiDocs(providerDbMock.provider);
         const entityName = kind_name + "-Spec";
@@ -266,16 +258,13 @@ describe("API docs test entity", () => {
             "type": "object",
             "title": "X\/Y Location",
             "description": "Stores an XY location of something",
-            "x-papiea-entity": "spec-only",
+            "x-papiea-entity": "basic",
             "required": ["x", "y"],
             "properties": {
                 "x": {
                     "type": "number"
                 },
                 "y": {
-                    "type": "number"
-                },
-                "z": {
                     "type": "number"
                 },
                 "v": {

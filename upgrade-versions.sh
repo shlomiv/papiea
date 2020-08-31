@@ -114,6 +114,6 @@ git add README.md
 
 git commit -m "[skip ci] Upgrade versions. Engine: $circle_num. Typescript: $typescipt_version. Python: $python_version"
 
-git push
+git push -u origin HEAD
 
 echo 'Versions updated successfully!'

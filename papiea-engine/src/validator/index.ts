@@ -1,6 +1,15 @@
 import { ValidationError } from "../errors/validation_error";
 import { isEmpty } from "../utils/utils"
-import { Entity_Reference, Provider, Status, Kind, Spec, IntentfulBehaviour, Data_Description, Metadata } from "papiea-core"
+import {
+    Data_Description,
+    Entity_Reference,
+    IntentfulBehaviour,
+    Kind,
+    Metadata,
+    Provider,
+    Spec,
+    Status
+} from "papiea-core"
 import { SFSCompiler } from "../intentful_core/sfs_compiler"
 import * as uuid_validate from "uuid-validate"
 import { load } from "js-yaml"
@@ -134,7 +143,47 @@ export class ValidatorImpl {
                     schemas, true, proc.name,
                     undefined, true)
             })
+            Object.values(kind.kind_structure).forEach(structure => {
+                this.validateKindStructure(structure)
+            })
         })
+    }
+
+    validateKindStructure(schema: Data_Description) {
+        const xPapieaField = "x-papiea"
+        const statusOnlyValue = "status-only"
+        // xPapieaField pryoperty have only statusOnlyValue value
+        this.validateFieldValue(schema, xPapieaField, [statusOnlyValue])
+        this.validateSpecOnlyStructures(schema)
+    }
+
+    validateFieldValue(schema: Data_Description, fieldName: string, possibleValues: string[]) {
+        for (let prop in schema) {
+            if (typeof schema[prop] === 'object') {
+                if (fieldName in schema[prop]) {
+                    const xPapieaValue = schema[prop][fieldName]
+                    if (!possibleValues.includes(xPapieaValue)) {
+                        throw new ValidationError([{
+                            name: "Error",
+                            message: `${fieldName} has wrong value: ${xPapieaValue}, possible values are: ${possibleValues.toString()}`
+                        }])
+                    }
+                } else {
+                    this.validateFieldValue(schema[prop], fieldName, possibleValues)
+                }
+
+            }
+        }
+    }
+
+    validateSpecOnlyStructures(entity: Data_Description) {
+        const specOnlyValue = "spec-only"
+        const xPapieaEntityField = "x-papiea-entity"
+        const xPapieaField = "x-papiea"
+        if (typeof entity === "object" && entity.hasOwnProperty(xPapieaEntityField) && entity[xPapieaEntityField] === specOnlyValue) {
+            // spec-only entity can't have xPapieaField values
+            this.validateFieldValue(entity.properties, xPapieaField, [])
+        }
     }
 
     public validate(

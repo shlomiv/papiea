@@ -2,7 +2,12 @@ import "jest"
 import axios from "axios"
 import {
     getClusterKind,
-    getClusterKindWithNullableFields, getSpecOnlyArrayKind,
+    getClusterKindWithNullableFields,
+    getSpecOnlyArrayKind,
+    getSpecOnlyKindByDescription,
+    getSpecOnlyKindDescription,
+    getSpecOnlyKindDescriptionWithSpecOnlyFields,
+    getSpecOnlyKindDescriptionWithStatusOnlyFields,
     loadYamlFromTestFactoryDir,
     ProviderBuilder
 } from "../test_data_factory"
@@ -61,6 +66,48 @@ describe("Provider API tests", () => {
     test("Register provider with malformed kind procedures", done => {
         const provider: any = { version: providerVersion, prefix: providerPrefix, kinds: [ {kind_procedures: {"argument": {malformed_field: "test" }}}], procedures: {}, extension_structure: {}, allowExtraProps: false };
         providerApi.post('/', provider).then(() => done.fail()).catch(() => done());
+    });
+
+    test("Register provider with spec only kind structure with status only fields", done => {
+        const desc = getSpecOnlyKindDescriptionWithStatusOnlyFields()
+        const kind = getSpecOnlyKindByDescription(desc)
+        const provider: any = {
+            version: providerVersion,
+            prefix: providerPrefix,
+            kinds: [kind],
+            procedures: {},
+            extension_structure: {},
+            allowExtraProps: false
+        };
+        providerApi.post('/', provider).then((e) => done.fail()).catch(() => done());
+    });
+
+    test("Register provider with spec only kind structure with spec only fields", done => {
+        const desc = getSpecOnlyKindDescriptionWithSpecOnlyFields()
+        const kind = getSpecOnlyKindByDescription(desc)
+        const provider: any = {
+            version: providerVersion,
+            prefix: providerPrefix,
+            kinds: [kind],
+            procedures: {},
+            extension_structure: {},
+            allowExtraProps: false
+        };
+        providerApi.post('/', provider).then(() => done.fail()).catch(() => done());
+    });
+
+    test("Register provider with spec only kind structure", done => {
+        const desc = getSpecOnlyKindDescription()
+        const kind = getSpecOnlyKindByDescription(desc)
+        const provider: Provider = {
+            version: providerVersion,
+            prefix: providerPrefix,
+            kinds: [kind],
+            procedures: {},
+            extension_structure: {},
+            allowExtraProps: false
+        };
+        providerApi.post('/', provider).then(() => done()).catch(() => done.fail());
     });
 
     test("Register provider with malformed entity procedures", done => {

@@ -4,17 +4,18 @@ import { resolve } from "path";
 import { plural } from "pluralize";
 import {
     Data_Description,
-    Version,
+    IntentfulBehaviour,
     Kind,
+    Procedural_Execution_Strategy,
     Procedural_Signature,
     Provider,
-    Procedural_Execution_Strategy,
-    SpecOnlyEntityKind
+    SpecOnlyEntityKind,
+    Version
 } from "papiea-core";
 import * as http from "http";
+import { IncomingMessage, ServerResponse } from "http";
 import uuid = require("uuid");
-import { IncomingMessage, ServerResponse } from "http"
-import { IntentfulBehaviour } from "papiea-core"
+
 const url = require("url");
 const queryString = require("query-string");
 
@@ -37,6 +38,22 @@ export function getLocationDataDescription(): Data_Description {
     let randomizedLocationDataDescription: any = {};
     randomizedLocationDataDescription["Location" + randomString(5)] = locationDataDescription["Location"];
     return randomizedLocationDataDescription;
+}
+
+export function getSpecOnlyKindDescriptionWithStatusOnlyFields(): Data_Description {
+    return getLocationDataDescription()
+}
+
+export function getSpecOnlyKindDescription(): Data_Description {
+    const description: any = getLocationDataDescription();
+    delete description[Object.keys(description)[0]].properties.z["x-papiea"]
+    return description
+}
+
+export function getSpecOnlyKindDescriptionWithSpecOnlyFields(): Data_Description {
+    const description: any = getLocationDataDescription();
+    description[Object.keys(description)[0]].properties.z["x-papiea"] = "spec-only"
+    return description
 }
 
 export function getLocationArrayDataDescription(): Data_Description {
@@ -80,6 +97,22 @@ export function getSpecOnlyKind(): SpecOnlyEntityKind {
         name,
         name_plural: plural(name),
         kind_structure: locationDataDescription,
+        intentful_signatures: [],
+        dependency_tree: new Map(),
+        kind_procedures: {},
+        entity_procedures: {},
+        differ: undefined,
+        intentful_behaviour: IntentfulBehaviour.SpecOnly
+    };
+    return locationKind;
+}
+
+export function getSpecOnlyKindByDescription(desc: Data_Description): SpecOnlyEntityKind {
+    const name = Object.keys(desc)[0];
+    const locationKind: SpecOnlyEntityKind = {
+        name,
+        name_plural: plural(name),
+        kind_structure: desc,
         intentful_signatures: [],
         dependency_tree: new Map(),
         kind_procedures: {},

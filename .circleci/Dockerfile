@@ -13,7 +13,7 @@ ENV PATH="${PATH}:/root/.yarn/bin"
 
 RUN cd /code && make
 
-FROM node:14 AS builder
+FROM node:14.8.0 AS builder
 
 COPY --from=debug /code /code
 

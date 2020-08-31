@@ -2,7 +2,7 @@ Location:
   type: object
   title: X/Y Location
   description: Stores an XY location of something
-  x-papiea-entity: spec-only
+  x-papiea-entity: basic
   required:
     - x
     - y
@@ -11,6 +11,9 @@ Location:
       type: number
     y:
       type: number
+    z:
+      type: number
+      x-papiea: status-only
     v:
       type: object
       properties:

@@ -1,17 +1,17 @@
 import "jest"
 import { ValidatorImpl } from "../../src/validator";
 import {
+    getBasicEntityLocationDataDescription,
     getLocationDataDescription,
-    getSpecOnlyKind, getSpecOnlyKindDescription,
-    getSpecOnlyKindDescriptionWithSpecOnlyFields, getSpecOnlyKindDescriptionWithStatusOnlyFields,
+    getSpecOnlyKind,
     ValidationBuilder
-} from "../test_data_factory";
+} from "../test_data_factory"
 import uuid = require("uuid")
 import { SpecOnlyEntityKind } from "papiea-core"
 
 describe("Validation tests", () => {
 
-    const locationDataDescription = getLocationDataDescription();
+    const locationDataDescription = getBasicEntityLocationDataDescription();
     const trimmedLocationDataDescription = Object.assign({}, locationDataDescription);
     const maybeLocation = Object.values(locationDataDescription)[0];
     const validator = ValidatorImpl.create()

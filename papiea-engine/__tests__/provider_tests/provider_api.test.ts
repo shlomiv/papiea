@@ -1,11 +1,11 @@
 import "jest"
 import axios from "axios"
 import {
+    getBasicKind,
     getClusterKind,
     getClusterKindWithNullableFields,
     getSpecOnlyArrayKind,
     getSpecOnlyKindByDescription,
-    getSpecOnlyKindDescription,
     getSpecOnlyKindDescriptionWithSpecOnlyFields,
     getSpecOnlyKindDescriptionWithStatusOnlyFields,
     loadYamlFromTestFactoryDir,
@@ -97,16 +97,7 @@ describe("Provider API tests", () => {
     });
 
     test("Register provider with spec only kind structure", done => {
-        const desc = getSpecOnlyKindDescription()
-        const kind = getSpecOnlyKindByDescription(desc)
-        const provider: Provider = {
-            version: providerVersion,
-            prefix: providerPrefix,
-            kinds: [kind],
-            procedures: {},
-            extension_structure: {},
-            allowExtraProps: false
-        };
+        const provider: Provider = new ProviderBuilder().withVersion("0.1.0").withKinds([getBasicKind()]).build();
         providerApi.post('/', provider).then(() => done()).catch(() => done.fail());
     });
 

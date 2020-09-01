@@ -4,6 +4,9 @@ import {
     getBasicEntityLocationDataDescription,
     getLocationDataDescription,
     getSpecOnlyKind,
+    getSpecOnlyKindDescription,
+    getSpecOnlyKindDescriptionWithSpecOnlyFields,
+    getSpecOnlyKindDescriptionWithStatusOnlyFields,
     ValidationBuilder
 } from "../test_data_factory"
 import uuid = require("uuid")

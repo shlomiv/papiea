@@ -284,7 +284,7 @@ describe("API docs test entity", () => {
 
     test("Provider with procedures generates correct openAPI removing all variables with 'x-papiea' - 'status_only' from properties and required of a spec", async () => {
         expect.hasAssertions()
-        const provider = new ProviderBuilder("provider_include_all_props").withVersion("0.1.0").withKinds([getSpecOnlyKind()]).build()
+        const provider = new ProviderBuilder("provider_include_all_props").withVersion("0.1.0").withKinds([getBasicKind()]).build()
         const providerDbMock = new Provider_DB_Mock(provider)
         const apiDocsGenerator = new ApiDocsGenerator(providerDbMock)
         const kind_name = provider.kinds[0].name
@@ -305,7 +305,7 @@ describe("API docs test entity", () => {
             "type": "object",
             "title": "X\/Y Location",
             "description": "Stores an XY location of something",
-            "x-papiea-entity": "spec-only",
+            "x-papiea-entity": "basic",
             "required": ["x", "y"],
             "properties": {
                 "x": {

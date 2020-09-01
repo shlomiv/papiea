@@ -68,37 +68,35 @@ describe("Provider API tests", () => {
         providerApi.post('/', provider).then(() => done.fail()).catch(() => done());
     });
 
-    test("Register provider with spec only kind structure with status only fields", done => {
+    test("Register provider with spec only kind structure with status only fields", async () => {
+        expect.assertions(1)
         const desc = getSpecOnlyKindDescriptionWithStatusOnlyFields()
         const kind = getSpecOnlyKindByDescription(desc)
-        const provider: any = {
-            version: providerVersion,
-            prefix: providerPrefix,
-            kinds: [kind],
-            procedures: {},
-            extension_structure: {},
-            allowExtraProps: false
-        };
-        providerApi.post('/', provider).then((e) => done.fail()).catch(() => done());
+                const provider: Provider = new ProviderBuilder().withVersion("0.1.0").withKinds([kind]).build();
+        try {
+            await providerApi.post('/', provider);
+        } catch (e) {
+            expect(e.response.data.error.errors[0].message).toBe("x-papiea has wrong value: status-only, the field should not be present");
+        }
     });
 
-    test("Register provider with spec only kind structure with spec only fields", done => {
+    test("Register provider with spec only kind structure with spec only fields", async () => {
+        expect.assertions(1)
         const desc = getSpecOnlyKindDescriptionWithSpecOnlyFields()
         const kind = getSpecOnlyKindByDescription(desc)
-        const provider: any = {
-            version: providerVersion,
-            prefix: providerPrefix,
-            kinds: [kind],
-            procedures: {},
-            extension_structure: {},
-            allowExtraProps: false
-        };
-        providerApi.post('/', provider).then(() => done.fail()).catch(() => done());
+        const provider: Provider = new ProviderBuilder().withVersion("0.1.0").withKinds([kind]).build();
+        try {
+            await providerApi.post('/', provider);
+        } catch (e) {
+            expect(e.response.data.error.errors[0].message).toBe("x-papiea has wrong value: spec-only, possible values are: status-only");
+        }
     });
 
-    test("Register provider with spec only kind structure", done => {
+    test("Register provider with spec only kind structure", async () => {
+        expect.assertions(1)
         const provider: Provider = new ProviderBuilder().withVersion("0.1.0").withKinds([getBasicKind()]).build();
-        providerApi.post('/', provider).then(() => done()).catch(() => done.fail());
+        const result = await providerApi.post('/', provider);
+        expect(result.status).toEqual(200)
     });
 
     test("Register provider with malformed entity procedures", done => {

@@ -159,13 +159,19 @@ export class ValidatorImpl {
 
     validateFieldValue(schema: Data_Description, fieldName: string, possibleValues: string[]) {
         for (let prop in schema) {
-            if (typeof schema[prop] === 'object') {
+            if (typeof schema[prop] === "object") {
                 if (fieldName in schema[prop]) {
                     const xPapieaValue = schema[prop][fieldName]
                     if (!possibleValues.includes(xPapieaValue)) {
+                        let message = `${fieldName} has wrong value: ${xPapieaValue}, `
+                        if (possibleValues.length > 0) {
+                            message += `possible values are: ${possibleValues.toString()}`
+                        } else {
+                            message += "the field should not be present"
+                        }
                         throw new ValidationError([{
                             name: "Error",
-                            message: `${fieldName} has wrong value: ${xPapieaValue}, possible values are: ${possibleValues.toString()}`
+                            message: message
                         }])
                     }
                 } else {

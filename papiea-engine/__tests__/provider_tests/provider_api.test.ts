@@ -1,8 +1,13 @@
 import "jest"
 import axios from "axios"
 import {
+    getBasicKind,
     getClusterKind,
-    getClusterKindWithNullableFields, getSpecOnlyArrayKind,
+    getClusterKindWithNullableFields,
+    getSpecOnlyArrayKind,
+    getSpecOnlyKindByDescription,
+    getSpecOnlyKindDescriptionWithSpecOnlyFields,
+    getSpecOnlyKindDescriptionWithStatusOnlyFields,
     loadYamlFromTestFactoryDir,
     ProviderBuilder
 } from "../test_data_factory"
@@ -61,6 +66,37 @@ describe("Provider API tests", () => {
     test("Register provider with malformed kind procedures", done => {
         const provider: any = { version: providerVersion, prefix: providerPrefix, kinds: [ {kind_procedures: {"argument": {malformed_field: "test" }}}], procedures: {}, extension_structure: {}, allowExtraProps: false };
         providerApi.post('/', provider).then(() => done.fail()).catch(() => done());
+    });
+
+    test("Register provider with spec only kind structure with status only fields", async () => {
+        expect.assertions(1)
+        const desc = getSpecOnlyKindDescriptionWithStatusOnlyFields()
+        const kind = getSpecOnlyKindByDescription(desc)
+                const provider: Provider = new ProviderBuilder().withVersion("0.1.0").withKinds([kind]).build();
+        try {
+            await providerApi.post('/', provider);
+        } catch (e) {
+            expect(e.response.data.error.errors[0].message).toBe("x-papiea has wrong value: status-only, the field should not be present");
+        }
+    });
+
+    test("Register provider with spec only kind structure with spec only fields", async () => {
+        expect.assertions(1)
+        const desc = getSpecOnlyKindDescriptionWithSpecOnlyFields()
+        const kind = getSpecOnlyKindByDescription(desc)
+        const provider: Provider = new ProviderBuilder().withVersion("0.1.0").withKinds([kind]).build();
+        try {
+            await providerApi.post('/', provider);
+        } catch (e) {
+            expect(e.response.data.error.errors[0].message).toBe("x-papiea has wrong value: spec-only, possible values are: status-only");
+        }
+    });
+
+    test("Register provider with spec only kind structure", async () => {
+        expect.assertions(1)
+        const provider: Provider = new ProviderBuilder().withVersion("0.1.0").withKinds([getBasicKind()]).build();
+        const result = await providerApi.post('/', provider);
+        expect(result.status).toEqual(200)
     });
 
     test("Register provider with malformed entity procedures", done => {

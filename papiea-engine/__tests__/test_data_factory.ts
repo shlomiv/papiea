@@ -112,6 +112,22 @@ export function getBasicKind(): SpecOnlyEntityKind {
     }
 }
 
+export function getSpecOnlyKindDescriptionWithStatusOnlyFields(): Data_Description {
+        const description: any = getLocationDataDescription();
+    description[Object.keys(description)[0]].properties.y["x-papiea"] = "status-only"
+    return description
+}
+
+export function getSpecOnlyKindDescription(): Data_Description {
+    return getLocationDataDescription()
+}
+
+export function getSpecOnlyKindDescriptionWithSpecOnlyFields(): Data_Description {
+    const description: any = getLocationDataDescription();
+    description[Object.keys(description)[0]].properties.y["x-papiea"] = "spec-only"
+    return description
+}
+
 export function getSpecOnlyArrayKind(): SpecOnlyEntityKind {
     const locationDataDescription = getLocationArrayDataDescription();
     const name = Object.keys(locationDataDescription)[0];
@@ -126,6 +142,22 @@ export function getSpecOnlyArrayKind(): SpecOnlyEntityKind {
         differ: undefined,
         intentful_behaviour: IntentfulBehaviour.Basic
     };
+}
+
+export function getSpecOnlyKindByDescription(desc: Data_Description): SpecOnlyEntityKind {
+    const name = Object.keys(desc)[0];
+    const locationKind: SpecOnlyEntityKind = {
+        name,
+        name_plural: plural(name),
+        kind_structure: desc,
+        intentful_signatures: [],
+        dependency_tree: new Map(),
+        kind_procedures: {},
+        entity_procedures: {},
+        differ: undefined,
+        intentful_behaviour: IntentfulBehaviour.SpecOnly
+    };
+    return locationKind;
 }
 
 export function getDifferKind(): Kind {

@@ -217,18 +217,18 @@ describe("Validation tests", () => {
     test("Validator validate incorrect spec only kind structure with x-papiea=spec-only", () => {
         const desc = getSpecOnlyKindDescriptionWithSpecOnlyFields()
         const kindStructure = desc[Object.keys(desc)[0]]
-        expect(() => validator.validateKindStructure(kindStructure)).toThrow()
+        expect(() => validator.validate_kind_structure(kindStructure)).toThrow()
     })
 
     test("Validator validate incorrect spec only kind structure with x-papiea=status-only", () => {
         const desc = getSpecOnlyKindDescriptionWithStatusOnlyFields()
         const kindStructure = desc[Object.keys(desc)[0]]
-        expect(()=>validator.validateKindStructure(kindStructure)).toThrow()
+        expect(()=>validator.validate_kind_structure(kindStructure)).toThrow()
     })
 
     test("Validator validate correct spec only kind structure", () => {
         const desc = getSpecOnlyKindDescription()
         const kindStructure = desc[Object.keys(desc)[0]]
-        validator.validateKindStructure(kindStructure)
+        validator.validate_kind_structure(kindStructure)
     })
 });

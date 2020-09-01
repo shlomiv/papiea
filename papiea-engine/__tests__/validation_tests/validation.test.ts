@@ -214,30 +214,21 @@ describe("Validation tests", () => {
         }).toThrow()
     });
 
-    test("Validator validate spec only kind structure with spec-only value x-papiea field", async () => {
-        expect.assertions(1)
+    test("Validator validate incorrect spec only kind structure with x-papiea=spec-only", () => {
         const desc = getSpecOnlyKindDescriptionWithSpecOnlyFields()
         const kindStructure = desc[Object.keys(desc)[0]]
-        expect(() => {
-            validator.validateKindStructure(kindStructure)
-        }).toThrow()
+        expect(() => validator.validateKindStructure(kindStructure)).toThrow()
     })
 
-    test("Validator validate spec only kind structure with status-only value x-papiea field", async () => {
-        expect.assertions(1)
+    test("Validator validate incorrect spec only kind structure with x-papiea=status-only", () => {
         const desc = getSpecOnlyKindDescriptionWithStatusOnlyFields()
         const kindStructure = desc[Object.keys(desc)[0]]
-        expect(() => {
-            validator.validateKindStructure(kindStructure)
-        }).toThrow()
+        expect(()=>validator.validateKindStructure(kindStructure)).toThrow()
     })
 
-    test("Validator validate correct spec only kind structure", async () => {
-        expect.assertions(1)
+    test("Validator validate correct spec only kind structure", () => {
         const desc = getSpecOnlyKindDescription()
         const kindStructure = desc[Object.keys(desc)[0]]
-        expect(() => {
-            validator.validateKindStructure(kindStructure)
-        }).not.toThrow()
+        validator.validateKindStructure(kindStructure)
     })
 });

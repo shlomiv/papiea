@@ -152,9 +152,9 @@ export class ValidatorImpl {
     validateKindStructure(schema: Data_Description) {
         const xPapieaField = "x-papiea"
         const statusOnlyValue = "status-only"
-        // xPapieaField pryoperty have only statusOnlyValue value
+        // xPapieaField property have only statusOnlyValue value
         this.validateFieldValue(schema, xPapieaField, [statusOnlyValue])
-        this.validateSpecOnlyStructures(schema)
+        this.validateSpecOnlyStructure(schema)
     }
 
     validateFieldValue(schema: Data_Description, fieldName: string, possibleValues: string[]) {
@@ -176,7 +176,7 @@ export class ValidatorImpl {
         }
     }
 
-    validateSpecOnlyStructures(entity: Data_Description) {
+    validateSpecOnlyStructure(entity: Data_Description) {
         const specOnlyValue = "spec-only"
         const xPapieaEntityField = "x-papiea-entity"
         const xPapieaField = "x-papiea"

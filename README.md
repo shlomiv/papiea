@@ -13,9 +13,9 @@ Please see [Papiea's design document](https://nutanix.github.io/papiea/Papiea-de
 
 | Component  | Version |
 | ------------- | ------------- |
-| Engine (docker) | -circle_num |
-| Client/SDK (typescript)  | 1.0.105 |
-| Client/SDK (python)  | 96b21611e99ddb924ec9986225f67b560563a8c8 |
+  | Engine (docker) | 1395 |
+  | Client/SDK (typescript)  | 1.0.106 |
+  | Client/SDK (python)  | 2049672522e1d19e914cc8ddb68b53f81ec62ca9 |
 
 ## Build Instructions Papiea
 

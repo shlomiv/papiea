@@ -9,6 +9,14 @@ between intended state and real world state.
 
 Please see [Papiea's design document](https://nutanix.github.io/papiea/Papiea-design.html)
 
+## Papiea versions:
+
+| Component  | Version |
+| ------------- | ------------- |
+  | Engine (docker) | 1395 |
+  | Client/SDK (typescript)  | 1.0.106 |
+  | Client/SDK (python)  | 2049672522e1d19e914cc8ddb68b53f81ec62ca9 |
+
 ## Build Instructions Papiea
 
 Since papiea consists of multiple package you need to build them all

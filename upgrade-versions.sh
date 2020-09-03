@@ -60,7 +60,7 @@ else
   circle_num="${CIRCLE_BUILD_NUM}"
 fi
 
-yarn run patch-all > temp_version.txt
+make update_typescript_versions UPD_TYPE="patch" BUILD_NUM="'$circle_num'"
 node publish-papiea.js
 
 typescipt_version=$(grep -m 1 'New version' temp_version.txt | sed 's/[a-zA-Z :]*//')

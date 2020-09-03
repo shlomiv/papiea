@@ -1,12 +1,20 @@
 import "jest"
 import { ValidatorImpl } from "../../src/validator";
-import { getLocationDataDescription, getSpecOnlyKind, ValidationBuilder } from "../test_data_factory";
+import {
+    getBasicEntityLocationDataDescription,
+    getLocationDataDescription,
+    getSpecOnlyKind,
+    getSpecOnlyKindDescription,
+    getSpecOnlyKindDescriptionWithSpecOnlyFields,
+    getSpecOnlyKindDescriptionWithStatusOnlyFields,
+    ValidationBuilder
+} from "../test_data_factory"
 import uuid = require("uuid")
 import { SpecOnlyEntityKind } from "papiea-core"
 
 describe("Validation tests", () => {
 
-    const locationDataDescription = getLocationDataDescription();
+    const locationDataDescription = getBasicEntityLocationDataDescription();
     const trimmedLocationDataDescription = Object.assign({}, locationDataDescription);
     const maybeLocation = Object.values(locationDataDescription)[0];
     const validator = ValidatorImpl.create()
@@ -205,4 +213,22 @@ describe("Validation tests", () => {
             validator.validate_uuid(kind_with_pattern, id)
         }).toThrow()
     });
+
+    test("Validator validate incorrect spec only kind structure with x-papiea=spec-only", () => {
+        const desc = getSpecOnlyKindDescriptionWithSpecOnlyFields()
+        const kindStructure = desc[Object.keys(desc)[0]]
+        expect(() => validator.validate_kind_structure(kindStructure)).toThrow()
+    })
+
+    test("Validator validate incorrect spec only kind structure with x-papiea=status-only", () => {
+        const desc = getSpecOnlyKindDescriptionWithStatusOnlyFields()
+        const kindStructure = desc[Object.keys(desc)[0]]
+        expect(()=>validator.validate_kind_structure(kindStructure)).toThrow()
+    })
+
+    test("Validator validate correct spec only kind structure", () => {
+        const desc = getSpecOnlyKindDescription()
+        const kindStructure = desc[Object.keys(desc)[0]]
+        validator.validate_kind_structure(kindStructure)
+    })
 });

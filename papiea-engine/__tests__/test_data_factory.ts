@@ -1,20 +1,21 @@
-import { load } from "js-yaml";
-import { readFileSync } from "fs";
-import { resolve } from "path";
-import { plural } from "pluralize";
+import { load } from "js-yaml"
+import { readFileSync } from "fs"
+import { resolve } from "path"
+import { plural } from "pluralize"
 import {
     Data_Description,
-    Version,
+    IntentfulBehaviour,
     Kind,
+    Procedural_Execution_Strategy,
     Procedural_Signature,
     Provider,
-    Procedural_Execution_Strategy,
-    SpecOnlyEntityKind
-} from "papiea-core";
-import * as http from "http";
-import uuid = require("uuid");
+    SpecOnlyEntityKind,
+    Version
+} from "papiea-core"
+import * as http from "http"
 import { IncomingMessage, ServerResponse } from "http"
-import { IntentfulBehaviour } from "papiea-core"
+import uuid = require("uuid")
+
 const url = require("url");
 const queryString = require("query-string");
 
@@ -34,6 +35,13 @@ export function loadYamlFromTestFactoryDir(relativePath: string): any {
 
 export function getLocationDataDescription(): Data_Description {
     let locationDataDescription = loadYamlFromTestFactoryDir("./test_data/location_kind_test_data.yml");
+    let randomizedLocationDataDescription: any = {};
+    randomizedLocationDataDescription["Location" + randomString(5)] = locationDataDescription["Location"];
+    return randomizedLocationDataDescription;
+}
+
+export function getBasicEntityLocationDataDescription(): Data_Description {
+    let locationDataDescription = loadYamlFromTestFactoryDir("./test_data/location_kind_test_data_basic.yml");
     let randomizedLocationDataDescription: any = {};
     randomizedLocationDataDescription["Location" + randomString(5)] = locationDataDescription["Location"];
     return randomizedLocationDataDescription;
@@ -69,14 +77,13 @@ export function getClusterWithNullableFieldsDataDescription(): Data_Description 
 }
 
 export function getMetadataDescription(): Data_Description {
-    let MetadataDescription = loadYamlFromTestFactoryDir("./test_data/metadata_extension.yml");
-    return MetadataDescription;
+    return loadYamlFromTestFactoryDir("./test_data/metadata_extension.yml");
 }
 
 export function getSpecOnlyKind(): SpecOnlyEntityKind {
     const locationDataDescription = getLocationDataDescription();
     const name = Object.keys(locationDataDescription)[0];
-    const locationKind: SpecOnlyEntityKind = {
+    return {
         name,
         name_plural: plural(name),
         kind_structure: locationDataDescription,
@@ -87,13 +94,44 @@ export function getSpecOnlyKind(): SpecOnlyEntityKind {
         differ: undefined,
         intentful_behaviour: IntentfulBehaviour.SpecOnly
     };
-    return locationKind;
+}
+
+export function getBasicKind(): SpecOnlyEntityKind {
+    const locationDataDescription = getBasicEntityLocationDataDescription();
+    const name = Object.keys(locationDataDescription)[0];
+    return {
+        name,
+        name_plural: plural(name),
+        kind_structure: locationDataDescription,
+        intentful_signatures: [],
+        dependency_tree: new Map(),
+        kind_procedures: {},
+        entity_procedures: {},
+        differ: undefined,
+        intentful_behaviour: IntentfulBehaviour.Basic
+    }
+}
+
+export function getSpecOnlyKindDescriptionWithStatusOnlyFields(): Data_Description {
+        const description: any = getLocationDataDescription();
+    description[Object.keys(description)[0]].properties.y["x-papiea"] = "status-only"
+    return description
+}
+
+export function getSpecOnlyKindDescription(): Data_Description {
+    return getLocationDataDescription()
+}
+
+export function getSpecOnlyKindDescriptionWithSpecOnlyFields(): Data_Description {
+    const description: any = getLocationDataDescription();
+    description[Object.keys(description)[0]].properties.y["x-papiea"] = "spec-only"
+    return description
 }
 
 export function getSpecOnlyArrayKind(): SpecOnlyEntityKind {
     const locationDataDescription = getLocationArrayDataDescription();
     const name = Object.keys(locationDataDescription)[0];
-    const locationKind: SpecOnlyEntityKind = {
+    return {
         name,
         name_plural: plural(name),
         kind_structure: locationDataDescription,
@@ -104,13 +142,28 @@ export function getSpecOnlyArrayKind(): SpecOnlyEntityKind {
         differ: undefined,
         intentful_behaviour: IntentfulBehaviour.Basic
     };
+}
+
+export function getSpecOnlyKindByDescription(desc: Data_Description): SpecOnlyEntityKind {
+    const name = Object.keys(desc)[0];
+    const locationKind: SpecOnlyEntityKind = {
+        name,
+        name_plural: plural(name),
+        kind_structure: desc,
+        intentful_signatures: [],
+        dependency_tree: new Map(),
+        kind_procedures: {},
+        entity_procedures: {},
+        differ: undefined,
+        intentful_behaviour: IntentfulBehaviour.SpecOnly
+    };
     return locationKind;
 }
 
 export function getDifferKind(): Kind {
     const locationDataDescription = getDifferLocationDataDescription();
     const name = Object.keys(locationDataDescription)[0];
-    const locationKind: Kind = {
+    return {
         name,
         name_plural: plural(name),
         kind_structure: locationDataDescription,
@@ -121,13 +174,12 @@ export function getDifferKind(): Kind {
         differ: undefined,
         intentful_behaviour: IntentfulBehaviour.Differ
     };
-    return locationKind;
 }
 
 export function getClusterKind(): Kind {
     const clusterDataDescription = getClusterDataDescription()
     const name = Object.keys(clusterDataDescription)[0]
-    const kind = {
+    return {
         name,
         name_plural: plural(name),
         kind_structure: clusterDataDescription,
@@ -138,13 +190,12 @@ export function getClusterKind(): Kind {
         differ: undefined,
         intentful_behaviour: IntentfulBehaviour.Basic
     }
-    return kind
 }
 
 export function getClusterKindWithNullableFields(): Kind {
     const clusterDataDescription = getClusterWithNullableFieldsDataDescription()
     const name = Object.keys(clusterDataDescription)[0]
-    const kind = {
+    return {
         name,
         name_plural: plural(name),
         kind_structure: clusterDataDescription,
@@ -155,7 +206,6 @@ export function getClusterKindWithNullableFields(): Kind {
         differ: undefined,
         intentful_behaviour: IntentfulBehaviour.Basic
     }
-    return kind
 }
 
 function formatErrorMsg(current_field: string, missing_field: string) {

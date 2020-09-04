@@ -65,6 +65,8 @@ node publish-papiea.js
 typescipt_version=$(grep -m 1 'New version' temp_version.txt | sed 's/[a-zA-Z :]*//')
 python_version=$(git rev-parse HEAD)
 
+python3 ./papiea-engine/publish-images.py "$typescipt_version"
+
 # sed command is different in BSD (Mac OS) and Linux
 # In our case the difference is '-i' flag
 # Thus checking the OS type
@@ -78,7 +80,7 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
   " README.md
 
   sed -i '' "/Engine (docker)/c\\
-  | Engine (docker) | $circle_num |
+  | Engine (docker) | $typescipt_version |
   " README.md
 else
   sed -i "/Client\/SDK (typescript)/c\\
@@ -90,7 +92,7 @@ else
   " README.md
 
   sed -i "/Engine (docker)/c\\
-  | Engine (docker) | $circle_num |
+  | Engine (docker) | $typescipt_version |
   " README.md
 fi
 

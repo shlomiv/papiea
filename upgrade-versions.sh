@@ -53,7 +53,6 @@ if [[ -z "${CIRCLE_BUILD_NUM}" ]]; then
     exit 1
   else
     echo 'Using CircleCI build number specified in -circle_num arg'
-    circle_num="$1"
   fi
 else
   echo 'Using CircleCI build number specified in CIRCLE_BUILD_NUM'

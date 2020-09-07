@@ -65,7 +65,7 @@ node publish-papiea.js
 typescipt_version=$(grep -m 1 'New version' temp_version.txt | sed 's/[a-zA-Z :]*//')
 python_version=$(git rev-parse HEAD)
 
-python3 ./papiea-engine/publish-images.py "$typescipt_version"
+python3 ./papiea-engine/publish-images-release.py "$typescipt_version"
 
 # sed command is different in BSD (Mac OS) and Linux
 # In our case the difference is '-i' flag

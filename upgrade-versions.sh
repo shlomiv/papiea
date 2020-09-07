@@ -62,17 +62,16 @@ fi
 make update_typescript_versions UPD_TYPE="patch" BUILD_NUM="'$circle_num'"
 node publish-papiea.js
 
-typescipt_version=$(grep -m 1 'New version' temp_version.txt | sed 's/[a-zA-Z :]*//')
+typescript_version=$(grep -m 1 'New version' temp_version.txt | sed 's/[a-zA-Z :]*//')
 python_version=$(git rev-parse HEAD)
-
-python3 ./papiea-engine/publish-images-release.py "$typescipt_version"
+docker_version=$(python3 ./papiea-engine/publish-images-release.py "$typescript_version" | tail -1)
 
 # sed command is different in BSD (Mac OS) and Linux
 # In our case the difference is '-i' flag
 # Thus checking the OS type
 if [[ "$OSTYPE" == "darwin"* ]]; then
   sed -i '' "/Client\/SDK (typescript)/c\\
-  | Client/SDK (typescript)  | $typescipt_version |
+  | Client/SDK (typescript)  | $typescript_version |
   " README.md
 
   sed -i '' "/Client\/SDK (python)/c\\
@@ -80,11 +79,11 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
   " README.md
 
   sed -i '' "/Engine (docker)/c\\
-  | Engine (docker) | $typescipt_version |
+  | Engine (docker) | $docker_version |
   " README.md
 else
   sed -i "/Client\/SDK (typescript)/c\\
-  | Client/SDK (typescript)  | $typescipt_version |
+  | Client/SDK (typescript)  | $typescript_version |
   " README.md
 
   sed -i "/Client\/SDK (python)/c\\
@@ -92,11 +91,11 @@ else
   " README.md
 
   sed -i "/Engine (docker)/c\\
-  | Engine (docker) | $typescipt_version |
+  | Engine (docker) | $docker_version |
   " README.md
 fi
 
-echo "Python commit hash: $python_version ; Typescript version: $typescipt_version; Circle build number: $circle_num."
+echo "Python commit hash: $python_version ; Typescript version: $typescript_version; Circle build number: $circle_num."
 
 if [[ "$accept" != true ]]; then
   while true; do
@@ -113,7 +112,7 @@ git ls-files . | grep 'package\.json' | xargs git add
 
 git add README.md
 
-git commit -m "[skip ci] Upgrade versions. Engine: $circle_num. Typescript: $typescipt_version. Python: $python_version."
+git commit -m "[skip ci] Upgrade versions. Engine: $docker_version. Typescript: $typescript_version. Python: $python_version."
 
 git push -u origin HEAD
 

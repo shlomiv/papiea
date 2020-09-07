@@ -50,7 +50,7 @@ if (updateType === "major") {
 } else {
     newVersion = `${manualVersion}+${circleCIBuildNum}`
 }
-const command = `yarn --cwd ${path} version --new-version ${newVersion} --no-git-tag-version --no-commit-hooks`
+const command = `yarn --cwd ${path} version --new-version ${newVersion} --no-git-tag-version --no-commit-hooks >> temp_version.txt`
 
 const child = exec(command, (err, stdout, stderr) => {
     if (err) throw err;

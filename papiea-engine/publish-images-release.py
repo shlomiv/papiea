@@ -17,7 +17,8 @@ def construct_tags(sem_ver):
     tags = []
     sem_ver_parts = sem_ver.split("+")
     major, minor, patch = sem_ver_parts[0].split(".")
-    tags.append("{}latest".format(BASE_TAG))
+    # TODO: uncomment latest when ready to merge
+    # tags.append("{}latest".format(BASE_TAG))
     tags.append(major)
     tags.append("{}{}.{}".format(BASE_TAG, major, minor))
     tags.append("{}{}.{}.{}".format(BASE_TAG, major, minor, patch))
@@ -25,9 +26,9 @@ def construct_tags(sem_ver):
         version, build_num = sem_ver_parts[0], sem_ver_parts[1]
         if build_num != os.environ['CIRCLE_BUILD_NUM']:
             raise Exception("Environment variable and version param CI build number mismatch!")
-        tags.append("{}{}+{}".format(BASE_TAG, version, build_num))
+        tags.append("{}{}_{}".format(BASE_TAG, version, build_num))
     except IndexError as e:
-        print("No build number present in the version: {}".format(sem_ver))
+        print("No build number present in the version: {}".format(sem_ver), file=sys.stderr)
         pass
     return tags
 
@@ -55,7 +56,7 @@ subprocess.check_call(['docker', 'push', build_tag])
 try:
     semantic_version = sys.argv[1]
 except IndexError as e:
-    print("No semantic version was passed as an argument, aborting")
+    print("No semantic version was passed as an argument, aborting", file=sys.stderr)
     sys.exit(1)
 
 tags = construct_tags(semantic_version)
@@ -80,3 +81,7 @@ while running_procs:
     # Here, `proc` has finished with return code `retcode`
     if retcode != 0 and retcode is not None:
         raise Exception("Couldn't push tags")
+
+# Print 'major.minor.patch+build_num' version so that it could optionally be used
+# as an input to bash script
+print(tags[-1])

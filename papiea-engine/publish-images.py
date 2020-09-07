@@ -1,5 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import subprocess
+import time
+from subprocess import Popen, PIPE
 import os
 import sys
 
@@ -55,8 +57,24 @@ latest_tag = f"{BASE_TAG}latest"
 #     'docker', 'tag', build_tag, latest_tag])
 # subprocess.check_call(['docker', 'push', latest_tag])
 tags = construct_tags(semantic_version)
+running_procs = []
 for tag in tags:
     print(f"Publishing {tag}")
     subprocess.check_call([
         'docker', 'tag', build_tag, tag])
-    subprocess.check_call(['docker', 'push', tag])
+    running_procs.append(Popen(['docker', 'push', tag], stdout=PIPE, stderr=PIPE))
+
+retcode = None
+while running_procs:
+    for proc in running_procs:
+        retcode = proc.poll()
+        if retcode is not None:  # Process finished.
+            running_procs.remove(proc)
+            break
+        else:  # No process is done, wait a bit and check again.
+            time.sleep(5)
+            continue
+
+    # Here, `proc` has finished with return code `retcode`
+    if retcode != 0 and retcode is not None:
+        raise Exception("Couldn't push tags")

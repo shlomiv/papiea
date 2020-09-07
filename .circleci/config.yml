@@ -84,7 +84,7 @@ jobs:
             cp .circleci/Dockerfile .
             docker-compose build
 
-      - run: ./papiea-engine/publish-images.py
+      - run: ./papiea-engine/publish-images-release.py
 
       - run:
           name: Login to git as Updater Bot

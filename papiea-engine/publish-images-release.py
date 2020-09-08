@@ -78,8 +78,9 @@ while running_procs:
             time.sleep(5)
             continue
 
-    # Here, `proc` has finished with return code `retcode`
-    if retcode != 0 and retcode is not None:
+    if retcode == 0 or retcode is None:
+        continue
+    else:
         raise Exception("Couldn't push tags, return code for push was: {}".format(retcode))
 
 # Print 'major.minor.patch+build_num' version so that it could optionally be used

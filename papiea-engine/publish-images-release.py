@@ -62,10 +62,10 @@ except IndexError as e:
 tags = construct_tags(semantic_version)
 running_procs = []
 for tag in tags:
-    print("Publishing {}".format(tag))
+    print("Publishing {}".format(tag), flush=True)
     subprocess.check_call([
         'docker', 'tag', build_tag, tag])
-    running_procs.append(Popen(['docker', 'push', tag], stdout=PIPE, stderr=PIPE))
+    running_procs.append(Popen(['docker', 'push', tag]))
 
 retcode = None
 while running_procs:
@@ -85,4 +85,4 @@ while running_procs:
 
 # Print 'major.minor.patch+build_num' version so that it could optionally be used
 # as an input to bash script
-print(tags[-1])
+print(tags[-1], flush=True)

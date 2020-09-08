@@ -65,7 +65,7 @@ node publish-papiea.js
 typescript_version=$(grep -m 1 'New version' temp_version.txt | sed 's/[a-zA-Z :]*//')
 python_version=$(git rev-parse HEAD)
 ./papiea-engine/publish-images-release.py "$typescript_version" | tee temp_version.txt
-docker_version=$(head -n 1 temp_version.txt)
+docker_version=$(tail -n 1 temp_version.txt)
 
 # sed command is different in BSD (Mac OS) and Linux
 # In our case the difference is '-i' flag

@@ -19,7 +19,7 @@ def construct_tags(sem_ver):
     major, minor, patch = sem_ver_parts[0].split(".")
     # TODO: uncomment latest when ready to merge
     # tags.append("{}latest".format(BASE_TAG))
-    tags.append(major)
+    tags.append("{}{}".format(BASE_TAG, major))
     tags.append("{}{}.{}".format(BASE_TAG, major, minor))
     tags.append("{}{}.{}.{}".format(BASE_TAG, major, minor, patch))
     try:

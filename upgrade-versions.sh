@@ -62,6 +62,8 @@ fi
 make update_typescript_versions UPD_TYPE="patch" BUILD_NUM="'$circle_num'"
 node publish-papiea.js
 
+./papiea-sdk/python/publish-sdk.sh
+
 typescript_version=$(grep -m 1 'New version' temp_version.txt | sed 's/[a-zA-Z :]*//')
 python_version=$(git rev-parse HEAD)
 ./papiea-engine/publish-images-release.py "$typescript_version" | tee temp_version.txt

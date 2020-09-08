@@ -80,7 +80,7 @@ while running_procs:
 
     # Here, `proc` has finished with return code `retcode`
     if retcode != 0 and retcode is not None:
-        raise Exception("Couldn't push tags")
+        raise Exception("Couldn't push tags, return code for push was: {}".format(retcode))
 
 # Print 'major.minor.patch+build_num' version so that it could optionally be used
 # as an input to bash script

@@ -62,10 +62,12 @@ fi
 make update_typescript_versions UPD_TYPE="patch" BUILD_NUM="'$circle_num'"
 node publish-papiea.js
 
-./papiea-sdk/python/publish-sdk.sh
-
 typescript_version=$(grep -m 1 'New version' temp_version.txt | sed 's/[a-zA-Z :]*//')
-python_version=$(git rev-parse HEAD)
+
+pushd ./papiea-sdk/python
+./papiea-sdk/python/publish-sdk.sh "$typescript_version"
+popd
+
 ./papiea-engine/publish-images-release.py "$typescript_version" | tee temp_version.txt
 docker_version=$(tail -n 1 temp_version.txt)
 
@@ -78,7 +80,7 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
   " README.md
 
   sed -i '' "/Client\/SDK (python)/c\\
-  | Client/SDK (python)  | $python_version |
+  | Client/SDK (python)  | $typescript_version |
   " README.md
 
   sed -i '' "/Engine (docker)/c\\
@@ -90,7 +92,7 @@ else
   " README.md
 
   sed -i "/Client\/SDK (python)/c\\
-  | Client/SDK (python)  | $python_version |
+  | Client/SDK (python)  | $typescript_version |
   " README.md
 
   sed -i "/Engine (docker)/c\\
@@ -98,7 +100,7 @@ else
   " README.md
 fi
 
-echo "Python commit hash: $python_version ; Typescript version: $typescript_version; Circle build number: $circle_num."
+echo "Version: $typescript_version; Circle build number: $circle_num."
 
 if [[ "$accept" != true ]]; then
   while true; do
@@ -115,7 +117,7 @@ git ls-files . | grep 'package\.json' | xargs git add
 
 git add README.md
 
-git commit -m "[skip ci] Upgrade versions. Engine: $docker_version. Typescript: $typescript_version. Python: $python_version."
+git commit -m "[skip ci] Upgrade versions. Engine: $docker_version. Typescript: $typescript_version. Python: $typescript_version."
 
 git push -u origin HEAD
 

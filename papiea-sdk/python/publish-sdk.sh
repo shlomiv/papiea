@@ -3,7 +3,7 @@ set -e
 
 # Optionally try install pip if it doesn't exist
 if ! python3 -m pip --version ; then
-  if ! apt-get install python3-pip ; then
+  if ! sudo apt-get install python3-pip ; then
     echo "Couldn't install pip via apt-get, exiting"
     exit 1
   fi

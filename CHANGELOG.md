@@ -1,3 +1,4 @@
+- Version 1.0.303: Add changelog fix (#500)
 - Version : introduce appending changes to CHANGELOG.md when PR is merged to master (#498), manually bump versions (#499)
 # Changelog
 

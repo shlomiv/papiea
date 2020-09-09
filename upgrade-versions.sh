@@ -65,7 +65,7 @@ node publish-papiea.js
 typescript_version=$(grep -m 1 'New version' temp_version.txt | sed 's/[a-zA-Z :]*//')
 
 pushd ./papiea-sdk/python
-./papiea-sdk/python/publish-sdk.sh "$typescript_version"
+./publish-sdk.sh "$typescript_version"
 popd
 
 ./papiea-engine/publish-images-release.py "$typescript_version" | tee temp_version.txt

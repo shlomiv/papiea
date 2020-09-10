@@ -62,13 +62,13 @@ fi
 make update_typescript_versions UPD_TYPE="patch" BUILD_NUM="'$circle_num'"
 node publish-papiea.js
 
-typescript_version=$(grep -m 1 'New version' temp_version.txt | sed 's/[a-zA-Z :]*//')
+package_version=$(grep -m 1 'New version' temp_version.txt | sed 's/[a-zA-Z :]*//')
 
 pushd ./papiea-sdk/python
-./publish-sdk.sh "$typescript_version"
+./publish-sdk.sh "$package_version"
 popd
 
-./papiea-engine/publish-images-release.py "$typescript_version" | tee temp_version.txt
+./papiea-engine/publish-images-release.py "$package_version" | tee temp_version.txt
 docker_version=$(tail -n 1 temp_version.txt)
 
 # sed command is different in BSD (Mac OS) and Linux
@@ -76,11 +76,11 @@ docker_version=$(tail -n 1 temp_version.txt)
 # Thus checking the OS type
 if [[ "$OSTYPE" == "darwin"* ]]; then
   sed -i '' "/Client\/SDK (typescript)/c\\
-  | Client/SDK (typescript)  | $typescript_version |
+  | Client/SDK (typescript)  | $package_version |
   " README.md
 
   sed -i '' "/Client\/SDK (python)/c\\
-  | Client/SDK (python)  | $typescript_version |
+  | Client/SDK (python)  | $package_version |
   " README.md
 
   sed -i '' "/Engine (docker)/c\\
@@ -88,11 +88,11 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
   " README.md
 else
   sed -i "/Client\/SDK (typescript)/c\\
-  | Client/SDK (typescript)  | $typescript_version |
+  | Client/SDK (typescript)  | $package_version |
   " README.md
 
   sed -i "/Client\/SDK (python)/c\\
-  | Client/SDK (python)  | $typescript_version |
+  | Client/SDK (python)  | $package_version |
   " README.md
 
   sed -i "/Engine (docker)/c\\
@@ -100,7 +100,7 @@ else
   " README.md
 fi
 
-echo "Version: $typescript_version; Circle build number: $circle_num."
+echo "Version: $package_version; Circle build number: $circle_num."
 
 if [[ "$accept" != true ]]; then
   while true; do
@@ -117,7 +117,7 @@ git ls-files . | grep 'package\.json' | xargs git add
 
 git add README.md
 
-git commit -m "[skip ci] Upgrade versions. Engine: $docker_version. Typescript: $typescript_version. Python: $typescript_version."
+git commit -m "[skip ci] Upgrade versions. Engine: $docker_version. Typescript: $package_version. Python: $package_version."
 
 git push -u origin HEAD
 

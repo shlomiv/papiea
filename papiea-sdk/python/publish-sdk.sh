@@ -20,7 +20,7 @@ VERSION="$1" python3 setup.py sdist bdist_wheel
 
 python3 -m pip install --user --upgrade twine
 
-export TWINE_USERNAME="$ARTIFACTORY_USER"
-export TWINE_PASSWORD="$ARTIFACTORY_PASSWORD"
+export TWINE_USERNAME="__token__"
+export TWINE_PASSWORD="$TEST_PYPI_KEY"
 
-python3 -m twine upload --repository-url https://nutanix.jfrog.io/nutanix/api/pypi/pypi-local dist/*
+python3 -m twine upload --repository testpypi dist/*

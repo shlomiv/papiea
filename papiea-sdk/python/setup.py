@@ -11,7 +11,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="papiea-sdk",
+    name="papiea-sdk-Emulebest",
     version=version,
     author="Shlomi Vaknin",
     description="Papiea python SDK",

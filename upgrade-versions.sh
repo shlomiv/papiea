@@ -114,7 +114,7 @@ sed -i "1i $changelog_message" CHANGELOG.md
 
 if [[ "$accept" != true ]]; then
   while true; do
-    read -p "Commit and push? (y/n) " yn
+    read -r -p "Commit and push? (y/n) " yn
     case $yn in
         [Yy]* ) break;;
         [Nn]* ) exit 1;;

@@ -101,6 +101,16 @@ else
 fi
 
 echo "Version: $package_version; Circle build number: $circle_num."
+# append version with PR link to the CHANGELOG.md
+commit_message=$(git log -n 1 --format=%s)
+# match #$number in the commit message
+pr_number=$(echo "$commit_message" | grep -oE "#[1-9]+\b" | tail -1 | cut -c2-)
+changelog_message="- Version $package_version: $commit_message"
+# if there is a PR number in the commit
+if [[ "$pr_number" -ne "" ]]; then
+  changelog_message+=" PR url: $CIRCLE_REPOSITORY_URL/pull/$pr_number"
+fi
+sed -i "1i $changelog_message" CHANGELOG.md
 
 if [[ "$accept" != true ]]; then
   while true; do
@@ -116,6 +126,8 @@ fi
 git ls-files . | grep 'package\.json' | xargs git add
 
 git add README.md
+
+git add CHANGELOG.md
 
 git commit -m "[skip ci] Upgrade versions. Engine: $docker_version. Typescript: $package_version. Python: $package_version."
 

@@ -1,10 +1,18 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+
+# This script is used to publish image when pushing any changes
+# The image is as follows:
+# nutanix-docker.jfrog.io/papiea:
+# build_num (e.g. 1337)
 import subprocess
+import time
+from subprocess import Popen, PIPE
 import os
+import sys
 
+BASE_TAG = "nutanix-docker.jfrog.io/papiea:"
 
-tag = ('nutanix-docker.jfrog.io/papiea:' +
-       os.environ['CIRCLE_BUILD_NUM'])
+build_tag = (BASE_TAG + os.environ['CIRCLE_BUILD_NUM'])
 
 subprocess.check_call([
     'docker', 'login',
@@ -19,13 +27,8 @@ with open(".dockerignore", "w") as f:
 
 subprocess.check_call([
     'docker', 'build',
-    '-t', tag,
+    '-t', build_tag,
     '-f', '.circleci/Dockerfile',
     '.'])
 
-subprocess.check_call(['docker', 'push', tag])
-if os.environ['CIRCLE_BRANCH'] == 'master':
-    latest_tag = 'nutanix-docker.jfrog.io/papiea:latest'
-    subprocess.check_call([
-        'docker', 'tag', tag, latest_tag])
-    subprocess.check_call(['docker', 'push', latest_tag])
+subprocess.check_call(['docker', 'push', build_tag])

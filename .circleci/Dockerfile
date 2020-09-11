@@ -37,7 +37,8 @@ RUN cd /code \
     && apt-get install curl -y \
     && curl -sL https://deb.nodesource.com/setup_10.x -o nodesource_setup.sh \
     && bash nodesource_setup.sh \
-    && apt-get install nodejs -y
+    && apt-get install nodejs -y \
+    && apt-get install python3-pip -y
 
 # Install yarn
 RUN curl -o- -L yarnpkg.com/install.sh | bash

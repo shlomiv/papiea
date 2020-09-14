@@ -499,8 +499,8 @@ describe("Intentful Workflow tests", () => {
         try {
             first_provider_prefix = "location_provider_intentful_1_same_kind"
             second_provider_prefix = "2nd_location_provider_intentful_1_same_kind"
-            const first_location = sdk1.new_kind(JSON.parse(JSON.stringify(location_yaml)));
-            const second_location = sdk2.new_kind(JSON.parse(JSON.stringify(location_yaml)));
+            const first_location = sdk1.new_kind(JSON.parse(JSON.stringify(locationDataDescription)));
+            const second_location = sdk2.new_kind(JSON.parse(JSON.stringify(locationDataDescription)));
             sdk1.version(provider_version);
             sdk1.prefix(first_provider_prefix);
             sdk2.prefix(second_provider_prefix);

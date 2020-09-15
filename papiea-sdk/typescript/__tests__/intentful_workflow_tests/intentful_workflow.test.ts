@@ -467,6 +467,9 @@ describe("Intentful Workflow tests", () => {
                 for (let i = 1; i <= retries; i++) {
                     const promises = watchers.map(watcher => entityApi.get(`/intent_watcher/${ watcher.uuid }`))
                     const results = await Promise.all(promises)
+                    for (let item of results) {
+                        console.log(item.data.status)
+                    }
                     if (results.every(res => res.data.status === IntentfulStatus.Completed_Successfully)) {
                         const first_res = await entityApi.get(`/${ sdk1.provider.prefix }/${ sdk1.provider.version }/${ first_kind_name }/${ first_result.data.metadata.uuid }`)
                         expect(first_res.data.status.x).toEqual(20)

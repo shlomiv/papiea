@@ -7,8 +7,8 @@
     "src"
   ],
   "scripts": {
-    "test": "jest --runInBand --coverage",
-    "test-ci": "jest --runInBand --coverage --ci --reporters=default --reporters=jest-junit",
+    "test": "node --trace-warnings node_modules/.bin/jest --runInBand --coverage",
+    "test-ci": "node --trace-warnings node_modules/.bin/jest --runInBand --coverage --ci --reporters=default --reporters=jest-junit",
     "clean": "rm -rf build",
     "build": "yarn run tsc"
   },

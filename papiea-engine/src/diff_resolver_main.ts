@@ -46,7 +46,7 @@ async function setUpDiffResolver() {
     const watchlist: Watchlist = new Watchlist()
 
     const intentfulListenerMongo = new IntentfulListenerMongo(statusDb, specDb, watchlist)
-    intentfulListenerMongo.run(500)
+    intentfulListenerMongo.run(250)
 
     const diffResolver = new DiffResolver(watchlist, watchlistDb, specDb, statusDb, providerDb, differ, intentfulContext, logger, batchSize)
 
@@ -54,8 +54,8 @@ async function setUpDiffResolver() {
 
     console.log("Running diff resolver")
 
-    intentResolver.run(10000, deletedWatcherPersists)
-    await diffResolver.run(3000)
+    intentResolver.run(3000, deletedWatcherPersists)
+    await diffResolver.run(1500)
 }
 
 setUpDiffResolver().then(()=>console.debug("Exiting diff resolver")).catch(console.error)

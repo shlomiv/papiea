@@ -62,9 +62,10 @@ export class LoggerFactory {
     private static readonly PRODUCTION =
         (process?.env?.NODE_ENV === 'production')
 
-    public static makeLogger(options: Partial<LoggerOptions>): [Logger, LoggerHandle] {
+    public static makeLogger(options: Partial<LoggerOptions>): Logger {
         const factory = new LoggerFactory(options)
-        return factory.createLogger()
+        const [logger, _] = factory.createLogger()
+        return logger
     }
 
     public static nested(parent: LoggerFactory,

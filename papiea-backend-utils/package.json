@@ -16,6 +16,6 @@
   "dependencies": {
     "logform": "^2.1.2",
     "papiea-core": "file:../papiea-core",
-    "winston": "^3.2.1"
+    "winston": "^3.3.3"
   }
 }

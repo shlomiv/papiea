@@ -30,7 +30,7 @@ const batchSize = process.env.RANDOM_ENTITY_BATCH_SIZE ?? 5
 const deletedWatcherPersists = process.env.DELETED_WATCHER_PERSIST_SECONDS ?? 100
 
 async function setUpDiffResolver() {
-    const logger = LoggerFactory.makeLogger({level: loggingLevel});
+    const [logger, _] = LoggerFactory.makeLogger({level: loggingLevel});
     const mongoConnection: MongoConnection = new MongoConnection(mongoUrl, mongoDb);
     await mongoConnection.connect();
 

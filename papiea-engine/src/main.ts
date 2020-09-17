@@ -51,7 +51,7 @@ const papieaDebug = process.env.PAPIEA_DEBUG === "true"
 
 
 async function setUpApplication(): Promise<express.Express> {
-    const logger = LoggerFactory.makeLogger({level: loggingLevel});
+    const [logger, _] = LoggerFactory.makeLogger({level: loggingLevel});
     const auditLogger: AuditLogger = new AuditLogger(logger, papieaDebug)
     const app = express();
     app.use(cookieParser());

@@ -1824,7 +1824,8 @@ class MockProceduralCtx implements ProceduralCtx_Interface {
     get_provider_client(key?: string): ProviderClient {
         throw new Error("Method not implemented.");
     }
-
+    cleanup() {
+    }
 }
 
 

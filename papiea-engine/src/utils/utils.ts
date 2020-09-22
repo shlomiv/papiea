@@ -2,6 +2,8 @@ import { SortParams } from "../entity/entity_api_impl"
 import { ValidationError } from "../errors/validation_error"
 import { AxiosError } from "axios"
 
+export const DEFAULT_ENTROPY_FN = () => getRandomInt(10, 20)
+
 function validatePaginationParams(offset: number | undefined, limit: number | undefined) {
     if (offset !== undefined) {
         if (offset <= 0) {
@@ -123,4 +125,9 @@ export function deepMerge(target: any, ...sources: any[]): any {
     }
 
     return deepMerge(target, ...sources);
+}
+
+export function calculateBackoff(n: number, maximumBackoff: number, entropySourceFn: () => number = DEFAULT_ENTROPY_FN) {
+    const entropy = entropySourceFn()
+    return Math.min(Math.pow(2, n) + entropy, maximumBackoff)
 }

@@ -205,7 +205,7 @@ describe("Intentful Workflow tests", () => {
     })
 
     test("Exponential backoff should be activated", async () => {
-        expect.assertions(3);
+        expect.assertions(1);
         const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
         try {
             let times_requested = 0

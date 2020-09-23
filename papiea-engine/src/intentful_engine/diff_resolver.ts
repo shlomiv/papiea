@@ -33,18 +33,11 @@ export class DiffResolver {
     private logger: Logger;
     private batchSize: number;
     private static MAXIMUM_BACKOFF = 100
-    private static ENTROPY_FN = (diff_delay?: number) => {
-        return () => {
-            if (diff_delay !== undefined && diff_delay !== null) {
-                return diff_delay + getRandomInt(1, 10)
-            }
-            return getRandomInt(10, 20)
-        }
-    }
+    private entropyFn: (diff_delay?: number) => number
 
     onIntentfulHandlerFail: Handler<(entity: EntryReference, error_msg?: string) => Promise<void>>
 
-    constructor(watchlist: Watchlist, watchlistDb: Watchlist_DB, specDb: Spec_DB, statusDb: Status_DB, providerDb: Provider_DB, differ: Differ, intentfulContext: IntentfulContext, logger: Logger, batchSize: number) {
+    constructor(watchlist: Watchlist, watchlistDb: Watchlist_DB, specDb: Spec_DB, statusDb: Status_DB, providerDb: Provider_DB, differ: Differ, intentfulContext: IntentfulContext, logger: Logger, batchSize: number, entropyFn: (diff_delay?: number) => number) {
         this.specDb = specDb
         this.statusDb = statusDb
         this.watchlistDb = watchlistDb
@@ -55,6 +48,7 @@ export class DiffResolver {
         this.logger = logger
         this.batchSize = batchSize
         this.onIntentfulHandlerFail = new Handler()
+        this.entropyFn = entropyFn
     }
 
     public async run(delay: number) {
@@ -84,7 +78,7 @@ export class DiffResolver {
         }
     }
 
-    private static createDiffBackoff(kind: Kind, delay: Delay | null | undefined, retries: number = 0): Backoff {
+    private createDiffBackoff(kind: Kind, delay: Delay | null | undefined, retries: number = 0): Backoff {
         if (delay !== undefined && delay !== null) {
             return {
                 delay,
@@ -93,7 +87,7 @@ export class DiffResolver {
         } else {
             return {
                 delay: {
-                    delay_seconds: calculateBackoff(retries, this.MAXIMUM_BACKOFF, this.ENTROPY_FN(kind.diff_delay)),
+                    delay_seconds: calculateBackoff(retries, DiffResolver.MAXIMUM_BACKOFF, this.entropyFn(kind.diff_delay)),
                     delay_set_time: new Date()
                 },
                 retries
@@ -101,7 +95,7 @@ export class DiffResolver {
         }
     }
 
-    private static incrementDiffBackoff(backoff: Backoff, kind: Kind): Backoff {
+    private incrementDiffBackoff(backoff: Backoff, kind: Kind): Backoff {
         const retries = backoff.retries + 1
         return this.createDiffBackoff(kind, null, retries)
     }
@@ -187,11 +181,11 @@ export class DiffResolver {
                             }
                             this.logger.info(`Starting to retry resolving diff for entity with uuid: ${rediff.metadata!.uuid}`)
                             const delay = await this.launchOperation({diff: rediff.diffs[diff_index], ...rediff})
-                            entries[key][2] = DiffResolver.createDiffBackoff(rediff.kind, delay)
+                            entries[key][2] = this.createDiffBackoff(rediff.kind, delay)
                             continue
                         } catch (e) {
                             this.logger.debug(`Couldn't invoke retry handler for entity with uuid ${rediff.metadata!.uuid}: ${e}`)
-                            entries[key][2] = DiffResolver.incrementDiffBackoff(entries[key][2]!, rediff.kind)
+                            entries[key][2] = this.incrementDiffBackoff(entries[key][2]!, rediff.kind)
                             const error_msg = e?.response?.data?.message
                             await this.onIntentfulHandlerFail.call(entry_reference, error_msg)
                             continue
@@ -246,11 +240,11 @@ export class DiffResolver {
         try {
             const delay = await this.launchOperation({diff: next_diff, ...rediff})
             this.logger.info(`Starting to resolve diff for ${provider.prefix}/${provider.version}/${kind.name} entity with uuid: ${metadata!.uuid}`)
-            const backoff = DiffResolver.createDiffBackoff(kind, delay)
+            const backoff = this.createDiffBackoff(kind, delay)
             return [next_diff, backoff]
         } catch (e) {
             this.logger.debug(`Couldn't invoke handler for entity with uuid ${metadata!.uuid}: ${e}`)
-            const backoff = DiffResolver.createDiffBackoff(kind, null)
+            const backoff = this.createDiffBackoff(kind, null)
             const error_msg = e?.response?.data?.message
             await this.onIntentfulHandlerFail.call(entry_reference, error_msg)
             return [next_diff, backoff]

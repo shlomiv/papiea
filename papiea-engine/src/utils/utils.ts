@@ -125,8 +125,8 @@ export function deepMerge(target: any, ...sources: any[]): any {
     return deepMerge(target, ...sources);
 }
 
-export function calculateBackoff(n: number, maximumBackoff: number, entropy: number) {
-    return Math.min(Math.pow(2, n) + entropy, maximumBackoff)
+export function calculateBackoff(retries: number, maximumBackoff: number, entropy: number) {
+    return Math.min(Math.pow(2, retries) + entropy, maximumBackoff)
 }
 
 export function getEntropyFn(papieaDebug: boolean) {

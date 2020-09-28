@@ -7,29 +7,16 @@ import { IntentfulContext } from "./intentful_core/intentful_context";
 import { IntentResolver } from "./intentful_engine/intent_resolver";
 import { IntentfulListenerMongo } from "./intentful_engine/intentful_listener_mongo_simple";
 import { getEntropyFn } from "./utils/utils"
+import { getConfig } from "./utils/arg_parser"
 
-declare var process: {
-    env: {
-        SERVER_PORT: string,
-        MONGO_DB: string,
-        MONGO_URL: string,
-        PAPIEA_PUBLIC_URL: string,
-        DEBUG_LEVEL: string,
-        PAPIEA_ADMIN_S2S_KEY: string,
-        LOGGING_LEVEL: string
-        PAPIEA_DEBUG: string,
-        DELETED_WATCHER_PERSIST_SECONDS: number,
-        RANDOM_ENTITY_BATCH_SIZE: number,
-    },
-    title: string;
-};
-
-const mongoUrl = process.env.MONGO_URL || 'mongodb://mongo:27017';
-const mongoDb = process.env.MONGO_DB || 'papiea';
-const loggingLevel = logLevelFromString(process.env.LOGGING_LEVEL) ?? 'debug';
-const batchSize = process.env.RANDOM_ENTITY_BATCH_SIZE ?? 5
-const deletedWatcherPersists = process.env.DELETED_WATCHER_PERSIST_SECONDS ?? 100
-const papieaDebug = process.env.PAPIEA_DEBUG === "true"
+process.title = "papiea_diff_resolver"
+const config = getConfig()
+const mongoUrl = config.mongo_url
+const mongoDb = config.mongo_db
+const loggingLevel = logLevelFromString(config.logging_level)
+const batchSize = config.entity_batch_size
+const deletedWatcherPersists = config.deleted_watcher_persist_time
+const papieaDebug = config.debug
 
 async function setUpDiffResolver() {
     const logger = LoggerFactory.makeLogger({level: loggingLevel});

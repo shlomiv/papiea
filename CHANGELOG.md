@@ -1,3 +1,4 @@
+- Version 0.7.8+1557: fixed multiple validation problems (#512) PR url: git@github.com:nutanix/papiea.git/pull/512
 - Version 0.7.7+1552: Bump bl from 2.2.0 to 2.2.1 in /papiea-engine (#506)
 - Version 0.7.6+1545: Exponential backoff implementation (#507)
 - Version 0.7.5+1541: Fixed provider not found return error code from 500 to 404 (#509)

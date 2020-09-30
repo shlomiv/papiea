@@ -86,34 +86,34 @@ Papiea uses configuration file to apply settings. Sample config file is located 
 The configuration parameters are following:
 
 ```
-{
-    // Server port (default - 3000)
-    server_port: number,
 
-    // Public facing papiea address (default - "http://localhost:3000")
-    public_addr: string,
+# Server port (default - 3000)
+server_port: number,
 
-    // Mongo url (default - "mongodb://mongo:27017")
-    mongo_url: string,
+# Public facing papiea address (default - "http://localhost:3000")
+public_addr: string,
 
-    // Mongo Db collection name to store papiea entities in (default - "papiea")
-    mongo_db: string,
+# Mongo url (default - "mongodb://mongo:27017")
+mongo_url: string,
 
-    // Papiea Admin S2S key (default - "")
-    admin_key: string,
+# Mongo Db collection name to store papiea entities in (default - "papiea")
+mongo_db: string,
 
-    // Papiea debug mode toggle (default - true)
-    debug: boolean,
+# Papiea Admin S2S key (default - "")
+admin_key: string,
 
-    // Default logging level for papiea (default - "info")
-    logging_level: string,
+# Papiea debug mode toggle (default - true)
+debug: boolean,
 
-    // Size of batch of random entities to be added to diff resolution each N seconds (default - 5)
-    entity_batch_size: number,
+# Default logging level for papiea (default - "info")
+logging_level: string,
 
-    // Deleted watcher persists in database for this amount of seconds (default - 100)
-    deleted_watcher_persist_time: number
-}
+# Size of batch of random entities to be added to diff resolution each N seconds (default - 5)
+entity_batch_size: number,
+
+# Deleted watcher persists in database for this amount of seconds (default - 100)
+deleted_watcher_persist_time: number
+
 ```
 
 A set of these variables might be used to override the preceeding config file params.
@@ -128,7 +128,7 @@ General pattern is - PAPIEA_{VARIABLE_NAME_CAPITALIZED}
 Additional env variables:
 
 * `HOT_RELOAD` - use nodemon to autoreload papiea on code changes
-* `PAPIEA_CONFIG_PATH` - path to config file (default - `../../papiea-config.json` rootDir is counted from `papiea
+* `PAPIEA_CONFIG_PATH` - path to config file (default - `../../papiea-config.yaml` rootDir is counted from `papiea
 -engine/src/utils`)
 
 

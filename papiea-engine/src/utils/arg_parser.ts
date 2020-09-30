@@ -1,9 +1,30 @@
 import * as fs from "fs"
+import { load } from "js-yaml"
+import * as path from "path"
 
-const PAPIEA_CONFIG_PATH = process.env.PAPIEA_CONFIG_PATH ?? "../../papiea-config.json"
+const PAPIEA_CONFIG_PATH = process.env.PAPIEA_CONFIG_PATH ?? path.join(__dirname, "../../papiea-config.yaml")
+
+const toNum: (val: string) => number = Number.parseInt
+const toStr: (val: string) => string = (val: string) => val
+const toBool: (val: string) => boolean = (val: string) => {
+    return !["0", "null", "false", ""].includes(val);
+
+}
+
+const TRANSFORM_FN_MAP: { [key in keyof PapieaConfig]: (val: string) => PapieaConfig[key] } = {
+    server_port: toNum,
+    entity_batch_size: toNum,
+    deleted_watcher_persist_time: toNum,
+    debug: toBool,
+    public_addr: toStr,
+    mongo_url: toStr,
+    mongo_db: toStr,
+    admin_key: toStr,
+    logging_level: toStr
+}
 
 export interface PapieaConfig {
-    [key: string]: string | number | boolean
+    [k: string]: string | number | boolean
 
     // Server port
     server_port: number,
@@ -33,13 +54,6 @@ export interface PapieaConfig {
     deleted_watcher_persist_time: number
 }
 
-const TRANSFORM_FN_MAP: { [key: string]: Function } = {
-    server_port: Number.parseInt,
-    entity_batch_size: Number.parseInt,
-    deleted_watcher_persist_time: Number.parseInt,
-    debug: (val: string) => val === "true"
-}
-
 const PAPIEA_DEFAULT_CFG: PapieaConfig = {
     server_port: 3000,
     public_addr: "http://localhost:3000",
@@ -53,7 +67,7 @@ const PAPIEA_DEFAULT_CFG: PapieaConfig = {
 }
 
 export function getConfig(): PapieaConfig {
-    const config: PapieaConfig = JSON.parse(fs.readFileSync(PAPIEA_CONFIG_PATH, 'utf-8'))
+    const config: PapieaConfig = load(fs.readFileSync(PAPIEA_CONFIG_PATH, 'utf-8'))
     const mapConfigToEnv: { [key: string]: string } = {}
     Object.assign(mapConfigToEnv, config)
     for (let key in mapConfigToEnv) {
@@ -77,7 +91,6 @@ export function getConfig(): PapieaConfig {
 
     // Merge with default to populate undefined values
     const mergedConfig = {}
-    Object.assign(mergedConfig, PAPIEA_DEFAULT_CFG)
-    Object.assign(mergedConfig, config)
+    Object.assign(mergedConfig, PAPIEA_DEFAULT_CFG, config)
     return mergedConfig as PapieaConfig
 }

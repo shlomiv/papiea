@@ -68,16 +68,16 @@ const PAPIEA_DEFAULT_CFG: PapieaConfig = {
 
 export function getConfig(): PapieaConfig {
     const config: PapieaConfig = load(fs.readFileSync(PAPIEA_CONFIG_PATH, 'utf-8'))
-    const mapConfigToEnv: { [key: string]: string } = {}
-    Object.assign(mapConfigToEnv, config)
+    const mapConfigToEnv: { [key in keyof PapieaConfig]: string } = {} as any
+    Object.assign(mapConfigToEnv, PAPIEA_DEFAULT_CFG)
     for (let key in mapConfigToEnv) {
         mapConfigToEnv[key] = `PAPIEA_${key.toUpperCase()}`
     }
     // If there is an env variable prefixed with PAPIEA_ and has the same name
     // as the config parameter - override config param with an env variable
-    for (let key in config) {
-        if (!config.hasOwnProperty(key)) {
-            continue
+    for (let key in PAPIEA_DEFAULT_CFG) {
+        if (PAPIEA_DEFAULT_CFG.hasOwnProperty(key) && !config.hasOwnProperty(key)) {
+            config[key] = PAPIEA_DEFAULT_CFG[key]
         }
         if (process.env[mapConfigToEnv[key]] !== undefined) {
             const transformFn = TRANSFORM_FN_MAP[key]
@@ -88,9 +88,5 @@ export function getConfig(): PapieaConfig {
             }
         }
     }
-
-    // Merge with default to populate undefined values
-    const mergedConfig = {}
-    Object.assign(mergedConfig, PAPIEA_DEFAULT_CFG, config)
-    return mergedConfig as PapieaConfig
+    return config
 }

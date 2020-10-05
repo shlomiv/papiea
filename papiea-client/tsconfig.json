@@ -15,5 +15,5 @@
       ]
     }
   },
-  "exclude": ["node_modules", "**/__tests__/*", "build"]
+  "exclude": ["node_modules", "**/__tests__/*"]
 }

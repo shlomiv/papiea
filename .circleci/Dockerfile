@@ -21,7 +21,7 @@ COPY --from=debug /code /code
 RUN curl -o- -L yarnpkg.com/install.sh | bash
 ENV PATH="${PATH}:/root/.yarn/bin"
 
-RUN cd /code
+RUN cd /code && make remove_dev_deps
 
 RUN rm -rf /code/papiea-engine/__tests__ && rm -rf /code/papiea-engine/__benchmarks__
 

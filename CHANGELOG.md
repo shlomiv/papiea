@@ -1,3 +1,4 @@
+- Version 0.0.203+1586: build dir to exclude while compiling
 - Version 0.0.202+1583: build packages on CI machine
 - Version 0.0.201+1580: Merge remote-tracking branch 'origin/igor-fix-incomplete-packages' into igor-fix-incomplete-packages
 - Version 0.0.200+1577: adding build to publish artifacts

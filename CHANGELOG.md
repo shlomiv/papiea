@@ -1,3 +1,7 @@
+- Version 0.0.203+1586: build dir to exclude while compiling
+- Version 0.0.202+1583: build packages on CI machine
+- Version 0.0.201+1580: Merge remote-tracking branch 'origin/igor-fix-incomplete-packages' into igor-fix-incomplete-packages
+- Version 0.0.200+1577: adding build to publish artifacts
 - Version 0.7.9+1569: Added papiea customization via file config (#510)
 - Version 0.7.8+1557: fixed multiple validation problems (#512) PR url: git@github.com:nutanix/papiea.git/pull/512
 - Version 0.7.7+1552: Bump bl from 2.2.0 to 2.2.1 in /papiea-engine (#506)

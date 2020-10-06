@@ -15,6 +15,9 @@ const TRANSFORM_FN_MAP: { [key in keyof PapieaConfig]: (val: string) => PapieaCo
     server_port: toNum,
     entity_batch_size: toNum,
     deleted_watcher_persist_time: toNum,
+    entity_poll_delay: toNum,
+    intent_resolve_delay: toNum,
+    diff_resolve_delay: toNum,
     debug: toBool,
     public_addr: toStr,
     mongo_url: toStr,
@@ -52,6 +55,15 @@ export interface PapieaConfig {
 
     // Deleted watcher persists in database for this amount of seconds
     deleted_watcher_persist_time: number
+
+    // Delay for polling entity changes in database in milliseconds
+    entity_poll_delay: number
+
+    // Delay for observing intent watcher status change in milliseconds
+    intent_resolve_delay: number
+
+    // Delay for rediffing watcher entities in milliseconds
+    diff_resolve_delay: number
 }
 
 const PAPIEA_DEFAULT_CFG: PapieaConfig = {
@@ -63,7 +75,10 @@ const PAPIEA_DEFAULT_CFG: PapieaConfig = {
     debug: true,
     logging_level: "info",
     entity_batch_size: 5,
-    deleted_watcher_persist_time: 100
+    deleted_watcher_persist_time: 100,
+    entity_poll_delay: 250,
+    intent_resolve_delay: 3000,
+    diff_resolve_delay: 1500
 }
 
 export function getConfig(): PapieaConfig {

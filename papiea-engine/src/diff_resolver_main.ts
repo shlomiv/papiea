@@ -17,6 +17,9 @@ const loggingLevel = logLevelFromString(config.logging_level)
 const batchSize = config.entity_batch_size
 const deletedWatcherPersists = config.deleted_watcher_persist_time
 const papieaDebug = config.debug
+const entityPollDelay = config.entity_poll_delay
+const intentResolveDelay = config.intent_resolve_delay
+const diffResolveDelay = config.diff_resolve_delay
 
 async function setUpDiffResolver() {
     const logger = LoggerFactory.makeLogger({level: loggingLevel});
@@ -35,7 +38,7 @@ async function setUpDiffResolver() {
     const watchlist: Watchlist = new Watchlist()
 
     const intentfulListenerMongo = new IntentfulListenerMongo(statusDb, specDb, watchlist)
-    intentfulListenerMongo.run(250)
+    intentfulListenerMongo.run(entityPollDelay)
     const entropyFunction = getEntropyFn(papieaDebug)
 
     const diffResolver = new DiffResolver(watchlist, watchlistDb, specDb, statusDb, providerDb, differ, intentfulContext, logger, batchSize, entropyFunction)
@@ -44,8 +47,8 @@ async function setUpDiffResolver() {
 
     console.log("Running diff resolver")
 
-    intentResolver.run(3000, deletedWatcherPersists)
-    await diffResolver.run(1500)
+    intentResolver.run(intentResolveDelay, deletedWatcherPersists)
+    await diffResolver.run(diffResolveDelay)
 }
 
 setUpDiffResolver().then(()=>console.debug("Exiting diff resolver")).catch(console.error)

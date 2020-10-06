@@ -86,7 +86,6 @@ Papiea uses configuration file to apply settings. Sample config file is located 
 The configuration parameters are following:
 
 ```
-
 # Server port (default - 3000)
 server_port: number,
 
@@ -114,6 +113,14 @@ entity_batch_size: number,
 # Deleted watcher persists in database for this amount of seconds (default - 100)
 deleted_watcher_persist_time: number
 
+# Delay for polling entity changes in database in milliseconds (default - 250)
+entity_poll_delay: number
+
+# Delay for observing intent watcher status change in milliseconds (default - 1500)
+intent_resolve_delay: number
+
+# Delay for rediffing watcher entities in milliseconds (default - 3000)
+diff_resolve_delay: number
 ```
 
 A set of these variables might be used to override the preceeding config file params.

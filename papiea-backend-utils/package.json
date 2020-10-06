@@ -1,6 +1,6 @@
 {
   "name": "papiea-backend-utils",
-  "version": "0.0.203+1586",
+  "version": "0.7.9+9999",
   "description": "Papiea backend library -- functionality common to both -engine and -sdk",
   "main": "build/index.js",
   "scripts": {

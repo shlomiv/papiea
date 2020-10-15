@@ -1,3 +1,4 @@
+- Version 0.7.12+1613: Add IntentWatcher API (#516) PR url: git@github.com:nutanix/papiea.git/pull/516
 - Version 0.7.11+1608: fixed the problem & introduced tests (#522) PR url: git@github.com:nutanix/papiea.git/pull/522
 - Version 0.7.10+1592: add new options to customize timeouts (#520)
 - Version 0.0.203+1586: build dir to exclude while compiling

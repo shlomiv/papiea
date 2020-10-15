@@ -5,6 +5,7 @@ from typing import Any, Callable, List, NoReturn, Optional, Type
 from aiohttp import web
 
 from .api import ApiInstance
+from .client import IntentWatcherClient
 from .core import (
     DataDescription,
     Entity,
@@ -21,7 +22,7 @@ from .core import (
     Version, ProcedureDescription,
 )
 from .python_sdk_context import IntentfulCtx, ProceduralCtx
-from .python_sdk_exceptions import InvocationError, SecurityApiError
+from .python_sdk_exceptions import ApiException, InvocationError, PapieaBaseException, SecurityApiError
 from .utils import json_loads_attrs, validate_error_codes
 
 
@@ -127,7 +128,6 @@ class SecurityApi(object):
         except Exception as e:
             raise SecurityApiError.from_error(e, "Cannot deactivate s2s key")
 
-
 class ProviderSdk(object):
     def __init__(
         self,
@@ -152,6 +152,7 @@ class ProviderSdk(object):
         self.meta_ext = {}
         self.allow_extra_props = allow_extra_props
         self._security_api = SecurityApi(self, s2skey)
+        self._intent_watcher_client = IntentWatcherClient(papiea_url, s2skey, logger)
         self._provider_api = ApiInstance(
             self.provider_url,
             headers={
@@ -234,7 +235,7 @@ class ProviderSdk(object):
             return kind_builder
 
     def add_kind(self, kind: Kind) -> Optional["KindBuilder"]:
-        if kind not in self._kind.indexOf(kind):
+        if kind not in self._kind:
             self._kind.append(kind)
             kind_builder = KindBuilder(kind, self, self.allow_extra_props)
             return kind_builder
@@ -370,6 +371,9 @@ class ProviderSdk(object):
     def s2s_key(self) -> Secret:
         return self._s2skey
 
+    @property
+    def intent_watcher(self) -> IntentWatcherClient:
+        return self._intent_watcher_client
 
 class KindBuilder(object):
     def __init__(self, kind: Kind, provider: ProviderSdk, allow_extra_props: bool):
@@ -505,7 +509,16 @@ class KindBuilder(object):
                         },
                     }
                 },
-                result={},
+                result={
+                    "IntentfulOutput": {
+                        "type": "object",
+                        "nullable": "true",
+                        "properties": {
+                            "delay_secs": {"type": "integer"}
+                        },
+                        "description": "Amount of seconds to wait before this entity will be checked again by the intent engine"
+                    }
+                },
                 execution_strategy=IntentfulExecutionStrategy.Basic,
                 procedure_callback=procedure_callback_url,
                 base_callback=callback_url,
@@ -532,7 +545,6 @@ class KindBuilder(object):
             except Exception as e:
                 e = InvocationError.from_error(e)
                 return web.json_response(e.to_response(), status=e.status_code)
-
         self.server_manager.register_handler(
             f"/{self.kind.name}/{sfs_signature}", procedure_callback_fn
         )

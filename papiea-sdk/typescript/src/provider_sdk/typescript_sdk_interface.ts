@@ -1,11 +1,11 @@
 // [[file:~/work/papiea-js/Papiea-design.org::*Typescript:%20/src/provider_sdk/typescript_sdk_interface][Typescript: /src/provider_sdk/typescript_sdk_interface:1]]
 import { Kind_Builder } from "./typescript_sdk";
-import { Data_Description, Version, Status, Entity, Entity_Reference, S2S_Key, UserInfo, Action, Secret, ErrorSchemas } from "papiea-core";
+import { Data_Description, Version, Status, Entity, Entity_Reference, S2S_Key, UserInfo, Action, Secret, ErrorSchemas, IntentWatcher } from "papiea-core";
 import {
     LOG_LEVELS, LogLevel, LoggerOptions, Logger, LoggerFactory
 } from 'papiea-backend-utils';
 import { IncomingHttpHeaders } from "http";
-import { provider_client, ProviderClient } from "papiea-client";
+import { ProviderClient } from "papiea-client";
 
 // Re-exports from papiea-backend.
 export {LOG_LEVELS, LogLevel, LoggerOptions, Logger, LoggerFactory}

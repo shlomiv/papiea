@@ -1,3 +1,4 @@
+- Version 0.7.11+1608: fixed the problem & introduced tests (#522) PR url: git@github.com:nutanix/papiea.git/pull/522
 - Version 0.7.10+1592: add new options to customize timeouts (#520)
 - Version 0.0.203+1586: build dir to exclude while compiling
 - Version 0.0.202+1583: build packages on CI machine

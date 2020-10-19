@@ -164,6 +164,29 @@ For now this clojurescript library is embedded, but it may end up in a different
     Use `.ssh/config` to name that host), then select `node` as the running environment and you should have a repl.
     Debugging is not yet working in cljs, but I simply use regular clojure if I need to live debug for now.
 
+## Issuing a bug report
+
+While issuing a bug report please make sure You created an issue https://github.com/nutanix/papiea/issues with the 
+following info:
+
+1. General description of the error
+
+2. Code samples or path which were used during problematic scenario execution
+
+3. Prerequisites: yaml definitions for spec, metadata extension, auth info if present
+
+4. Steps that caused the unwanted scenario
+   e.g. Defined a provider X, with procedure Y, provided input of spec
+   `{x: 10, y: 20}`, expected output of procedure was `{sum: 30}`, got `{sum: 10}`
+   
+Please make sure to:
+
+1. Anonymize your code (no personal or corporate details present in the provided info)
+
+2. Not link any private repositories
+
+3. Give an issue label `bug`
+
 ## License and copyright
 
 Copyright (C) 2018 Nutanix

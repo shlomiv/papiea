@@ -2,6 +2,11 @@
 # yarn lockfile v1
 
 
+"@assemblyscript/loader@^0.15.2":
+  version "0.15.2"
+  resolved "https://nutanix.jfrog.io/nutanix/api/npm/npm-virtual/@assemblyscript/loader/-/loader-0.15.2.tgz#bd52cdee5abc4c03076dffb5b02239ede37acd1d"
+  integrity sha1-vVLN7lq8TAMHbf+1sCI57eN6zR0=
+
 "@babel/code-frame@^7.0.0-beta.35":
   version "7.10.1"
   resolved "https://registry.yarnpkg.com/@babel/code-frame/-/code-frame-7.10.1.tgz#d5481c5095daa1c57e16e54c6f9198443afb49ff"
@@ -435,12 +440,25 @@ arrify@^2.0.1:
   resolved "https://registry.npmjs.org/arrify/-/arrify-2.0.1.tgz#c9655e9331e0abcd588d2a7cad7e9956f66701fa"
   integrity sha512-3duEwti880xqi4eAMN8AyR4a0ByT90zoYdLlevfrvU43vb0YZwZVfxOgxWrLXXXpyugL0hNZc9G6BiB5B3nUug==
 
+as-bind@^0.4.2:
+  version "0.4.2"
+  resolved "https://registry.npmjs.org/as-bind/-/as-bind-0.4.2.tgz#2a59304f82ce61eb4cd3768ea5da252762c8b6a7"
+  integrity sha512-3S0ldkUcirhxmHRJ4osonF2KsJdaAjDo0lNrlLoKO3wrm1U+GWdzgMtErKlxSpLURjjbXEXysBCd2aWu2IkhVw==
+
 asn1@~0.2.3:
   version "0.2.4"
   resolved "https://registry.yarnpkg.com/asn1/-/asn1-0.2.4.tgz#8d2475dfab553bb33e77b54e59e880bb8ce23136"
   integrity sha512-jxwzQpLQjSmWXgwaCZE9Nz+glAG01yF1QnWgbhGwHI5A6FRIEY6IVqtHhIepHqI7/kyEyQEagBC5mBEFlIYvdg==
   dependencies:
     safer-buffer "~2.1.0"
+
+assemblyscript@^0.15.2:
+  version "0.15.2"
+  resolved "https://registry.npmjs.org/assemblyscript/-/assemblyscript-0.15.2.tgz#601ee527d8baeeb76b21a36511e6a07505b7ecee"
+  integrity sha512-o4tjNWzE1i1d38Ga8uXQLJoO6wuz+WKL45Vg8uWZcfrbAO+K9pfjBGg+XveBU9lqjxQ/ScaX7V9k2LXnuokpmw==
+  dependencies:
+    binaryen "97.0.0-nightly.20201008"
+    long "^4.0.0"
 
 assert-plus@1.0.0, assert-plus@^1.0.0:
   version "1.0.0"
@@ -711,6 +729,11 @@ binary-extensions@^1.0.0:
   version "1.13.1"
   resolved "https://registry.yarnpkg.com/binary-extensions/-/binary-extensions-1.13.1.tgz#598afe54755b2868a5330d2aff9d4ebb53209b65"
   integrity sha512-Un7MIEDdUC5gNpcGDV97op1Ywk748MpHcFTHoYs6qnj1Z3j7I53VG3nwZhKzoBZmbdRNnb6WRdFlwl7tSDuZGw==
+
+binaryen@97.0.0-nightly.20201008:
+  version "97.0.0-nightly.20201008"
+  resolved "https://registry.npmjs.org/binaryen/-/binaryen-97.0.0-nightly.20201008.tgz#b9dc6fa3b92b764b66956d079190b48d2e22065f"
+  integrity sha512-GWV30FOQqz+vBIZRbc7GSasLNhh8BNLKH+2u2j5BjqM0WOEqqaP5iSj0mq72We2aVYqpBajJPI/CORY6o2RBxA==
 
 bindings@^1.5.0:
   version "1.5.0"
@@ -3422,6 +3445,11 @@ logform@^2.2.0:
     ms "^2.1.1"
     triple-beam "^1.3.0"
 
+long@^4.0.0:
+  version "4.0.0"
+  resolved "https://registry.npmjs.org/long/-/long-4.0.0.tgz#9a7b71cfb7d361a194ea555241c92f7468d5bf28"
+  integrity sha512-XsP+KhQif4bjX1kbuSiySJFNAehNxgLb6hPRGJ9QsUr8ajHkuXGdrHmFUTUUXhDwVX2R5bY4JNZEwbUiMhV+MA==
+
 loose-envify@^1.0.0:
   version "1.4.0"
   resolved "https://registry.yarnpkg.com/loose-envify/-/loose-envify-1.4.0.tgz#71ee51fa7be4caec1a63839f7e682d8132d30caf"
@@ -4085,14 +4113,14 @@ package-json@^4.0.0:
     semver "^5.1.0"
 
 "papiea-backend-utils@file:../papiea-backend-utils":
-  version "0.7.3"
+  version "0.7.10"
   dependencies:
     logform "^2.1.2"
-    papiea-core "file:../papiea-core"
+    papiea-core "file:../../../Library/Caches/Yarn/v6/npm-papiea-backend-utils-0.7.10-e0a74eec-23a9-47a1-8af3-1fdcc3714ea6-1602749527231/node_modules/papiea-core"
     winston "^3.3.3"
 
 "papiea-core@file:../papiea-core":
-  version "0.7.3"
+  version "0.7.10"
 
 parse-glob@^3.0.4:
   version "3.0.4"

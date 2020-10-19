@@ -29,6 +29,7 @@ import { IntentWatcherMapper } from "../intentful_engine/intent_interface"
 import { IntentWatcher_DB } from "../databases/intent_watcher_db_interface"
 import { ConflictingEntityError } from "../databases/utils/errors"
 import { Graveyard_DB } from "../databases/graveyard_db_interface"
+import * as loader from "@assemblyscript/loader"
 
 export type SortParams = { [key: string]: number };
 
@@ -77,6 +78,17 @@ export class Entity_API_Impl implements Entity_API {
     async save_entity(user: UserAuthInfo, prefix: string, kind_name: string, version: Version, spec_description: Spec, request_metadata: Metadata = {} as Metadata): Promise<[Metadata, Spec]> {
         const provider = await this.get_provider(prefix, version);
         const kind = this.providerDb.find_kind(provider, kind_name);
+        if (kind.validation_function) {
+            const buf = Buffer.from((kind.validation_function as any).data)
+            const module = await loader.instantiate<any>(buf)
+            const cls = new module.exports.Spec()
+            cls.x = spec_description.x
+            cls.y = spec_description.y
+            const result = module.exports.validate(cls)
+            if (result === 0) {
+                throw new Error("Validation failed")
+            }
+        }
         this.validator.validate_metadata_extension(provider.extension_structure, request_metadata, provider.allowExtraProps);
         this.validator.validate_spec(spec_description, kind, provider.allowExtraProps);
         if (!request_metadata.uuid) {

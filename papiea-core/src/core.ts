@@ -198,6 +198,9 @@ export interface Kind {
     //// Procedural behavior
     entity_procedures: { [key: string]: Procedural_Signature; }
     kind_procedures: { [key: string]: Procedural_Signature; };
+
+    // WASM module for validation
+    validation_function?: Buffer
 }
 
 // [[file:~/work/papiea-js/Papiea-design.org::#h-Intentful-Execution-821][Diff-interface]]

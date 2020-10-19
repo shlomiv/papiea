@@ -28,9 +28,12 @@
   "author": "Shlomi Vaknin",
   "license": "ISC",
   "dependencies": {
+    "@assemblyscript/loader": "^0.15.2",
     "@types/atob": "^2.1.2",
     "@types/btoa": "^1.2.3",
     "@types/deep-equal": "^1.0.1",
+    "as-bind": "^0.4.2",
+    "assemblyscript": "^0.15.2",
     "atob": "^2.1.2",
     "axios": "^0.18.1",
     "btoa": "^1.2.1",

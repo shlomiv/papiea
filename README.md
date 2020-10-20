@@ -166,8 +166,8 @@ For now this clojurescript library is embedded, but it may end up in a different
 
 ## Issuing a bug report
 
-While issuing a bug report please make sure You created an issue https://github.com/nutanix/papiea/issues with the 
-following info:
+While issuing a bug report please make sure you created an issue https://github.com/nutanix/papiea/issues with the 
+following info (make sure to use the right template):
 
 1. General description of the error
 
@@ -185,7 +185,9 @@ Please make sure to:
 
 2. Not link any private repositories
 
-3. Give an issue label `bug`
+3. Use a bug report template
+
+4. Give an issue label `bug`
 
 ## License and copyright
 

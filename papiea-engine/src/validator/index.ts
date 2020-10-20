@@ -30,6 +30,12 @@ function modelIsEmpty(model: any) {
     return false
 }
 
+function modelIsNullable(model: any) {
+    if (model && (model.required === undefined || model.required === null)) {
+        return true
+    }
+}
+
 const SwaggerModelValidator = require('swagger-model-validator');
 
 export interface Validator {
@@ -214,6 +220,10 @@ export class ValidatorImpl {
             }
         }
         if (model !== undefined && model !== null) {
+            // Model has fields but none of those are required
+            if (modelIsNullable(model) && (data === null || isEmpty(data))) {
+                return {valid: true}
+            }
             const res = this.validator.validate(data, model, models, allowBlankTarget, validatorDenyExtraProps);
             if (!res.valid) {
                 throw new ValidationError(res.errors);

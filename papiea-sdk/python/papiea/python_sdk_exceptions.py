@@ -43,7 +43,7 @@ class PapieaBaseException(Exception):
             exception = EXCEPTION_MAP.get(error["type"])
             if exception:
                 logger.info("There is exception")
-                raise exception(error["message"], resp, details)
+                raise exception(error.get("errors")[0].get("message"), resp, details)
         raise ApiException(resp.status, resp.reason, details)
 
 
@@ -95,7 +95,7 @@ class InvocationError(Exception):
 
     @staticmethod
     def from_error(e: Exception):
-        return InvocationError(500, str(e), [e])
+        return InvocationError(500, str(e), [])
 
     def to_response(self) -> dict:
         return {

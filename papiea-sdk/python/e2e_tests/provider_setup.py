@@ -60,7 +60,6 @@ async def create_user_s2s_key(sdk: ProviderSdk):
         raise SecurityApiError.from_error(err, str(err))
 
 async def setup_and_register_sdk() -> ProviderSdk:
-
     try:
         async with ProviderSdk.create_provider(
             papiea_test.PAPIEA_URL, papiea_test.PAPIEA_ADMIN_S2S_KEY, papiea_test.SERVER_CONFIG_HOST, papiea_test.SERVER_CONFIG_PORT, logger=papiea_test.logger
@@ -70,9 +69,9 @@ async def setup_and_register_sdk() -> ProviderSdk:
 
             # TODO: Add security policy to set the secure_with parameters
             sdk.metadata_extension(metadata_extension)
-    
+
             await create_provider_admin_s2s_key(sdk, papiea_test.PROVIDER_ADMIN_S2S_KEY)
-        
+
             bucket = sdk.new_kind(bucket_yaml)
             obj = sdk.new_kind(object_yaml)
 

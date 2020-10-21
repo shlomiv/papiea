@@ -2,8 +2,11 @@ import time
 
 import e2e_tests as papiea_test
 
+from aiohttp import ClientSession
+
 from papiea.core import Any, AttributeDict, IntentfulStatus, IntentWatcher
 from papiea.python_sdk import ProviderSdk
+from papiea.utils import json_loads_attrs
 
 async def cleanup():
     async with papiea_test.get_client(papiea_test.OBJECT_KIND) as object_entity_client:

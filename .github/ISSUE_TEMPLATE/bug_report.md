@@ -7,7 +7,7 @@ about: Create a report to help us improve
 <!-- NOTE: Please put only ONE problem per bug report.  If you're not sure whether you have one problem or multiple problems, please err on the side of filing more bug reports.  It's much easier to close duplicates than split a single issue into multiple issues. -->
 
 ### System Details
-<!-- THIS SECTION IS REQUIRED.  If you leave it out, I will just have to ask you for this information, and your bug will take longer to resolve. :) -->
+<!-- THIS SECTION IS REQUIRED.  Please fill in the necessary information -->
 
 - **Papiea Engine version**: [e.g. 1.0.62]
 - **Papiea SDK version:** [e.g. 1.0.62]
@@ -22,12 +22,13 @@ about: Create a report to help us improve
 handlers/intent handlers/etc) -->
 
 
-### Expected/As is Behavior
+### Expected/Actual Behavior
 <!-- A short description of what you expected to happen and what happened instead. -->
 
 
 ### Steps to Reproduce
-<!-- Steps to reproduce the problem.  The more detailed and concrete you can be, the better.  Screenshots are welcome if appropriate/helpful. -->
+<!-- Steps to reproduce the problem.  The more detailed and concrete you can be, the better.  Logs are welcome if 
+appropriate/helpful. -->
 1. Defined a provider X
 2. Defined a procedure Y,
 3. Provided input of spec to the procedure

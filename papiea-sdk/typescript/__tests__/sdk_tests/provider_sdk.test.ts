@@ -786,6 +786,26 @@ describe("Provider Sdk tests", () => {
         }
     });
 
+    test("Papiea should correctly validate if input param is an empty object and schema doesn't have any required fields", async () => {
+        const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
+        const location = sdk.new_kind(location_yaml);
+        const input_args = {type: 'object', properties: { ip: { type: "string" }}}
+        sdk.version(provider_version);
+        sdk.prefix("location_provider_empty_input");
+        sdk.provider_procedure(
+            "computeSumWithEmptyInput",
+            {input_schema: {input: input_args}},
+            async (ctx, input) => {
+            }
+        );
+        try {
+            await sdk.register();
+            const res: any = await axios.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/procedure/computeSumWithEmptyInput`, { input: {} });
+        } finally {
+            sdk.server.close();
+        }
+    });
+
     test("Papiea should fail validation if input param is undefined instead of empty object", async () => {
         expect.assertions(1)
         const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);

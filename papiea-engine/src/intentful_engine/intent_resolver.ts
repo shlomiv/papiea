@@ -102,7 +102,16 @@ export class IntentResolver {
 
     private async processActiveWatcher(active: IntentWatcher, entity: Entity): Promise<IntentWatcher> {
         const diffs = await this.rediff(entity)
-        const intersection = IntentResolver.getIntersection(diffs, active.diffs, (diff, watcher_diff) => deepEqual(diff.diff_fields, watcher_diff.diff_fields))
+        const intersection = IntentResolver.getIntersection(diffs, active.diffs, (diff, watcher_diff) => {
+            for (let active_diff of watcher_diff.diff_fields) {
+                for (let current_diff of diff.diff_fields) {
+                    if (deepEqual(active_diff, current_diff)) {
+                        return true
+                    }
+                }
+            }
+            return false
+        })
         if (intersection.size === 0) {
             active.status = IntentfulStatus.Completed_Successfully
             await this.intentWatcherDb.update_watcher(active.uuid, { status: active.status })

@@ -1,3 +1,4 @@
+- Version 0.7.18+1649: Merge branch 'nitesh/reduce_verbose_logging' of https://github.com/nutanix/papiea into nitesh/reduce_verbose_logging
 - Version 0.7.17+1644: Bump cryptography from 2.1.4 to 2.3 in /papiea-sdk/python/e2e_tests (#525) PR url: git@github.com:nutanix/papiea.git/pull/525
 - Version 0.7.16+1641: Merge remote-tracking branch 'origin/master'
 - Version 0.7.13+1631: fixed validator error connected to optional fields (#529) PR url: git@github.com:nutanix/papiea.git/pull/529

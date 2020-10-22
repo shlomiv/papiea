@@ -7,10 +7,12 @@ export class ProcedureInvocationError extends Error {
     status: number;
 
     protected constructor(errors: { [key: string]: any }[], status: number) {
-        super(JSON.stringify(errors));
+        const messages = errors.map(x => x.message);
+        super(JSON.stringify(messages));
         Object.setPrototypeOf(this, ProcedureInvocationError.prototype);
         this.errors = errors;
         this.status = status;
+        this.name = "ProcedureInvocationError"
     }
 
     static fromError(err: AxiosError, status?: number): ProcedureInvocationError

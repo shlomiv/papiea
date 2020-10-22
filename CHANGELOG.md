@@ -1,3 +1,4 @@
+- Version 0.7.16+1641: Merge remote-tracking branch 'origin/master'
 - Version 0.7.13+1631: fixed validator error connected to optional fields (#529) PR url: git@github.com:nutanix/papiea.git/pull/529
 - Version 0.7.12+1613: Add IntentWatcher API (#516) PR url: git@github.com:nutanix/papiea.git/pull/516
 - Version 0.7.11+1608: fixed the problem & introduced tests (#522) PR url: git@github.com:nutanix/papiea.git/pull/522

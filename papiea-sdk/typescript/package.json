@@ -1,6 +1,6 @@
 {
   "name": "papiea-sdk",
-  "version": "0.7.18+1649",
+  "version": "0.7.19+1653",
   "main": "build/provider_sdk/typescript_sdk.js",
   "files": [
     "build",

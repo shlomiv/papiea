@@ -1068,6 +1068,57 @@ describe("Intentful Workflow tests", () => {
             sdk.server.close();
         }
     })
+
+    test("Diff selection order should be random", async () => {
+        expect.assertions(2);
+        const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
+        try {
+            first_provider_prefix = "location_provider_intentful_7"
+            const location = sdk.new_kind(locationDataDescription);
+            sdk.version(provider_version);
+            sdk.prefix(first_provider_prefix);
+            let x_invoked = 0
+            let y_invoked = 0
+            location.on("x", async (ctx, entity, input) => {
+                x_invoked++
+            })
+            location.on("y", async (ctx, entity, input) => {
+                y_invoked++
+            })
+            location.on_create(async (ctx, entity) => {
+                const { metadata, spec } = entity
+                await ctx.update_status(metadata!, spec!)
+            })
+            await sdk.register();
+            const kind_name = sdk.provider.kinds[0].name;
+            const { data: { metadata, spec } } = await entityApi.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }`, {
+                spec: {
+                    x: 10,
+                    y: 11
+                }
+            })
+            first_provider_to_delete_entites.push(metadata)
+            await timeout(5000)
+            const { data: { watcher } } = await entityApi.put(`/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`, {
+                spec: {
+                    x: 20,
+                    y: 21
+                },
+                metadata: {
+                    spec_version: 1
+                }
+            })
+            try {
+                await timeout(10000)
+                expect(x_invoked).toBeGreaterThan(1)
+                expect(y_invoked).toBeGreaterThan(1)
+            } catch (e) {
+                console.log(`Couldn't wait timeout: ${e}`)
+            }
+        } finally {
+            sdk.server.close();
+        }
+    })
 })
 
 describe("Intentful Workflow test sfs validation", () => {

@@ -46,6 +46,7 @@ const providerApiAdmin = axios.create({
 describe("Intentful Workflow tests", () => {
 
     const locationDataDescription = new DescriptionBuilder().withBehaviour(IntentfulBehaviour.Differ).build()
+    const locationDataDescriptionNonDiffer = new DescriptionBuilder().withBehaviour(IntentfulBehaviour.SpecOnly).build()
     const locationDataDescriptionDuplicate = new DescriptionBuilder().withBehaviour(IntentfulBehaviour.Differ).build()
     const xFieldStructure = {"type": "array", "items": {"type": "object", "properties": {"ip": {"type": "string"}}}}
     const locationDataDescriptionArraySfs = new DescriptionBuilder(DescriptionType.Location, "Location").withBehaviour(IntentfulBehaviour.Differ).withStatusOnlyField("z").withField("x", xFieldStructure).build()
@@ -931,6 +932,131 @@ describe("Intentful Workflow tests", () => {
                         expect(intent_watcher.status).toBe(IntentfulStatus.Completed_Successfully)
                         const result = await entityApi.get(`/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`)
                         expect(result.data.status.x.length).toEqual(2)
+                        return
+                    }
+                    await timeout(5000)
+                }
+            } catch (e) {
+                console.log(`Couldn't get entity: ${e}`)
+            }
+        } finally {
+            sdk.server.close();
+        }
+    })
+
+    /*
+    The flow of this test is as follows:
+    1. Create an intentful handler watching on array addition operation SFS
+    2. Add 2 array members to spec
+    3. In the handler update status including a single array element, fail 2nd addition with 409 (conflicting entity)
+    4. Add second array member to the status while inside the retrying handler
+    5. Check that intent resolved successfully, record amount of diffs observed in the handler (should be 2 -> 1 diff)
+     */
+    test("Change array fields with 2 members, making one member initially fail", async () => {
+        expect.assertions(3);
+        const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
+        try {
+            first_provider_prefix = "location_provider_intentful_5"
+            const location_array = sdk.new_kind(locationDataDescriptionArraySfs);
+            const location = sdk.new_kind(locationDataDescriptionNonDiffer).kind.name;
+            sdk.version(provider_version);
+            sdk.prefix(first_provider_prefix);
+            const id = uuid()
+            let last_recorded_diff_length = 0
+            location_array.on("x.+{ip}", async (ctx, entity, diff) => {
+                last_recorded_diff_length = diff.length
+                let status: any[] = []
+                if (diff.length === 2) {
+                    // Initially set a status of only one object
+                    status = [
+                        {ip: '1'}
+                    ]
+                }
+                if (diff.length === 1) {
+                    // Set to status that satisfies spec
+                    status = [
+                        {ip: '1'},
+                        {ip: '2'}
+                    ]
+                }
+                for (let {spec: [fields]} of diff) {
+                    const ip = Number.parseInt(fields.ip)
+                    if (diff.length == 2) {
+                        // This should trigger duplicate spec version error when there are 2 diffs
+                        //     [
+                        //       { keys: { ip: '1' }, key: 'x', spec: [ [Object] ], status: [] },
+                        //       { keys: { ip: '2' }, key: 'x', spec: [ [Object] ], status: [] }
+                        //     ]
+                        // But should be omitted when we receive one
+                        // [ { keys: { ip: '2' }, key: 'x', spec: [ [Object] ], status: [] } ]
+                        await entityApi.put(`${sdk.entity_url}/${sdk.provider.prefix}/${sdk.provider.version}/${location}/${id}`, {
+                            spec: {
+                                x: ip,
+                                y: 11
+                            },
+                            metadata: {
+                                spec_version: 1
+                            }
+                        })
+                    }
+                    await providerApiAdmin.post(`/${sdk.provider.prefix}/${sdk.provider.version}/update_status`, {
+                        context: "some context",
+                        entity_ref: {
+                            uuid: entity.metadata.uuid,
+                            kind: entity.metadata.kind
+                        },
+                        status: {
+                            x: status,
+                            y: 11
+                        }
+                    })
+                }
+            })
+            location_array.on_create(async (ctx, entity) => {
+                const { metadata, spec } = entity
+                await ctx.update_status(metadata!, spec!)
+            })
+            await sdk.register();
+            const kind_name = sdk.provider.kinds[0].name;
+            await entityApi.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ location }`, {
+                spec: {
+                    x: 10,
+                    y: 11
+                },
+                metadata: {
+                    uuid: id
+                }
+            })
+            const { data: { metadata, spec } } = await entityApi.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }`, {
+                spec: {
+                    x: [],
+                    y: 11
+                }
+            })
+            first_provider_to_delete_entites.push(metadata)
+            await timeout(5000)
+            const { data: { watcher } } = await entityApi.put(`/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`, {
+                spec: {
+                    x: [
+                        { ip: "1" },
+                        { ip: "2" }
+                    ],
+                    y: 11
+                },
+                metadata: {
+                    spec_version: 1
+                }
+            })
+            let retries = 10
+            try {
+                let watcherApi = sdk.get_intent_watcher_client()
+                for (let i = 1; i <= retries; i++) {
+                    const intent_watcher = await watcherApi.get(watcher.uuid)
+                    if (intent_watcher.status === IntentfulStatus.Completed_Successfully) {
+                        expect(intent_watcher.status).toBe(IntentfulStatus.Completed_Successfully)
+                        const result = await entityApi.get(`/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`)
+                        expect(result.data.status.x.length).toEqual(2)
+                        expect(last_recorded_diff_length).toEqual(1)
                         return
                     }
                     await timeout(5000)

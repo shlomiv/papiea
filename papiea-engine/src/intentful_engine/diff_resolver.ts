@@ -161,63 +161,24 @@ export class DiffResolver {
             if (!entries.hasOwnProperty(key)) {
                 continue
             }
-            let [entry_reference, current_diff, current_backoff] = entries[key]
+
+            let [entry_reference, diff_results] = entries[key]
             this.logger.debug(`Diff engine processing ${entry_reference.provider_reference.provider_prefix}/${entry_reference.provider_reference.provider_version}/${entry_reference.entity_reference.kind} entity with uuid: ${entry_reference.entity_reference.uuid}`)
-            let rediff: RediffResult | null = null
-            if (current_diff && current_backoff) {
-                // Delay for rediffing
-                if ((new Date().getTime() - current_backoff.delay.delay_set_time.getTime()) / 1000 > current_backoff.delay.delay_seconds) {
-                    rediff = await this.rediff(entry_reference)
-                    if (!rediff) {
-                        await this.removeFromWatchlist(entry_reference)
-                        continue
-                    }
-                    const diff_index = rediff.diffs.findIndex(diff => deepEqual(diff.diff_fields, current_diff!.diff_fields))
-                    // Diff still exists, we should check the health and retry if not healthy
-                    if (diff_index !== -1) {
-                        try {
-                            if (await this.checkHealthy(rediff.diffs![diff_index])) {
-                                continue
-                            }
-                            this.logger.info(`Starting to retry resolving diff for entity with uuid: ${rediff.metadata!.uuid}`)
-                            const delay = await this.launchOperation({diff: rediff.diffs[diff_index], ...rediff})
-                            entries[key][2] = this.incrementDiffBackoff(entries[key][2]!, delay, rediff.kind)
-                            continue
-                        } catch (e) {
-                            this.logger.debug(`Couldn't invoke retry handler for entity with uuid ${rediff.metadata!.uuid}: ${e}`)
-                            entries[key][2] = this.incrementDiffBackoff(entries[key][2]!, null, rediff.kind)
-                            const error_msg = e?.response?.data?.message
-                            await this.onIntentfulHandlerFail.call(entry_reference, error_msg)
-                            continue
-                        }
-                    }
-                } else {
-                    // Time for rediff hasn't come, continuing
-                    continue
-                }
-            }
-            // Check if we have already rediffed this entity
+            let rediff: RediffResult | null = await this.rediff(entry_reference)
             if (!rediff) {
-                rediff = await this.rediff(entry_reference)
-                if (!rediff) {
+                await this.removeFromWatchlist(entry_reference)
+                continue
+            }
+            if (diff_results.length === 0) {
+                if (rediff.diffs.length === 0) {
                     await this.removeFromWatchlist(entry_reference)
                     continue
                 }
+                for (let diff of rediff.diffs) {
+                    entries[key][1].push([diff, null])
+                }
             }
-            if (rediff.diffs.length === 0) {
-                await this.removeFromWatchlist(entry_reference)
-                continue
-            }
-            // No active diffs found, choosing the next one
-            const result = await this.startNewDiffResolution(entry_reference, rediff)
-            if (result === null) {
-                await this.removeFromWatchlist(entry_reference)
-                continue
-            }
-            const new_diff = result![0]
-            const new_delay = result![1]
-            entries[key][1] = new_diff
-            entries[key][2] = new_delay
+            await this.startDiffsResolution(entry_reference, diff_results, rediff)
         }
         await this.watchlistDb.update_watchlist(this.watchlist)
     }
@@ -226,28 +187,54 @@ export class DiffResolver {
         return this.batchSize
     }
 
-    private async startNewDiffResolution(entry_reference: EntryReference, rediff: RediffResult): Promise<null | [Diff, Backoff]> {
+    private async startDiffsResolution(entry_reference: EntryReference, diff_results: [Diff, Backoff | null][], rediff: RediffResult) {
         const {diffs, metadata, provider, kind} = rediff
         let next_diff: Diff
+        let idx: number
         const diff_selection_strategy = this.intentfulContext.getDiffSelectionStrategy(kind!)
         try {
-            next_diff = diff_selection_strategy.selectOne(diffs)
+            [next_diff, idx] = diff_selection_strategy.selectOne(diffs)
         } catch (e) {
             this.logger.debug(`Entity with uuid ${metadata!.uuid}: ${e}`)
             return null
         }
-        next_diff.handler_url = `${next_diff.intentful_signature.base_callback}/healthcheck`
-        try {
-            const delay = await this.launchOperation({diff: next_diff, ...rediff})
-            this.logger.info(`Starting to resolve diff for ${provider.prefix}/${provider.version}/${kind.name} entity with uuid: ${metadata!.uuid}`)
-            const backoff = this.createDiffBackoff(kind, delay)
-            return [next_diff, backoff]
-        } catch (e) {
-            this.logger.debug(`Couldn't invoke handler for entity with uuid ${metadata!.uuid}: ${e}`)
-            const backoff = this.createDiffBackoff(kind, null)
-            const error_msg = e?.response?.data?.message
-            await this.onIntentfulHandlerFail.call(entry_reference, error_msg)
-            return [next_diff, backoff]
+        const backoff: Backoff | null = diff_results[idx][1]
+        if (!backoff) {
+            next_diff.handler_url = `${next_diff.intentful_signature.base_callback}/healthcheck`
+            try {
+                const delay = await this.launchOperation({diff: next_diff, ...rediff})
+                const backoff = this.createDiffBackoff(kind, delay)
+                this.logger.info(`Starting to resolve diff for ${provider.prefix}/${provider.version}/${kind.name} entity with uuid: ${metadata!.uuid}`)
+                diff_results[idx][1] = backoff
+            } catch (e) {
+                this.logger.debug(`Couldn't invoke handler for entity with uuid ${metadata!.uuid}: ${e}`)
+                const backoff = this.createDiffBackoff(kind, null)
+                const error_msg = e?.response?.data?.message
+                await this.onIntentfulHandlerFail.call(entry_reference, error_msg)
+                diff_results[idx][1] = backoff
+            }
+        } else {
+            // Delay for rediffing
+            if ((new Date().getTime() - backoff.delay.delay_set_time.getTime()) / 1000 > backoff.delay.delay_seconds) {
+                const diff_index = rediff.diffs.findIndex(diff => deepEqual(diff.diff_fields, next_diff!.diff_fields))
+                // Diff still exists, we should check the health and retry if not healthy
+                if (diff_index !== -1) {
+                    try {
+                        // TODO: this seems like a bug
+                        if (await this.checkHealthy(rediff.diffs![diff_index])) {
+                            return
+                        }
+                        this.logger.info(`Starting to retry resolving diff for entity with uuid: ${rediff.metadata!.uuid}`)
+                        const delay = await this.launchOperation({diff: rediff.diffs[diff_index], ...rediff})
+                        diff_results[idx][1] = this.incrementDiffBackoff(backoff, delay, rediff.kind)
+                    } catch (e) {
+                        this.logger.debug(`Couldn't invoke retry handler for entity with uuid ${rediff.metadata!.uuid}: ${e}`)
+                        diff_results[idx][1] = this.incrementDiffBackoff(backoff, null, rediff.kind)
+                        const error_msg = e?.response?.data?.message
+                        await this.onIntentfulHandlerFail.call(entry_reference, error_msg)
+                    }
+                }
+            }
         }
     }
 
@@ -262,7 +249,7 @@ export class DiffResolver {
         for (let [metadata, _] of entities) {
             const ent = create_entry(metadata)
             if (!this.watchlist.has(ent)) {
-                this.watchlist.set([ent, undefined, undefined])
+                this.watchlist.set([ent, []])
             }
         }
         return this.watchlistDb.update_watchlist(this.watchlist)

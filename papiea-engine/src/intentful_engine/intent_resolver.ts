@@ -188,7 +188,7 @@ export class IntentResolver {
             if (!entries.hasOwnProperty(key)) {
                 continue
             }
-            const [entry_ref, diff, delay] = entries[key]
+            const [entry_ref, _] = entries[key]
             const watchers = await this.intentWatcherDb.list_watchers({ entity_ref: entry_ref.entity_reference })
             if (watchers.length !== 0) {
                 try {

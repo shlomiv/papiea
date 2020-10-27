@@ -4,8 +4,8 @@ import * as assert from "assert";
 
 export class BasicDiffSelectionStrategy implements DiffSelectionStrategyInterface{
 
-    selectOne(diffs: Diff[]): Diff {
+    selectOne(diffs: Diff[]): [Diff, number] {
         assert(diffs.filter(diff => diff?.intentful_signature?.procedure_callback).length > 0, "No valid diffs to choose from")
-        return diffs[0]
+        return [diffs[0], 0]
     }
 }

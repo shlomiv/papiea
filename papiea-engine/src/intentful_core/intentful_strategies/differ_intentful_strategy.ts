@@ -34,6 +34,7 @@ export class DifferIntentfulStrategy extends IntentfulStrategy {
     async update(metadata: Metadata, spec: Spec): Promise<IntentWatcher | null> {
         const [_, status] = await this.statusDb.get_status(metadata)
         let watcher_spec_version = metadata.spec_version + 1
+        await this.update_entity(metadata, spec)
         const watcher: IntentWatcher = {
             uuid: uuid(),
             entity_ref: {
@@ -54,13 +55,6 @@ export class DifferIntentfulStrategy extends IntentfulStrategy {
         if (!watchlist.has(ent)) {
             watchlist.set([ent, []])
             await this.watchlistDb.update_watchlist(watchlist)
-        }
-        try {
-            await this.update_entity(metadata, spec)
-        } catch (e) {
-            watcher.status = IntentfulStatus.Failed
-            await this.intentWatcherDb.update_watcher(watcher.uuid, { ...watcher })
-            throw e
         }
         return watcher
     }

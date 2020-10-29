@@ -59,7 +59,7 @@ export class IntentResolver {
     }
 
     private static inTerminalState(watcher: IntentWatcher): boolean {
-        const terminal_states = [IntentfulStatus.Completed_Partially, IntentfulStatus.Completed_Successfully, IntentfulStatus.Outdated, IntentfulStatus.Failed]
+        const terminal_states = [IntentfulStatus.Completed_Partially, IntentfulStatus.Completed_Successfully, IntentfulStatus.Outdated]
         return terminal_states.includes(watcher.status)
     }
 

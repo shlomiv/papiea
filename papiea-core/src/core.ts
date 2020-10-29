@@ -29,9 +29,6 @@ export enum IntentfulStatus {
 
     // Next spec version overwrote watched fields
     Outdated = "Outdated",
-
-    // Compare and swap during spec change has failed
-    Failed = "Failed"
 }
 
 export interface UserInfo {

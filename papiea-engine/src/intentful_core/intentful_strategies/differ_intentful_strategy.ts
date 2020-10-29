@@ -43,8 +43,7 @@ export class DifferIntentfulStrategy extends IntentfulStrategy {
             diffs: [],
             spec_version: watcher_spec_version,
             user: this.user,
-            status: IntentfulStatus.Pending,
-            times_failed: 0
+            status: IntentfulStatus.Active,
         }
         for (let diff of this.differ.diffs(this.kind!, spec, status)) {
             watcher.diffs.push(diff)
@@ -53,14 +52,12 @@ export class DifferIntentfulStrategy extends IntentfulStrategy {
         const watchlist = await this.watchlistDb.get_watchlist()
         const ent = create_entry(metadata)
         if (!watchlist.has(ent)) {
-            watchlist.set([ent, undefined, undefined])
+            watchlist.set([ent, []])
             await this.watchlistDb.update_watchlist(watchlist)
         }
         try {
             await this.update_entity(metadata, spec)
         } catch (e) {
-            watcher.times_failed++
-            watcher.last_handler_error = e.message
             watcher.status = IntentfulStatus.Failed
             await this.intentWatcherDb.update_watcher(watcher.uuid, { ...watcher })
             throw e
@@ -73,7 +70,7 @@ export class DifferIntentfulStrategy extends IntentfulStrategy {
         const watchlist = await this.watchlistDb.get_watchlist()
         const ent = create_entry(created_metadata)
         if (!watchlist.has(ent)) {
-            watchlist.set([ent, undefined, undefined])
+            watchlist.set([ent, []])
             await this.watchlistDb.update_watchlist(watchlist)
         }
         return [created_metadata, created_spec]

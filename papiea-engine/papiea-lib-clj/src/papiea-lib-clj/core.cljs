@@ -104,12 +104,13 @@
 ;; following a path, essentially a `get-in` like function.
 (defmethod sfs-compiler :papiea/simple [[_ & ks]]
   (fn[results]
-    (mapv (fn[{:keys [keys key spec-val status-val]}]
+    (mapv (fn[{:keys [path keys key spec-val status-val]}]
             (let [s1 (mapv #(get-in' % ks) spec-val)
                   s2 (mapv #(get-in' % ks) status-val)
                   empty (or (empty? s1) (empty? s2))]
               {:keys keys
                :key (if empty key (last ks))
+               :path (conj (ensure-vec path) (if empty key (last ks)))
                :spec-val  (if empty spec-val (flat-choices s1))
                :status-val (if empty status-val (flat-choices s2))}))
           results)))
@@ -119,7 +120,7 @@
 (defmethod sfs-compiler :papiea/vector [[_ action & ks]]
   (fn[results]
     (into []
-          (mapcat (fn[{:keys [keys key spec-val status-val]}]
+          (mapcat (fn[{:keys [path keys key spec-val status-val]}]
                     (->> (group-by #(get-in' % ks)
                                    (into
                                     (mapv #(assoc % :papiea/spec true) spec-val) ;; Should use meta instead?
@@ -127,6 +128,7 @@
                          (mapv (fn[[id-val [s1 s2]]]
                                  {:keys       (assoc keys (last ks) id-val)
                                   :key        key
+                                  :path (conj (ensure-vec path) id-val )
                                   :spec-val   (ensure-vec(cond (:papiea/spec s1) (dissoc s1 :papiea/spec)
                                                                (:papiea/spec s2) (dissoc s2 :papiea/spec)
                                                                :else             nil))

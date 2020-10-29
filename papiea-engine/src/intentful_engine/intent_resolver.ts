@@ -143,7 +143,7 @@ export class IntentResolver {
             const watchers = await this.intentWatcherDb.list_watchers({ entity_ref: { uuid: entity.metadata.uuid, kind: entity.metadata.kind } })
             const current_spec_version = entity.metadata.spec_version
             const latest_watcher = this.getLatestWatcher(watchers)
-            if (latest_watcher && latest_watcher.spec_version === current_spec_version && latest_watcher.status === IntentfulStatus.Pending) {
+            if (latest_watcher && latest_watcher.spec_version === current_spec_version && latest_watcher.status === IntentfulStatus.Active) {
                 latest_watcher.status = IntentfulStatus.Active
                 await this.intentWatcherDb.update_watcher(latest_watcher.uuid, { status: latest_watcher.status })
                 await this.processActiveWatcher(latest_watcher, entity)
@@ -151,7 +151,7 @@ export class IntentResolver {
                 await this.processOutdatedWatchers(rest, entity)
             } else if (latest_watcher && latest_watcher.spec_version === current_spec_version && latest_watcher.status === IntentfulStatus.Active) {
                 await this.processActiveWatcher(latest_watcher, entity)
-                const pending = watchers.filter(watcher => watcher.status === IntentfulStatus.Pending)
+                const pending = watchers.filter(watcher => watcher.status === IntentfulStatus.Active)
                 await this.processPendingWatchers(pending, entity)
             }
         } catch (e) {
@@ -175,11 +175,6 @@ export class IntentResolver {
     private async onIntentfulHandlerFail(entity: EntryReference, error_msg?: string) {
         const watchers = await this.intentWatcherDb.list_watchers({ entity_ref: entity.entity_reference })
         const active_watcher = watchers.find(watcher => watcher.status === IntentfulStatus.Active)
-        if (active_watcher) {
-            active_watcher.times_failed += 1
-            active_watcher.last_handler_error = error_msg
-            await this.intentWatcherDb.update_watcher(active_watcher.uuid, { times_failed: active_watcher.times_failed, last_handler_error: active_watcher.last_handler_error })
-        }
     }
 
     private async updateWatchersStatuses() {

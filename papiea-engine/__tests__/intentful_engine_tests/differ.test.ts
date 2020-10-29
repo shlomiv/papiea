@@ -53,6 +53,27 @@ describe("Differ tests", () => {
         }
     })
 
+    // TODO: finish the test when all the bugs are fixed
+    // test.only("Differ find a complex diff with path single diff", () => {
+    //     expect.assertions(1)
+    //     const differ = new BasicDiffer()
+    //     const spec = {
+    //         "a": [{ "id": 1, "a": [{ "f": 1, "a": 10, "d": 11}, { "f": 2, "a": 10, "d": 11}], "d": 2 },
+    //             { "id": 2, "a": [{ "f": 1, "a": 10, "d": 11}, { "f": 2, "a": 10, "d": 11}], "d": 2 }],
+    //         c: {x: 10}
+    //     }
+    //     const status = {
+    //         "a": [{ "id": 1, "a": [{ "f": 1, "a": 12, "d": 13}, { "f": 2, "a": 10, "d": 11}], "d": 3 },
+    //             { "id": 2, "a": [{ "f": 1, "a": 10, "d": 11}, { "f": 2, "a": 10, "d": 11}], "d": 3 }],
+    //         c: {x: 15}
+    //     }
+    //     const diff_fields = SFSCompiler.run_sfs(SFSCompiler.try_compile_sfs("a.{id}.a.{f}.[a,d]", "test_kind"), spec, status)
+    //     for (let diff of differ.diffs(locationDifferKind, spec, status)) {
+    //         console.log(diff_fields)
+    //         // expect(diff.diff_fields).toEqual(diff_fields)
+    //     }
+    // })
+
     test("Differ produces exception when it cannot parse sfs", () => {
         expect.assertions(1)
 

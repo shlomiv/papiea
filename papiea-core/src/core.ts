@@ -18,10 +18,6 @@ export type Secret = string
 
 export enum IntentfulStatus {
 
-    // A spec change or a scheduled diffing created this intent watcher,
-    // it is not yet active
-    Pending = "Pending",
-
     // Intent Watcher is currently waiting for a diff to be resolved
     Active = "Active",
 
@@ -31,11 +27,11 @@ export enum IntentfulStatus {
     // Some fields were set to the spec value, and some were not due to a newer spec version
     Completed_Partially = "Completed Partially",
 
-    // None of the fields was changed to the given spec values,
-    // and there is already a newer spec version
-    Failed = "Failed",
-
+    // Next spec version overwrote watched fields
     Outdated = "Outdated",
+
+    // Compare and swap during spec change has failed
+    Failed = "Failed"
 }
 
 export interface UserInfo {
@@ -59,12 +55,6 @@ export interface IntentWatcher {
 
     // Diffs tracked by this watcher
     diffs: Diff[]
-
-    // Number of times a handler has failed
-    times_failed: number
-
-    // Last handler error message
-    last_handler_error?: string
 
     // Current status of the entity
     status: IntentfulStatus

@@ -8,8 +8,6 @@ export class IntentWatcherMapper {
             spec_version: intentWatcher.spec_version,
             status: intentWatcher.status,
             created_at: intentWatcher.created_at,
-            times_failed: intentWatcher.times_failed,
-            last_handler_error: intentWatcher.last_handler_error
         }
     }
 

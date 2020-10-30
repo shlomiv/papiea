@@ -135,15 +135,19 @@
                                  {:keys       (assoc keys (last ks) id-val)
                                   :key        key
 
-                                  ;; The reason that the or statement below is correct is due to action having three
-                                  ;; possible values:
-                                  ;; 1. :change - if we found a change of an item in a vector, it must be in the same position in spec and status
+                                  ;; The reason that the condition below is correct:
+                                  ;; action's possible values:
+                                  ;; 1. :change - finding that a value changed means it exists in both spec and status.
+                                  ;;              Order is not guaranteed, so we return both positions
                                   ;; 2. :add    - finding that something got added means it only exists in spec (s1). Therefore
                                   ;;              the following must be true:
                                   ;;              `(and (not-nil? (:position s1)) (nil?     (:position s2)))`
                                   ;; 3. :del    - in much the same way, a removed item must only appear in the status (s2), satisfying
                                   ;;              `(and (nil?     (:position s1)) (not-nil? (:position s2)))`
-                                  :path (conj (ensure-vec path) (or (:papiea/position s1) (:papiea/position s2)))
+                                  :path (conj (ensure-vec path) (condp = action
+                                                                  [:change] {"status" (:papiea/position s2) "spec" (:papiea/position s1)}
+                                                                  [:add] (:papiea/position s1)
+                                                                  [:del] (:papiea/position s2)))
                                   
                                   :spec-val   (ensure-vec(cond (:papiea/spec s1) (dissoc s1 :papiea/spec :papiea/position)
                                                                (:papiea/spec s2) (dissoc s2 :papiea/spec :papiea/position)

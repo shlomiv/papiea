@@ -49,7 +49,7 @@
 (defn prepare
   "Prepare a spec/status pair to be diffed by the compiled Differ"
   [spec status]
-  [{:keys {} :key :papiea/item :spec-val [spec] :status-val [status]}])
+  [{:keys {} :path [] :key :papiea/item :spec-val [spec] :status-val [status]}])
 
 (defn flat-choices
   "Used to flatten embedded multiple choices"
@@ -102,15 +102,16 @@
     (fn[results]
       (try (empty-nil (filter-diff (c results)))
            (catch #?(:clj Error
-                     :cljs js/Error) e)))))
+                     :cljs js/Error) e
+             (println e))))))
 
 ;; Node `:papiea/simple` in the AST encodes getting a value directly by
 ;; following a path, essentially a `get-in` like function.
 (defmethod sfs-compiler :papiea/simple [[_ & ks]]
   (fn[results]
-    (mapv (fn[{:keys [path keys key spec-val status-val]}]
-            (let [s1 (mapv #(get-in' % ks) spec-val)
-                  s2 (mapv #(get-in' % ks) status-val)
+     (mapv (fn[{:keys [path keys key spec-val status-val]}]
+             (let [s1 (mapv #(get-in' % ks) spec-val)
+                   s2 (mapv #(get-in' % ks) status-val)
                   empty (or (empty? s1) (empty? s2))]
               {:keys keys
                :key (if empty key (last ks))
@@ -125,22 +126,32 @@
   (fn[results]
     (into []
           (mapcat (fn[{:keys [path keys key spec-val status-val]}]
-                    (->> (group-by #(get-in' % ks)
-                                   (into
-                                    (mapv #(assoc % :papiea/spec true) spec-val) ;; Should use meta instead?
-                                    (mapv #(assoc % :papiea/status true) status-val)))
+                    (->> (dissoc (group-by #(get-in' % ks)
+                                           (into
+                                            (map-indexed #(assoc %2 :papiea/spec true :papiea/position %) spec-val) ;; Should use meta instead?
+                                            (map-indexed #(assoc %2 :papiea/status true :papiea/position %) status-val))) nil)
+                        
                          (mapv (fn[[id-val [s1 s2]]]
                                  {:keys       (assoc keys (last ks) id-val)
                                   :key        key
-                                  :path (conj (ensure-vec path) id-val )
-                                  :spec-val   (ensure-vec(cond (:papiea/spec s1) (dissoc s1 :papiea/spec)
-                                                               (:papiea/spec s2) (dissoc s2 :papiea/spec)
+
+                                  ;; The reason that the or statement below is correct is due to action having three
+                                  ;; possible values:
+                                  ;; 1. :change - if we found a change of an item in a vector, it must be in the same position in spec and status
+                                  ;; 2. :add    - finding that something got added means it only exists in spec (s1). Therefore
+                                  ;;              the following must be true:
+                                  ;;              `(and (not-nil? (:position s1)) (nil?     (:position s2)))`
+                                  ;; 3. :del    - in much the same way, a removed item must only appear in the status (s2), satisfying
+                                  ;;              `(and (nil?     (:position s1)) (not-nil? (:position s2)))`
+                                  :path (conj (ensure-vec path) (or (:papiea/position s1) (:papiea/position s2)))
+                                  
+                                  :spec-val   (ensure-vec(cond (:papiea/spec s1) (dissoc s1 :papiea/spec :papiea/position)
+                                                               (:papiea/spec s2) (dissoc s2 :papiea/spec :papiea/position)
                                                                :else             nil))
-                                  :status-val (ensure-vec(cond (:papiea/status s1) (dissoc s1 :papiea/status)
-                                                               (:papiea/status s2) (dissoc s2 :papiea/status)
+                                  :status-val (ensure-vec(cond (:papiea/status s1) (dissoc s1 :papiea/status :papiea/position)
+                                                               (:papiea/status s2) (dissoc s2 :papiea/status :papiea/position)
                                                                :else               nil))}))
-                         (filterv (partial ensure_vector_action action))
-                         ensure-some))
+                         (filterv (partial ensure_vector_action action))))
                   results))))
 
 ;; Node `:papiea/complex` in the AST recieves various commands that are

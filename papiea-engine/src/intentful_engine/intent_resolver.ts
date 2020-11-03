@@ -4,7 +4,7 @@ import {IntentWatcher_DB} from "../databases/intent_watcher_db_interface"
 import {Provider_DB} from "../databases/provider_db_interface"
 import {Handler, IntentfulListener} from "./intentful_listener_interface"
 import {Watchlist} from "./watchlist"
-import {Diff, Differ, Entity, IntentfulStatus, IntentWatcher} from "papiea-core"
+import {Diff, DiffContent, Differ, Entity, IntentfulStatus, IntentWatcher} from "papiea-core"
 import {timeout} from "../utils/utils"
 import {Logger} from "papiea-backend-utils"
 
@@ -39,14 +39,28 @@ export class IntentResolver {
         this.intentfulListener.onChange = new Handler(this.onChange)
     }
 
-    private static isPresent(current_diffs: Diff[], watcher_diff: Diff): boolean {
+    private static getExisting(current_diffs: Diff[], watcher_diff: Diff): Diff | null {
         for (let diff of current_diffs) {
-            if (diff.diff_fields.key === watcher_diff.diff_fields.key
-                && JSON.stringify(diff.diff_fields.path) === JSON.stringify(watcher_diff.diff_fields.path)) {
-                return true
+            for (let idx in watcher_diff.diff_fields) {
+                const watcher_diff_path = JSON.stringify(watcher_diff.diff_fields[idx].path)
+                const current_diff_path = JSON.stringify(diff.diff_fields[idx].path)
+                if (watcher_diff_path === current_diff_path) {
+                    return diff
+                }
             }
         }
-        return false
+        return null
+    }
+
+    private pathValuesEqual(diff_fields: DiffContent[], entity: Entity): boolean {
+        for (let idx in diff_fields) {
+            const current_value = this.differ.get_diff_path_value(diff_fields[idx], entity.spec)
+            const diff_value = diff_fields[idx].spec[0]
+            if (current_value !== diff_value) {
+                return false
+            }
+        }
+        return true
     }
 
     private static inTerminalState(watcher: IntentWatcher): boolean {
@@ -80,11 +94,9 @@ export class IntentResolver {
         if (current_spec_version > watcher_spec_version) {
             let affected_diff_count = 0
             for (let watcher_diff of active.diffs) {
-                const current_value = this.differ.get_diff_path_value(watcher_diff.diff_fields, entity.spec)
-                const diff_value = watcher_diff.diff_fields.spec[0]
-                if (current_value !== diff_value) {
+                if (!this.pathValuesEqual(watcher_diff.diff_fields, entity)) {
                     affected_diff_count++
-                } else if (IntentResolver.isPresent(current_diffs, watcher_diff)) {
+                } else if (IntentResolver.getExisting(current_diffs, watcher_diff)) {
                     unresolved_diffs.push(watcher_diff)
                 } else {
                     resolved_diff_count++
@@ -93,7 +105,7 @@ export class IntentResolver {
             status = IntentResolver.determineWatcherStatus(affected_diff_count, resolved_diff_count, active)
         } else {
             for (let watcher_diff of active.diffs) {
-                if (IntentResolver.isPresent(current_diffs, watcher_diff)) {
+                if (IntentResolver.getExisting(current_diffs, watcher_diff)) {
                     unresolved_diffs.push(watcher_diff)
                 } else {
                     resolved_diff_count++

@@ -1,13 +1,5 @@
-import { Spec, Status, Kind, Differ, Diff } from "papiea-core"
+import { Spec, Status, Kind, Differ, Diff, DiffContent } from "papiea-core"
 import { SFSCompiler } from "./sfs_compiler"
-
-export interface DiffContent {
-    keys: any,
-    key: string,
-    path: Array<number | string>,
-    spec: number[] | string[],
-    status: number[] | string[]
-}
 
 export class BasicDiffer implements Differ {
     // Get the diff iterator from an entity based on the
@@ -19,7 +11,7 @@ export class BasicDiffer implements Differ {
                 yield {
                     kind: kind.name,
                     intentful_signature: sig,
-                    diff_fields: SFSCompiler.run_sfs(compiled_signature, spec, status)
+                    diff_fields: result as DiffContent[]
                 }
             }
         }
@@ -34,37 +26,16 @@ export class BasicDiffer implements Differ {
                 return {
                     kind: kind.name,
                     intentful_signature: sig,
-                    diff_fields: diff_fields
+                    diff_fields: diff_fields as DiffContent[]
                 }
             }
         ).filter(diff => diff.diff_fields !== null && diff.diff_fields.length > 0)
     }
 
-    public get_diff_path_value(diff: DiffContent, spec: Spec) {
-        // This depends keys and diff.path values to be in order
-        const keys = Object.keys(diff.keys)
-        const arrayItem = (arr: any[], key: string, value: any) => {
-            const result = arr.filter(val => val[key] === value)
-            if (result[0] !== undefined) {
-                return result
-            } else {
-                throw new Error("Couldn't correctly traverse diff path")
-            }
-        }
+    public get_diff_path_value(diff: DiffContent, spec: Spec): any {
         let obj = spec
-        let key_index = 0
         for (let item of diff.path) {
-            switch (typeof item) {
-                case "number":
-                    obj = arrayItem(obj, keys[key_index], item)
-                    key_index++
-                    break
-                case "string":
-                    obj = obj[item]
-                    break
-                default:
-                    throw new Error("Unsupported type while traversing diff path")
-            }
+            obj = obj[item]
         }
         return obj
     }

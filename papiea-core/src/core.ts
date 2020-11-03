@@ -135,6 +135,14 @@ export enum FieldBehavior {
     StatusOnly = "status-only"
 }
 
+export interface DiffContent {
+    keys: any,
+    key: string,
+    path: Array<number | string>,
+    spec: number[] | string[],
+    status: number[] | string[]
+}
+
 // The differ is used to locate a diff in an entity between the
 // current status and the desired state. 
 export interface Differ {
@@ -145,6 +153,9 @@ export interface Differ {
     // We could also get the entire list of diffs, ordered by the
     // original dependency tree
     all_diffs(kind: Kind, spec: Spec, status: Status): Diff[];
+
+    // Get current value by path specified in diff fields
+    get_diff_path_value(diff: DiffContent, spec: Spec): any
 }
 
 export enum DiffSelectionStrategy {
@@ -196,7 +207,7 @@ export interface Diff {
     intentful_signature: Intentful_Signature,
 
     // Field diff found by the Differ
-    diff_fields: any
+    diff_fields: DiffContent[]
 
     // A uri for a URL which specifically identifies the currently running process.
     // If the URL returns 404 we know that the task was dropped (say, provider crashed).

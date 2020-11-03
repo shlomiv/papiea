@@ -35,8 +35,6 @@ export class DiffResolver {
     private static MAXIMUM_BACKOFF = 100
     private entropyFn: (diff_delay?: number) => number
 
-    onIntentfulHandlerFail: Handler<(entity: EntryReference, error_msg?: string) => Promise<void>>
-
     constructor(watchlist: Watchlist, watchlistDb: Watchlist_DB, specDb: Spec_DB, statusDb: Status_DB, providerDb: Provider_DB, differ: Differ, intentfulContext: IntentfulContext, logger: Logger, batchSize: number, entropyFn: (diff_delay?: number) => number) {
         this.specDb = specDb
         this.statusDb = statusDb
@@ -47,7 +45,6 @@ export class DiffResolver {
         this.intentfulContext = intentfulContext
         this.logger = logger
         this.batchSize = batchSize
-        this.onIntentfulHandlerFail = new Handler()
         this.entropyFn = entropyFn
     }
 
@@ -116,7 +113,7 @@ export class DiffResolver {
         }
     }
 
-    private async launchOperation({diff, metadata, provider, kind, spec, status}: DiffWithContext): Promise<Delay | null> {
+    private async launchOperation({diff, metadata, spec, status}: DiffWithContext): Promise<Delay | null> {
         this.logger.debug("launchOperation", diff.intentful_signature.procedure_callback,
             { metadata: metadata,
                 spec: spec,
@@ -210,7 +207,6 @@ export class DiffResolver {
                 this.logger.debug(`Couldn't invoke handler for entity with uuid ${metadata!.uuid}: ${e}`)
                 const backoff = this.createDiffBackoff(kind, null)
                 const error_msg = e?.response?.data?.message
-                await this.onIntentfulHandlerFail.call(entry_reference, error_msg)
                 diff_results[idx][1] = backoff
             }
         } else {
@@ -231,7 +227,6 @@ export class DiffResolver {
                         this.logger.debug(`Couldn't invoke retry handler for entity with uuid ${rediff.metadata!.uuid}: ${e}`)
                         diff_results[idx][1] = this.incrementDiffBackoff(backoff, null, rediff.kind)
                         const error_msg = e?.response?.data?.message
-                        await this.onIntentfulHandlerFail.call(entry_reference, error_msg)
                     }
                 }
             }

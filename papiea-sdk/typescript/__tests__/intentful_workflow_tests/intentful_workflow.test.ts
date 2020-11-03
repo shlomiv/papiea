@@ -75,7 +75,7 @@ describe("Intentful Workflow tests", () => {
         }
     })
 
-    test("Change single field differ resolver should pass", async () => {
+    test.only("Change single field differ resolver should pass", async () => {
         expect.assertions(2);
         const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
         try {
@@ -656,60 +656,6 @@ describe("Intentful Workflow tests", () => {
             sdk1.server.close();
             sdk2.server.close();
             expect(test_result).toBeTruthy()
-        }
-    })
-
-    test("Change single field differ resolver should fail because of handler error", async () => {
-        expect.assertions(2);
-        const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
-        try {
-            first_provider_prefix = "location_provider_intentful_2"
-            const location = sdk.new_kind(locationDataDescription);
-            sdk.version(provider_version);
-            sdk.prefix(first_provider_prefix);
-            location.on("x", async (ctx, entity, input) => {
-                throw new Error("Error in handler")
-            })
-            location.on_create(async (ctx, entity) => {
-                const { metadata, spec } = entity
-                await ctx.update_status(metadata!, spec!)
-            })
-            await sdk.register();
-            const kind_name = sdk.provider.kinds[0].name;
-            const { data: { metadata, spec } } = await entityApi.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }`, {
-                spec: {
-                    x: 120,
-                    y: 11
-                }
-            })
-            first_provider_to_delete_entites.push(metadata)
-            await timeout(5000)
-            const { data: { watcher } } = await entityApi.put(`/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`, {
-                spec: {
-                    x: 25,
-                    y: 11
-                },
-                metadata: {
-                    spec_version: 1
-                }
-            })
-            let retries = 10
-            try {
-                let watcherApi = sdk.get_intent_watcher_client()
-                for (let i = 1; i <= retries; i++) {
-                    const intent_watcher = await watcherApi.get(watcher.uuid)
-                    if (intent_watcher.status === IntentfulStatus.Active && intent_watcher.times_failed > 1) {
-                        expect(intent_watcher.times_failed).toBeGreaterThan(1)
-                        expect(intent_watcher.last_handler_error).toEqual("Error in handler")
-                        return
-                    }
-                    await timeout(5000)
-                }
-            } catch (e) {
-                console.log(`Couldn't get entity: ${e}`)
-            }
-        } finally {
-            sdk.server.close();
         }
     })
 

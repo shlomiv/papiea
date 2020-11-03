@@ -54,6 +54,7 @@ describe("Differ tests", () => {
     })
 
     // TODO: finish the test when all the bugs are fixed
+    // TODO: write more tests for edge cases
     // test.only("Differ find a complex diff with path single diff", () => {
     //     expect.assertions(1)
     //     const differ = new BasicDiffer()

@@ -43,7 +43,7 @@ async function setUpDiffResolver() {
 
     const diffResolver = new DiffResolver(watchlist, watchlistDb, specDb, statusDb, providerDb, differ, intentfulContext, logger, batchSize, entropyFunction)
 
-    const intentResolver = new IntentResolver(specDb, statusDb, intentWatcherDB, providerDb, intentfulListenerMongo, differ, diffResolver, watchlist, logger)
+    const intentResolver = new IntentResolver(specDb, statusDb, intentWatcherDB, providerDb, intentfulListenerMongo, differ, watchlist, logger)
 
     console.log("Running diff resolver")
 

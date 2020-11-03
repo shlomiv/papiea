@@ -94,10 +94,12 @@ export class IntentResolver {
         if (current_spec_version > watcher_spec_version) {
             let affected_diff_count = 0
             for (let watcher_diff of active.diffs) {
+                // Current set of diff fields are more up to date, thus replacing
+                const existing_diff = IntentResolver.getExisting(current_diffs, watcher_diff)
                 if (!this.pathValuesEqual(watcher_diff.diff_fields, entity)) {
                     affected_diff_count++
-                } else if (IntentResolver.getExisting(current_diffs, watcher_diff)) {
-                    unresolved_diffs.push(watcher_diff)
+                } else if (existing_diff) {
+                    unresolved_diffs.push(existing_diff)
                 } else {
                     resolved_diff_count++
                 }
@@ -105,8 +107,10 @@ export class IntentResolver {
             status = IntentResolver.determineWatcherStatus(affected_diff_count, resolved_diff_count, active)
         } else {
             for (let watcher_diff of active.diffs) {
-                if (IntentResolver.getExisting(current_diffs, watcher_diff)) {
-                    unresolved_diffs.push(watcher_diff)
+                // Current set of diff fields are more up to date, thus replacing
+                const existing_diff = IntentResolver.getExisting(current_diffs, watcher_diff)
+                if (existing_diff) {
+                    unresolved_diffs.push(existing_diff)
                 } else {
                     resolved_diff_count++
                 }

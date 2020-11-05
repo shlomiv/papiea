@@ -1,3 +1,4 @@
+- Version 0.7.21+1682: Optional field nullable issue fix (#539) PR url: git@github.com:nutanix/papiea.git/pull/539
 - Version 0.7.20+1657: Bump pyxdg from 0.25 to 0.26 in /papiea-sdk/python/e2e_tests (#524) PR url: git@github.com:nutanix/papiea.git/pull/524
 - Version 0.7.19+1653: fix partial array update error (#533) PR url: git@github.com:nutanix/papiea.git/pull/533
 - Version 0.7.18+1649: Merge branch 'nitesh/reduce_verbose_logging' of https://github.com/nutanix/papiea into nitesh/reduce_verbose_logging

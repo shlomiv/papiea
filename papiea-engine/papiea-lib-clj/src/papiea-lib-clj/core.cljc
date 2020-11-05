@@ -5,8 +5,9 @@
 
 #?(:cljs (nodejs/enable-util-print!))
 
-(defmacro error [message] #?(:clj `(Error. ~message)
-                             :cljs `(js/Error. ~message)))
+(defn error
+   [message] #?(:clj (Error. message)
+                :cljs (js/Error. message)))
 
 (def sfs-parser
   (insta/parser

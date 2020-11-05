@@ -75,7 +75,7 @@ describe("Intentful Workflow tests", () => {
         }
     })
 
-    test.only("Change single field differ resolver should pass", async () => {
+    test("Change single field differ resolver should pass", async () => {
         expect.assertions(2);
         const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
         try {
@@ -1015,7 +1015,7 @@ describe("Intentful Workflow tests", () => {
         }
     })
 
-    test("Diff selection order should be random", async () => {
+    test.only("Diff selection order should be random", async () => {
         expect.assertions(2);
         const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
         try {
@@ -1056,8 +1056,8 @@ describe("Intentful Workflow tests", () => {
             })
             try {
                 await timeout(10000)
-                expect(x_invoked).toBeGreaterThan(1)
-                expect(y_invoked).toBeGreaterThan(1)
+                expect(x_invoked).toBeGreaterThanOrEqual(1)
+                expect(y_invoked).toBeGreaterThanOrEqual(1)
             } catch (e) {
                 console.log(`Couldn't wait timeout: ${e}`)
             }
@@ -1095,7 +1095,7 @@ describe("Intentful Workflow test sfs validation", () => {
             await sdk.register();
         } catch (e) {
             expect(e.response.status).toEqual(400)
-            expect(e.response.data.error.errors[ 0 ].message).toContain("SFS: 'wrong, wrong2' validation on kind:" +
+            expect(e.response.data.error.errors[ 0 ].message).toContain("SFS: 'wrong, wrong2' parsing on kind:" +
                 ` ${Object.keys(locationDataDescription)[0]} failed with error: Parse error at line 1,`)
         }
     })

@@ -2,12 +2,12 @@
   :description "FIXME: write this!"
   :url "http://example.com/FIXME"
 
-  :dependencies [[org.clojure/clojure "1.10.1"]
-                 [org.clojure/clojurescript "1.10.764"]
-                 [instaparse "1.4.10"]
-                 [cider/piggieback "0.5.1"]]
+  :dependencies [[org.clojure/clojure "1.9.0"]
+                 [org.clojure/clojurescript "1.10.439"]
+                 [instaparse "1.4.9"]
+                 [cider/piggieback "0.3.10"]]
 
-  :plugins [[lein-cljsbuild "1.1.8"]]
+  :plugins [[lein-cljsbuild "1.1.7"]]
   :repl-options {:nrepl-middleware [cider.piggieback/wrap-cljs-repl]}
 
   

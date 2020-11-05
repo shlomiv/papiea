@@ -3,7 +3,6 @@ import {DiffContent} from "papiea-core"
 
 // TODO: add d.ts for type annotations
 const papi_clj = require("../../papiea-lib-clj/papiea-lib-clj.js").papiea_lib_clj;
-console.log(papi_clj)
 const clj_str = (a: any) => papi_clj.core.clj_str(a);
 const sfs_parser = (sfs_ast: string) => papi_clj.core.parse_sfs(sfs_ast);
 const sfs_optimizer = (sfs_ast: string) => papi_clj.core.optimize_sfs_ast(sfs_ast);

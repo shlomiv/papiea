@@ -96,6 +96,7 @@
                   {:id 2 :props [{:id2 4 :name "o1"}]}]})
 
            [{:keys {},
+             :path [],
              :key :papiea/item,
              :spec-val
              [{:f1
@@ -113,7 +114,7 @@
               :spec-val [{:name "old"}]
               :status-val [{:name "new"}]}])
            
-           [{:keys {}, :key :name, :spec-val ["old"], :status-val ["new"]}]))
+           [{:keys {}, :key :name, :path [:name], :spec-val ["old"], :status-val ["new"]}]))
 
     (is (unordered= ((c/sfs-compiler[:papiea/simple :v])
             [{:keys {} :key :papiea/item
@@ -123,6 +124,7 @@
                                 {:name "n"}]}]}])
            
            [{:keys {},
+             :path [:v],
              :key :v,
              :spec-val [{:name "old"} {:name "a"}],
              :status-val [{:name "new"} {:name "n"}]}]))
@@ -133,10 +135,11 @@
                {:keys {:id 2} :key :papiea/item :spec-val [{:id 2 :name "old2"}] :status-val [{:id 2 :name "new2"}]}
                {:keys {:id 3} :key :papiea/item :spec-val [] :status-val [{:id 3 :name "old3"}]}])
              
-             [{:keys {:id 1}, :key :name, :spec-val ["old1"], :status-val ["new1"]}
-              {:keys {:id 2}, :key :name, :spec-val ["old2"], :status-val ["new2"]}
-              {:keys {:id 3}, :key :papiea/item, :spec-val [], :status-val [{:id 3, :name "old3"}]}]))))
-  
+             [{:keys {:id 1}, :key :name, :path [:name], :spec-val ["old1"], :status-val ["new1"]}
+              {:keys {:id 2}, :key :name, :path [:name], :spec-val ["old2"], :status-val ["new2"]}
+              {:keys {:id 3}, :key :papiea/item, :path [:papiea/item], :spec-val [], :status-val [{:id 3, :name "old3"}]}]))))
+
+  ;; TODO: This test is broken Shlomi V. please take a look
   (testing "vector"
     (testing "all changes"
       (is (unordered= ((c/sfs-compiler[:papiea/vector [:all] :id])
@@ -155,6 +158,7 @@
                 :status-val [{:id 2 :name "new2"} {:id 1 :name "new1"} {:id 3 :name "old3"}]}])
              
              [{:keys {:id 4},
+               :path [2],
                :key :papiea/item,
                :spec-val [{:id 4, :name "new4"}],
                :status-val []}])))
@@ -166,6 +170,7 @@
                 :status-val [{:id 2 :name "new2"} {:id 1 :name "new1"} {:id 3 :name "old3"}]}])
 
              [{:keys {:id 3},
+               :path [nil],
                :key :papiea/item,
                :spec-val [],
                :status-val [{:id 3, :name "old3"}]}]
@@ -177,9 +182,10 @@
              {:name "a" :age 23}
              {:name "b" :age 12}))
 
-           [{:keys {} :key :name :spec-val ["a"] :status-val ["b"]}
-            {:keys {} :key :age :spec-val [23] :status-val [12]}])))
+           [{:keys {} :key :name :path [:name], :spec-val ["a"] :status-val ["b"]}
+            {:keys {} :key :age :path [:age], :spec-val [23] :status-val [12]}])))
 
+  ;; TODO: This test is broken Shlomi V. please take a look
   (testing "complex"
     (is (unordered= ((c/sfs-compiler [:papiea/complex [:papiea/simple :f1] [:papiea/vector [:all] :id] [:papiea/simple :props] [:papiea/vector [:all] :id2] [:papiea/simple :name]])
             (c/prepare
@@ -192,6 +198,7 @@
             {:keys {:id 1, :id2 5}, :key :name, :spec-val ["n2"], :status-val ["o2"]}]))
 
 
+    ;; TODO: This test is broken Shlomi V. please take a look
     (is (unordered= ((c/sfs-compiler [:papiea/complex
                              [:papiea/simple :f1]
                              [:papiea/vector [:all] :id]
@@ -273,12 +280,12 @@
              {:f1 [{:id 1 :another "a1_old" :props [{:id2 5 :name "o2"}]}
                    {:id 2 :another "a2_old" :props [{:id2 4 :name "o1"}]}]}))
 
-           [{:keys {"id" 2},:key "another",:spec-val ["a2"],:status-val ["a2_old"]}
-            {:keys {"id" 1},:key "another",:spec-val ["a1"],:status-val ["a1_old"]}
-            {:keys {"id" 2, "id2" 4},:key "name",:spec-val ["n1"],:status-val ["o1"]}
-            {:keys {"id" 1, "id2" 5},:key "name",:spec-val ["n2"],:status-val ["o2"]}]))
+           [{:keys {"id" 2}, :key "another", :path ["f1" {"status" 0, "spec" 1} "another"], :spec-val ["a2"], :status-val ["a2_old"]}
+            {:keys {"id" 1}, :key "another", :path ["f1" {"status" 1, "spec" 0} "another"], :spec-val ["a1"], :status-val ["a1_old"]}
+            {:keys {"id" 2, "id2" 4}, :key "name", :path ["f1" {"status" 0, "spec" 1} "props" {"status" 0, "spec" 0} "name"], :spec-val ["n1"], :status-val ["o1"]}
+            {:keys {"id" 1, "id2" 5}, :key "name", :path ["f1" {"status" 1, "spec" 0} "props" {"status" 0, "spec" 0} "name"], :spec-val ["n2"], :status-val ["o2"]}]))
 
-    (testing "Test using javascript-like stracture using strings"
+    (testing "Test using javascript-like structure using strings"
       (is (unordered= ((c/sfs-compiler (c/optimize-ast (insta/parse c/sfs-parser "f1.{id}.[another, props.{id2}.name]")))
               (c/prepare
                {"f1" [{"id" 2 "another" "a2" "props" [{"id2" 4 "name" "n1"}]}
@@ -288,10 +295,10 @@
 
              
              
-           [{:keys {"id" 2},:key "another",:spec-val ["a2"],:status-val ["a2_old"]}
-            {:keys {"id" 1},:key "another",:spec-val ["a1"],:status-val ["a1_old"]}
-            {:keys {"id" 2, "id2" 4},:key "name",:spec-val ["n1"],:status-val ["o1"]}
-            {:keys {"id" 1, "id2" 5},:key "name",:spec-val ["n2"],:status-val ["o2"]}])))
+           [{:keys {"id" 2}, :key "another", :path ["f1" {"status" 0, "spec" 1} "another"], :spec-val ["a2"], :status-val ["a2_old"]}
+            {:keys {"id" 1}, :key "another", :path ["f1" {"status" 1, "spec" 0} "another"], :spec-val ["a1"], :status-val ["a1_old"]}
+            {:keys {"id" 2, "id2" 4}, :key "name", :path ["f1" {"status" 0, "spec" 1} "props" {"status" 0, "spec" 0} "name"], :spec-val ["n1"], :status-val ["o1"]}
+            {:keys {"id" 1, "id2" 5}, :key "name", :path ["f1" {"status" 1, "spec" 0} "props" {"status" 0, "spec" 0} "name"],  :spec-val ["n2"], :status-val ["o2"]}])))
 
     (testing "Items with an incomplete diff should be fully removed from the results"
       (is (unordered= ((c/sfs-compiler (c/optimize-ast (insta/parse c/sfs-parser "f1.{id}.[another, props.{id2}.name]")))
@@ -301,8 +308,8 @@
                         {"f1" [{"id" 1 "another" "a1_old" "props" [{"id2" 5 "name" "o2"}]}
                                {"id" 2 "another" "a2" "props" [{"id2" 4 "name" "o1"}]}]}))
 
-                      [{:keys {"id" 1},:key "another",:spec-val ["a1"],:status-val ["a1_old"]}
-                       {:keys {"id" 1, "id2" 5},:key "name",:spec-val ["n2"],:status-val ["o2"]}])))))
+                      [{:keys {"id" 1}, :key "another", :path ["f1" {"status" 1, "spec" 0} "another"], :spec-val ["a1"], :status-val ["a1_old"]}
+                       {:keys {"id" 1, "id2" 5}, :key "name", :path ["f1" {"status" 1, "spec" 0} "props" {"status" 0, "spec" 0} "name"], :spec-val ["n2"], :status-val ["o2"]}])))))
 
 (deftest ensure-diff-exists
   (testing "all potential diffs has to really resolve to different values."
@@ -321,8 +328,8 @@
               (c/prepare {:a 1 :v 2}
                          {:a 2 :v 4}))
 
-             [{:keys {}, :key "a", :spec-val [1], :status-val [2]}
-              {:keys {}, :key "v", :spec-val [2], :status-val [4]}])))))
+             [{:keys {}, :key "a", :path ["a"], :spec-val [1], :status-val [2]}
+              {:keys {}, :key "v", :path ["v"], :spec-val [2], :status-val [4]}])))))
 
 
 (deftest grouping-tests
@@ -336,8 +343,8 @@
                                                    {"letter" "b" "name" "a"}] "network_list" [{"mac" 4 "ip" "ip1"}
                                                                                               {"mac" 5 "ip" "ip1"}]}]}))
 
-                    [{:keys {"id" 2, "letter" "b"},:key "name",:spec-val ["b"],:status-val ["a"]}
-                     {:keys {"id" 2, "mac" 4},:key "ip",:spec-val ["ip2"],:status-val ["ip1"]}])))
+                    [{:keys {"id" 2, "letter" "b"}, :key "name", :path ["f1" {"status" 0, "spec" 0} "drive_list" {"status" 1, "spec" 1} "name"], :spec-val ["b"], :status-val ["a"]}
+                     {:keys {"id" 2, "mac" 4}, :key "ip", :path ["f1" {"status" 0, "spec" 0} "network_list" {"status" 0, "spec" 0} "ip"], :spec-val ["ip2"], :status-val ["ip1"]}])))
 
 
   (testing "Will return all items that match"
@@ -350,9 +357,9 @@
                                                                  {"mac" 5 "ip" "ip2"}
                                                                  {"mac" 6 "ip" "ip1"}]}]}))
 
-                    [{:keys {"id" 2}, :key "name", :spec-val ["a2"], :status-val ["a1"]}
-                     {:keys {"id" 2, "mac" 4},:key "ip",:spec-val ["ip1"],:status-val ["ip2"]}
-                     {:keys {"id" 2, "mac" 5},:key "ip",:spec-val ["ip1"],:status-val ["ip2"]}])))
+                    [{:keys {"id" 2}, :key "name", :path ["f1" {"status" 0, "spec" 0} "name"], :spec-val ["a2"], :status-val ["a1"]}
+                     {:keys {"id" 2, "mac" 4}, :key "ip", :path ["f1" {"status" 0, "spec" 0} "network_list" {"status" 0, "spec" 0} "ip"], :spec-val ["ip1"], :status-val ["ip2"]}
+                     {:keys {"id" 2, "mac" 5}, :key "ip", :path ["f1" {"status" 0, "spec" 0} "network_list" {"status" 1, "spec" 1} "ip"], :spec-val ["ip1"], :status-val ["ip2"]}])))
 
   (testing "Match on an entire vector item"
     (is (unordered= ((c/sfs-compiler (c/optimize-ast (insta/parse c/sfs-parser "f1.{id}.[name, network_list]")))
@@ -362,9 +369,10 @@
                       {"f1" [{"id" 2 "name" "a1" "network_list" [{"mac" 4 "ip" "ip2"}
                                                                  {"mac" 5 "ip" "ip2"}]}]}))
 
-                    [{:keys {"id" 2}, :key "name", :spec-val ["a2"], :status-val ["a1"]}
+                    [{:keys {"id" 2}, :key "name", :path ["f1" {"status" 0, "spec" 0} "name"], :spec-val ["a2"], :status-val ["a1"]}
                      {:keys {"id" 2},
                       :key "network_list",
+                      :path ["f1" {"status" 0, "spec" 0} "network_list"],
                       :spec-val [{"mac" 4, "ip" "ip1"} {"mac" 5, "ip" "ip1"}],
                       :status-val [{"mac" 4, "ip" "ip2"} {"mac" 5, "ip" "ip2"}]}])))
 
@@ -383,8 +391,8 @@
                       {"f1" [{"id" 1 "another" "a1" "name" "shlomi"}
                              {"id" 2 "another" "a2" "name" "binny"}]}))
 
-                    [{:keys {"id" 2},:key "another",:spec-val ["a1"],:status-val ["a2"]}
-                     {:keys {"id" 2},:key "name",:spec-val ["shlomi"],:status-val ["binny"]}]))))
+                    [{:keys {"id" 2}, :key "another", :path ["f1" {"status" 0, "spec" 1} "another"], :spec-val ["a1"], :status-val ["a2"]}
+                     {:keys {"id" 2}, :key "name", :path ["f1" {"status" 0, "spec" 1} "name"], :spec-val ["shlomi"], :status-val ["binny"]}]))))
 
 
 

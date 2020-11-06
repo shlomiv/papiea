@@ -32,8 +32,10 @@ describe("SFS Tests", () => {
     test("Run the sfs '[a,d]' on spec:{a:1, d:2} status:{a:3, d:4}", () => {
         let sfs = sfs_compiler("[a,d]");
         let r = run_compiled_sfs(sfs, { "a": 1, "d": 2 }, { "a": 3, "d": 4 });
-        expect(r).toEqual([ { keys: {}, key: 'a', 'spec': [ 1 ], 'status': [ 3 ] },
-        { keys: {}, key: 'd', 'spec': [ 2 ], 'status': [ 4 ] } ]);
+        expect(r).toEqual([
+                              {keys: {}, key: "a", path: ["a"], spec: [1], status: [3]},
+                              {keys: {}, key: "d", path: ["d"], spec: [2], status: [4]}
+                          ])
     });
     test("Run the sfs 'a.{id}.[a,d]' on spec:{a:1, d:2} status:{a:3, d:4}", () => {
         let sfs = sfs_compiler("a.{id}.[a,d]");
@@ -46,14 +48,24 @@ describe("SFS Tests", () => {
                 "a": [{ "id": 1, "a": 2, "d": 3 },
                 { "id": 2, "a": 1, "d": 3 }]
             });
-        expect(r).toEqual([ { keys: { id: 1 },
-            key: 'a',
-            'spec': [ 1 ],
-            'status': [ 2 ] },
-          { keys: { id: 1 },
-            key: 'd',
-            'spec': [ 2 ],
-            'status': [ 3 ] } ]);
+        expect(r).toEqual(
+            [
+                {
+                    keys: {id: 1},
+                    key: "a",
+                    path: ["a", {"spec": 0, "status": 0}, "a"],
+                    spec: [1],
+                    status: [2]
+                },
+                {
+                    keys: {id: 1},
+                    key: "d",
+                    path: ["a", {"spec": 0, "status": 0}, "d"],
+                    spec: [2],
+                    status: [3]
+                }
+            ]
+        )
     });
     test("Run the sfs 'a.{id}.[a,d]' on spec:{a:1, d:2} status:{a:3, d:4}", () => {
         let sfs = sfs_compiler("a.{id}.[a,d]");
@@ -66,13 +78,23 @@ describe("SFS Tests", () => {
                 "a": [{ "id": 1, "a": 2, "d": 3 },
                     { "id": 2, "a": 1, "d": 3 }]
             });
-        expect(r).toEqual([ { keys: { id: 1 },
-            key: 'a',
-            'spec': [ 1 ],
-            'status': [ 2 ] },
-            { keys: { id: 1 },
-                key: 'd',
-                'spec': [ 2 ],
-                'status': [ 3 ] } ]);
+        expect(r).toEqual(
+            [
+                {
+                    keys: {id: 1},
+                    key: "a",
+                    path: ["a", {"spec": 0, "status": 0}, "a"],
+                    spec: [1],
+                    status: [2]
+                },
+                {
+                    keys: {id: 1},
+                    key: "d",
+                    path: ["a", {"spec": 0, "status": 0}, "d"],
+                    spec: [2],
+                    status: [3]
+                }
+            ]
+        )
     });
 })

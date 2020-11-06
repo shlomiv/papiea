@@ -110,7 +110,7 @@ describe("Intent Watcher tests", () => {
                 spec_version: 1
             }
         })
-        expect(watcher.status).toEqual(IntentfulStatus.Pending)
+        expect(watcher.status).toEqual(IntentfulStatus.Active)
         expect(watcher.diffs[0].diff_fields[0]["spec"][0]).toEqual(20)
         expect(watcher.diffs[0].diff_fields[0]["status"][0]).toEqual(null)
         createdWatcher = watcher
@@ -140,7 +140,7 @@ describe("Intent Watcher tests", () => {
                 spec_version: 1
             }
         })
-        expect(watcher.status).toEqual(IntentfulStatus.Pending)
+        expect(watcher.status).toEqual(IntentfulStatus.Active)
         expect(watcher.diffs[0].diff_fields[0]["spec"][0]).toEqual(20)
         expect(watcher.diffs[1].diff_fields[0].spec[0]).toEqual(110)
         expect(watcher.diffs[0].diff_fields[0]["status"][0]).toEqual(null)
@@ -173,7 +173,7 @@ describe("Intent Watcher tests", () => {
         })
 
         const result = await entityApi.get(`/intent_watcher/${ watcher.uuid }`)
-        expect(result.data.status).toEqual(IntentfulStatus.Pending)
+        expect(result.data.status).toEqual(IntentfulStatus.Active)
         expect(result.data.diffs).toBeUndefined()
         createdWatcher = watcher
     })

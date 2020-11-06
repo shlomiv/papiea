@@ -1015,7 +1015,7 @@ describe("Intentful Workflow tests", () => {
         }
     })
 
-    test.only("Diff selection order should be random", async () => {
+    test("Diff selection order should be random", async () => {
         expect.assertions(2);
         const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
         try {

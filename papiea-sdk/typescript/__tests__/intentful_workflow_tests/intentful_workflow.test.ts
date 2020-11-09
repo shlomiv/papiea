@@ -57,8 +57,11 @@ describe("Intentful Workflow tests", () => {
     let second_provider_to_delete_entites: Metadata[] = []
 
     afterEach(async () => {
-        for (let metadata of first_provider_to_delete_entites) {
-            await entityApi.delete(`${first_provider_prefix}/${provider_version}/${metadata.kind}/${metadata.uuid}`)
+        try {
+            for (let metadata of first_provider_to_delete_entites) {
+                await entityApi.delete(`${first_provider_prefix}/${provider_version}/${metadata.kind}/${metadata.uuid}`)
+            }
+        } catch (e) {
         }
         try {
             for (let metadata of second_provider_to_delete_entites) {
@@ -106,7 +109,6 @@ describe("Intentful Workflow tests", () => {
                 }
             })
             first_provider_to_delete_entites.push(metadata)
-            await timeout(5000)
             const { data: { watcher } } = await entityApi.put(`/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`, {
                 spec: {
                     x: 20,
@@ -135,6 +137,114 @@ describe("Intentful Workflow tests", () => {
             } catch (e) {
                 console.log(`Couldn't get entity: ${e}`)
             }
+        } finally {
+            sdk.server.close();
+        }
+    })
+
+    test("Differ should retry if error is encountered", async () => {
+        expect.assertions(1)
+        const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
+        first_provider_prefix = "location_provider_intentful_error"
+        try {
+            const location = sdk.new_kind(locationDataDescription);
+            sdk.version(provider_version);
+            sdk.prefix(first_provider_prefix);
+            let times_invoked = 0
+            location.on("x", async (ctx, entity, input) => {
+                times_invoked++
+                throw new Error("Error in handler")
+            })
+            location.on_create(async (ctx, entity) => {
+                const { metadata, spec } = entity
+                await ctx.update_status(metadata!, spec!)
+            })
+            await sdk.register();
+            const kind_name = sdk.provider.kinds[0].name;
+            const { data: { metadata, spec } } = await entityApi.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }`, {
+                spec: {
+                    x: 10,
+                    y: 11
+                }
+            })
+            first_provider_to_delete_entites.push(metadata)
+            const { data: { watcher } } = await entityApi.put(`/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`, {
+                spec: {
+                    x: 20,
+                    y: 11
+                },
+                metadata: {
+                    spec_version: 1
+
+                }
+            })
+            let retries = 5
+            try {
+                let watcherApi = sdk.get_intent_watcher_client()
+                for (let i = 1; i <= retries; i++) {
+                    const intent_watcher = await watcherApi.get(watcher.uuid)
+                    if (intent_watcher.status !== IntentfulStatus.Active) {
+                        expect(intent_watcher.status).toBe(IntentfulStatus.Active)
+                    }
+                    await timeout(2000)
+                }
+                expect(times_invoked).toBeGreaterThan(1)
+            } catch (e) {
+                console.log(`Couldn't get entity: ${e}`)
+            }
+        } finally {
+            sdk.server.close();
+        }
+    })
+
+    test("Differ shouldn't retry if error is encountered but entity is deleted", async () => {
+        expect.assertions(1)
+        const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
+        try {
+            const prefix = "location_provider_intentful_error_entity_deleted"
+            const location = sdk.new_kind(locationDataDescription);
+            sdk.version(provider_version);
+            sdk.prefix(first_provider_prefix);
+            let times_invoked = 0
+            location.on("x", async (ctx, entity, input) => {
+                times_invoked++
+                throw new Error("Error in handler")
+            })
+            location.on_create(async (ctx, entity) => {
+                const {metadata, spec} = entity
+                await ctx.update_status(metadata!, spec!)
+            })
+            await sdk.register();
+            const kind_name = sdk.provider.kinds[0].name;
+            const {
+                data: {
+                    metadata,
+                    spec
+                }
+            } = await entityApi.post(`${sdk.entity_url}/${sdk.provider.prefix}/${sdk.provider.version}/${kind_name}`, {
+                spec: {
+                    x: 10,
+                    y: 11
+                }
+            })
+            first_provider_to_delete_entites.push(metadata)
+            const {data: {watcher}} = await entityApi.put(`/${sdk.provider.prefix}/${sdk.provider.version}/${kind_name}/${metadata.uuid}`, {
+                spec: {
+                    x: 20,
+                    y: 11
+                },
+                metadata: {
+                    spec_version: 1
+
+                }
+            })
+            await timeout(3000)
+            const times_invoked_before_deletion = times_invoked
+            await entityApi.delete(`/${sdk.provider.prefix}/${sdk.provider.version}/${kind_name}/${metadata.uuid}`)
+            await timeout(5000)
+            const times_invoked_after_deletion = times_invoked
+            expect(times_invoked_before_deletion).toEqual(times_invoked_after_deletion)
+            await providerApiAdmin.delete(`${prefix}/${provider_version}`)
         } finally {
             sdk.server.close();
         }
@@ -179,7 +289,6 @@ describe("Intentful Workflow tests", () => {
                 }
             })
             first_provider_to_delete_entites.push(metadata)
-            await timeout(5000)
             const { data: { watcher } } = await entityApi.put(`/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`, {
                 spec: {
                     x: 30,
@@ -192,7 +301,6 @@ describe("Intentful Workflow tests", () => {
             try {
                 await timeout(5000)
                 let watcherApi = sdk.get_intent_watcher_client()
-
                 let intent_watcher = await watcherApi.get(watcher.uuid)
                 expect(intent_watcher.status).toBe(IntentfulStatus.Active)
                 await timeout(3000)
@@ -283,7 +391,6 @@ describe("Intentful Workflow tests", () => {
                 }
             })
             first_provider_to_delete_entites.push(metadata)
-            await timeout(5000)
             const { data: { watcher } } = await entityApi.put(`/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`, {
                 spec: {
                     x: 30,
@@ -373,7 +480,6 @@ describe("Intentful Workflow tests", () => {
             })
             first_provider_to_delete_entites.push(first_result.data.metadata)
             first_provider_to_delete_entites.push(second_result.data.metadata)
-            await timeout(5000)
             const first_watcher_result = await entityApi.put(`/${ sdk.provider.prefix }/${ sdk.provider.version }/${ first_kind_name }/${ first_result.data.metadata.uuid }`, {
                 spec: {
                     x: 20,
@@ -485,8 +591,6 @@ describe("Intentful Workflow tests", () => {
                 }
             })
             second_provider_to_delete_entites.push(second_result.data.metadata)
-            await timeout(5000)
-
             const first_watcher_result = await entityApi.put(
                 `/${ sdk1.provider.prefix }/${ sdk1.provider.version }/${ first_kind_name }/${ first_result.data.metadata.uuid }`, {
                     spec: {
@@ -605,8 +709,6 @@ describe("Intentful Workflow tests", () => {
                 }
             })
             second_provider_to_delete_entites.push(second_result.data.metadata)
-            await timeout(5000)
-
             const first_watcher_result = await entityApi.put(
                 `/${ sdk1.provider.prefix }/${ sdk1.provider.version }/${ first_kind_name }/${ first_result.data.metadata.uuid }`, {
                     spec: {
@@ -690,7 +792,6 @@ describe("Intentful Workflow tests", () => {
                 }
             })
             first_provider_to_delete_entites.push(metadata)
-            await timeout(5000)
             try {
                 await entityApi.put(`/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`, {
                     spec: {
@@ -740,7 +841,6 @@ describe("Intentful Workflow tests", () => {
                 }
             })
             first_provider_to_delete_entites.push(metadata)
-            await timeout(5000)
             const promises = []
             for (let i = 0; i < 2; i++) {
                 promises.push(entityApi.put(`/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`, {
@@ -794,7 +894,6 @@ describe("Intentful Workflow tests", () => {
                 }
             })
             first_provider_to_delete_entites.push(metadata)
-            await timeout(5000)
             await entityApi.put(`/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`, {
                 spec: {
                     x: 20,
@@ -804,7 +903,6 @@ describe("Intentful Workflow tests", () => {
                     spec_version: 1
                 }
             })
-            await timeout(5000)
             try {
                 await entityApi.put(`/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`, {
                     spec: {
@@ -856,7 +954,6 @@ describe("Intentful Workflow tests", () => {
                 }
             })
             first_provider_to_delete_entites.push(metadata)
-            await timeout(5000)
             const { data: { watcher } } = await entityApi.put(`/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`, {
                 spec: {
                     x: [
@@ -980,7 +1077,6 @@ describe("Intentful Workflow tests", () => {
                 }
             })
             first_provider_to_delete_entites.push(metadata)
-            await timeout(5000)
             const { data: { watcher } } = await entityApi.put(`/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`, {
                 spec: {
                     x: [
@@ -1044,7 +1140,6 @@ describe("Intentful Workflow tests", () => {
                 }
             })
             first_provider_to_delete_entites.push(metadata)
-            await timeout(5000)
             const { data: { watcher } } = await entityApi.put(`/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`, {
                 spec: {
                     x: 20,

@@ -71,7 +71,10 @@ describe("Intentful Workflow tests", () => {
         }
         first_provider_to_delete_entites = []
         second_provider_to_delete_entites = []
-        await providerApiAdmin.delete(`${first_provider_prefix}/${provider_version}`)
+        try {
+            await providerApiAdmin.delete(`${first_provider_prefix}/${provider_version}`)
+        } catch (e) {
+        }
         try {
             await providerApiAdmin.delete(`${ second_provider_prefix }/${ provider_version }`)
         } catch (e) {
@@ -204,7 +207,7 @@ describe("Intentful Workflow tests", () => {
             const prefix = "location_provider_intentful_error_entity_deleted"
             const location = sdk.new_kind(locationDataDescription);
             sdk.version(provider_version);
-            sdk.prefix(first_provider_prefix);
+            sdk.prefix(prefix);
             let times_invoked = 0
             location.on("x", async (ctx, entity, input) => {
                 times_invoked++

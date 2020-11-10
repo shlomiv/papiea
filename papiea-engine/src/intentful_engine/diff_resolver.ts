@@ -175,7 +175,7 @@ export class DiffResolver {
                     entries[key][1].push([diff, null])
                 }
             }
-            await this.startDiffsResolution(entry_reference, diff_results, rediff)
+            await this.startDiffsResolution(diff_results, rediff)
         }
         await this.watchlistDb.update_watchlist(this.watchlist)
     }
@@ -184,7 +184,7 @@ export class DiffResolver {
         return this.batchSize
     }
 
-    private async startDiffsResolution(entry_reference: EntryReference, diff_results: [Diff, Backoff | null][], rediff: RediffResult) {
+    private async startDiffsResolution(diff_results: [Diff, Backoff | null][], rediff: RediffResult) {
         const {diffs, metadata, provider, kind} = rediff
         let next_diff: Diff
         let idx: number
@@ -197,7 +197,7 @@ export class DiffResolver {
         }
         const backoff: Backoff | null = diff_results[idx][1]
         if (!backoff) {
-            next_diff.handler_url = `${next_diff.intentful_signature.base_callback}/healthcheck`
+            diff_results[idx][0].handler_url = `${next_diff.intentful_signature.base_callback}/healthcheck`
             try {
                 const delay = await this.launchOperation({diff: next_diff, ...rediff})
                 const backoff = this.createDiffBackoff(kind, delay)
@@ -206,18 +206,16 @@ export class DiffResolver {
             } catch (e) {
                 this.logger.debug(`Couldn't invoke handler for entity with uuid ${metadata!.uuid}: ${e}`)
                 const backoff = this.createDiffBackoff(kind, null)
-                const error_msg = e?.response?.data?.message
                 diff_results[idx][1] = backoff
             }
         } else {
             // Delay for rediffing
             if ((new Date().getTime() - backoff.delay.delay_set_time.getTime()) / 1000 > backoff.delay.delay_seconds) {
                 const diff_index = rediff.diffs.findIndex(diff => deepEqual(diff.diff_fields, next_diff!.diff_fields))
-                // Diff still exists, we should check the health and retry if not healthy
+                // Diff still exists, we should check the health of the handler and retry if healthy
                 if (diff_index !== -1) {
                     try {
-                        // TODO: this seems like a bug
-                        if (await this.checkHealthy(rediff.diffs![diff_index])) {
+                        if (!await this.checkHealthy(diff_results[idx][0])) {
                             return
                         }
                         this.logger.info(`Starting to retry resolving diff for entity with uuid: ${rediff.metadata!.uuid}`)
@@ -226,7 +224,6 @@ export class DiffResolver {
                     } catch (e) {
                         this.logger.debug(`Couldn't invoke retry handler for entity with uuid ${rediff.metadata!.uuid}: ${e}`)
                         diff_results[idx][1] = this.incrementDiffBackoff(backoff, null, rediff.kind)
-                        const error_msg = e?.response?.data?.message
                     }
                 }
             }

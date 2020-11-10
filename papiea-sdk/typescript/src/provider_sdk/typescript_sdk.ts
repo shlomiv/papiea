@@ -372,6 +372,7 @@ class Provider_Server_Manager {
             this.should_run = true;
         }
         this.app.get("/healthcheck", asyncHandler(async (req, res) => {
+            console.log("Got call here")
             res.status(200).json({ status: "Available" })
         }))
     }
@@ -392,12 +393,8 @@ class Provider_Server_Manager {
         }
     }
 
-    callback_url(kind?: string) {
-        if (kind !== undefined) {
-            return `http://${ this.public_host }:${ this.public_port }/${ kind }`
-        } else {
-            return `http://${ this.public_host }:${ this.public_port }/`
-        }
+    callback_url() {
+        return `http://${ this.public_host }:${ this.public_port }`
     }
 
     procedure_callback_url(procedure_name: string, kind?: string): string {
@@ -434,7 +431,7 @@ export class Kind_Builder {
                      description: ProcedureDescription,
                      handler: (ctx: ProceduralCtx_Interface, entity: Entity, input: any) => Promise<any>): Kind_Builder {
         const procedure_callback_url = this.server_manager.procedure_callback_url(name, this.kind.name);
-        const callback_url = this.server_manager.callback_url(this.kind.name);
+        const callback_url = this.server_manager.callback_url();
         validate_error_codes(description.errors_schemas)
         const procedural_signature: Procedural_Signature = {
             name,
@@ -473,7 +470,7 @@ export class Kind_Builder {
     on(sfs_signature: string,
        handler: (ctx: IntentfulCtx_Interface, entity: Entity, input: any) => Promise<any>): Kind_Builder {
         const procedure_callback_url = this.server_manager.procedure_callback_url(sfs_signature, this.kind.name);
-        const callback_url = this.server_manager.callback_url(this.kind.name);
+        const callback_url = this.server_manager.callback_url();
         this.kind.intentful_signatures.push({
             signature: sfs_signature,
             name: sfs_signature,
@@ -543,7 +540,7 @@ export class Kind_Builder {
                    description: ProcedureDescription,
                    handler: (ctx: ProceduralCtx_Interface, input: any) => Promise<any>): Kind_Builder {
         const procedure_callback_url = this.server_manager.procedure_callback_url(name, this.kind.name);
-        const callback_url = this.server_manager.callback_url(this.kind.name);
+        const callback_url = this.server_manager.callback_url();
         validate_error_codes(description.errors_schemas)
         const procedural_signature: Procedural_Signature = {
             name,

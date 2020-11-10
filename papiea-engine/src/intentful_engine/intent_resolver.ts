@@ -92,6 +92,8 @@ export class IntentResolver {
         const unresolved_diffs = []
         let status: IntentfulStatus
         if (current_spec_version > watcher_spec_version) {
+            // All the spec fields recorded by the watcher got changed as a series of spec changes
+            // but none of the diffs (on the watcher fields) got resolved, only affected, thus Outdated
             let affected_diff_count = 0
             for (let watcher_diff of active.diffs) {
                 // Current set of diff fields are more up to date, thus replacing

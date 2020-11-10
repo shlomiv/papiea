@@ -912,6 +912,96 @@ describe("Intentful Workflow tests single provider", () => {
             sdk.server.close();
         }
     })
+
+    test.only("Diff handling should find a resolving path if handlers are dependant", async () => {
+        expect.assertions(3)
+        const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
+        try {
+            first_provider_prefix = "location_provider_intentful_7"
+            const location = sdk.new_kind(locationDataDescription);
+            sdk.version(provider_version);
+            sdk.prefix(first_provider_prefix);
+            let locked = true
+            location.on("x", async (ctx, entity, input) => {
+                if (!locked) {
+                    await providerApiAdmin.post(`/${sdk.provider.prefix}/${sdk.provider.version}/update_status`, {
+                        context: "some context",
+                        entity_ref: {
+                            uuid: entity.metadata.uuid,
+                            kind: entity.metadata.kind
+                        },
+                        status: {
+                            x: 20,
+                            y: 21
+                        }
+                    })
+                }
+            })
+            location.on("y", async (ctx, entity, input) => {
+                console.log("Invoked")
+                await providerApiAdmin.post(`/${sdk.provider.prefix}/${sdk.provider.version}/update_status`, {
+                    context: "some context",
+                    entity_ref: {
+                        uuid: entity.metadata.uuid,
+                        kind: entity.metadata.kind
+                    },
+                    status: {
+                        x: 10,
+                        y: 21
+                    }
+                })
+            })
+            location.on_create(async (ctx, entity) => {
+                const { metadata, spec } = entity
+                await ctx.update_status(metadata!, spec!)
+            })
+            await sdk.register();
+            const kind_name = sdk.provider.kinds[0].name;
+            const { data: { metadata, spec } } = await entityApi.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }`, {
+                spec: {
+                    x: 10,
+                    y: 11
+                }
+            })
+            first_provider_to_delete_entites.push(metadata)
+            const { data: { watcher } } = await entityApi.put(`/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`, {
+                spec: {
+                    x: 20,
+                    y: 11
+                },
+                metadata: {
+                    spec_version: 1
+                }
+            })
+
+            try {
+                await timeout(3000)
+                const watcherApi = sdk.get_intent_watcher_client()
+                const intent_watcher = await watcherApi.get(watcher.uuid)
+                expect(intent_watcher.status).toEqual(IntentfulStatus.Active)
+                const { data: { watcher: second_watcher } } = await entityApi.put(`/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`, {
+                    spec: {
+                        x: 20,
+                        y: 21
+                    },
+                    metadata: {
+                        spec_version: 2
+                    }
+                })
+                await timeout(50000)
+                const second_intent_watcher = await watcherApi.get(second_watcher.uuid)
+                expect(second_intent_watcher.status).toEqual(IntentfulStatus.Completed_Successfully)
+                // locked = false
+                // await timeout(50000)
+                // const updated_intent_watcher = await watcherApi.get(watcher.uuid)
+                // expect(updated_intent_watcher.status).toEqual(IntentfulStatus.Completed_Successfully)
+            } catch (e) {
+                console.log(`Couldn't wait timeout: ${e}`)
+            }
+        } finally {
+            sdk.server.close();
+        }
+    })
 })
 
 describe("Intentful Workflow test sfs validation", () => {

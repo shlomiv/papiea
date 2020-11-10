@@ -1,5 +1,5 @@
 // [[file:~/work/papiea-js/Papiea-design.org::*/src/intentful_engine/task_manager_interface.ts][/src/intentful_engine/task_manager_interface.ts:1]]
-import { calculateBackoff, getRandomInt, timeout } from "../utils/utils"
+import { calculateBackoff, timeout } from "../utils/utils"
 import { Spec_DB } from "../databases/spec_db_interface"
 import { Status_DB } from "../databases/status_db_interface"
 import { create_entry, Backoff, EntryReference, Watchlist, Delay } from "./watchlist"
@@ -9,7 +9,6 @@ import { Provider_DB } from "../databases/provider_db_interface";
 import axios from "axios"
 import { IntentfulContext } from "../intentful_core/intentful_context";
 import { Logger } from "papiea-backend-utils";
-import { Handler } from "./intentful_listener_interface";
 import deepEqual = require("deep-equal");
 
 type DiffContext = {
@@ -151,6 +150,15 @@ export class DiffResolver {
         await this.watchlistDb.update_watchlist(this.watchlist)
     }
 
+    private static includesDiff(diffs: Diff[], diff: Diff) {
+        for (let d of diffs) {
+            if (deepEqual(d, diff)) {
+                return true
+            }
+        }
+        return false
+    }
+
     private async resolveDiffs() {
         const entries = this.watchlist.entries()
 
@@ -171,8 +179,20 @@ export class DiffResolver {
                     await this.removeFromWatchlist(entry_reference)
                     continue
                 }
+            }
+            if (rediff.diffs.length > diff_results.length) {
                 for (let diff of rediff.diffs) {
-                    entries[key][1].push([diff, null])
+                    const watched_diffs = diff_results.map(watch => watch[0])
+                    if (!DiffResolver.includesDiff(watched_diffs, diff)) {
+                        entries[key][1].push([diff, null])
+                    }
+                }
+            } else if (diff_results.length > rediff.diffs.length) {
+                const watched_diffs = diff_results.map(watch => watch[0])
+                for (let idx = 0; idx <= watched_diffs.length; idx++) {
+                    if (!DiffResolver.includesDiff(rediff.diffs, watched_diffs[idx])) {
+                        entries[key][1].splice(idx, 1)
+                    }
                 }
             }
             await this.startDiffsResolution(diff_results, rediff)

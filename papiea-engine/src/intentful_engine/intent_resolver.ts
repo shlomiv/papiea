@@ -85,7 +85,11 @@ export class IntentResolver {
     }
 
     private async processActiveWatcher(active: IntentWatcher, entity: Entity): Promise<void> {
+        console.log(`Spec version ` + entity.metadata.spec_version)
         const current_spec_version = entity.metadata.spec_version
+        if (current_spec_version === 3) {
+            console.log("Here")
+        }
         const watcher_spec_version = active.spec_version
         const current_diffs = await this.rediff(entity)
         let resolved_diff_count = 0
@@ -139,6 +143,7 @@ export class IntentResolver {
     private async onChange(entity: Entity) {
         try {
             const watchers = await this.intentWatcherDb.list_watchers({ entity_ref: { uuid: entity.metadata.uuid, kind: entity.metadata.kind }, status: IntentfulStatus.Active })
+            console.log(`L: ${watchers.length}`)
             for (let watcher of watchers) {
                 await this.processActiveWatcher(watcher, entity)
             }
@@ -155,6 +160,7 @@ export class IntentResolver {
             }
             const [entry_ref, _] = entries[key]
             const watchers = await this.intentWatcherDb.list_watchers({ entity_ref: entry_ref.entity_reference, status: IntentfulStatus.Active })
+            console.log(watchers.length)
             if (watchers.length !== 0) {
                 try {
                     const [metadata, spec] = await this.specDb.get_spec(entry_ref.entity_reference)

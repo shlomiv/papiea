@@ -372,7 +372,6 @@ class Provider_Server_Manager {
             this.should_run = true;
         }
         this.app.get("/healthcheck", asyncHandler(async (req, res) => {
-            console.log("Got call here")
             res.status(200).json({ status: "Available" })
         }))
     }

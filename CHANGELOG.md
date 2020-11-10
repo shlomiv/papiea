@@ -1,3 +1,4 @@
+- Version 0.7.23+1705: Added stacktrace and errors field for validation error type (#543) PR url: git@github.com:nutanix/papiea.git/pull/543
 - Version 0.7.22+1697: Fixed nested value of type any in update_status issue and added test for the same. (#542) PR url: git@github.com:nutanix/papiea.git/pull/542
 - Version 0.7.21+1682: Optional field nullable issue fix (#539) PR url: git@github.com:nutanix/papiea.git/pull/539
 - Version 0.7.20+1657: Bump pyxdg from 0.25 to 0.26 in /papiea-sdk/python/e2e_tests (#524) PR url: git@github.com:nutanix/papiea.git/pull/524

@@ -913,7 +913,7 @@ describe("Intentful Workflow tests single provider", () => {
         }
     })
 
-    test.only("Diff handling should find a resolving path if handlers are dependant", async () => {
+    test("Diff handling should find a resolving path if handlers are dependant", async () => {
         expect.assertions(3)
         const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
         try {
@@ -938,7 +938,6 @@ describe("Intentful Workflow tests single provider", () => {
                 }
             })
             location.on("y", async (ctx, entity, input) => {
-                console.log("Invoked")
                 await providerApiAdmin.post(`/${sdk.provider.prefix}/${sdk.provider.version}/update_status`, {
                     context: "some context",
                     entity_ref: {
@@ -988,15 +987,15 @@ describe("Intentful Workflow tests single provider", () => {
                         spec_version: 2
                     }
                 })
-                await timeout(50000)
+                await timeout(4000)
+                locked = false
+                await timeout(10000)
+                const updated_intent_watcher = await watcherApi.get(watcher.uuid)
+                expect(updated_intent_watcher.status).toEqual(IntentfulStatus.Completed_Successfully)
                 const second_intent_watcher = await watcherApi.get(second_watcher.uuid)
                 expect(second_intent_watcher.status).toEqual(IntentfulStatus.Completed_Successfully)
-                // locked = false
-                // await timeout(50000)
-                // const updated_intent_watcher = await watcherApi.get(watcher.uuid)
-                // expect(updated_intent_watcher.status).toEqual(IntentfulStatus.Completed_Successfully)
             } catch (e) {
-                console.log(`Couldn't wait timeout: ${e}`)
+                console.log(`Error encountered: ${e}`)
             }
         } finally {
             sdk.server.close();

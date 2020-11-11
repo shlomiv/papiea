@@ -1,3 +1,8 @@
+- Version 0.7.23+1705: Added stacktrace and errors field for validation error type (#543) PR url: git@github.com:nutanix/papiea.git/pull/543
+- Version 0.7.22+1697: Fixed nested value of type any in update_status issue and added test for the same. (#542) PR url: git@github.com:nutanix/papiea.git/pull/542
+- Version 0.7.21+1682: Optional field nullable issue fix (#539) PR url: git@github.com:nutanix/papiea.git/pull/539
+- Version 0.7.20+1657: Bump pyxdg from 0.25 to 0.26 in /papiea-sdk/python/e2e_tests (#524) PR url: git@github.com:nutanix/papiea.git/pull/524
+- Version 0.7.19+1653: fix partial array update error (#533) PR url: git@github.com:nutanix/papiea.git/pull/533
 - Version 0.7.18+1649: Merge branch 'nitesh/reduce_verbose_logging' of https://github.com/nutanix/papiea into nitesh/reduce_verbose_logging
 - Version 0.7.17+1644: Bump cryptography from 2.1.4 to 2.3 in /papiea-sdk/python/e2e_tests (#525) PR url: git@github.com:nutanix/papiea.git/pull/525
 - Version 0.7.16+1641: Merge remote-tracking branch 'origin/master'

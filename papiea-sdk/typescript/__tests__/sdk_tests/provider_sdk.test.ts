@@ -58,6 +58,7 @@ describe("Provider Sdk tests", () => {
     const provider_version = "0.1.0";
     const location_yaml = load(readFileSync(resolve(__dirname, "../test_data/location_kind_test_data.yml"), "utf-8"));
     const location_array_yaml = load(readFileSync(resolve(__dirname, "../test_data/location_kind_test_data_array.yml"), "utf-8"));
+
     test("Yaml parses into walkable tree", (done) => {
         expect(location_yaml).not.toBeNull();
         expect(location_yaml.Location).not.toBeNull();
@@ -742,6 +743,8 @@ describe("Provider Sdk tests", () => {
             const res: any = await axios.post(`${sdk.entity_url}/${sdk.provider.prefix}/${sdk.provider.version}/procedure/computeSum`, { input: { "a": 5, "b": 5 } });
         } catch (e) {
             expect(e.response.data.error.errors[0].message).toBe("Unable to validate a model with a type: string, expected: number");
+            expect(e.response.data.error.errors[0].stacktrace).not.toBeUndefined();
+            expect(e.response.data.error.errors[0].stacktrace).toContain("Unable to validate a model with a type: string, expected: number")
             expect(e.response.data.error.code).toBe(500);
         } finally {
             sdk.server.close();
@@ -922,6 +925,135 @@ describe("Provider Sdk tests", () => {
             expect(e.response.data.error.errors[0].message).toBe("Cannot set property 'x' of undefined");
             expect(e.response.data.error.errors[0].stacktrace).not.toBeUndefined();
             expect(e.response.data.error.errors[0].stacktrace).toContain("TypeError: Cannot set property 'x' of undefined")
+        } finally {
+            sdk.server.close();
+        }
+    });
+
+    const NULL_TEST_SCHEMA = {
+        Test: {
+            type: 'object',
+            title: 'Test',
+            'x-papiea-entity': 'basic',
+            properties: {
+                provider_ref: {
+                    type: 'object',
+                    required: ['a_id'],
+                    properties: {
+                        a_id: {
+                            type: 'string'
+                        },
+                        b_id: {
+                            type: 'string'
+                        }
+                    }
+                }
+            }
+        }
+    }
+    test("Entity initialization after setting it to null should succeed", async () => {
+        expect.assertions(2);
+        const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
+        try {
+            const machine = sdk.new_kind(NULL_TEST_SCHEMA);
+            sdk.version(provider_version);
+            sdk.prefix("test_provider");
+            machine.entity_procedure(
+                "testProcedure",
+                {input_schema: {TestProcedureInput: {type: 'string', title: 'Input value to test procedure'}},
+                 output_schema: NULL_TEST_SCHEMA},
+                async (ctx, entity, input) => {
+
+                const real_ref = {
+                    a_id: '1',
+                    b_id: input
+                }
+
+                await ctx.update_status(entity.metadata, {provider_ref: null})
+                await ctx.update_status(entity.metadata, {provider_ref: real_ref})
+
+                return entity.spec;
+            });
+
+            await sdk.register();
+            const kind_name = sdk.provider.kinds[0].name;
+            const { data: { metadata, spec } } = await axios.post(`${sdk.entity_url}/${sdk.provider.prefix}/${sdk.provider.version}/${kind_name}`, {
+                spec: {
+                    provider_ref: {
+                        a_id: '1',
+                        b_id: '2'
+                    }
+                }
+            });
+
+            const res: any = await axios.post(`${sdk.entity_url}/${sdk.provider.prefix}/${sdk.provider.version}/${kind_name}/${metadata.uuid}/procedure/testProcedure`, {input: '2'});
+            const updatedEntity: any = await axios.get(`${sdk.entity_url}/${sdk.provider.prefix}/${sdk.provider.version}/${kind_name}/${metadata.uuid}`);
+            expect(updatedEntity.data.status.provider_ref.a_id).toEqual('1')
+            expect(updatedEntity.data.status.provider_ref.b_id).toEqual('2')
+        } finally {
+            sdk.server.close();
+        }
+    });
+
+    const NESTED_TEST_SCHEMA = {
+        Test: {
+            type: 'object',
+            title: 'Test',
+            'x-papiea-entity': 'differ',
+            required: ['a'],
+            properties: {
+                a: {
+                    type: 'object',
+                    'x-papiea': 'status-only',
+                    properties: {
+                        b: {
+                            type: 'object',
+                        }
+                    },
+                },
+            }
+        }
+    }
+    test("Update status of a nested object with value of type any should succeed", async () => {
+        expect.assertions(2)
+        const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
+        try {
+            const nested_object = sdk.new_kind(NESTED_TEST_SCHEMA);
+            sdk.version(provider_version);
+            sdk.prefix("test_provider");
+            nested_object.entity_procedure(
+                "testProcedure",
+                {input_schema: null,
+                 output_schema: NESTED_TEST_SCHEMA},
+                async (ctx, entity, input) => {
+
+                await ctx.update_status(entity.metadata, {
+                    a: {
+                        b: {
+                            hyp_type: 'test'
+                        }
+                    }
+                });
+
+                return entity.spec;
+            });
+
+            await sdk.register();
+            const kind_name = sdk.provider.kinds[0].name;
+            const { data: { metadata, spec } } = await axios.post(`${sdk.entity_url}/${sdk.provider.prefix}/${sdk.provider.version}/${kind_name}`, {
+                spec: {
+                    a: {
+                        b: {
+                            hyp_type: 'test'
+                        }
+                    }
+                }
+            });
+
+            const res: any = await axios.post(`${sdk.entity_url}/${sdk.provider.prefix}/${sdk.provider.version}/${kind_name}/${metadata.uuid}/procedure/testProcedure`, null);
+            const updatedEntity: any = await axios.get(`${sdk.entity_url}/${sdk.provider.prefix}/${sdk.provider.version}/${kind_name}/${metadata.uuid}`);
+            expect(updatedEntity.data.spec.a.b.hyp_type).toEqual('test')
+            expect(updatedEntity.data.status.a.b.hyp_type).toEqual('test')
         } finally {
             sdk.server.close();
         }

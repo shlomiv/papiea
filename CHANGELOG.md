@@ -1,3 +1,4 @@
+- Version 0.8.1+1711: Randomness in intentful handler (#535) PR url: git@github.com:nutanix/papiea.git/pull/535
 - Version 0.7.23+1705: Added stacktrace and errors field for validation error type (#543) PR url: git@github.com:nutanix/papiea.git/pull/543
 - Version 0.7.22+1697: Fixed nested value of type any in update_status issue and added test for the same. (#542) PR url: git@github.com:nutanix/papiea.git/pull/542
 - Version 0.7.21+1682: Optional field nullable issue fix (#539) PR url: git@github.com:nutanix/papiea.git/pull/539

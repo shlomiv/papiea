@@ -1,4 +1,4 @@
-import { Spec, Status, Kind, Differ, Diff } from "papiea-core"
+import { Spec, Status, Kind, Differ, Diff, DiffContent } from "papiea-core"
 import { SFSCompiler } from "./sfs_compiler"
 
 export class BasicDiffer implements Differ {
@@ -11,7 +11,7 @@ export class BasicDiffer implements Differ {
                 yield {
                     kind: kind.name,
                     intentful_signature: sig,
-                    diff_fields: SFSCompiler.run_sfs(compiled_signature, spec, status)
+                    diff_fields: result as DiffContent[]
                 }
             }
         }
@@ -26,9 +26,17 @@ export class BasicDiffer implements Differ {
                 return {
                     kind: kind.name,
                     intentful_signature: sig,
-                    diff_fields: diff_fields
+                    diff_fields: diff_fields as DiffContent[]
                 }
             }
         ).filter(diff => diff.diff_fields !== null && diff.diff_fields.length > 0)
+    }
+
+    public get_diff_path_value(diff: DiffContent, spec: Spec): any {
+        let obj = spec
+        for (let item of diff.path) {
+            obj = obj[item]
+        }
+        return obj
     }
 }

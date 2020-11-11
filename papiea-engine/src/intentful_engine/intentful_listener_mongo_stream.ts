@@ -4,6 +4,7 @@ import { Watchlist, create_entry } from "./watchlist";
 import { Entity } from "papiea-core";
 import { MongoConnection } from "../databases/mongo";
 
+// This is an alternative implementation which works with mongo replica set capabilities
 export class IntentfulListenerMongoStream implements IntentfulListener {
     private entityDbCollection: Collection;
     onChange: Handler<(entity: Entity) => Promise<void>>;

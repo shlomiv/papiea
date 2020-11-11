@@ -9,6 +9,8 @@
 
   :plugins [[lein-cljsbuild "1.1.7"]]
   :repl-options {:nrepl-middleware [cider.piggieback/wrap-cljs-repl]}
+
+  
   
   :source-paths ["src"]
   :test-paths ["test"]

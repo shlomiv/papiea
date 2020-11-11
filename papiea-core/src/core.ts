@@ -18,10 +18,6 @@ export type Secret = string
 
 export enum IntentfulStatus {
 
-    // A spec change or a scheduled diffing created this intent watcher,
-    // it is not yet active
-    Pending = "Pending",
-
     // Intent Watcher is currently waiting for a diff to be resolved
     Active = "Active",
 
@@ -31,10 +27,7 @@ export enum IntentfulStatus {
     // Some fields were set to the spec value, and some were not due to a newer spec version
     Completed_Partially = "Completed Partially",
 
-    // None of the fields was changed to the given spec values,
-    // and there is already a newer spec version
-    Failed = "Failed",
-
+    // Next spec version overwrote watched fields
     Outdated = "Outdated",
 }
 
@@ -59,12 +52,6 @@ export interface IntentWatcher {
 
     // Diffs tracked by this watcher
     diffs: Diff[]
-
-    // Number of times a handler has failed
-    times_failed: number
-
-    // Last handler error message
-    last_handler_error?: string
 
     // Current status of the entity
     status: IntentfulStatus
@@ -112,11 +99,6 @@ export interface Entity {
 }
 // entity-struct ends here
 
-export interface EntitySpec {
-    metadata: Metadata,
-    spec: Spec
-}
-
 // [[file:~/work/papiea-js/Papiea-design.org::#h-Interfaces-559][SFS-interfaces]]
 // Intentful signature
 export type SFS = string;
@@ -148,6 +130,14 @@ export enum FieldBehavior {
     StatusOnly = "status-only"
 }
 
+export interface DiffContent {
+    keys: any,
+    key: string,
+    path: Array<number | string>,
+    spec: number[] | string[],
+    status: number[] | string[]
+}
+
 // The differ is used to locate a diff in an entity between the
 // current status and the desired state. 
 export interface Differ {
@@ -158,6 +148,9 @@ export interface Differ {
     // We could also get the entire list of diffs, ordered by the
     // original dependency tree
     all_diffs(kind: Kind, spec: Spec, status: Status): Diff[];
+
+    // Get current value by path specified in diff fields
+    get_diff_path_value(diff: DiffContent, spec: Spec): any
 }
 
 export enum DiffSelectionStrategy {
@@ -209,7 +202,7 @@ export interface Diff {
     intentful_signature: Intentful_Signature,
 
     // Field diff found by the Differ
-    diff_fields: any
+    diff_fields: DiffContent[]
 
     // A uri for a URL which specifically identifies the currently running process.
     // If the URL returns 404 we know that the task was dropped (say, provider crashed).
@@ -231,8 +224,8 @@ export interface SpecOnlyEntityKind extends Kind {
 // We may want to support different execution strategies. For now we
 // can only halt intentful execution for the duration of the
 // procedural call
-export enum Procedural_Execution_Strategy {Halt_Intentful};
-export enum Intentful_Execution_Strategy {Basic};
+export enum Procedural_Execution_Strategy {Halt_Intentful}
+export enum Intentful_Execution_Strategy {Basic}
 
 // Error descriptions in format:
 // Map<code, {description, structure}> where code is an error status code as string
@@ -294,11 +287,6 @@ export interface Provider {
     authModel?: string;
     allowExtraProps: boolean;
 }
-
-// Add support for partial types where relevant
-export type Partial<T> = {
-    [P in keyof T]?: T[P];
-};
 
 export interface S2S_Key {
     name?: string

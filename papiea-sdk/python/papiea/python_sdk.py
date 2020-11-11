@@ -62,11 +62,8 @@ class ProviderServerManager(object):
         if self._runner is not None:
             await self._runner.cleanup()
 
-    def callback_url(self, kind: Optional[str]) -> str:
-        if kind is not None:
-            return f"http://{ self.public_host }:{ self.public_port }/{ kind }"
-        else:
-            return f"http://{ self.public_host }:{ self.public_port }/"
+    def callback_url(self) -> str:
+        return f"http://{ self.public_host }:{ self.public_port }"
 
     def procedure_callback_url(self, procedure_name: str, kind: Optional[str]) -> str:
         if kind is not None:
@@ -400,7 +397,7 @@ class KindBuilder(object):
         procedure_callback_url = self.server_manager.procedure_callback_url(
             name, self.kind.name
         )
-        callback_url = self.server_manager.callback_url(self.kind.name)
+        callback_url = self.server_manager.callback_url()
         validate_error_codes(procedure_description.get("errors_schemas"))
         procedural_signature = ProceduralSignature(
             name=name,
@@ -449,7 +446,7 @@ class KindBuilder(object):
         procedure_callback_url = self.server_manager.procedure_callback_url(
             name, self.kind.name
         )
-        callback_url = self.server_manager.callback_url(self.kind.name)
+        callback_url = self.server_manager.callback_url()
         validate_error_codes(procedure_description.get("errors_schemas"))
         procedural_signature = ProceduralSignature(
             name=name,
@@ -490,7 +487,7 @@ class KindBuilder(object):
         procedure_callback_url = self.server_manager.procedure_callback_url(
             sfs_signature, self.kind.name
         )
-        callback_url = self.server_manager.callback_url(self.kind.name)
+        callback_url = self.server_manager.callback_url()
         self.kind.intentful_signatures.append(
             IntentfulSignature(
                 signature=sfs_signature,

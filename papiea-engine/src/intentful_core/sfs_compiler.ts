@@ -1,4 +1,5 @@
 import { ValidationError } from "../errors/validation_error"
+import {DiffContent} from "papiea-core"
 
 // TODO: add d.ts for type annotations
 const papi_clj = require("../../papiea-lib-clj/papiea-lib-clj.js").papiea_lib_clj;
@@ -14,9 +15,8 @@ export class SFSCompiler {
         try {
             sfs_parser(signature)
         } catch(e) {
-            const message = e.message
             throw new ValidationError([
-                new Error(`SFS: '${signature}' validation on kind: ${kind_name} failed with error: ${message}`)
+                new Error(`SFS: '${signature}' parsing on kind: ${kind_name} failed with error: ${e.message}`)
             ])
         }
     }
@@ -26,7 +26,7 @@ export class SFSCompiler {
         return sfs_compiler(signature)
     }
 
-    static run_sfs(compiled_sfs: any, spec: any, status: any): any[] | null {
+    static run_sfs(compiled_sfs: any, spec: any, status: any): DiffContent[] | null {
         return run_compiled_sfs(compiled_sfs, spec, status)
     }
 }

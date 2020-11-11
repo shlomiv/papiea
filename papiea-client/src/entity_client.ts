@@ -1,5 +1,5 @@
 import axios, { AxiosPromise, AxiosRequestConfig } from "axios";
-import { Metadata, Spec, Entity_Reference, Entity, EntitySpec, PapieaError, IntentWatcher, IntentfulStatus } from "papiea-core";
+import { Metadata, Spec, Entity_Reference, Entity, PapieaError, IntentWatcher, IntentfulStatus } from "papiea-core";
 import {
     BadRequestError,
     ConflictingEntityError,
@@ -10,6 +10,8 @@ import {
     UnauthorizedError,
     ValidationError
 } from "./errors/errors";
+
+type EntitySpec = Pick<Entity, Metadata | Spec>
 
 const BATCH_SIZE = 20
 

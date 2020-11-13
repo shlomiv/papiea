@@ -1,7 +1,7 @@
 import { Spec_DB } from "./spec_db_interface";
 import { Collection, Db } from "mongodb";
 import { ConflictingEntityError, EntityNotFoundError } from "./utils/errors";
-import { Entity_Reference, Metadata, Spec, Entity } from "papiea-core";
+import {Entity_Reference, Metadata, Spec, Entity, Provider_Entity_Reference} from "papiea-core"
 import { SortParams } from "../entity/entity_api_impl";
 import { Logger, dotnotation } from "papiea-backend-utils";
 import { IntentfulKindReference } from "./provider_db_mongo";
@@ -56,13 +56,12 @@ export class Spec_DB_Mongo implements Spec_DB {
             if (result.result.n !== 1) {
                 throw new Error(`Amount of updated entries doesn't equal to 1: ${result.result.n}`)
             }
-            return this.get_spec({ uuid: entity_metadata.uuid, kind: entity_metadata.kind });
+            return this.get_spec(entity_metadata);
         } catch (err) {
             if (err.code === 11000) {
-                const entity_ref: Entity_Reference = { uuid: entity_metadata.uuid, kind: entity_metadata.kind };
-                let res:any 
+                let res:any
                 try {
-                  res = await this.get_spec(entity_ref);
+                  res = await this.get_spec(entity_metadata);
                 } catch (e) {
                     throw new Error(`Cannot create entity ${e}, ${err}`)
                 }
@@ -74,12 +73,15 @@ export class Spec_DB_Mongo implements Spec_DB {
         }
     }
 
-    async get_spec(entity_ref: Entity_Reference): Promise<[Metadata, Spec]> {
-        const result: Entity | null = await this.collection.findOne({
-            "metadata.uuid": entity_ref.uuid,
-            "metadata.kind": entity_ref.kind,
-            "metadata.deleted_at": null
-        });
+    async get_spec(entity_ref: Provider_Entity_Reference): Promise<[Metadata, Spec]> {
+        const result: Entity | null = await this.collection.findOne(
+            {
+                "metadata.uuid": entity_ref.uuid,
+                "metadata.kind": entity_ref.kind,
+                "metadata.provider_prefix": entity_ref.provider_prefix,
+                "metadata.provider_version": entity_ref.provider_version,
+                "metadata.deleted_at": null
+            });
         if (result === null) {
             throw new EntityNotFoundError(entity_ref.kind, entity_ref.uuid)
         }

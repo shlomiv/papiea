@@ -107,8 +107,8 @@ export class Entity_API_Impl implements Entity_API {
         return [metadata, spec];
     }
 
-    async get_entity_spec(user: UserAuthInfo, kind_name: string, entity_uuid: uuid4): Promise<[Metadata, Spec]> {
-        const entity_ref: Entity_Reference = { kind: kind_name, uuid: entity_uuid };
+    async get_entity_spec(user: UserAuthInfo, prefix: string, version: Version, kind_name: string, entity_uuid: uuid4): Promise<[Metadata, Spec]> {
+        const entity_ref: Provider_Entity_Reference = { kind: kind_name, uuid: entity_uuid, provider_prefix: prefix, provider_version: version };
         const [metadata, spec] = await this.spec_db.get_spec(entity_ref);
         await this.authorizer.checkPermission(user, { "metadata": metadata }, Action.Read);
         return [metadata, spec];
@@ -147,7 +147,7 @@ export class Entity_API_Impl implements Entity_API {
         const provider = await this.get_provider(prefix, version);
         const kind = this.providerDb.find_kind(provider, kind_name);
         this.validator.validate_spec(spec_description, kind, provider.allowExtraProps);
-        const entity_ref: Entity_Reference = { kind: kind_name, uuid: uuid };
+        const entity_ref: Provider_Entity_Reference = { kind: kind_name, uuid: uuid, provider_prefix: prefix, provider_version: version };
         const metadata: Metadata = (await this.spec_db.get_spec(entity_ref))[0];
         await this.authorizer.checkPermission(user, { "metadata": metadata }, Action.Update);
         metadata.spec_version = spec_version;
@@ -172,7 +172,7 @@ export class Entity_API_Impl implements Entity_API {
     async call_procedure(user: UserAuthInfo, prefix: string, kind_name: string, version: Version, entity_uuid: uuid4, procedure_name: string, input: any): Promise<any> {
         const provider = await this.get_provider(prefix, version);
         const kind = this.providerDb.find_kind(provider, kind_name);
-        const entity_spec: [Metadata, Spec] = await this.get_entity_spec(user, kind_name, entity_uuid);
+        const entity_spec: [Metadata, Spec] = await this.get_entity_spec(user, prefix, version, kind_name, entity_uuid);
         const entity_status: [Metadata, Status] = await this.get_entity_status(
             user, prefix, version, kind_name, entity_uuid);
         const procedure: Procedural_Signature | undefined = kind.entity_procedures[procedure_name];
@@ -270,7 +270,7 @@ export class Entity_API_Impl implements Entity_API {
         }
     }
 
-    async check_permission(user: UserAuthInfo, prefix: string, version: Version, entityAction: [Action, Entity_Reference][]): Promise<OperationSuccess> {
+    async check_permission(user: UserAuthInfo, prefix: string, version: Version, entityAction: [Action, Provider_Entity_Reference][]): Promise<OperationSuccess> {
         if (entityAction.length === 1) {
             return await this.check_single_permission(user, prefix, version, entityAction[0])
         } else {
@@ -278,7 +278,7 @@ export class Entity_API_Impl implements Entity_API {
         }
     }
 
-    async check_single_permission(user: UserAuthInfo, prefix: string, version: Version, entityAction: [Action, Entity_Reference]): Promise<OperationSuccess> {
+    async check_single_permission(user: UserAuthInfo, prefix: string, version: Version, entityAction: [Action, Provider_Entity_Reference]): Promise<OperationSuccess> {
         const [action, entityRef] = entityAction;
         if (action === Action.Create) {
             const has_perm = await this.has_permission(user, entityRef as Metadata, action)
@@ -298,7 +298,7 @@ export class Entity_API_Impl implements Entity_API {
         }
     }
 
-    async check_multiple_permissions(user: UserAuthInfo, prefix: string, version: Version, entityAction: [Action, Entity_Reference][]): Promise<OperationSuccess> {
+    async check_multiple_permissions(user: UserAuthInfo, prefix: string, version: Version, entityAction: [Action, Provider_Entity_Reference][]): Promise<OperationSuccess> {
         const checkPromises: Promise<boolean>[] = [];
         for (let [action, entityRef] of entityAction) {
             if (action === Action.Create) {

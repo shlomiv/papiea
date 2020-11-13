@@ -157,7 +157,7 @@ export class IntentResolver {
             const watchers = await this.intentWatcherDb.list_watchers({ entity_ref: entry_ref.entity_reference, status: IntentfulStatus.Active })
             if (watchers.length !== 0) {
                 try {
-                    const [metadata, spec] = await this.specDb.get_spec(entry_ref.entity_reference)
+                    const [metadata, spec] = await this.specDb.get_spec({...entry_ref.provider_reference, ...entry_ref.entity_reference})
                     const [, status] = await this.statusDb.get_status({...entry_ref.provider_reference, ...entry_ref.entity_reference})
                     this.onChange({ metadata, spec, status })
                 } catch (e) {

@@ -1049,20 +1049,17 @@ describe("Intentful workflow multiple providers", () => {
         for (let metadata of first_provider_to_delete_entites) {
             await entityApi.delete(`${first_provider_prefix}/${provider_version}/${metadata.kind}/${metadata.uuid}`)
         }
-        try {
-            for (let metadata of second_provider_to_delete_entites) {
-                await entityApi.delete(`${second_provider_prefix}/${provider_version}/${metadata.kind}/${metadata.uuid}`)
-            }
-        } catch (e) {
-            // TODO: this has 'Status Not found' problem, need to investigate
+        for (let metadata of second_provider_to_delete_entites) {
+            await entityApi.delete(`${second_provider_prefix}/${provider_version}/${metadata.kind}/${metadata.uuid}`)
         }
+            // TODO: this has 'Status Not found' problem, need to investigate
         first_provider_to_delete_entites = []
         second_provider_to_delete_entites = []
         await providerApiAdmin.delete(`${first_provider_prefix}/${provider_version}`)
         await providerApiAdmin.delete(`${second_provider_prefix}/${provider_version}`)
     })
 
-    test("Differ resolver with 2 providers and entities with same uuid should pass", async () => {
+    test.only("Differ resolver with 2 providers and entities with same uuid should pass", async () => {
         expect.hasAssertions();
         let test_result = false
         const sdk1 = ProviderSdk.create_provider(

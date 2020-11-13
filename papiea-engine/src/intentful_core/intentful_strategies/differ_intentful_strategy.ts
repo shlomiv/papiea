@@ -38,6 +38,8 @@ export class DifferIntentfulStrategy extends IntentfulStrategy {
         const watcher: IntentWatcher = {
             uuid: uuid(),
             entity_ref: {
+                provider_version: metadata.provider_version,
+                provider_prefix: metadata.provider_prefix,
                 uuid: metadata.uuid,
                 kind: metadata.kind
             },

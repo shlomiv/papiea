@@ -113,7 +113,7 @@ describe("MongoDb tests", () => {
     test("Get Spec", async () => {
         expect.assertions(5);
         const specDb: Spec_DB = await connection.get_spec_db(logger);
-        const entity_ref: Provider_Entity_Reference = { uuid: entityA_uuid, kind: "test", provider_prefix: "test", provider_version: "0.1.0" };
+        const entity_ref: Provider_Entity_Reference = { uuid: entityA_uuid, kind: "test", provider_prefix: "test", provider_version: "1" };
         const res = await specDb.get_spec(entity_ref);
         expect(res).not.toBeNull();
         if (res === null) {

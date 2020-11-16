@@ -1,6 +1,18 @@
 // [[file:~/work/papiea-js/Papiea-design.org::*Typescript:%20/src/provider_sdk/typescript_sdk_interface][Typescript: /src/provider_sdk/typescript_sdk_interface:1]]
 import { Kind_Builder } from "./typescript_sdk";
-import { Data_Description, Version, Status, Entity, Entity_Reference, S2S_Key, UserInfo, Action, Secret, ErrorSchemas, IntentWatcher } from "papiea-core";
+import {
+    Data_Description,
+    Version,
+    Status,
+    Entity,
+    Entity_Reference,
+    S2S_Key,
+    UserInfo,
+    Action,
+    Secret,
+    ErrorSchemas,
+    Provider_Entity_Reference
+} from "papiea-core"
 import {
     LOG_LEVELS, LogLevel, LoggerOptions, Logger, LoggerFactory
 } from 'papiea-backend-utils';
@@ -71,7 +83,7 @@ export interface IntentfulCtx_Interface {
     get_user_security_api(user_s2skey:Secret): SecurityApi
     get_headers(): IncomingHttpHeaders
     get_invoking_token(): string
-    check_permission(entityAction: [Action, Entity_Reference][], user_token?: string, provider_prefix?: string, provider_version?: Version): Promise<boolean>
+    check_permission(entityAction: [Action, Provider_Entity_Reference][], user_token?: string, provider_prefix?: string, provider_version?: Version): Promise<boolean>
     get_logger(log_level?: string, pretty_print?: boolean): Logger
     get_provider_client(key?: string): ProviderClient
     cleanup(): void

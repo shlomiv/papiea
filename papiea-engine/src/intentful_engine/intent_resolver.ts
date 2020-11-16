@@ -138,7 +138,17 @@ export class IntentResolver {
 
     private async onChange(entity: Entity) {
         try {
-            const watchers = await this.intentWatcherDb.list_watchers({ entity_ref: { uuid: entity.metadata.uuid, kind: entity.metadata.kind }, status: IntentfulStatus.Active })
+            const watchers = await this.intentWatcherDb.list_watchers(
+                {
+                    entity_ref: {
+                        uuid: entity.metadata.uuid,
+                        kind: entity.metadata.kind,
+                        provider_prefix: entity.metadata.provider_prefix,
+                        provider_version: entity.metadata.provider_version
+                    },
+                    status: IntentfulStatus.Active
+                }
+            )
             for (let watcher of watchers) {
                 await this.processActiveWatcher(watcher, entity)
             }
@@ -154,7 +164,17 @@ export class IntentResolver {
                 continue
             }
             const [entry_ref, _] = entries[key]
-            const watchers = await this.intentWatcherDb.list_watchers({ entity_ref: entry_ref.entity_reference, status: IntentfulStatus.Active })
+            const watchers = await this.intentWatcherDb.list_watchers(
+                {
+                    entity_ref: {
+                        uuid: entry_ref.entity_reference.uuid,
+                        kind: entry_ref.entity_reference.kind,
+                        provider_prefix: entry_ref.provider_reference.provider_prefix,
+                        provider_version: entry_ref.provider_reference.provider_version
+                    },
+                    status: IntentfulStatus.Active
+                }
+            )
             if (watchers.length !== 0) {
                 try {
                     const [metadata, spec] = await this.specDb.get_spec({...entry_ref.provider_reference, ...entry_ref.entity_reference})

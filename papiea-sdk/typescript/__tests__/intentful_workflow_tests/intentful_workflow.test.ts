@@ -1059,7 +1059,7 @@ describe("Intentful workflow multiple providers", () => {
         await providerApiAdmin.delete(`${second_provider_prefix}/${provider_version}`)
     })
 
-    test.only("Differ resolver with 2 providers and entities with same uuid should pass", async () => {
+    test("Differ resolver with 2 providers and entities with same uuid should pass", async () => {
         expect.hasAssertions();
         let test_result = false
         const sdk1 = ProviderSdk.create_provider(

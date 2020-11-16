@@ -2,7 +2,15 @@ import {
     Logger, LoggerFactory, LogLevel, ProceduralCtx_Interface, SecurityApi
 } from "./typescript_sdk_interface"
 import { LoggerHandle } from 'papiea-backend-utils';
-import { Entity, Status, Entity_Reference, Action, Version, Secret } from "papiea-core";
+import {
+    Entity,
+    Status,
+    Entity_Reference,
+    Action,
+    Version,
+    Secret,
+    Provider_Entity_Reference
+} from "papiea-core"
 import axios, { AxiosInstance } from "axios";
 import { ProviderSdk } from "./typescript_sdk";
 import { IncomingHttpHeaders } from "http";
@@ -38,7 +46,7 @@ export class ProceduralCtx implements ProceduralCtx_Interface {
         return `${this.base_url}/${this.provider_prefix}/${this.provider_version}/${entity.metadata.kind}/${entity.metadata.uuid}`
     }
 
-    async check_permission(entityAction: [Action, Entity_Reference][], user_token?: string, provider_prefix: string = this.provider_prefix, provider_version: Version = this.provider_version): Promise<boolean> {
+    async check_permission(entityAction: [Action, Provider_Entity_Reference][], user_token?: string, provider_prefix: string = this.provider_prefix, provider_version: Version = this.provider_version): Promise<boolean> {
         if (user_token) {
             const auth_header = `Bearer ${user_token}`
             return this.try_check(provider_prefix, provider_version, entityAction, {...this.headers, authorization: auth_header})

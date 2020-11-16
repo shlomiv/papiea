@@ -113,7 +113,7 @@ describe("MongoDb tests", () => {
     test("Get Spec", async () => {
         expect.assertions(5);
         const specDb: Spec_DB = await connection.get_spec_db(logger);
-        const entity_ref: Entity_Reference = { uuid: entityA_uuid, kind: "test" };
+        const entity_ref: Provider_Entity_Reference = { uuid: entityA_uuid, kind: "test", provider_prefix: "test", provider_version: "0.1.0" };
         const res = await specDb.get_spec(entity_ref);
         expect(res).not.toBeNull();
         if (res === null) {
@@ -129,7 +129,7 @@ describe("MongoDb tests", () => {
     test("Get Spec for non existing entity should fail", async () => {
         expect.assertions(1);
         const specDb: Spec_DB = await connection.get_spec_db(logger);
-        const entity_ref: Entity_Reference = { uuid: uuid4(), kind: "test" };
+        const entity_ref: Provider_Entity_Reference = { uuid: uuid4(), kind: "test", provider_prefix: "test", provider_version: "0.1.0" };
         try {
             await specDb.get_spec(entity_ref);
         } catch (err) {
@@ -458,7 +458,7 @@ describe("MongoDb tests", () => {
             }],
             spec_version: 1,
             status: IntentfulStatus.Active,
-            entity_ref: {} as Entity_Reference,
+            entity_ref: {} as Provider_Entity_Reference,
         };
         await watcherDb.save_watcher(watcher)
         await watcherDb.delete_watcher(watcher.uuid)
@@ -481,7 +481,7 @@ describe("MongoDb tests", () => {
             }],
             spec_version: 1,
             status: IntentfulStatus.Active,
-            entity_ref: {} as Entity_Reference,
+            entity_ref: {} as Provider_Entity_Reference,
         };
         await watcherDb.save_watcher(watcher);
         const res: IntentWatcher = await watcherDb.get_watcher(watcher.uuid);
@@ -503,7 +503,7 @@ describe("MongoDb tests", () => {
             }],
             spec_version: 1,
             status: IntentfulStatus.Active,
-            entity_ref: {} as Entity_Reference,
+            entity_ref: {} as Provider_Entity_Reference,
         };
         await watcherDb.save_watcher(watcher);
         try {
@@ -526,7 +526,7 @@ describe("MongoDb tests", () => {
             }],
             spec_version: 1,
             status: IntentfulStatus.Active,
-            entity_ref: {} as Entity_Reference,
+            entity_ref: {} as Provider_Entity_Reference,
         };
         await watcherDb.save_watcher(watcher);
         const res = (await watcherDb.list_watchers({ uuid: watcher.uuid }) as IntentWatcher[])[0]
@@ -546,7 +546,7 @@ describe("MongoDb tests", () => {
             }],
             spec_version: 1,
             status: IntentfulStatus.Active,
-            entity_ref: {} as Entity_Reference,
+            entity_ref: {} as Provider_Entity_Reference,
         };
         await watcherDb.save_watcher(watcher)
         await watcherDb.update_watcher(watcher.uuid, { status: IntentfulStatus.Completed_Successfully })

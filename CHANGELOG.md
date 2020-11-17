@@ -1,3 +1,4 @@
+- Version 0.8.2+1727: Fix status not found deletion bug (#547) PR url: git@github.com:nutanix/papiea.git/pull/547
 - Version 0.8.1+1711: Randomness in intentful handler (#535) PR url: git@github.com:nutanix/papiea.git/pull/535
   * Breaking changes:
     1. Intentful Status:

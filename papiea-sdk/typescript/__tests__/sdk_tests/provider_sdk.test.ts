@@ -1119,7 +1119,7 @@ describe("SDK + oauth provider tests", () => {
             "computeWithPermissionCheck",
             {input_schema: loadYamlFromTestFactoryDir("./test_data/procedure_sum_input.yml")},
             async (ctx, input) => {
-                const allowed = await ctx.check_permission([[Action.Read, { uuid: entity_metadata.uuid, kind: kind_name }]], undefined,  provider.prefix, provider.version);
+                const allowed = await ctx.check_permission([[Action.Read, { uuid: entity_metadata.uuid, kind: kind_name, provider_prefix: entity_metadata.provider_prefix, provider_version: entity_metadata.provider_version }]], undefined,  provider.prefix, provider.version);
                 expect(allowed).toBeFalsy();
             }
         );
@@ -1150,7 +1150,7 @@ describe("SDK + oauth provider tests", () => {
             "computeWithPermissionCheck",
             {input_schema: loadYamlFromTestFactoryDir("./test_data/procedure_sum_input.yml")},
             async (ctx, input) => {
-                const allowed = await ctx.check_permission([[Action.Read, { uuid: entity_metadata.uuid, kind: kind_name }]], undefined, provider.prefix, provider.version);
+                const allowed = await ctx.check_permission([[Action.Read, { uuid: entity_metadata.uuid, kind: kind_name, provider_prefix: entity_metadata.provider_prefix, provider_version: entity_metadata.provider_version }]], undefined, provider.prefix, provider.version);
                 expect(allowed).toBeTruthy();
             }
         );
@@ -1181,7 +1181,7 @@ describe("SDK + oauth provider tests", () => {
             "computeWithPermissionCheck",
             {input_schema: loadYamlFromTestFactoryDir("./test_data/procedure_sum_input.yml")},
             async (ctx, input) => {
-                const allowed = await ctx.check_permission([[Action.Read, { uuid: entity_metadata.uuid, kind: kind_name }]], adminKey, provider.prefix, provider.version);
+                const allowed = await ctx.check_permission([[Action.Read, { uuid: entity_metadata.uuid, kind: kind_name, provider_prefix: entity_metadata.provider_prefix, provider_version: entity_metadata.provider_version }]], adminKey, provider.prefix, provider.version);
                 expect(allowed).toBeTruthy();
             }
         );
@@ -1212,7 +1212,7 @@ describe("SDK + oauth provider tests", () => {
             "computeWithPermissionCheck",
             {input_schema: loadYamlFromTestFactoryDir("./test_data/procedure_sum_input.yml")},
             async (ctx, input) => {
-                const allowed = await ctx.check_permission([[Action.Read, { uuid: entity_metadata.uuid, kind: kind_name }]], "Totally invalid key", provider.prefix, provider.version);
+                const allowed = await ctx.check_permission([[Action.Read, { uuid: entity_metadata.uuid, kind: kind_name, provider_prefix: entity_metadata.provider_prefix, provider_version: entity_metadata.provider_version }]], "Totally invalid key", provider.prefix, provider.version);
                 expect(allowed).toBeFalsy();
             }
         );
@@ -1405,7 +1405,7 @@ describe("SDK + oauth provider tests", () => {
             {input_schema: loadYamlFromTestFactoryDir("./test_data/procedure_sum_input.yml")},
             async (ctx, input) => {
                 const allowed = await ctx.check_permission([
-                    [Action.Read, { uuid: entity_metadata.uuid, kind: kind_name }],
+                    [Action.Read, { uuid: entity_metadata.uuid, kind: kind_name, provider_prefix: entity_metadata.provider_prefix, provider_version: entity_metadata.provider_version }],
                     [Action.Create, { uuid: entity_metadata.uuid, kind: kind_name, spec_version: 1, extension: { owner: "alice" }, created_at: {} as Date, provider_prefix: provider.prefix, provider_version: provider.version } as Metadata]
                 ], undefined, provider.prefix, provider.version);
                 expect(allowed).toBeTruthy();
@@ -1439,7 +1439,7 @@ describe("SDK + oauth provider tests", () => {
             {input_schema: loadYamlFromTestFactoryDir("./test_data/procedure_sum_input.yml")},
             async (ctx, input) => {
                 const allowed = await ctx.check_permission([
-                    [Action.Read, { uuid: entity_metadata.uuid, kind: kind_name }],
+                    [Action.Read, { uuid: entity_metadata.uuid, kind: kind_name, provider_prefix: entity_metadata.provider_prefix, provider_version: entity_metadata.provider_version }],
                     [Action.Create, { uuid: entity_metadata.uuid, kind: kind_name, spec_version: 1, extension: { owner: "alice" }, created_at: {} as Date, provider_prefix: provider.prefix, provider_version: provider.version } as Metadata]
                 ], undefined, provider.prefix, provider.version);
                 expect(allowed).toBeFalsy();
@@ -1626,7 +1626,6 @@ describe("SDK callback tests", () => {
                     }
                 })
             } catch (e) {
-                console.log(e.response.data)
                 expect(e).toBeDefined()
             }
         } finally {

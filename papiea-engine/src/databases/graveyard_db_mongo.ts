@@ -10,7 +10,6 @@ export class Graveyard_DB_Mongo implements Graveyard_DB {
     logger: Logger
     entity_collection: Collection
     client: MongoClient
-    session?: ClientSession
 
     constructor(logger: Logger, db: Db, client: MongoClient) {
         this.collection = db.collection("graveyard")
@@ -45,7 +44,7 @@ export class Graveyard_DB_Mongo implements Graveyard_DB {
                 "metadata.kind": entity_ref.kind,
                 "metadata.provider_prefix": entity_ref.provider_prefix,
                 "metadata.provider_version": entity_ref.provider_version
-            }, {session: this.session})
+            })
         if (result.result.n === undefined || result.result.ok !== 1) {
             throw new Error("Failed to remove entity");
         }
@@ -70,7 +69,7 @@ export class Graveyard_DB_Mongo implements Graveyard_DB {
     async save_to_graveyard(entity: Entity): Promise<void> {
         entity.metadata.spec_version++
         entity.metadata.deleted_at = new Date()
-        const result = await this.collection.insertOne(entity, {session: this.session})
+        const result = await this.collection.insertOne(entity)
         if (result.result.n !== 1) {
             throw new Error(`Amount of saved entries doesn't equal to 1: ${result.result.n}`)
         }

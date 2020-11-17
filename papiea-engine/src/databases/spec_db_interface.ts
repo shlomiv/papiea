@@ -1,4 +1,4 @@
-import { Metadata, Spec, Entity_Reference } from "papiea-core";
+import {Metadata, Spec, Entity_Reference, Provider_Entity_Reference} from "papiea-core"
 import { SortParams } from "../entity/entity_api_impl";
 import { IntentfulKindReference } from "./provider_db_mongo";
 
@@ -19,7 +19,7 @@ export interface Spec_DB {
 
     // Get the spec of a particular entity from the db. Returns both
     // current metadata and the spec of that entity.
-    get_spec(entity_ref: Entity_Reference): Promise<[Metadata, Spec]>;
+    get_spec(entity_ref: Provider_Entity_Reference): Promise<[Metadata, Spec]>;
 
     // Get specs by their entity references
     get_specs_by_ref(entity_refs: Entity_Reference[]): Promise<[Metadata, Spec][]>

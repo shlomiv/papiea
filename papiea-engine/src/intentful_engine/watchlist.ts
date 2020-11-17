@@ -1,6 +1,7 @@
 import { Diff, Entity_Reference, Version, Metadata } from "papiea-core"
 
 // I don't like the provider being necessary here too much, maybe rethink this
+// TODO: this structure could be simplified because provider ref is in metadata now
 export interface EntryReference {
     provider_reference: {
         provider_prefix: string,

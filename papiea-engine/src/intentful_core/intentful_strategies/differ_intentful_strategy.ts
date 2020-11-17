@@ -39,7 +39,9 @@ export class DifferIntentfulStrategy extends IntentfulStrategy {
             uuid: uuid(),
             entity_ref: {
                 uuid: metadata.uuid,
-                kind: metadata.kind
+                kind: metadata.kind,
+                provider_prefix: metadata.provider_prefix,
+                provider_version: metadata.provider_version,
             },
             diffs: [],
             spec_version: watcher_spec_version,

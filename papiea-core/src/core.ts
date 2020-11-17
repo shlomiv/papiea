@@ -42,7 +42,7 @@ export interface IntentWatcher {
     uuid: uuid4
 
     // Entity being observed by a watcher
-    entity_ref: Entity_Reference
+    entity_ref: Provider_Entity_Reference
 
     // Spec version at the time of a spec change
     spec_version: number

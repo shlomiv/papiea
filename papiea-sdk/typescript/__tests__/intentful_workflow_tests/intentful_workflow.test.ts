@@ -1052,7 +1052,6 @@ describe("Intentful workflow multiple providers", () => {
         for (let metadata of second_provider_to_delete_entites) {
             await entityApi.delete(`${second_provider_prefix}/${provider_version}/${metadata.kind}/${metadata.uuid}`)
         }
-            // TODO: this has 'Status Not found' problem, need to investigate
         first_provider_to_delete_entites = []
         second_provider_to_delete_entites = []
         await providerApiAdmin.delete(`${first_provider_prefix}/${provider_version}`)

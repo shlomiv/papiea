@@ -17,15 +17,20 @@ import {
     StatusUpdateStrategy
 } from "./intentful_strategies/status_update_strategy";
 import { Graveyard_DB } from "../databases/graveyard_db_interface"
+import {EntityCreationStrategy} from "./entity_creation_strategies/entity_creation_strategy_interface"
+import {ConstructorEntityCreationStrategy} from "./entity_creation_strategies/constructor_entity_creation_strategy"
+import {BasicEntityCreationStrategy} from "./entity_creation_strategies/basic_entity_creation_strategy"
 
 export type BehaviourStrategyMap = Map<IntentfulBehaviour, IntentfulStrategy>
 export type DiffSelectionStrategyMap = Map<DiffSelectionStrategy, DiffSelectionStrategyInterface>
 export type StatusUpdateStrategyMap = Map<IntentfulBehaviour, StatusUpdateStrategy>
+export type EntityCreationStrategyMap = Map<"constructor" | "basic", EntityCreationStrategy>
 
 export class IntentfulContext {
     private readonly behaviourStrategyMap: BehaviourStrategyMap
     private readonly diffSelectionStrategyMap: DiffSelectionStrategyMap
     private readonly statusUpdateStrategyMap: StatusUpdateStrategyMap
+    private readonly entityCreationStrategyMap: EntityCreationStrategyMap
 
     constructor(specDb: Spec_DB, statusDb: Status_DB, graveyardDb: Graveyard_DB, differ: Differ, intentWatcherDb: IntentWatcher_DB, watchlistDb: Watchlist_DB) {
         this.behaviourStrategyMap = new Map()
@@ -41,6 +46,10 @@ export class IntentfulContext {
         this.statusUpdateStrategyMap.set(IntentfulBehaviour.Basic, new BasicUpdateStrategy(statusDb))
         this.statusUpdateStrategyMap.set(IntentfulBehaviour.SpecOnly, new SpecOnlyUpdateStrategy(statusDb))
         this.statusUpdateStrategyMap.set(IntentfulBehaviour.Differ, new DifferUpdateStrategy(statusDb, specDb, differ, watchlistDb))
+
+        this.entityCreationStrategyMap = new Map()
+        this.entityCreationStrategyMap.set("constructor", new ConstructorEntityCreationStrategy(specDb, statusDb, graveyardDb, watchlistDb, differ, intentWatcherDb))
+        this.entityCreationStrategyMap.set("basic", new BasicEntityCreationStrategy(specDb, statusDb, graveyardDb, watchlistDb))
     }
 
     getIntentfulStrategy(kind: Kind, user: UserAuthInfo): IntentfulStrategy {
@@ -66,5 +75,17 @@ export class IntentfulContext {
         strategy.setKind(kind)
         strategy.setUser(user)
         return strategy
+    }
+
+    getEntityCreationStrategy(kind: Kind, user: UserAuthInfo): EntityCreationStrategy {
+        let strategy: EntityCreationStrategy | undefined
+        if (kind.kind_procedures[`__${ kind.name }_create`]) {
+            strategy = this.entityCreationStrategyMap.get("constructor")
+        } else {
+            strategy = this.entityCreationStrategyMap.get("basic")
+        }
+        strategy?.setKind(kind)
+        strategy?.setUser(user)
+        return strategy!
     }
 }

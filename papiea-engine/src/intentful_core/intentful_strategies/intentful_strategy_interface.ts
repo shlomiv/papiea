@@ -38,14 +38,6 @@ export abstract class IntentfulStrategy {
         return [updatedMetadata, updatedSpec]
     }
 
-    async create_entity(metadata: Metadata, spec: Spec): Promise<[Metadata, Spec]> {
-        // Create increments spec version so we should check already incremented one
-        await this.check_spec_version(metadata, metadata.spec_version + 1, spec)
-        const [updatedMetadata, updatedSpec] = await this.specDb.update_spec(metadata, spec);
-        await this.statusDb.replace_status(metadata, spec)
-        return [updatedMetadata, updatedSpec]
-    }
-
     async delete_entity(entity: Entity): Promise<void> {
         await this.graveyardDb.dispose(entity)
     }
@@ -53,37 +45,6 @@ export abstract class IntentfulStrategy {
     async update(metadata: Metadata, spec: Spec): Promise<IntentWatcher | null> {
         await this.update_entity(metadata, spec)
         return null
-    }
-
-    async create(metadata: Metadata, spec: Spec): Promise<[Metadata, Spec]> {
-        const entity = await this.create_entity(metadata, spec)
-        try {
-            await this.dispatch(`__${ metadata.kind }_create`, { metadata, spec })
-        } catch (e) {
-            await this.delete_entity({ metadata: entity[0], spec: entity[1], status: undefined })
-            throw e
-        }
-        return entity
-    }
-
-    protected async dispatch(procedure_name: string, entity: Partial<Entity>): Promise<any> {
-        if (this.kind) {
-            if (this.kind.kind_procedures[procedure_name]) {
-                if (this.user === undefined) {
-                    throw OnActionError.create("User not specified", procedure_name, this.kind.name)
-                }
-                try {
-                    const { data } =  await axios.post(this.kind.kind_procedures[procedure_name].procedure_callback, {
-                        input: entity
-                    }, { headers: this.user })
-                    return data
-                } catch (e) {
-                    throw OnActionError.create(e.response.data.message, procedure_name, this.kind.name)
-                }
-            }
-        } else {
-            throw OnActionError.create("Insufficient params specified", procedure_name)
-        }
     }
 
     setKind(kind: Kind): void {
@@ -95,7 +56,6 @@ export abstract class IntentfulStrategy {
     }
 
     async delete(entity: Entity): Promise<void> {
-        await this.dispatch(`__${entity.metadata.kind}_delete`, { metadata: entity.metadata })
         return this.delete_entity(entity)
     }
 }

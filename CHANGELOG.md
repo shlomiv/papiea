@@ -1,3 +1,4 @@
+- Version 0.8.5+1748: update yarn locks (#552) PR url: git@github.com:nutanix/papiea.git/pull/552
 - Version 0.8.4+1735: Changed error message for bad request error in validator (#549) PR url: git@github.com:nutanix/papiea.git/pull/549
 - Version 0.8.3+1732: Fix swagger errors in papiea-engine (#548) PR url: git@github.com:nutanix/papiea.git/pull/548
 - Version 0.8.2+1727: Fix status not found deletion bug (#547) PR url: git@github.com:nutanix/papiea.git/pull/547

@@ -50,7 +50,7 @@
     "pluralize": "^7.0.0",
     "query-string": "^6.2.0",
     "simple-oauth2": "^2.2.1",
-    "swagger-model-validator": "^3.0.19",
+    "swagger-model-validator": "^3.0.20",
     "swagger-ui-express": "^4.0.7",
     "ts-node": "^7.0.1",
     "uuid": "^3.3.2",

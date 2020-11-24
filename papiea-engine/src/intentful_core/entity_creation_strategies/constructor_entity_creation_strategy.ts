@@ -19,14 +19,15 @@ import {IntentWatcher_DB} from "../../databases/intent_watcher_db_interface"
 import {Watchlist_DB} from "../../databases/watchlist_db_interface"
 import deepEqual = require("deep-equal")
 import uuid = require("uuid")
+import {Validator} from "../../validator"
 
 export class ConstructorEntityCreationStrategy extends EntityCreationStrategy {
     protected differ: Differ
     protected intentWatcherDb: IntentWatcher_DB
     protected watchlistDb: Watchlist_DB;
 
-    constructor(specDb: Spec_DB, statusDb: Status_DB, graveyardDb: Graveyard_DB, watchlistDb: Watchlist_DB, differ: Differ, intentWatcherDb: IntentWatcher_DB) {
-        super(specDb, statusDb, graveyardDb, watchlistDb)
+    constructor(specDb: Spec_DB, statusDb: Status_DB, graveyardDb: Graveyard_DB, watchlistDb: Watchlist_DB, validator: Validator, differ: Differ, intentWatcherDb: IntentWatcher_DB) {
+        super(specDb, statusDb, graveyardDb, watchlistDb, validator)
         this.differ = differ
         this.intentWatcherDb = intentWatcherDb
         this.watchlistDb = watchlistDb

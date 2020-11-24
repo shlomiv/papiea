@@ -2,7 +2,7 @@ import { Spec_DB } from "../databases/spec_db_interface"
 import { Status_DB } from "../databases/status_db_interface"
 import { IntentfulStrategy } from "./intentful_strategies/intentful_strategy_interface"
 import { BasicIntentfulStrategy } from "./intentful_strategies/basic_intentful_strategy"
-import { IntentfulBehaviour, Kind, Differ, DiffSelectionStrategy } from "papiea-core"
+import {IntentfulBehaviour, Kind, Differ, DiffSelectionStrategy, Provider} from "papiea-core"
 import { SpecOnlyIntentfulStrategy } from "./intentful_strategies/spec_only_intentful_strategy"
 import { UserAuthInfo } from "../auth/authn"
 import { DifferIntentfulStrategy } from "./intentful_strategies/differ_intentful_strategy"
@@ -20,6 +20,7 @@ import { Graveyard_DB } from "../databases/graveyard_db_interface"
 import {EntityCreationStrategy} from "./entity_creation_strategies/entity_creation_strategy_interface"
 import {ConstructorEntityCreationStrategy} from "./entity_creation_strategies/constructor_entity_creation_strategy"
 import {BasicEntityCreationStrategy} from "./entity_creation_strategies/basic_entity_creation_strategy"
+import {Validator} from "../validator"
 
 export type BehaviourStrategyMap = Map<IntentfulBehaviour, IntentfulStrategy>
 export type DiffSelectionStrategyMap = Map<DiffSelectionStrategy, DiffSelectionStrategyInterface>
@@ -32,7 +33,7 @@ export class IntentfulContext {
     private readonly statusUpdateStrategyMap: StatusUpdateStrategyMap
     private readonly entityCreationStrategyMap: EntityCreationStrategyMap
 
-    constructor(specDb: Spec_DB, statusDb: Status_DB, graveyardDb: Graveyard_DB, differ: Differ, intentWatcherDb: IntentWatcher_DB, watchlistDb: Watchlist_DB) {
+    constructor(specDb: Spec_DB, statusDb: Status_DB, graveyardDb: Graveyard_DB, differ: Differ, intentWatcherDb: IntentWatcher_DB, watchlistDb: Watchlist_DB, validator: Validator) {
         this.behaviourStrategyMap = new Map()
         this.behaviourStrategyMap.set(IntentfulBehaviour.Basic, new BasicIntentfulStrategy(specDb, statusDb, graveyardDb))
         this.behaviourStrategyMap.set(IntentfulBehaviour.SpecOnly, new SpecOnlyIntentfulStrategy(specDb, statusDb, graveyardDb))
@@ -48,8 +49,8 @@ export class IntentfulContext {
         this.statusUpdateStrategyMap.set(IntentfulBehaviour.Differ, new DifferUpdateStrategy(statusDb, specDb, differ, watchlistDb))
 
         this.entityCreationStrategyMap = new Map()
-        this.entityCreationStrategyMap.set("constructor", new ConstructorEntityCreationStrategy(specDb, statusDb, graveyardDb, watchlistDb, differ, intentWatcherDb))
-        this.entityCreationStrategyMap.set("basic", new BasicEntityCreationStrategy(specDb, statusDb, graveyardDb, watchlistDb))
+        this.entityCreationStrategyMap.set("constructor", new ConstructorEntityCreationStrategy(specDb, statusDb, graveyardDb, watchlistDb, validator, differ, intentWatcherDb))
+        this.entityCreationStrategyMap.set("basic", new BasicEntityCreationStrategy(specDb, statusDb, graveyardDb, watchlistDb, validator))
     }
 
     getIntentfulStrategy(kind: Kind, user: UserAuthInfo): IntentfulStrategy {
@@ -77,7 +78,7 @@ export class IntentfulContext {
         return strategy
     }
 
-    getEntityCreationStrategy(kind: Kind, user: UserAuthInfo): EntityCreationStrategy {
+    getEntityCreationStrategy(provider: Provider, kind: Kind, user: UserAuthInfo): EntityCreationStrategy {
         let strategy: EntityCreationStrategy | undefined
         if (kind.kind_procedures[`__${ kind.name }_create`]) {
             strategy = this.entityCreationStrategyMap.get("constructor")
@@ -86,6 +87,7 @@ export class IntentfulContext {
         }
         strategy?.setKind(kind)
         strategy?.setUser(user)
+        strategy?.setProvider(provider)
         return strategy!
     }
 }

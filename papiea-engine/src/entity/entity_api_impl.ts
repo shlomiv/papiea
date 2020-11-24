@@ -324,20 +324,4 @@ export class Entity_API_Impl implements Entity_API {
             return false;
         }
     }
-
-    private async get_existing_entities(provider: Provider, uuid: string, kind_name: string): Promise<[Metadata, Spec, Status] | []> {
-        try {
-            const result_spec = await this.spec_db.list_specs({ metadata: { uuid: uuid, kind: kind_name, provider_version: provider.version, provider_prefix: provider.prefix, deleted_at: null } }, false)
-            const result_status = await this.status_db.list_status({ metadata: { uuid: uuid, kind: kind_name, provider_version: provider.version, provider_prefix: provider.prefix, deleted_at: null } }, false)
-            if (result_spec.length !== 0 || result_status.length !== 0) {
-                return [result_spec[0][0], result_spec[0][1], result_status[0][1]]
-            } else {
-                return []
-            }
-        } catch (e) {
-            // Hiding details of the error for security reasons
-            // since it is not supposed to occur under normal circumstances
-            throw new Error("uuid is not valid")
-        }
-    }
 }

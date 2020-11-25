@@ -6,6 +6,7 @@ import { BadRequestError } from '../errors/bad_request_error';
 import { processPaginationParams, processSortQuery } from "../utils/utils";
 import { SortParams } from "./entity_api_impl";
 import { CheckNoQueryParams, check_request } from "../validator/express_validator";
+import {Version} from "papiea-core"
 
 const CheckProcedureCallParams = check_request({
     allowed_query_params: [],
@@ -27,14 +28,14 @@ export function createEntityAPIRouter(entity_api: Entity_API): Router {
         return { results: pageEntities, entity_count: totalEntities };
     }
 
-    const filterEntities = async function (user: UserAuthInfo, kind_name: string, filter: any, skip: number, size: number, searchDeleted: boolean, exactMatch: boolean, sortParams?: SortParams): Promise<any> {
+    const filterEntities = async (user: UserAuthInfo, prefix: string, version: Version, kind_name: string, filter: any, skip: number, size: number, searchDeleted: boolean, exactMatch: boolean, sortParams?: SortParams): Promise<any> => {
         if (searchDeleted) {
-            const entities = await entity_api.filter_deleted(user, kind_name, filter, exactMatch, sortParams)
+            const entities = await entity_api.filter_deleted(user, prefix, version, kind_name, filter, exactMatch, sortParams)
             return paginateEntities(Object.values(entities), skip, size)
         }
-        const resultSpecs: any[] = await entity_api.filter_entity_spec(user, kind_name, filter, exactMatch, sortParams);
+        const resultSpecs: any[] = await entity_api.filter_entity_spec(user, prefix, version, kind_name, filter, exactMatch, sortParams);
 
-        const resultStatuses: any[] = await entity_api.filter_entity_status(user, kind_name, filter, exactMatch, sortParams);
+        const resultStatuses: any[] = await entity_api.filter_entity_status(user, prefix, version, kind_name, filter, exactMatch, sortParams);
 
         const uuidToEntity: { [key: string]: any } = {};
 
@@ -120,7 +121,7 @@ export function createEntityAPIRouter(entity_api: Entity_API): Router {
         filter.status = JSON.parse(queryToString(req.query.status) ?? '{}');
         filter.metadata = JSON.parse(queryToString(req.query.metadata) ?? '{}');
 
-        res.json(await filterEntities(req.user, req.params.kind, filter, skip, size, searchDeleted, exactMatch, sortParams));
+        res.json(await filterEntities(req.user, req.params.prefix, req.params.version, req.params.kind, filter, skip, size, searchDeleted, exactMatch, sortParams));
     }));
 
     router.get("/:prefix/:version/:kind/:uuid", CheckNoQueryParams, asyncHandler(async (req, res) => {
@@ -158,7 +159,7 @@ export function createEntityAPIRouter(entity_api: Entity_API): Router {
             filter.metadata = {};
         }
 
-        res.json(await filterEntities(req.user, req.params.kind, filter, skip, size, searchDeleted, exactMatch, sortParams));
+        res.json(await filterEntities(req.user, req.params.prefix, req.params.version, req.params.kind, filter, skip, size, searchDeleted, exactMatch, sortParams));
     }));
 
     router.put("/:prefix/:version/:kind/:uuid", check_request({
@@ -174,8 +175,8 @@ export function createEntityAPIRouter(entity_api: Entity_API): Router {
         allowed_query_params: [],
         allowed_body_params: ['metadata', 'spec']
     }), asyncHandler(async (req, res) => {
-        const [intent_watcher, [metadata, spec, status]] = await entity_api.save_entity(req.user, req.params.prefix, req.params.kind, req.params.version, req.body);
-        res.json({ "intent_watcher": intent_watcher, "metadata": metadata, "spec": spec, "status": status });
+        const result = await entity_api.save_entity(req.user, req.params.prefix, req.params.kind, req.params.version, req.body);
+        res.json(result);
     }));
 
     router.delete("/:prefix/:version/:kind/:uuid", CheckNoQueryParams, asyncHandler(async (req, res) => {

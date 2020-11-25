@@ -8,6 +8,9 @@ import { IntentResolver } from "./intentful_engine/intent_resolver";
 import { IntentfulListenerMongo } from "./intentful_engine/intentful_listener_mongo_simple";
 import { getEntropyFn } from "./utils/utils"
 import { getConfig } from "./utils/arg_parser"
+import {ValidatorImpl} from "./validator"
+import {Authorizer, NoAuthAuthorizer, PerProviderAuthorizer} from "./auth/authz"
+import {ProviderCasbinAuthorizerFactory} from "./auth/casbin"
 
 process.title = "papiea_diff_resolver"
 const config = getConfig()
@@ -33,8 +36,11 @@ async function setUpDiffResolver() {
     const watchlistDb = await mongoConnection.get_watchlist_db(logger)
     const graveyardDb = await mongoConnection.get_graveyard_db(logger)
 
+    const validator = ValidatorImpl.create()
+    const noopAuthorizer: Authorizer = new NoAuthAuthorizer();
+
     const differ = new BasicDiffer()
-    const intentfulContext = new IntentfulContext(specDb, statusDb, graveyardDb, differ, intentWatcherDB, watchlistDb)
+    const intentfulContext = new IntentfulContext(specDb, statusDb, graveyardDb, differ, intentWatcherDB, watchlistDb, validator, noopAuthorizer)
     const watchlist: Watchlist = new Watchlist()
 
     const intentfulListenerMongo = new IntentfulListenerMongo(statusDb, specDb, watchlist)

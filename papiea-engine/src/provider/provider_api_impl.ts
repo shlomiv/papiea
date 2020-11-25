@@ -7,7 +7,7 @@ import { Authorizer } from "../auth/authz";
 import { UserAuthInfo } from "../auth/authn";
 import { createHash } from "../auth/crypto";
 import { EventEmitter } from "events";
-import { Action, Entity_Reference, Kind, Provider, S2S_Key, Secret, Status, Version } from "papiea-core";
+import { Action, Entity_Reference, Provider, S2S_Key, Secret, Status, Version } from "papiea-core";
 import { Logger } from "papiea-backend-utils";
 import { Watchlist_DB } from "../databases/watchlist_db_interface";
 import { SpecOnlyUpdateStrategy } from "../intentful_core/intentful_strategies/status_update_strategy";
@@ -54,7 +54,7 @@ export class Provider_API_Impl implements Provider_API {
     };
 
     async unregister_provider(user: UserAuthInfo, provider_prefix: string, version: Version): Promise<void> {
-        await this.authorizer.checkPermission(user, { prefix: provider_prefix }, Action.UnregisterProvider);
+        await this.authorizer.checkPermission(user, {prefix: provider_prefix}, Action.UnregisterProvider);
         return this.providerDb.delete_provider(provider_prefix, version);
     }
 
@@ -118,21 +118,13 @@ export class Provider_API_Impl implements Provider_API {
     }
 
     async get_provider(user: UserAuthInfo, provider_prefix: string, provider_version: Version): Promise<Provider> {
-        await this.authorizer.checkPermission(user, { prefix: provider_prefix }, Action.ReadProvider);
+        await this.authorizer.checkPermission(user, {prefix: provider_prefix}, Action.ReadProvider);
         return this.providerDb.get_provider(provider_prefix, provider_version);
     }
 
     async list_providers_by_prefix(user: UserAuthInfo, provider_prefix: string): Promise<Provider[]> {
         const res = await this.providerDb.find_providers(provider_prefix);
         return this.authorizer.filter(user, res, Action.ReadProvider);
-    }
-
-    async get_latest_provider(user: UserAuthInfo, provider_prefix: string): Promise<Provider> {
-        return this.providerDb.get_latest_provider(provider_prefix);
-    }
-
-    async get_latest_provider_by_kind(user: UserAuthInfo, kind_name: string): Promise<Provider> {
-        return await this.providerDb.get_latest_provider_by_kind(kind_name);
     }
 
     fix_null_object(schemas: any, status: Status): Status {
@@ -162,11 +154,7 @@ export class Provider_API_Impl implements Provider_API {
             provider.oauth2 = auth.oauth2;
         }
         await this.providerDb.save_provider(provider);
-        this.eventEmitter.emit('authChange', provider);
-    }
-
-    on_auth_change(callbackfn: (provider: Provider) => void): void {
-        this.eventEmitter.on('authChange', callbackfn);
+        this.authorizer.on_auth_changed(provider)
     }
 
     async create_key(user: UserAuthInfo, name: string, owner: string, provider_prefix: string, user_info?: any, key?: Secret): Promise<S2S_Key> {

@@ -16,9 +16,9 @@ export abstract class EntityCreationStrategy {
     protected readonly watchlistDb: Watchlist_DB
     protected readonly validator: Validator
     protected readonly authorizer: Authorizer
-    protected kind?: Kind
-    protected user?: UserAuthInfo
-    protected provider?: Provider
+    protected kind!: Kind
+    protected user!: UserAuthInfo
+    protected provider!: Provider
 
 
     protected constructor(specDb: Spec_DB, statusDb: Status_DB, graveyardDb: Graveyard_DB, watchlistDb: Watchlist_DB, validator: Validator, authorizer: Authorizer) {
@@ -55,23 +55,23 @@ export abstract class EntityCreationStrategy {
         }
     }
 
-    protected async create_metadata(request_metadata: Metadata) {
+    protected async create_metadata(request_metadata: Metadata): Promise<Metadata> {
         if (!request_metadata.uuid) {
-            if (this.kind!.uuid_validation_pattern === undefined) {
+            if (this.kind.uuid_validation_pattern === undefined) {
                 request_metadata.uuid = uuid();
             } else {
                 throw new Error("Uuid is not provided, but supposed to be since validation pattern is specified")
             }
         } else {
-            const result = await this.get_existing_entities(this.provider!, request_metadata.uuid, request_metadata.kind)
+            const result = await this.get_existing_entities(this.provider, request_metadata.uuid, request_metadata.kind)
             if (result.length !== 0) {
                 const [metadata, spec, status] = result
                 throw new ConflictingEntityError("An entity with this uuid already exists", metadata, spec, status)
             }
         }
-        request_metadata.kind = this.kind!.name
-        request_metadata.provider_prefix = this.provider!.prefix
-        request_metadata.provider_version = this.provider!.version
+        request_metadata.kind = this.kind.name
+        request_metadata.provider_prefix = this.provider.prefix
+        request_metadata.provider_version = this.provider.version
         if (request_metadata.spec_version === undefined || request_metadata.spec_version === null) {
             let spec_version = await this.graveyardDb.get_highest_spec_version(
                 {
@@ -82,16 +82,17 @@ export abstract class EntityCreationStrategy {
                 })
             request_metadata.spec_version = spec_version
         }
+        return request_metadata
     }
 
-    protected validate_entity(entity: Entity) {
-        this.validator.validate_metadata_extension(this.provider!.extension_structure, entity.metadata, this.provider!.allowExtraProps);
-        this.validator.validate_spec(entity.spec, this.kind!, this.provider!.allowExtraProps)
-        this.validator.validate_uuid(this.kind!, entity.metadata.uuid)
+    protected validate_entity(entity: Pick<Entity, "metadata" | "spec">) {
+        this.validator.validate_metadata_extension(this.provider.extension_structure, entity.metadata, this.provider.allowExtraProps);
+        this.validator.validate_spec(entity.spec, this.kind, this.provider.allowExtraProps)
+        this.validator.validate_uuid(this.kind, entity.metadata.uuid)
     }
 
     protected async check_permission(entity: Entity) {
-        await this.authorizer.checkPermission(this.user!, { "metadata": entity.metadata }, Action.Create);
+        await this.authorizer.checkPermission(this.user, {"metadata": entity.metadata}, Action.Create, this.provider);
     }
 
     protected async create_entity(metadata: Metadata, spec: Spec): Promise<[Metadata, Spec]> {
@@ -102,7 +103,7 @@ export abstract class EntityCreationStrategy {
         return [updatedMetadata, updatedSpec]
     }
 
-    abstract create(input: unknown): Promise<[IntentWatcher | null, [Metadata, Spec, Status]]>
+    abstract create(input: unknown): Promise<[IntentWatcher | null, [Metadata, Spec, Status | null]]>
 
     setKind(kind: Kind): void {
         this.kind = kind

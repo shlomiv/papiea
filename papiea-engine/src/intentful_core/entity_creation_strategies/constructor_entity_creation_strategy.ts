@@ -20,14 +20,15 @@ import {Watchlist_DB} from "../../databases/watchlist_db_interface"
 import deepEqual = require("deep-equal")
 import uuid = require("uuid")
 import {Validator} from "../../validator"
+import {Authorizer} from "../../auth/authz"
 
 export class ConstructorEntityCreationStrategy extends EntityCreationStrategy {
     protected differ: Differ
     protected intentWatcherDb: IntentWatcher_DB
     protected watchlistDb: Watchlist_DB;
 
-    constructor(specDb: Spec_DB, statusDb: Status_DB, graveyardDb: Graveyard_DB, watchlistDb: Watchlist_DB, validator: Validator, differ: Differ, intentWatcherDb: IntentWatcher_DB) {
-        super(specDb, statusDb, graveyardDb, watchlistDb, validator)
+    constructor(specDb: Spec_DB, statusDb: Status_DB, graveyardDb: Graveyard_DB, watchlistDb: Watchlist_DB, validator: Validator, authorizer: Authorizer, differ: Differ, intentWatcherDb: IntentWatcher_DB) {
+        super(specDb, statusDb, graveyardDb, watchlistDb, validator, authorizer)
         this.differ = differ
         this.intentWatcherDb = intentWatcherDb
         this.watchlistDb = watchlistDb
@@ -43,6 +44,7 @@ export class ConstructorEntityCreationStrategy extends EntityCreationStrategy {
 
     public async create(input: any): Promise<[IntentWatcher | null, [Metadata, Spec, Status]]> {
         const entity = await this.dispatch(`__${ this.kind?.name }_create`, input)
+        await this.validate_entity(entity)
         const [created_metadata, created_spec, created_status] = await this.save_entity(entity)
         let watcher: null | IntentWatcher = null
         if (!deepEqual(created_spec, created_status) && this.kind?.intentful_behaviour === IntentfulBehaviour.Differ) {
@@ -59,7 +61,7 @@ export class ConstructorEntityCreationStrategy extends EntityCreationStrategy {
                 user: this.user,
                 status: IntentfulStatus.Active,
             }
-            for (let diff of this.differ.diffs(this.kind!, created_spec, created_status)) {
+            for (let diff of this.differ.diffs(this.kind, created_spec, created_status)) {
                 watcher.diffs.push(diff)
             }
             await this.intentWatcherDb.save_watcher(watcher)
@@ -88,7 +90,7 @@ export class ConstructorEntityCreationStrategy extends EntityCreationStrategy {
                     throw OnActionError.create(e.response.data.message, procedure_name, this.kind.name)
                 }
             } else {
-                // We should reach this exception under normal condition because of pre checks while choosing strategy
+                // We should not reach this exception under normal condition because of pre checks while choosing strategy
                 throw new Error("Entity creation was expecting a constructor but couldn't find it")
             }
         } else {

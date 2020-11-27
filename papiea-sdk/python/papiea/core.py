@@ -1,6 +1,6 @@
 import enum
-from typing import Any, Optional, Dict
-from typing import TypedDict
+from dataclasses import dataclass
+from typing import Any, Optional, Dict, Union, List
 
 
 class AttributeDict(dict):
@@ -11,20 +11,124 @@ class AttributeDict(dict):
 Version = str
 Secret = str
 DataDescription = Any
+SFS = str
+ProviderCallbackUrl = str
 
 
 class ProceduralExecutionStrategy(str):
-    HaltIntentful = "Halt_Intentful"
+    HaltIntentful = 0
 
 
-UserInfo = AttributeDict
-S2S_Key = AttributeDict
-Entity = AttributeDict
-EntityReference = AttributeDict
+class IntentfulExecutionStrategy(int):
+    Basic = 0
+
+
+@dataclass
+class ProceduralSignature:
+    name: str
+    argument: DataDescription
+    result: DataDescription
+    execution_strategy: Union[ProceduralExecutionStrategy, IntentfulExecutionStrategy]
+    procedure_callback: ProviderCallbackUrl
+    base_callback: ProviderCallbackUrl
+    description: Optional[str] = None
+    errors_schemas: Optional['ErrorSchemas'] = None
+
+
+# Cannot inherit this because of
+# non-default arguments follows default argument, waiting for Python to work around this MRO inconvenience
+@dataclass
+class IntentfulSignature:
+    name: str
+    argument: DataDescription
+    result: DataDescription
+    execution_strategy: Union[ProceduralExecutionStrategy, IntentfulExecutionStrategy]
+    procedure_callback: ProviderCallbackUrl
+    base_callback: ProviderCallbackUrl
+    signature: SFS
+    description: Optional[str] = None
+    errors_schemas: Optional['ErrorSchemas'] = None
+
+
+@dataclass
+class S2SKey:
+    owner: str
+    provider_prefix: str
+    key: Secret
+    uuid: str
+    created_at: Any
+    deleted_at: Any
+    user_info: 'UserInfo'
+    name: Optional[str] = None
+
+
+UserInfo = Dict[str, Any]
+
+
+@dataclass
+class Entity:
+    metadata: 'Metadata'
+    spec: 'Spec'
+    status: 'Status'
+
+
+@dataclass
+class EntityReference:
+    uuid: str
+    kind: str
+    name: Optional[str] = None
+
+
+class ProviderEntityReference(EntityReference):
+    provider_prefix: str
+    provider_version: Version
+
+
 Spec = AttributeDict
-EntitySpec = AttributeDict
-Metadata = AttributeDict
-IntentWatcher = AttributeDict
+Status = AttributeDict
+
+
+@dataclass
+class EntitySpec:
+    metadata: 'Metadata'
+    spec: 'Spec'
+
+
+class Metadata(ProviderEntityReference):
+    spec_version: int
+    created_at: Any
+    deleted_at: Optional[Any] = None
+    extension: Optional[Dict[str, Any]] = None
+
+
+@dataclass
+class DiffContent:
+    keys: Any
+    key: str
+    path: List[Union[str, int]]
+    spec: Union[List[int], List[str]]
+    status: Union[List[int], List[str]]
+
+
+@dataclass
+class Diff:
+    kind: str
+    intentful_signature: 'IntentfulSignature'
+    diff_fields: List[DiffContent]
+    handler_url: Optional[str] = None
+
+
+@dataclass
+class IntentWatcher:
+    uuid: str
+    entity_ref: ProviderEntityReference
+    spec_version: int
+    diffs: List[Diff]
+    status: 'IntentfulStatus'
+    user: Optional[UserInfo] = None
+    last_status_changed: Optional[Any] = None
+    created_at: Optional[Any] = None
+
 
 class Action(str):
     Read = "read"
@@ -41,12 +145,36 @@ class Action(str):
     UpdateStatus = "update_status"
 
 
-Status = Any
-Provider = AttributeDict
-Kind = AttributeDict
+@dataclass
+class Provider:
+    prefix: str
+    version: Version
+    kinds: List['Kind']
+    procedures: Dict[str, ProceduralSignature]
+    extension_structure: DataDescription
+    allowExtraProps: bool
+    created_at: Optional[Any] = None
+    policy: Optional[str] = None
+    oauth: Optional[str] = None
+    authModel: Optional[str] = None
 
 
-# TODO: these should be strings
+@dataclass
+class Kind:
+    name: str
+    kind_structure: DataDescription
+    intentful_behaviour: 'IntentfulBehaviour'
+    intentful_signatures: List[IntentfulSignature]
+    dependency_tree: Dict[SFS, List[SFS]]
+    entity_procedures: Dict[str, ProceduralSignature]
+    kind_procedures: Dict[str, ProceduralSignature]
+    uuid_validation_pattern: Optional[str] = None
+    name_plural: Optional[str] = None
+    differ: Optional[Any] = None
+    diff_delay: Optional[int] = None
+    diff_selection_strategy: Optional['DiffSelectionStrategy'] = None
+
+
 class PapieaError(enum.Enum):
     Validation = "validation_error"
     BadRequest = "bad_request_error"
@@ -58,14 +186,15 @@ class PapieaError(enum.Enum):
     ServerError = "server_error"
 
 
+class DiffSelectionStrategy(enum.Enum):
+    Basic = "basic"
+    Random = "random"
+
+
 class IntentfulBehaviour(str):
     Basic = "basic"
     SpecOnly = "spec-only"
     Differ = "differ"
-
-
-class IntentfulExecutionStrategy(int):
-    Basic = 0
 
 
 # Error description in format:
@@ -73,25 +202,26 @@ class IntentfulExecutionStrategy(int):
 # ErrorSchemas structure is an OpenAPI object describing error value
 # Beware that an Error that user gets in the end is still of
 #  a PapieaErrorResponse type
-class ErrorSchema(TypedDict):
-    description: Optional[str]
-    structure: Optional[Any]
+@dataclass
+class ErrorSchema:
+    description: Optional[str] = None
+    structure: Optional[Any] = None
 
 
 ErrorSchemas = Dict[str, ErrorSchema]
 
 
-class ProcedureDescription(TypedDict, total=False): # total=False indicates not all fields are necessary
-    input_schema: Optional[Any]  # openapi schema representing input
-    output_schema: Optional[Any]  # openapi schema representing output
-    errors_schemas: Optional[ErrorSchemas]  # map of error-code to openapi schema representing error
-    description: Optional[str]  # textual description of the procedure
+@dataclass
+class ProcedureDescription:
+    input_schema: Optional[Any] = None  # openapi schema representing input
+    output_schema: Optional[Any] = None # openapi schema representing output
+    errors_schemas: Optional[ErrorSchemas] = None  # map of error-code to openapi schema representing error
+    description: Optional[str] = None # textual description of the procedure
 
 
 ProviderPower = str
 Key = str
-ProceduralSignature = AttributeDict
-IntentfulSignature = AttributeDict
+
 
 class IntentfulStatus(str):
     Pending = "Pending"

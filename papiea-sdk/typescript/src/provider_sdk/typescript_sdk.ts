@@ -571,21 +571,12 @@ export class Kind_Builder {
         return this
     }
 
-    on_create(handler: (ctx: ProceduralCtx_Interface, entity: Partial<Entity>) => Promise<any>): Kind_Builder {
+    // Return type should always contain metadata & spec (status could be empty)
+    on_create(handler: (ctx: ProceduralCtx_Interface, input: any) => Promise<Entity>): Kind_Builder {
         const name = `__${this.kind.name}_create`
         const loggerFactory = new LoggerFactory({logPath: name})
         const [logger, handle] = loggerFactory.createLogger()
         logger.info("You are registering on create handler. Note, this is a post create handler. The behaviour is due to change")
-        handle.cleanup()
-        this.kind_procedure(name, {}, handler)
-        return this
-    }
-
-    on_delete(handler: (ctx: ProceduralCtx_Interface, entity: Partial<Entity>) => Promise<any>): Kind_Builder {
-        const name = `__${this.kind.name}_delete`
-        const loggerFactory = new LoggerFactory({logPath: name})
-        const [logger, handle] = loggerFactory.createLogger()
-        logger.info("You are registering on delete handler. Note, this is a pre delete handler. The behaviour is due to change")
         handle.cleanup()
         this.kind_procedure(name, {}, handler)
         return this

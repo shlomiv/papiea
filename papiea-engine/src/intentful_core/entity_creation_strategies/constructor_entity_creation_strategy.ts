@@ -76,19 +76,28 @@ export class ConstructorEntityCreationStrategy extends EntityCreationStrategy {
     }
 
     protected async dispatch(procedure_name: string, input: any): Promise<Entity> {
+        let entity: Entity
         if (this.kind) {
             if (this.kind.kind_procedures[procedure_name]) {
                 if (this.user === undefined) {
                     throw OnActionError.create("User not specified", procedure_name, this.kind.name)
                 }
                 try {
-                    const { data } =  await axios.post<Entity>(this.kind.kind_procedures[procedure_name].procedure_callback, {
+                    const {data} =  await axios.post<Entity>(this.kind.kind_procedures[procedure_name].procedure_callback, {
                         input
                     }, { headers: this.user })
-                    return data
+                    entity = data
                 } catch (e) {
                     throw OnActionError.create(e.response.data.message, procedure_name, this.kind.name)
                 }
+                if (
+                    entity.metadata === undefined || entity.metadata === null ||
+                    entity.spec === undefined || entity.spec === null ||
+                    entity.status === undefined || entity.status === null
+                ) {
+                    throw OnActionError.create("Constructor didn't provide full entity", procedure_name, this.kind.name)
+                }
+                return entity
             } else {
                 // We should not reach this exception under normal condition because of pre checks while choosing strategy
                 throw new Error("Entity creation was expecting a constructor but couldn't find it")

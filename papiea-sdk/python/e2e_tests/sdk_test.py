@@ -1,5 +1,4 @@
 import asyncio
-import functools
 import pytest
 import time
 
@@ -8,6 +7,7 @@ import e2e_tests.provider_setup as provider
 import e2e_tests.utils as test_utils
 
 from papiea.core import AttributeDict, IntentfulStatus, Spec
+
 
 # Includes all the entity ops related tests
 class TestEntityOperations:

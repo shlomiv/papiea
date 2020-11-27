@@ -70,8 +70,6 @@ export interface Provider_Entity_Reference extends Entity_Reference {
 // [[file:~/work/papiea-js/Papiea-design.org::#h-Metadata-350][metadata-struct]]
 export interface Metadata extends Provider_Entity_Reference {
     // Identity fields
-    uuid: uuid4;
-    kind: string;
     spec_version: number;
 
     // Additional fields

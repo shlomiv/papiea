@@ -15,6 +15,7 @@ ensure_bucket_exists_returns = AttributeDict(
     EnsureBucketExistsOutput=papiea_test.ref_type(papiea_test.BUCKET_KIND, "Reference of the bucket created/found")
 )
 
+
 async def ensure_bucket_exists(ctx, input_bucket_name):
     # Run get query to obtain the list of buckets
     # Check if bucket_name exists in the bucket list
@@ -23,7 +24,8 @@ async def ensure_bucket_exists(ctx, input_bucket_name):
 
     try:
         async with ctx.entity_client_for_user(papiea_test.bucket_kind_dict) as bucket_entity_client:
-            desired_bucket = await bucket_entity_client.filter(AttributeDict(spec=AttributeDict(name=input_bucket_name)))
+            desired_bucket = await bucket_entity_client.filter(
+                AttributeDict(spec=AttributeDict(name=input_bucket_name)))
             if len(desired_bucket.results) != 0:
                 papiea_test.logger.debug("Bucket already exists. Returning it...")
 
@@ -48,9 +50,8 @@ async def ensure_bucket_exists(ctx, input_bucket_name):
                 kind=ret_entity.metadata.kind
             )
     except:
-        raise
+        raise Exception("Unable to create bucket entity")
 
-    raise Exception("Unable to create bucket entity")
 
 change_bucket_name_takes = AttributeDict(
     ChangeBucketNameInput=AttributeDict(
@@ -64,6 +65,7 @@ change_bucket_name_returns = AttributeDict(
 )
 change_bucket_name_returns.get("ChangeBucketNameOutput").get("properties") \
     ["message"] = AttributeDict(type="string", description="Error message")
+
 
 async def change_bucket_name(ctx, entity_bucket, new_bucket_name):
     # check if there's any bucket with the new name
@@ -94,6 +96,7 @@ async def change_bucket_name(ctx, entity_bucket, new_bucket_name):
 
     raise Exception("Unable to change name for the bucket entity")
 
+
 create_object_takes = AttributeDict(
     CreateObjectInput=AttributeDict(
         type="string",
@@ -106,6 +109,7 @@ create_object_returns = AttributeDict(
 )
 create_object_returns.get("CreateObjectOutput").get("properties") \
     ["message"] = AttributeDict(type="string", description="Error message")
+
 
 async def create_object(ctx, entity_bucket, input_object_name):
     # check if object name already exists in entity.objects
@@ -128,7 +132,8 @@ async def create_object(ctx, entity_bucket, input_object_name):
 
                 async with ctx.entity_client_for_user(papiea_test.bucket_kind_dict) as bucket_entity_client:
                     entity_bucket.spec.objects.append(
-                        AttributeDict(name=input_object_name,
+                        AttributeDict(
+                            name=input_object_name,
                             reference=EntityReference(
                                 uuid=entity_object.metadata.uuid,
                                 kind=papiea_test.OBJECT_KIND
@@ -148,9 +153,8 @@ async def create_object(ctx, entity_bucket, input_object_name):
         else:
             raise Exception("Object already exists in the bucket")
     except:
-        raise
+        raise Exception("Unable to create object entity")
 
-    raise Exception("Unable to create object entity")
 
 link_object_takes = AttributeDict(
     LinkObjectInput=AttributeDict(
@@ -176,6 +180,7 @@ link_object_returns = AttributeDict(
 link_object_returns.get("LinkObjectOutput").get("properties") \
     ["message"] = AttributeDict(type="string", description="Error message")
 
+
 async def link_object(ctx, entity_bucket, input_object):
     # assuming input_object to be the object name and the uuid
     # check if the name already exist in the objects list
@@ -190,7 +195,8 @@ async def link_object(ctx, entity_bucket, input_object):
 
             async with ctx.entity_client_for_user(papiea_test.bucket_kind_dict) as bucket_entity_client:
                 entity_bucket.spec.objects.append(
-                    AttributeDict(name=input_object.object_name,
+                    AttributeDict(
+                        name=input_object.object_name,
                         reference=EntityReference(
                             uuid=input_object.object_uuid,
                             kind=papiea_test.OBJECT_KIND
@@ -211,9 +217,8 @@ async def link_object(ctx, entity_bucket, input_object):
         else:
             raise Exception("Object already exists in the bucket")
     except:
-        raise
+        raise Exception("Unable to link object entity")
 
-    raise Exception("Unable to link object entity")
 
 unlink_object_takes = AttributeDict(
     UnlinkObjectInput=AttributeDict(
@@ -223,10 +228,11 @@ unlink_object_takes = AttributeDict(
     )
 )
 unlink_object_returns = AttributeDict(
-    UnlinkObjectOutput=papiea_test.ref_type(papiea_test.BUCKET_KIND, "Reference of the bucket from which the object was removed")
-)
+    UnlinkObjectOutput=papiea_test.ref_type(papiea_test.BUCKET_KIND,
+                                            "Reference of the bucket from which the object was removed"))
 unlink_object_returns.get("UnlinkObjectOutput").get("properties") \
     ["message"] = AttributeDict(type="string", description="Error message")
+
 
 async def unlink_object(ctx, entity_bucket, input_object_name):
     # assuming input_object to be the object name
@@ -241,7 +247,8 @@ async def unlink_object(ctx, entity_bucket, input_object_name):
             papiea_test.logger.debug("Object found. Unlinking the object...")
 
             async with ctx.entity_client_for_user(papiea_test.bucket_kind_dict) as bucket_entity_client:
-                entity_bucket.spec.objects = [d for d in entity_bucket.spec.objects if d.get("name") != input_object_name]
+                entity_bucket.spec.objects = [d for d in entity_bucket.spec.objects if
+                                              d.get("name") != input_object_name]
                 await bucket_entity_client.update(
                     metadata=entity_bucket.metadata,
                     spec=entity_bucket.spec
@@ -255,9 +262,8 @@ async def unlink_object(ctx, entity_bucket, input_object_name):
         else:
             raise Exception("Object not found in the bucket")
     except:
-        raise
+        raise Exception("Unable to unlink object entity")
 
-    raise Exception("Unable to unlink object entity")
 
 async def bucket_create_handler(ctx, entity_bucket):
     try:
@@ -270,6 +276,7 @@ async def bucket_create_handler(ctx, entity_bucket):
         await ctx.update_status(entity_bucket.metadata, status)
     except Exception as ex:
         raise Exception("Unable to execute bucket create intent handler: " + str(ex))
+
 
 async def bucket_name_handler(ctx, entity_bucket, diff):
     # fetch unique uuids for the objects in the bucket
@@ -299,6 +306,7 @@ async def bucket_name_handler(ctx, entity_bucket, diff):
     except:
         raise
 
+
 async def on_object_added_handler(ctx, entity_bucket, diff):
     try:
         papiea_test.logger.debug("Executing object added to bucket intent handler...")
@@ -324,6 +332,7 @@ async def on_object_added_handler(ctx, entity_bucket, diff):
     except:
         raise
 
+
 async def on_object_removed_handler(ctx, entity_bucket, diff):
     try:
         papiea_test.logger.debug("Executing object removed from bucket intent handler...")
@@ -333,7 +342,8 @@ async def on_object_removed_handler(ctx, entity_bucket, diff):
                 entity_object = await object_entity_client.get(AttributeDict(uuid=entity.status[0].reference.uuid))
 
                 entity_object.status.references[:] = [d for d in entity_object.status.references
-                    if d.get("object_name") != entity.status[0].name or d.get("bucket_name") != entity_bucket.spec.name]
+                                                      if d.get("object_name") != entity.status[0].name
+                                                      or d.get("bucket_name") != entity_bucket.spec.name]
 
                 if not entity_object.status.references:
                     papiea_test.logger.debug("Object refcount is zero. Deleting the object...")
@@ -345,6 +355,7 @@ async def on_object_removed_handler(ctx, entity_bucket, diff):
         await ctx.update_status(entity_bucket.metadata, entity_bucket.status)
     except:
         raise
+
 
 async def object_create_handler(ctx, entity_object):
     try:
@@ -359,6 +370,7 @@ async def object_create_handler(ctx, entity_object):
         await ctx.update_status(entity_object.metadata, status)
     except:
         raise
+
 
 async def object_content_handler(ctx, entity_object, diff):
     try:

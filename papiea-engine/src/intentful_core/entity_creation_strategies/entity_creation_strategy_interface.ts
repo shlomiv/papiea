@@ -56,6 +56,9 @@ export abstract class EntityCreationStrategy {
     }
 
     protected async create_metadata(request_metadata: Metadata): Promise<Metadata> {
+        request_metadata.kind = this.kind.name
+        request_metadata.provider_prefix = this.provider.prefix
+        request_metadata.provider_version = this.provider.version
         if (!request_metadata.uuid) {
             if (this.kind.uuid_validation_pattern === undefined) {
                 request_metadata.uuid = uuid();
@@ -69,9 +72,6 @@ export abstract class EntityCreationStrategy {
                 throw new ConflictingEntityError("An entity with this uuid already exists", metadata, spec, status)
             }
         }
-        request_metadata.kind = this.kind.name
-        request_metadata.provider_prefix = this.provider.prefix
-        request_metadata.provider_version = this.provider.version
         if (request_metadata.spec_version === undefined || request_metadata.spec_version === null) {
             let spec_version = await this.graveyardDb.get_highest_spec_version(
                 {

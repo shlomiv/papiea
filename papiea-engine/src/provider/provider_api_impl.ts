@@ -6,7 +6,6 @@ import { Validator } from "../validator";
 import { Authorizer } from "../auth/authz";
 import { UserAuthInfo } from "../auth/authn";
 import { createHash } from "../auth/crypto";
-import { EventEmitter } from "events";
 import { Action, Entity_Reference, Provider, S2S_Key, Secret, Status, Version } from "papiea-core";
 import { Logger } from "papiea-backend-utils";
 import { Watchlist_DB } from "../databases/watchlist_db_interface";
@@ -19,15 +18,16 @@ export class Provider_API_Impl implements Provider_API {
     private statusDb: Status_DB;
     private s2skeyDb: S2S_Key_DB;
     private authorizer: Authorizer;
-    private eventEmitter: EventEmitter;
     private logger: Logger;
     private validator: Validator
     private watchlistDb: Watchlist_DB;
     private intentfulContext: IntentfulContext;
+    private readonly registeredAuthorizers: Authorizer[]
 
     constructor(logger: Logger, providerDb: Provider_DB, statusDb: Status_DB,
                 s2skeyDb: S2S_Key_DB, watchlistDb: Watchlist_DB,
                 intentfulContext: IntentfulContext, authorizer: Authorizer,
+                registeredAuthorizers: Authorizer[],
                 validator: Validator)
     {
         this.providerDb = providerDb;
@@ -36,7 +36,7 @@ export class Provider_API_Impl implements Provider_API {
         this.watchlistDb = watchlistDb
         this.intentfulContext = intentfulContext
         this.authorizer = authorizer;
-        this.eventEmitter = new EventEmitter();
+        this.registeredAuthorizers = registeredAuthorizers
         this.logger = logger;
         this.validator = validator
     }
@@ -154,7 +154,9 @@ export class Provider_API_Impl implements Provider_API {
             provider.oauth2 = auth.oauth2;
         }
         await this.providerDb.save_provider(provider);
-        this.authorizer.on_auth_changed(provider)
+        for (let authorizer of this.registeredAuthorizers) {
+            authorizer.on_auth_changed(provider)
+        }
     }
 
     async create_key(user: UserAuthInfo, name: string, owner: string, provider_prefix: string, user_info?: any, key?: Secret): Promise<S2S_Key> {

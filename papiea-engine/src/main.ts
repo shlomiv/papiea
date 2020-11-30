@@ -56,8 +56,9 @@ async function setUpApplication(): Promise<express.Express> {
     const graveyardDb = await mongoConnection.get_graveyard_db(logger)
     const validator = ValidatorImpl.create()
     const entityApiAuthorizer: Authorizer = new PerProviderAuthorizer(logger, new ProviderCasbinAuthorizerFactory(logger));
+    const adminAuthorizer: Authorizer = new AdminAuthorizer()
     const intentfulContext = new IntentfulContext(specDb, statusDb, graveyardDb, differ, intentWatcherDB, watchlistDb, validator, entityApiAuthorizer)
-    const providerApi = new Provider_API_Impl(logger, providerDb, statusDb, s2skeyDb, watchlistDb, intentfulContext, new AdminAuthorizer(), validator)
+    const providerApi = new Provider_API_Impl(logger, providerDb, statusDb, s2skeyDb, watchlistDb, intentfulContext, adminAuthorizer, [adminAuthorizer, entityApiAuthorizer], validator)
     const sessionKeyApi = new SessionKeyAPI(sessionKeyDb)
     const userAuthInfoExtractor = new CompositeUserAuthInfoExtractor([
         new AdminUserAuthInfoExtractor(adminKey),

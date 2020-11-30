@@ -17,6 +17,17 @@ declare var process: {
 const serverPort = parseInt(process.env.SERVER_PORT || '3000');
 const adminKey = process.env.PAPIEA_ADMIN_S2S_KEY || '';
 
+const entityApiAdmin = axios.create(
+    {
+        baseURL: `http://127.0.0.1:${serverPort}/services`,
+        timeout: 1000,
+        headers: {
+            "Content-Type": "application/json",
+            'Authorization': `Bearer ${adminKey}`
+        },
+    }
+)
+
 const entityApi = axios.create({
     baseURL: `http://127.0.0.1:${serverPort}/services`,
     timeout: 1000,
@@ -211,17 +222,7 @@ describe("Entity API auth tests", () => {
         await providerApiAdmin.post(`/${provider.prefix}/${provider.version}/auth`, {
             policy: null
         });
-        await entityApi.delete(`/${provider.prefix}/${provider.version}/${kind_name}/${entity_metadata.uuid}`);
-    });
-
-    test("Get user info", async () => {
-        expect.hasAssertions();
-        const { data: { token } } = await providerApi.get(`/${ provider.prefix }/${ provider.version }/auth/login`);
-        const { data } = await providerApi.get(`/${ provider.prefix }/${ provider.version }/auth/user_info`,
-            { headers: { 'Authorization': 'Bearer ' + token } }
-        );
-        expect(data.owner).toEqual("alice");
-        expect(data.tenant).toEqual(tenant_uuid);
+        await entityApiAdmin.delete(`/${provider.prefix}/${provider.version}/${kind_name}/${entity_metadata.uuid}`);
     });
 
     test("Get user info via cookie", async () => {
@@ -271,141 +272,6 @@ describe("Entity API auth tests", () => {
         } catch (e) {
             expect(e.response.status).toEqual(403);
         }
-    });
-
-    test("Get entity should succeed after policy set", async () => {
-        const { data: { token } } = await providerApi.get(`/${ provider.prefix }/${ provider.version }/auth/login`);
-        await providerApiAdmin.post(`/${ provider.prefix }/${ provider.version }/auth`, {
-            policy: `p, alice, owner, ${ kind_name }, *, allow`
-        });
-        const { data: { metadata, spec } } = await entityApi.get(`/${ provider.prefix }/${ provider.version }/${ kind_name }/${ entity_metadata.uuid }`,
-            { headers: { 'Authorization': 'Bearer ' + token } }
-        );
-        expect(metadata).toEqual(entity_metadata);
-        expect(spec).toEqual(entity_spec);
-    });
-
-    test("Update entity should raise permission denied", async () => {
-        expect.assertions(1 + expectAssertionsFromOauth2Server);
-        try {
-            const { data: { token } } = await providerApi.get(`/${provider.prefix}/${provider.version}/auth/login`);
-            await providerApiAdmin.post(`/${provider.prefix}/${provider.version}/auth`, {
-                policy: `p, bill, owner, ${kind_name}, *, allow`
-            });
-            await entityApi.put(`/${ provider.prefix }/${ provider.version }/${ kind_name }/${ entity_metadata.uuid }`, {
-                spec: {
-                    x: 10,
-                    y: 11
-                },
-                metadata: {
-                    spec_version: 1
-                }
-            }, {
-                headers: { 'Authorization': 'Bearer ' + token }
-            });
-        } catch (e) {
-            expect(e.response.status).toEqual(403);
-        }
-    });
-
-    test("Update entity should succeed after policy set", async () => {
-        const { data: { token } } = await providerApi.get(`/${ provider.prefix }/${ provider.version }/auth/login`);
-        await providerApiAdmin.post(`/${ provider.prefix }/${ provider.version }/auth`, {
-            policy: `p, alice, owner, ${ kind_name }, *, allow`
-        });
-        await entityApi.put(`/${ provider.prefix }/${ provider.version }/${ kind_name }/${ entity_metadata.uuid }`, {
-            spec: {
-                x: 101,
-                y: 11
-            },
-            metadata: {
-                spec_version: 1
-            }
-        }, {
-            headers: { 'Authorization': 'Bearer ' + token }
-        });
-        const { data: {metadata, spec } } = await entityApi.get(`/${ provider.prefix }/${ provider.version }/${ kind_name }/${ entity_metadata.uuid }`, {
-            headers: { 'Authorization': 'Bearer ' + token }
-        })
-        entity_spec.x = 101;
-        entity_metadata.spec_version = 2;
-        expect(metadata).toEqual(entity_metadata);
-        expect(spec).toEqual(entity_spec);
-    });
-
-    test("Fake owner should raise permission denied", async () => {
-        const { data: { metadata, spec } } = await entityApi.post(`/${provider.prefix}/${provider.version}/${kind_name}`, {
-            metadata: {
-                extension: {
-                    owner: "bill",
-                    tenant_uuid: tenant_uuid
-                }
-            },
-            spec: {
-                x: 10,
-                y: 11
-            }
-        });
-        expect.assertions(1 + expectAssertionsFromOauth2Server);
-        try {
-            const { data: { token } } = await providerApi.get(`/${provider.prefix}/${provider.version}/auth/login`);
-            await providerApiAdmin.post(`/${provider.prefix}/${provider.version}/auth`, {
-                policy: `p, bill, owner, ${kind_name}, *, allow`
-            });
-            await entityApi.put(`/${ provider.prefix }/${ provider.version }/${ kind_name }/${ metadata.uuid }`, {
-                spec: {
-                    x: 10,
-                    y: 11
-                },
-                metadata: {
-                    spec_version: 1,
-                    extension: {
-                        owner: "alice"
-                    }
-                }
-            }, {
-                headers: { 'Authorization': 'Bearer ' + token }
-            });
-        } catch (e) {
-            expect(e.response.status).toEqual(403);
-        }
-    });
-
-    test("Entity procedure should receive headers", async () => {
-        let headers: any = {};
-        const server = http.createServer((req, res) => {
-            if (req.method == 'POST') {
-                Object.assign(headers, req.headers);
-                let body = '';
-                req.on('data', function (data) {
-                    body += data;
-                });
-                req.on('end', function () {
-                    const post = JSON.parse(body);
-                    res.statusCode = 200;
-                    res.setHeader('Content-Type', 'text/plain');
-                    res.end(JSON.stringify(post.spec));
-                    server.close();
-                });
-            }
-        });
-        server.listen(procedureCallbackPort, procedureCallbackHostname, () => {
-            entityApiAuthTestLogger.info(`Server running at http://${ procedureCallbackHostname }:${ procedureCallbackPort }/`);
-        });
-        const { data: { token } } = await providerApi.get(`/${ provider.prefix }/${ provider.version }/auth/login`);
-        await providerApiAdmin.post(`/${ provider.prefix }/${ provider.version }/auth`, {
-            policy: `p, alice, owner, ${ kind_name }, *, allow`
-        });
-        await entityApi.post(`/${ provider.prefix }/${ provider.version }/${ kind_name }/${ entity_metadata.uuid }/procedure/moveX`, { input: 5 },
-            { headers: { 'Authorization': 'Bearer ' + token } }
-        );
-        expect(headers['tenant']).toEqual(tenant_uuid);
-        expect(headers['tenant-email']).toEqual('alice@localhost');
-        expect(headers['tenant-fname']).toEqual('Alice');
-        expect(headers['tenant-lname']).toEqual('Doe');
-        expect(headers['tenant-role']).toEqual('papiea-admin');
-        expect(headers['owner']).toEqual('alice');
-        expect(headers['authorization']).toBeDefined();
     });
 
     test("Create, get and inacivate s2s key", async () => {

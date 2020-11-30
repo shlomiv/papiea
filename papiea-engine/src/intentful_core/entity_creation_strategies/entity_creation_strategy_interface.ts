@@ -1,7 +1,17 @@
 import {Spec_DB} from "../../databases/spec_db_interface"
 import {Status_DB} from "../../databases/status_db_interface"
 import {Graveyard_DB} from "../../databases/graveyard_db_interface"
-import {Action, Entity, IntentWatcher, Kind, Metadata, Provider, Spec, Status} from "papiea-core"
+import {
+    Action,
+    Entity,
+    IntentfulBehaviour,
+    IntentWatcher,
+    Kind,
+    Metadata,
+    Provider,
+    Spec,
+    Status
+} from "papiea-core"
 import {ConflictingEntityError, GraveyardConflictingEntityError} from "../../databases/utils/errors"
 import {UserAuthInfo} from "../../auth/authn"
 import {Watchlist_DB} from "../../databases/watchlist_db_interface"
@@ -99,7 +109,9 @@ export abstract class EntityCreationStrategy {
         // Create increments spec version so we should check already incremented one
         await this.check_spec_version(metadata, metadata.spec_version + 1, spec)
         const [updatedMetadata, updatedSpec] = await this.specDb.update_spec(metadata, spec);
-        await this.statusDb.replace_status(metadata, spec)
+        if (this.kind?.intentful_behaviour !== IntentfulBehaviour.Differ) {
+            await this.statusDb.replace_status(metadata, spec)
+        }
         return [updatedMetadata, updatedSpec]
     }
 

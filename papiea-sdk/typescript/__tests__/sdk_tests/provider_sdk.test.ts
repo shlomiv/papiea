@@ -1551,6 +1551,14 @@ describe("SDK callback tests", () => {
         }
     });
 
+    function create_empty_entity(): Entity {
+        return {
+            metadata: {} as Metadata,
+            spec: {},
+            status: {}
+        }
+    }
+
     test("On create callback should be called", async () => {
         expect.hasAssertions();
         const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
@@ -1566,6 +1574,7 @@ describe("SDK callback tests", () => {
         );
         location.on_create(async (ctx, input) => {
             expect(input).toBeDefined()
+            return create_empty_entity()
         })
         try {
             await sdk.register()
@@ -1643,6 +1652,7 @@ describe("SDK callback tests", () => {
         let called_times = 0
         location.on_create(async (ctx, input) => {
             called_times++
+            return create_empty_entity()
         })
         try {
             const id = uuid()
@@ -1699,9 +1709,11 @@ describe("SDK callback tests", () => {
         sdk.prefix(prefix);
         location.on_create(async (ctx, input) => {
             expect(input).toBeDefined()
+            return create_empty_entity()
         })
         location_duplicate.on_create(async (ctx, input) => {
             expect(input).toBeDefined()
+            return create_empty_entity()
         })
         try {
             await sdk.register()
@@ -1761,6 +1773,7 @@ describe("SDK callback tests", () => {
 
         location.on_create(async (ctx, input) => {
             expect(input).toBeDefined()
+            return create_empty_entity()
         })
         try {
             await sdk.register()

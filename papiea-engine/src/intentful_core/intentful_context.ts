@@ -1,7 +1,6 @@
 import { Spec_DB } from "../databases/spec_db_interface"
 import { Status_DB } from "../databases/status_db_interface"
 import { IntentfulStrategy } from "./intentful_strategies/intentful_strategy_interface"
-import { BasicIntentfulStrategy } from "./intentful_strategies/basic_intentful_strategy"
 import {IntentfulBehaviour, Kind, Differ, DiffSelectionStrategy, Provider} from "papiea-core"
 import { SpecOnlyIntentfulStrategy } from "./intentful_strategies/spec_only_intentful_strategy"
 import { UserAuthInfo } from "../auth/authn"
@@ -36,7 +35,7 @@ export class IntentfulContext {
 
     constructor(specDb: Spec_DB, statusDb: Status_DB, graveyardDb: Graveyard_DB, differ: Differ, intentWatcherDb: IntentWatcher_DB, watchlistDb: Watchlist_DB, validator: Validator, authorizer: Authorizer) {
         this.behaviourStrategyMap = new Map()
-        this.behaviourStrategyMap.set(IntentfulBehaviour.Basic, new BasicIntentfulStrategy(specDb, statusDb, graveyardDb))
+        this.behaviourStrategyMap.set(IntentfulBehaviour.Basic, new SpecOnlyIntentfulStrategy(specDb, statusDb, graveyardDb))
         this.behaviourStrategyMap.set(IntentfulBehaviour.SpecOnly, new SpecOnlyIntentfulStrategy(specDb, statusDb, graveyardDb))
         this.behaviourStrategyMap.set(IntentfulBehaviour.Differ, new DifferIntentfulStrategy(specDb, statusDb, graveyardDb, differ, intentWatcherDb, watchlistDb))
 

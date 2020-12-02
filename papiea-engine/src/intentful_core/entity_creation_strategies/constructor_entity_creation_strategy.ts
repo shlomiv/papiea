@@ -25,7 +25,7 @@ import {Authorizer} from "../../auth/authz"
 export class ConstructorEntityCreationStrategy extends EntityCreationStrategy {
     protected differ: Differ
     protected intentWatcherDb: IntentWatcher_DB
-    protected watchlistDb: Watchlist_DB;
+    protected watchlistDb: Watchlist_DB
 
     constructor(specDb: Spec_DB, statusDb: Status_DB, graveyardDb: Graveyard_DB, watchlistDb: Watchlist_DB, validator: Validator, authorizer: Authorizer, differ: Differ, intentWatcherDb: IntentWatcher_DB) {
         super(specDb, statusDb, graveyardDb, watchlistDb, validator, authorizer)
@@ -37,13 +37,13 @@ export class ConstructorEntityCreationStrategy extends EntityCreationStrategy {
     protected async save_entity(entity: Entity): Promise<[Metadata, Spec, Status]> {
         // Create increments spec version so we should check already incremented one
         await this.check_spec_version(entity.metadata, entity.metadata.spec_version + 1, entity.spec)
-        const [updatedMetadata, updatedSpec] = await this.specDb.update_spec(entity.metadata, entity.spec);
+        const [updatedMetadata, updatedSpec] = await this.specDb.update_spec(entity.metadata, entity.spec)
         await this.statusDb.replace_status(entity.metadata, entity.status)
         return [updatedMetadata, updatedSpec, entity.status]
     }
 
     public async create(input: any): Promise<[IntentWatcher | null, [Metadata, Spec, Status]]> {
-        const entity = await this.dispatch(`__${ this.kind?.name }_create`, input)
+        const entity = await this.dispatch(`__${this.kind?.name}_create`, input)
         await this.validate_entity(entity)
         const [created_metadata, created_spec, created_status] = await this.save_entity(entity)
         let watcher: null | IntentWatcher = null
@@ -77,15 +77,21 @@ export class ConstructorEntityCreationStrategy extends EntityCreationStrategy {
 
     protected async dispatch(procedure_name: string, input: any): Promise<Entity> {
         let entity: Entity
+        const constructor = this.kind.kind_procedures[procedure_name]
         if (this.kind) {
-            if (this.kind.kind_procedures[procedure_name]) {
+            if (constructor !== undefined && constructor !== null) {
                 if (this.user === undefined) {
                     throw OnActionError.create("User not specified", procedure_name, this.kind.name)
                 }
                 try {
-                    const {data} =  await axios.post<Entity>(this.kind.kind_procedures[procedure_name].procedure_callback, {
+                    const schemas: any = {}
+                    Object.assign(schemas, constructor.argument)
+                    this.validator.validate(input, Object.values(constructor.argument)[0], schemas,
+                                            this.provider.allowExtraProps,
+                                            Object.keys(constructor.argument)[0], "Constructor procedure")
+                    const {data} = await axios.post<Entity>(this.kind.kind_procedures[procedure_name].procedure_callback, {
                         input
-                    }, { headers: this.user })
+                    }, {headers: this.user})
                     entity = data
                 } catch (e) {
                     throw OnActionError.create(e.response.data.message, procedure_name, this.kind.name)

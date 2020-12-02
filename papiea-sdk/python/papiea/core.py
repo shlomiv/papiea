@@ -219,6 +219,12 @@ class ProcedureDescription:
     description: Optional[str] = None # textual description of the procedure
 
 
+@dataclass
+class ConstructorProcedureDescription:
+    input_schema: Optional[Any] = None  # openapi schema representing input
+    errors_schemas: Optional[ErrorSchemas] = None  # map of error-code to openapi schema representing error
+
+
 ProviderPower = str
 Key = str
 

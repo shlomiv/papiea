@@ -95,10 +95,11 @@ export abstract class EntityCreationStrategy {
         return request_metadata
     }
 
-    protected validate_entity(entity: Pick<Entity, "metadata" | "spec">) {
+    protected validate_entity(entity: Entity) {
         this.validator.validate_metadata_extension(this.provider.extension_structure, entity.metadata, this.provider.allowExtraProps);
         this.validator.validate_spec(entity.spec, this.kind, this.provider.allowExtraProps)
         this.validator.validate_uuid(this.kind, entity.metadata.uuid)
+        this.validator.validate_status(this.provider, entity.metadata, entity.status)
     }
 
     protected async check_permission(entity: Entity) {
@@ -109,9 +110,7 @@ export abstract class EntityCreationStrategy {
         // Create increments spec version so we should check already incremented one
         await this.check_spec_version(metadata, metadata.spec_version + 1, spec)
         const [updatedMetadata, updatedSpec] = await this.specDb.update_spec(metadata, spec);
-        if (this.kind?.intentful_behaviour !== IntentfulBehaviour.Differ) {
-            await this.statusDb.replace_status(metadata, spec)
-        }
+        await this.statusDb.replace_status(metadata, spec)
         return [updatedMetadata, updatedSpec]
     }
 

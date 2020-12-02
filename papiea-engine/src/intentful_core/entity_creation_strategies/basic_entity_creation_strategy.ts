@@ -9,9 +9,9 @@ import {Validator} from "../../validator"
 import {Authorizer} from "../../auth/authz"
 
 export class BasicEntityCreationStrategy extends EntityCreationStrategy {
-    public async create(input: { metadata: Metadata, spec: Spec }): Promise<[IntentWatcher | null, [Metadata, Spec, Status | null]]> {
+    public async create(input: {metadata: Metadata, spec: Spec}): Promise<[IntentWatcher | null, [Metadata, Spec, Status | null]]> {
         const metadata = await this.create_metadata(input.metadata ?? {})
-        await this.validate_entity({metadata, spec: input.spec})
+        await this.validate_entity({metadata, spec: input.spec, status: input.spec})
         const [created_metadata, spec] = await this.create_entity(metadata, input.spec)
         if (this.kind?.intentful_behaviour === IntentfulBehaviour.Differ) {
             const watchlist = await this.watchlistDb.get_watchlist()

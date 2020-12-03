@@ -43,7 +43,7 @@ export class ConstructorEntityCreationStrategy extends EntityCreationStrategy {
     }
 
     public async create(input: any): Promise<[IntentWatcher | null, [Metadata, Spec, Status]]> {
-        const entity = await this.dispatch(`__${this.kind?.name}_create`, input)
+        const entity = await this.invoke_constructor(`__${this.kind?.name}_create`, input)
         await this.validate_entity(entity)
         const [created_metadata, created_spec, created_status] = await this.save_entity(entity)
         let watcher: null | IntentWatcher = null
@@ -75,7 +75,7 @@ export class ConstructorEntityCreationStrategy extends EntityCreationStrategy {
         return [watcher, [created_metadata, created_spec, created_status]]
     }
 
-    protected async dispatch(procedure_name: string, input: any): Promise<Entity> {
+    protected async invoke_constructor(procedure_name: string, input: any): Promise<Entity> {
         let entity: Entity
         const constructor = this.kind.kind_procedures[procedure_name]
         if (this.kind) {

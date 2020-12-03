@@ -581,6 +581,16 @@ export class Kind_Builder {
         this.kind_procedure(name, description, handler)
         return this
     }
+
+    on_delete(handler: (ctx: ProceduralCtx_Interface, entity: Partial<Entity>) => Promise<void>): Kind_Builder {
+        const name = `__${this.kind.name}_delete`
+        const loggerFactory = new LoggerFactory({logPath: name})
+        const [logger, handle] = loggerFactory.createLogger()
+        logger.info("You are registering on delete handler. Note, this is a pre delete handler. The behaviour is due to change")
+        handle.cleanup()
+        this.kind_procedure(name, {}, handler)
+        return this
+    }
 }
 
 export {Version, Kind, Procedural_Signature, Provider, Data_Description, Procedural_Execution_Strategy, Entity, ProceduralCtx_Interface, Provider_Power, IntentfulCtx_Interface, UserInfo, S2S_Key, SecurityApi, ProcedureDescription}

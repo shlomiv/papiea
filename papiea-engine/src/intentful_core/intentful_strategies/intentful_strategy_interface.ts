@@ -47,6 +47,26 @@ export abstract class IntentfulStrategy {
         return null
     }
 
+    protected async invoke_destructor(procedure_name: string, entity: Partial<Entity>): Promise<void> {
+        if (this.kind) {
+            if (this.kind.kind_procedures[procedure_name]) {
+                if (this.user === undefined) {
+                    throw OnActionError.create("User not specified", procedure_name, this.kind.name)
+                }
+                try {
+                    const { data } =  await axios.post(this.kind.kind_procedures[procedure_name].procedure_callback, {
+                        input: entity
+                    }, { headers: this.user })
+                    return data
+                } catch (e) {
+                    throw OnActionError.create(e.response.data.message, procedure_name, this.kind.name)
+                }
+            }
+        } else {
+            throw OnActionError.create("Insufficient params specified", procedure_name)
+        }
+    }
+
     setKind(kind: Kind): void {
         this.kind = kind
     }
@@ -56,6 +76,7 @@ export abstract class IntentfulStrategy {
     }
 
     async delete(entity: Entity): Promise<void> {
+        await this.invoke_destructor(`__${entity.metadata.kind}_delete`, { metadata: entity.metadata })
         return this.delete_entity(entity)
     }
 }

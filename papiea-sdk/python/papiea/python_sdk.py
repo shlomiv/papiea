@@ -557,3 +557,13 @@ class KindBuilder:
             name, description handler
         )
         return self
+
+    def on_delete(
+        self,
+        handler: Callable[[ProceduralCtx, Any], Any],
+    ) -> "KindBuilder":
+        name = f"__{self.kind.name}_delete"
+        self.kind_procedure(
+            name, {}, handler
+        )
+        return self

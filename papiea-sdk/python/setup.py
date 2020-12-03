@@ -3,7 +3,7 @@ import os
 
 # You cannot easily pass arguments to this script
 # Thus using this simple env variable hack
-version = os.getenv("VERSION")
+version = os.getenv("VERSION") or "1.0.85"
 if version is None:
     raise Exception("No version specified as VERSION env param, exiting")
 

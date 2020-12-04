@@ -1,3 +1,4 @@
+- Version 0.8.7+1767: added log line for health check failed situation (#558) PR url: git@github.com:nutanix/papiea.git/pull/558
 - Version 0.8.6+1763: Separated null value fields and unset in status db (#555) PR url: git@github.com:nutanix/papiea.git/pull/555
 - Version 0.8.5+1748: update yarn locks (#552) PR url: git@github.com:nutanix/papiea.git/pull/552
 - Version 0.8.4+1735: Changed error message for bad request error in validator (#549) PR url: git@github.com:nutanix/papiea.git/pull/549

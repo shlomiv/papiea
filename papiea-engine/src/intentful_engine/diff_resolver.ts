@@ -236,6 +236,7 @@ export class DiffResolver {
                 if (diff_index !== -1) {
                     try {
                         if (!await this.checkHealthy(diff_results[idx][0])) {
+                            this.logger.debug(`Handler for entity with uuid: ${metadata!.uuid} health check has failed.`)
                             return
                         }
                         this.logger.info(`Starting to retry resolving diff for entity with uuid: ${rediff.metadata!.uuid}`)

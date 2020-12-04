@@ -1,7 +1,7 @@
 {
   "name": "papiea-client",
   "description": "",
-  "version": "0.8.5+1748",
+  "version": "0.8.6+1763",
   "main": "build/entity_client.js",
   "scripts": {
     "clean": "rm -rf build",

@@ -19,7 +19,8 @@ from .core import (
     Secret,
     UserInfo,
     Version, ProcedureDescription,
-    ConstructorProcedureDescription
+    ConstructorProcedureDescription,
+    ConstructorResult
 )
 from .python_sdk_context import IntentfulCtx, ProceduralCtx
 from .python_sdk_exceptions import InvocationError, SecurityApiError
@@ -551,7 +552,7 @@ class KindBuilder:
         self.server_manager.register_healthcheck()
         return self
 
-    def on_create(self, description: ConstructorProcedureDescription, handler: Callable[[ProceduralCtx, Any], Entity]) -> "KindBuilder":
+    def on_create(self, description: ConstructorProcedureDescription, handler: Callable[[ProceduralCtx, Any], ConstructorResult]) -> "KindBuilder":
         name = f"__{self.kind.name}_create"
         self.kind_procedure(
             name, description handler

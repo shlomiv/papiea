@@ -17,11 +17,11 @@ import {Status_DB} from "../../databases/status_db_interface"
 import {Graveyard_DB} from "../../databases/graveyard_db_interface"
 import {IntentWatcher_DB} from "../../databases/intent_watcher_db_interface"
 import {Watchlist_DB} from "../../databases/watchlist_db_interface"
-import deepEqual = require("deep-equal")
-import uuid = require("uuid")
 import {Validator} from "../../validator"
 import {Authorizer} from "../../auth/authz"
 import {ValidationError} from "../../errors/validation_error"
+import deepEqual = require("deep-equal")
+import uuid = require("uuid")
 
 export class ConstructorEntityCreationStrategy extends EntityCreationStrategy {
     protected differ: Differ
@@ -45,6 +45,7 @@ export class ConstructorEntityCreationStrategy extends EntityCreationStrategy {
 
     public async create(input: any): Promise<[IntentWatcher | null, [Metadata, Spec, Status]]> {
         const entity = await this.invoke_constructor(`__${this.kind?.name}_create`, input)
+        entity.metadata = await this.create_metadata(entity.metadata ?? {})
         await this.validate_entity(entity)
         const [created_metadata, created_spec, created_status] = await this.save_entity(entity)
         let watcher: null | IntentWatcher = null
@@ -102,7 +103,6 @@ export class ConstructorEntityCreationStrategy extends EntityCreationStrategy {
                     }
                 }
                 if (
-                    entity.metadata === undefined || entity.metadata === null ||
                     entity.spec === undefined || entity.spec === null ||
                     entity.status === undefined || entity.status === null
                 ) {

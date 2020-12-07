@@ -102,6 +102,13 @@ class Metadata(ProviderEntityReference):
 
 
 @dataclass
+class ConstructorResult:
+    spec: 'Spec'
+    status: 'Status'
+    metadata: Optional[Union['Metadata', Any]]
+
+
+@dataclass
 class DiffContent:
     keys: Any
     key: str

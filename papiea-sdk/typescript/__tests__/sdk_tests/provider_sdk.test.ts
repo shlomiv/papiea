@@ -6,11 +6,11 @@ import { loadYamlFromTestFactoryDir, OAuth2Server, ProviderBuilder } from "../..
 import axios from "axios"
 import { readFileSync } from "fs";
 import { Metadata, IntentfulBehaviour, Provider, Spec, Action, Entity_Reference, Entity } from "papiea-core";
-import uuid = require("uuid");
 import { Logger, LoggerFactory } from "papiea-backend-utils";
 import { ProviderClient } from "papiea-client";
 import { Kind_Builder, ProceduralCtx_Interface, ProviderSdk, SecurityApi } from "../../src/provider_sdk/typescript_sdk";
 import { InvocationError } from "../../src/provider_sdk/typescript_sdk_exceptions"
+import uuid = require("uuid");
 
 
 declare var process: {
@@ -1531,7 +1531,7 @@ describe("SDK callback tests", () => {
         try {
             await sdk.register()
             kind_name = sdk.provider.kinds[0].name
-            const { data: { metadata } } = await entityApi.post(`/${ prefix }/${ provider_version }/${ kind_name }`, {
+            const {data: {metadata}} = await entityApi.post(`/${prefix}/${provider_version}/${kind_name}`, {
                 spec: {
                     x: 10,
                     y: 11
@@ -1543,21 +1543,13 @@ describe("SDK callback tests", () => {
             })
             await entityApi.delete(`/${ prefix }/${ provider_version }/${ kind_name }/${ metadata.uuid }`, {
                 headers: {
-                    'Authorization': `Bearer ${ adminKey }`
+                    'Authorization': `Bearer ${adminKey}`
                 }
             })
         } finally {
             sdk.server.close();
         }
     });
-
-    function create_empty_entity(): Entity {
-        return {
-            metadata: {} as Metadata,
-            spec: {},
-            status: {}
-        }
-    }
 
     test("On create callback should be called", async () => {
         expect.hasAssertions();
@@ -1572,32 +1564,54 @@ describe("SDK callback tests", () => {
             async (ctx, input) => {
             }
         );
-        location.on_create(async (ctx, input) => {
+        location.on_create({input_schema: location_yaml}, async (ctx, input) => {
             expect(input).toBeDefined()
-            return create_empty_entity()
+            return {
+                spec: input,
+                status: input
+            }
         })
         try {
             await sdk.register()
             kind_name = sdk.provider.kinds[0].name
-            const { data: { metadata } } = await entityApi.post(`/${ prefix }/${ provider_version }/${ kind_name }`, {
-                spec: {
+            const {data: {metadata}} = await entityApi.post(
+                `/${prefix}/${provider_version}/${kind_name}`,
+                {
                     x: 10,
                     y: 11
+                },
+                {
+                    headers: {
+                        "Authorization": `Bearer ${adminKey}`
+                    }
                 }
-            }, {
+            )
+            await entityApi.delete(`/${prefix}/${provider_version}/${kind_name}/${metadata.uuid}`, {
                 headers: {
-                    'Authorization': `Bearer ${ adminKey }`
-                }
-            })
-            await entityApi.delete(`/${ prefix }/${ provider_version }/${ kind_name }/${ metadata.uuid }`, {
-                headers: {
-                    'Authorization': `Bearer ${ adminKey }`
+                    "Authorization": `Bearer ${adminKey}`
                 }
             })
         } finally {
-            sdk.server.close();
+            sdk.server.close()
         }
     });
+
+    const constructor_input_schema = {
+        Input: {
+            type: "object",
+            properties: {
+                x: {
+                    type: "number"
+                },
+                y: {
+                    type: "number"
+                },
+                uuid: {
+                    type: "string"
+                }
+            }
+        }
+    }
 
     test("Entity is deleted if on create failed", async () => {
         expect.hasAssertions();
@@ -1606,7 +1620,7 @@ describe("SDK callback tests", () => {
         prefix = "provider_on_create_callback"
         sdk.version(provider_version);
         sdk.prefix(prefix);
-        location.on_create(async (ctx, input) => {
+        location.on_create({input_schema: constructor_input_schema}, async (ctx, input) => {
             throw new Error("Constructor failed")
         })
         try {
@@ -1615,13 +1629,9 @@ describe("SDK callback tests", () => {
             const id = uuid()
             try {
                 const { data: { metadata } } = await entityApi.post(`/${ prefix }/${ provider_version }/${ kind_name }`, {
-                    spec: {
-                        x: 10,
-                        y: 11
-                    },
-                    metadata: {
-                        uuid: id
-                    }
+                    x: 10,
+                    y: 11,
+                    uuid: id
                 }, {
                     headers: {
                         "Authorization": `Bearer ${ adminKey }`
@@ -1650,22 +1660,30 @@ describe("SDK callback tests", () => {
         sdk.version(provider_version);
         sdk.prefix(prefix);
         let called_times = 0
-        location.on_create(async (ctx, input) => {
+        location.on_create({input_schema: constructor_input_schema}, async (ctx, input) => {
             called_times++
-            return create_empty_entity()
+            return {
+                spec: {
+                    x: input.x,
+                    y: input.y
+                },
+                status: {
+                    x: input.x,
+                    y: input.y
+                },
+                metadata: {
+                    uuid: input.uuid
+                }
+            }
         })
         try {
             const id = uuid()
             await sdk.register()
             kind_name = sdk.provider.kinds[0].name
             const { data: { metadata } } = await entityApi.post(`/${ prefix }/${ provider_version }/${ kind_name }`, {
-                spec: {
-                    x: 10,
-                    y: 11
-                },
-                metadata: {
-                    uuid: id
-                }
+                x: 10,
+                y: 11,
+                uuid: id
             }, {
                 headers: {
                     'Authorization': `Bearer ${ adminKey }`
@@ -1707,33 +1725,35 @@ describe("SDK callback tests", () => {
         prefix = "provider_on_create_2_callbacks"
         sdk.version(provider_version);
         sdk.prefix(prefix);
-        location.on_create(async (ctx, input) => {
+        location.on_create({input_schema: constructor_input_schema}, async (ctx, input) => {
             expect(input).toBeDefined()
-            return create_empty_entity()
+            return {
+                spec: input,
+                status: input
+            }
         })
-        location_duplicate.on_create(async (ctx, input) => {
+        location_duplicate.on_create({input_schema: constructor_input_schema}, async (ctx, input) => {
             expect(input).toBeDefined()
-            return create_empty_entity()
+            return {
+                spec: input,
+                status: input
+            }
         })
         try {
             await sdk.register()
             kind_name = sdk.provider.kinds[0].name
             const duplicate_kind_name = sdk.provider.kinds[1].name
             const { data: { metadata } } = await entityApi.post(`/${ prefix }/${ provider_version }/${ kind_name }`, {
-                spec: {
-                    x: 10,
-                    y: 11
-                }
+                x: 10,
+                y: 11
             }, {
                 headers: {
                     'Authorization': `Bearer ${ adminKey }`
                 }
             })
             const result = await entityApi.post(`/${ prefix }/${ provider_version }/${ duplicate_kind_name }`, {
-                spec: {
-                    x: 10,
-                    y: 11
-                }
+                x: 10,
+                y: 11
             }, {
                 headers: {
                     'Authorization': `Bearer ${ adminKey }`
@@ -1771,18 +1791,19 @@ describe("SDK callback tests", () => {
             expect(input).toBeDefined()
         })
 
-        location.on_create(async (ctx, input) => {
+        location.on_create({input_schema: constructor_input_schema}, async (ctx, input) => {
             expect(input).toBeDefined()
-            return create_empty_entity()
+            return {
+                spec: input,
+                status: input
+            }
         })
         try {
             await sdk.register()
             kind_name = sdk.provider.kinds[0].name
             const { data: { metadata } } = await entityApi.post(`/${ prefix }/${ provider_version }/${ kind_name }`, {
-                spec: {
-                    x: 10,
-                    y: 11
-                }
+                x: 10,
+                y: 11
             }, {
                 headers: {
                     'Authorization': `Bearer ${ adminKey }`
@@ -1796,7 +1817,8 @@ describe("SDK callback tests", () => {
         } finally {
             sdk.server.close();
         }
-    });
+    })
+
     test("On delete callback with error should interrupt execution", async () => {
         expect.hasAssertions();
         const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
@@ -1848,7 +1870,7 @@ describe("SDK callback tests", () => {
             async (ctx, input) => {
             }
         );
-        location.on_create(async (ctx, input) => {
+        location.on_create({input_schema: constructor_input_schema}, async (ctx, input) => {
             throw new Error("Cannot invoke on create")
         })
         try {
@@ -1856,10 +1878,8 @@ describe("SDK callback tests", () => {
             kind_name = sdk.provider.kinds[0].name
             try {
                 const { data: { metadata } } = await entityApi.post(`/${ prefix }/${ provider_version }/${ kind_name }`, {
-                    spec: {
-                        x: 10,
-                        y: 11
-                    }
+                    x: 10,
+                    y: 11
                 }, {
                     headers: {
                         'Authorization': `Bearer ${adminKey}`

@@ -26,7 +26,7 @@ import {
     SpecOnlyEntityKind,
     UserInfo,
     Version,
-    IntentWatcher, ErrorSchemas,
+    IntentWatcher, ErrorSchemas, Status, Spec, Metadata,
 } from "papiea-core"
 import { LoggerFactory } from 'papiea-backend-utils'
 import { InvocationError, SecurityApiError } from "./typescript_sdk_exceptions"
@@ -572,7 +572,7 @@ export class Kind_Builder {
     }
 
     // Return type should always contain metadata & spec (status could be empty)
-    on_create(description: {input_schema: any, error_schemas?: ErrorSchemas}, handler: (ctx: ProceduralCtx_Interface, input: any) => Promise<Entity>): Kind_Builder {
+    on_create(description: {input_schema: any, error_schemas?: ErrorSchemas}, handler: (ctx: ProceduralCtx_Interface, input: any) => Promise<{spec: Spec, status: Status, metadata?: Partial<Metadata>}>): Kind_Builder {
         const name = `__${this.kind.name}_create`
         const loggerFactory = new LoggerFactory({logPath: name})
         const [logger, handle] = loggerFactory.createLogger()

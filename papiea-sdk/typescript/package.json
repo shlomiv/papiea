@@ -1,6 +1,6 @@
 {
   "name": "papiea-sdk",
-  "version": "0.8.4+1735",
+  "version": "0.8.7+1767",
   "main": "build/provider_sdk/typescript_sdk.js",
   "files": [
     "build",
@@ -23,7 +23,7 @@
     "papiea-client": "file:../../papiea-client",
     "papiea-core": "file:../../papiea-core",
     "pluralize": "^7.0.0",
-    "swagger-model-validator": "^3.0.6",
+    "swagger-model-validator": "^3.0.20",
     "uuid": "^3.3.2"
   },
   "description": "",

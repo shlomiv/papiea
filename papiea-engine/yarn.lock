@@ -4085,14 +4085,14 @@ package-json@^4.0.0:
     semver "^5.1.0"
 
 "papiea-backend-utils@file:../papiea-backend-utils":
-  version "0.8.4"
+  version "0.8.7"
   dependencies:
     logform "^2.1.2"
-    papiea-core "file:../../../Library/Caches/Yarn/v6/npm-papiea-backend-utils-0.8.4-bb28a87c-9503-4762-b3ed-a1d15992ac90-1606919720528/node_modules/papiea-core"
+    papiea-core "file:../../../Library/Caches/Yarn/v6/npm-papiea-backend-utils-0.8.7-4e71a44c-6a1f-4301-ba6b-89efcbe44c2c-1607337132681/node_modules/papiea-core"
     winston "^3.3.3"
 
 "papiea-core@file:../papiea-core":
-  version "0.8.4"
+  version "0.8.7"
 
 parse-glob@^3.0.4:
   version "3.0.4"
@@ -5127,10 +5127,10 @@ swagger-methods@^1.0.8:
   resolved "https://registry.yarnpkg.com/swagger-methods/-/swagger-methods-1.0.8.tgz#8baf37ee861d3c72ff7b2faad6d74c60b336e2ed"
   integrity sha512-G6baCwuHA+C5jf4FNOrosE4XlmGsdjbOjdBK4yuiDDj/ro9uR4Srj3OR84oQMT8F3qKp00tYNv0YN730oTHPZA==
 
-swagger-model-validator@^3.0.19:
-  version "3.0.19"
-  resolved "https://registry.yarnpkg.com/swagger-model-validator/-/swagger-model-validator-3.0.19.tgz#dbbad57157276f6810304cf791c232d250b2cdcc"
-  integrity sha512-tjattpg1tOonLwBq/ZwG0wQ+g8labijP+ISCARpJEPaP3vjzxfxA9SQ5jjNyrfRPfpPz7GRCZwr/wGA2NU18jw==
+swagger-model-validator@^3.0.20:
+  version "3.0.20"
+  resolved "https://registry.npmjs.org/swagger-model-validator/-/swagger-model-validator-3.0.20.tgz#9f50c14dd87a7c9899d2fdfe74c7d2b62355e1fe"
+  integrity sha512-lFwgcigjAS+ZDRUetx9JRbI00f0BsFJiPnAjFcEnLz/u1+Wk7rSNNCp31LJFDYqn1yrGoGqIS7hXBsafWZKpEA==
   dependencies:
     lodash.isequal "^4.5.0"
 

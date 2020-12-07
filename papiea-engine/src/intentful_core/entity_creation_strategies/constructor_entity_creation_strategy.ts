@@ -21,6 +21,7 @@ import deepEqual = require("deep-equal")
 import uuid = require("uuid")
 import {Validator} from "../../validator"
 import {Authorizer} from "../../auth/authz"
+import {ValidationError} from "../../errors/validation_error"
 
 export class ConstructorEntityCreationStrategy extends EntityCreationStrategy {
     protected differ: Differ
@@ -94,7 +95,11 @@ export class ConstructorEntityCreationStrategy extends EntityCreationStrategy {
                     }, {headers: this.user})
                     entity = data
                 } catch (e) {
-                    throw OnActionError.create(e.response.data.message, procedure_name, this.kind.name)
+                    if (e instanceof ValidationError) {
+                        throw e
+                    } else {
+                        throw OnActionError.create(e.response.data.message, procedure_name, this.kind.name)
+                    }
                 }
                 if (
                     entity.metadata === undefined || entity.metadata === null ||

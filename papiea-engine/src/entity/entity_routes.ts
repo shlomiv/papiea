@@ -173,7 +173,6 @@ export function createEntityAPIRouter(entity_api: Entity_API): Router {
 
     router.post("/:prefix/:version/:kind", check_request({
         allowed_query_params: [],
-        allowed_body_params: ['metadata', 'spec']
     }), asyncHandler(async (req, res) => {
         const result = await entity_api.save_entity(req.user, req.params.prefix, req.params.kind, req.params.version, req.body);
         res.json(result);

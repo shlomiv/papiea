@@ -112,7 +112,7 @@ describe("Intent Watcher tests", () => {
         })
         expect(watcher.status).toEqual(IntentfulStatus.Active)
         expect(watcher.diffs[0].diff_fields[0]["spec"][0]).toEqual(20)
-        expect(watcher.diffs[0].diff_fields[0]["status"][0]).toEqual(null)
+        expect(watcher.diffs[0].diff_fields[0]["status"][0]).toEqual(10)
         createdWatcher = watcher
     })
 
@@ -141,10 +141,10 @@ describe("Intent Watcher tests", () => {
             }
         })
         expect(watcher.status).toEqual(IntentfulStatus.Active)
-        expect(watcher.diffs[0].diff_fields[0]["spec"][0]).toEqual(20)
+        expect(watcher.diffs[0].diff_fields[0].spec[0]).toEqual(20)
         expect(watcher.diffs[1].diff_fields[0].spec[0]).toEqual(110)
-        expect(watcher.diffs[0].diff_fields[0]["status"][0]).toEqual(null)
-        expect(watcher.diffs[1].diff_fields[0]["status"][0]).toEqual(null)
+        expect(watcher.diffs[0].diff_fields[0].status[0]).toEqual(10)
+        expect(watcher.diffs[1].diff_fields[0].status[0]).toEqual(11)
         createdWatcher = watcher
     })
 

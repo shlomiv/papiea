@@ -83,10 +83,6 @@ describe("Intentful Workflow tests single provider", () => {
                     status: { x: entity.spec.x }
                 })
             })
-            location.on_create(async (ctx, entity) => {
-                const { metadata, spec } = entity
-                await ctx.update_status(metadata!, spec!)
-            })
             await sdk.register();
             const kind_name = sdk.provider.kinds[0].name;
             const { data: { metadata, spec } } = await entityApi.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }`, {
@@ -142,10 +138,6 @@ describe("Intentful Workflow tests single provider", () => {
                 times_invoked++
                 throw new Error("Error in handler")
             })
-            location.on_create(async (ctx, entity) => {
-                const { metadata, spec } = entity
-                await ctx.update_status(metadata!, spec!)
-            })
             await sdk.register();
             const kind_name = sdk.provider.kinds[0].name;
             const { data: { metadata, spec } } = await entityApi.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }`, {
@@ -197,10 +189,6 @@ describe("Intentful Workflow tests single provider", () => {
             location.on("x", async (ctx, entity, input) => {
                 times_invoked++
                 throw new Error("Error in handler")
-            })
-            location.on_create(async (ctx, entity) => {
-                const {metadata, spec} = entity
-                await ctx.update_status(metadata!, spec!)
             })
             await sdk.register();
             const kind_name = sdk.provider.kinds[0].name;
@@ -263,10 +251,6 @@ describe("Intentful Workflow tests single provider", () => {
                     return {"delay_secs": 12}
                 }
             })
-            location.on_create(async (ctx, entity) => {
-                const { metadata, spec } = entity
-                await ctx.update_status(metadata!, spec!)
-            })
             await sdk.register();
             const kind_name = sdk.provider.kinds[0].name;
             const { data: { metadata, spec } } = await entityApi.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }`, {
@@ -317,10 +301,6 @@ describe("Intentful Workflow tests single provider", () => {
             location.on("x", async (ctx, entity, input) => {
                 times_requested++
             })
-            location.on_create(async (ctx, entity) => {
-                const { metadata, spec } = entity
-                await ctx.update_status(metadata!, spec!)
-            })
             await sdk.register();
             const kind_name = sdk.provider.kinds[0].name;
             const { data: { metadata, spec } } = await entityApi.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }`, {
@@ -364,10 +344,6 @@ describe("Intentful Workflow tests single provider", () => {
                     status: { x: entity.spec.x }
                 })
                 return null
-            })
-            location.on_create(async (ctx, entity) => {
-                const { metadata, spec } = entity
-                await ctx.update_status(metadata!, spec!)
             })
             await sdk.register();
             const kind_name = sdk.provider.kinds[0].name;
@@ -433,14 +409,6 @@ describe("Intentful Workflow tests single provider", () => {
             }
             first_location.on("x", intentful_handler())
             second_location.on("x", intentful_handler())
-            const on_create_handler = () => {
-                return async (ctx: any, entity: any) => {
-                    const { metadata, spec } = entity
-                    await ctx.update_status(metadata!, spec!)
-                }
-            }
-            first_location.on_create(on_create_handler())
-            second_location.on_create(on_create_handler())
             await sdk.register();
             const first_kind_name = sdk.provider.kinds[0].name;
             const second_kind_name = sdk.provider.kinds[1].name;
@@ -531,10 +499,6 @@ describe("Intentful Workflow tests single provider", () => {
                     status: { x: entity.spec.x }
                 })
             })
-            location.on_create(async (ctx, entity) => {
-                const { metadata, spec } = entity
-                await ctx.update_status(metadata!, spec!)
-            })
             await sdk.register();
             const kind_name = sdk.provider.kinds[0].name;
             const { data: { metadata, spec } } = await entityApi.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }`, {
@@ -579,10 +543,6 @@ describe("Intentful Workflow tests single provider", () => {
                     },
                     status: { x: entity.spec.x }
                 })
-            })
-            location.on_create(async (ctx, entity) => {
-                const { metadata, spec } = entity
-                await ctx.update_status(metadata!, spec!)
             })
             await sdk.register();
             const kind_name = sdk.provider.kinds[0].name;
@@ -632,10 +592,6 @@ describe("Intentful Workflow tests single provider", () => {
                     },
                     status: { x: entity.spec.x }
                 })
-            })
-            location.on_create(async (ctx, entity) => {
-                const { metadata, spec } = entity
-                await ctx.update_status(metadata!, spec!)
             })
             await sdk.register();
             const kind_name = sdk.provider.kinds[0].name;
@@ -690,10 +646,6 @@ describe("Intentful Workflow tests single provider", () => {
                     },
                     status: entity.spec
                 })
-            })
-            location.on_create(async (ctx, entity) => {
-                const { metadata, spec } = entity
-                await ctx.update_status(metadata!, spec!)
             })
             await sdk.register();
             const kind_name = sdk.provider.kinds[0].name;
@@ -807,10 +759,6 @@ describe("Intentful Workflow tests single provider", () => {
                     })
                 }
             })
-            location_array.on_create(async (ctx, entity) => {
-                const { metadata, spec } = entity
-                await ctx.update_status(metadata!, spec!)
-            })
             await sdk.register();
             const kind_name = sdk.provider.kinds[0].name;
             await entityApi.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ location }`, {
@@ -879,10 +827,6 @@ describe("Intentful Workflow tests single provider", () => {
             location.on("y", async (ctx, entity, input) => {
                 y_invoked++
             })
-            location.on_create(async (ctx, entity) => {
-                const { metadata, spec } = entity
-                await ctx.update_status(metadata!, spec!)
-            })
             await sdk.register();
             const kind_name = sdk.provider.kinds[0].name;
             const { data: { metadata, spec } } = await entityApi.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }`, {
@@ -949,10 +893,6 @@ describe("Intentful Workflow tests single provider", () => {
                         y: 21
                     }
                 })
-            })
-            location.on_create(async (ctx, entity) => {
-                const { metadata, spec } = entity
-                await ctx.update_status(metadata!, spec!)
             })
             await sdk.register();
             const kind_name = sdk.provider.kinds[0].name;
@@ -1088,14 +1028,6 @@ describe("Intentful workflow multiple providers", () => {
             }
             first_location.on("x", intentful_handler(sdk1))
             second_location.on("x", intentful_handler(sdk2))
-            const on_create_handler = () => {
-                return async (ctx: any, entity: any) => {
-                    const { metadata, spec } = entity
-                    await ctx.update_status(metadata!, spec!)
-                }
-            }
-            first_location.on_create(on_create_handler())
-            second_location.on_create(on_create_handler())
             await sdk1.register();
             await sdk2.register();
             const first_kind_name = sdk1.provider.kinds[0].name;
@@ -1206,14 +1138,6 @@ describe("Intentful workflow multiple providers", () => {
             }
             first_location.on("x", intentful_handler(sdk1))
             second_location.on("x", intentful_handler(sdk2))
-            const on_create_handler = () => {
-                return async (ctx: any, entity: any) => {
-                    const { metadata, spec } = entity
-                    await ctx.update_status(metadata!, spec!)
-                }
-            }
-            first_location.on_create(on_create_handler())
-            second_location.on_create(on_create_handler())
             await sdk1.register();
             await sdk2.register();
             const first_kind_name = sdk1.provider.kinds[0].name;

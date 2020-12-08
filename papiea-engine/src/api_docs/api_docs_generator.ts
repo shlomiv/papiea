@@ -277,7 +277,7 @@ export default class ApiDocsGenerator {
 
     postKind(provider: Provider, kind: Kind) {
         return {
-            "description": `Creates a new ${ kind.name }. While constructing copies spec to status`,
+            "description": `Creates a new instance of ${kind.name}. The created entity will have no diffs upon creation since this default constructor sets status to be the same as spec`,
             "operationId": `add${ provider.prefix }${ kind.name }`,
             "tags": [`${ provider.prefix }/${ provider.version }/${ kind.name }`],
             "requestBody": {
@@ -497,7 +497,7 @@ export default class ApiDocsGenerator {
     callConstructorProcedure(provider: Provider, kind: Kind, procedure: Procedural_Signature) {
         const [input, _] = this.getKindProcedureSchema(provider, kind, procedure)
         const procedural_def = {
-            "description": `Creates a new ${ kind.name }`,
+            "description": `Creates a new instance of ${kind.name} based on the provided input parameters. The created entity may have diffs upon creation which will get resolved in the usual way.`,
             "operationId": `add${ provider.prefix }${ kind.name }`,
             "tags": [`${ provider.prefix }/${ provider.version }/${ kind.name }`],
             "requestBody": {

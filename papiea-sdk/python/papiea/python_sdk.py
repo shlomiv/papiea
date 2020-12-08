@@ -555,7 +555,7 @@ class KindBuilder:
     def on_create(self, description: ConstructorProcedureDescription, handler: Callable[[ProceduralCtx, Any], ConstructorResult]) -> "KindBuilder":
         name = f"__{self.kind.name}_create"
         self.kind_procedure(
-            name, description handler
+            name, description, handler
         )
         return self
 

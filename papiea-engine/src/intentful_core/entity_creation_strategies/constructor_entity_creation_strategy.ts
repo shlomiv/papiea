@@ -1,4 +1,4 @@
-import {EntityCreationStrategy} from "./entity_creation_strategy_interface"
+import {EntityCreationResult, EntityCreationStrategy} from "./entity_creation_strategy_interface"
 import {
     Differ,
     Entity,
@@ -43,13 +43,17 @@ export class ConstructorEntityCreationStrategy extends EntityCreationStrategy {
         return [updatedMetadata, updatedSpec, entity.status]
     }
 
-    public async create(input: any): Promise<[IntentWatcher | null, [Metadata, Spec, Status]]> {
-        const entity = await this.invoke_constructor(`__${this.kind?.name}_create`, input)
+    public async create(input: any): Promise<EntityCreationResult> {
+        const entity = await this.invoke_constructor(`__${this.kind.name}_create`, input)
         entity.metadata = await this.create_metadata(entity.metadata ?? {})
         await this.validate_entity(entity)
+        const spec_status_equal = deepEqual(entity.spec, entity.status)
+        if (this.kind.intentful_behaviour === IntentfulBehaviour.SpecOnly) {
+            throw OnActionError.create("Spec-only entity constructor returned spec not matching status", "Constructor", this.kind.name)
+        }
         const [created_metadata, created_spec, created_status] = await this.save_entity(entity)
         let watcher: null | IntentWatcher = null
-        if (!deepEqual(created_spec, created_status) && this.kind?.intentful_behaviour === IntentfulBehaviour.Differ) {
+        if (!spec_status_equal && (this.kind.intentful_behaviour === IntentfulBehaviour.Differ || this.kind.intentful_behaviour === IntentfulBehaviour.Basic)) {
             watcher = {
                 uuid: uuid(),
                 entity_ref: {
@@ -74,13 +78,18 @@ export class ConstructorEntityCreationStrategy extends EntityCreationStrategy {
                 await this.watchlistDb.update_watchlist(watchlist)
             }
         }
-        return [watcher, [created_metadata, created_spec, created_status]]
+        return {
+            intent_watcher: watcher,
+            metadata: created_metadata,
+            spec: created_spec,
+            status: created_status
+        }
     }
 
     protected async invoke_constructor(procedure_name: string, input: any): Promise<Entity> {
         let entity: Entity
-        const constructor = this.kind.kind_procedures[procedure_name]
         if (this.kind) {
+            const constructor = this.kind.kind_procedures[procedure_name]
             if (constructor !== undefined && constructor !== null) {
                 if (this.user === undefined) {
                     throw OnActionError.create("User not specified", procedure_name, this.kind.name)

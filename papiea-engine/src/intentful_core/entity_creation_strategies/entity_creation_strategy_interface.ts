@@ -4,7 +4,6 @@ import {Graveyard_DB} from "../../databases/graveyard_db_interface"
 import {
     Action,
     Entity,
-    IntentfulBehaviour,
     IntentWatcher,
     Kind,
     Metadata,
@@ -18,6 +17,13 @@ import {Watchlist_DB} from "../../databases/watchlist_db_interface"
 import {Validator} from "../../validator"
 import uuid = require("uuid")
 import {Authorizer} from "../../auth/authz"
+
+export interface EntityCreationResult {
+    intent_watcher: IntentWatcher | null,
+    metadata: Metadata,
+    spec: Spec,
+    status: Status | null
+}
 
 export abstract class EntityCreationStrategy {
     protected readonly specDb: Spec_DB
@@ -114,7 +120,7 @@ export abstract class EntityCreationStrategy {
         return [updatedMetadata, updatedSpec]
     }
 
-    abstract create(input: unknown): Promise<[IntentWatcher | null, [Metadata, Spec, Status | null]]>
+    abstract create(input: unknown): Promise<EntityCreationResult>
 
     setKind(kind: Kind): void {
         this.kind = kind

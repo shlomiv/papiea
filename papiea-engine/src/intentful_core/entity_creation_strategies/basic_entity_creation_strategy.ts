@@ -1,4 +1,4 @@
-import {EntityCreationStrategy} from "./entity_creation_strategy_interface"
+import {EntityCreationResult, EntityCreationStrategy} from "./entity_creation_strategy_interface"
 import {IntentfulBehaviour, IntentWatcher, Metadata, Spec, Status} from "papiea-core"
 import {create_entry} from "../../intentful_engine/watchlist"
 import {Spec_DB} from "../../databases/spec_db_interface"
@@ -9,7 +9,7 @@ import {Validator} from "../../validator"
 import {Authorizer} from "../../auth/authz"
 
 export class BasicEntityCreationStrategy extends EntityCreationStrategy {
-    public async create(input: {metadata: Metadata, spec: Spec}): Promise<[IntentWatcher | null, [Metadata, Spec, Status | null]]> {
+    public async create(input: {metadata: Metadata, spec: Spec}): Promise<EntityCreationResult> {
         const metadata = await this.create_metadata(input.metadata ?? {})
         await this.validate_entity({metadata, spec: input.spec, status: input.spec})
         const [created_metadata, spec] = await this.create_entity(metadata, input.spec)
@@ -21,7 +21,12 @@ export class BasicEntityCreationStrategy extends EntityCreationStrategy {
                 await this.watchlistDb.update_watchlist(watchlist)
             }
         }
-        return [null, [created_metadata, spec, null]]
+        return {
+            intent_watcher: null,
+            metadata: created_metadata,
+            spec: spec,
+            status: null
+        }
     }
 
     public constructor(specDb: Spec_DB, statusDb: Status_DB, graveyardDb: Graveyard_DB, watchlistDb: Watchlist_DB, validator: Validator, authorizer: Authorizer) {

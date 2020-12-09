@@ -80,6 +80,11 @@ export class PerProviderAuthorizer extends Authorizer {
     }
 
     async checkPermission(user: UserAuthInfo, object: any, action: Action, provider?: Provider): Promise<void> {
+        if (provider === undefined || provider === null) {
+            // We shouldn't reach this under normal circumstances
+            // TODO: this should hidden, leaving it with this error till we have proper logging
+            throw new Error("No provider provided in the authorizer")
+        }
         const authorizer: Authorizer | null = await this.getAuthorizerByObject(provider!)
         if (authorizer === null) {
             return;

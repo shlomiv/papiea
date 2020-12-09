@@ -571,7 +571,7 @@ export class Kind_Builder {
         return this
     }
 
-    // Return type should always contain metadata & spec (status could be empty)
+    // Return type should always contain spec and status (metadata could be empty)
     on_create(description: {input_schema: any, error_schemas?: ErrorSchemas}, handler: (ctx: ProceduralCtx_Interface, input: any) => Promise<{spec: Spec, status: Status, metadata?: Partial<Metadata>}>): Kind_Builder {
         const name = `__${this.kind.name}_create`
         const loggerFactory = new LoggerFactory({logPath: name})

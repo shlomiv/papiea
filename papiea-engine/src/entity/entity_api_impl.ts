@@ -1,31 +1,31 @@
 import axios from "axios"
-import { Status_DB } from "../databases/status_db_interface";
-import { Spec_DB } from "../databases/spec_db_interface";
-import { Entity_API, OperationSuccess } from "./entity_api_interface";
-import { Validator } from "../validator";
-import { Authorizer } from "../auth/authz";
-import { UserAuthInfo } from "../auth/authn";
+import {Status_DB} from "../databases/status_db_interface"
+import {Spec_DB} from "../databases/spec_db_interface"
+import {Entity_API, OperationSuccess} from "./entity_api_interface"
+import {Validator} from "../validator"
+import {Authorizer} from "../auth/authz"
+import {UserAuthInfo} from "../auth/authn"
 import {
+    Action,
+    Entity,
+    IntentWatcher,
     Metadata,
     Procedural_Signature,
     Provider,
+    Provider_Entity_Reference,
     Spec,
     Status,
     uuid4,
-    Version,
-    Action,
-    Provider_Entity_Reference,
-    Entity,
-    IntentWatcher
-} from "papiea-core";
-import { ProcedureInvocationError } from "../errors/procedure_invocation_error";
-import { PermissionDeniedError } from "../errors/permission_error";
-import { Logger } from "papiea-backend-utils";
-import { IntentfulContext } from "../intentful_core/intentful_context"
-import { Provider_DB } from "../databases/provider_db_interface"
-import { IntentWatcherMapper } from "../intentful_engine/intent_interface"
-import { IntentWatcher_DB } from "../databases/intent_watcher_db_interface"
-import { Graveyard_DB } from "../databases/graveyard_db_interface"
+    Version
+} from "papiea-core"
+import {ProcedureInvocationError} from "../errors/procedure_invocation_error"
+import {PermissionDeniedError} from "../errors/permission_error"
+import {Logger} from "papiea-backend-utils"
+import {IntentfulContext} from "../intentful_core/intentful_context"
+import {Provider_DB} from "../databases/provider_db_interface"
+import {IntentWatcherMapper} from "../intentful_engine/intent_interface"
+import {IntentWatcher_DB} from "../databases/intent_watcher_db_interface"
+import {Graveyard_DB} from "../databases/graveyard_db_interface"
 
 export type SortParams = { [key: string]: number };
 
@@ -80,13 +80,7 @@ export class Entity_API_Impl implements Entity_API {
         const provider = await this.get_provider(prefix, version);
         const kind = this.providerDb.find_kind(provider, kind_name);
         const strategy = this.intentfulCtx.getEntityCreationStrategy(provider, kind, user)
-        const [intent_watcher, [metadata, spec, status]] = await strategy.create(input)
-        return {
-            intent_watcher,
-            metadata,
-            spec,
-            status
-        }
+        return await strategy.create(input)
     }
 
     async get_entity_spec(user: UserAuthInfo, prefix: string, version: Version, kind_name: string, entity_uuid: uuid4): Promise<[Metadata, Spec]> {

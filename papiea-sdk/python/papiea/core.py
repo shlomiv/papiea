@@ -51,6 +51,14 @@ class IntentfulSignature:
 
 
 @dataclass
+class CreateS2SKeyRequest:
+    user_info: 'UserInfo'
+    owner: Optional[str] = None
+    key: Optional[Secret] = None
+    name: Optional[str] = None
+
+
+@dataclass
 class S2SKey:
     owner: str
     provider_prefix: str

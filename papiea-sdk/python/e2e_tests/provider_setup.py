@@ -1,7 +1,7 @@
 import e2e_tests as papiea_test
 import e2e_tests.procedure_handlers as procedure_handlers
 
-from papiea.core import Key, ProcedureDescription, S2SKey
+from papiea.core import Key, ProcedureDescription, CreateS2SKeyRequest
 from papiea.python_sdk import ProviderSdk
 from papiea.python_sdk_exceptions import SecurityApiError
 
@@ -19,7 +19,7 @@ metadata_extension = papiea_test.load_yaml_from_file("./security/metadata_extens
 async def create_provider_admin_s2s_key(sdk: ProviderSdk, new_key: Key):
     admin_security_api = sdk.provider_security_api
 
-    the_key = S2SKey(
+    the_key = CreateS2SKeyRequest(
         name="Test provider admin S2S key",
         owner="nitesh.idnani@nutanix.com",
         key=new_key,
@@ -46,7 +46,7 @@ async def create_provider_admin_s2s_key(sdk: ProviderSdk, new_key: Key):
 async def create_user_s2s_key(sdk: ProviderSdk):
     admin_security_api = sdk.provider_security_api
 
-    the_key = S2SKey(
+    the_key = CreateS2SKeyRequest(
         name="test provider some.user s2s key",
         user_info={"owner": "nutanix"},
     )

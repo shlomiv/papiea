@@ -20,7 +20,7 @@ from .core import (
     UserInfo,
     Version, ProcedureDescription,
     ConstructorProcedureDescription,
-    ConstructorResult
+    ConstructorResult, CreateS2SKeyRequest
 )
 from .python_sdk_context import IntentfulCtx, ProceduralCtx
 from .python_sdk_exceptions import InvocationError, SecurityApiError
@@ -102,7 +102,7 @@ class SecurityApi(object):
         except Exception as e:
             raise SecurityApiError.from_error(e, "Cannot list s2s keys")
 
-    async def create_key(self, new_key: S2SKey) -> S2SKey:
+    async def create_key(self, new_key: CreateS2SKeyRequest) -> S2SKey:
         try:
             url = f"{self.provider.get_prefix()}/{self.provider.get_version()}"
             res = await self.provider.provider_api.post(

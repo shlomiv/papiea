@@ -6,6 +6,7 @@ from typing import Any, Optional, List, Type, Callable, AsyncGenerator
 from .api import ApiInstance
 from .core import AttributeDict, Entity, EntityReference, EntitySpec, IntentfulStatus, IntentWatcher, Metadata, Secret, \
     Spec
+from .python_sdk_exceptions import PapieaServerException
 
 FilterResults = AttributeDict
 
@@ -30,8 +31,19 @@ class EntityCRUD(object):
         self.api_instance = ApiInstance(
             f"{papiea_url}/services/{prefix}/{version}/{kind}", headers=headers, logger=logger
         )
+        self.kind = kind
+        self.__constructor_present = True
 
     async def __aenter__(self) -> "EntityCRUD":
+        constructor_procedure = f"__{self.kind}_create"
+        try:
+            await self.invoke_kind_procedure(constructor_procedure, {})
+        except Exception as e:
+            # No constructor for this kind
+            if str(e) == f"Procedure {constructor_procedure} not found for kind {self.kind}":
+                self.__constructor_present = False
+            else:
+                self.__constructor_present = True
         return self
 
     async def __aexit__(
@@ -50,15 +62,23 @@ class EntityCRUD(object):
         return res.results
 
     async def create(
-            self, spec: Spec, metadata_extension: Optional[Any] = None
+            self, input_data: Any, metadata_extension: Optional[Any] = None
     ) -> EntitySpec:
-        payload = {"spec": spec}
-        if metadata_extension is not None:
-            payload["metadata"] = {"extension": metadata_extension}
+        if self.__constructor_present:
+            payload = input_data
+            if metadata_extension is not None:
+                payload = {**payload, **metadata_extension}
+        else:
+            payload = {"spec": input_data}
+            if metadata_extension is not None:
+                payload["metadata"] = {"extension": metadata_extension}
         return await self.api_instance.post("", payload)
 
-    async def create_with_meta(self, metadata: Metadata, spec: Spec) -> EntitySpec:
-        payload = {"metadata": metadata, "spec": spec}
+    async def create_with_meta(self, metadata: Metadata, input_data: Any) -> EntitySpec:
+        if self.__constructor_present:
+            payload = {**metadata, **input_data}
+        else:
+            payload = {"metadata": metadata, "spec": input_data}
         return await self.api_instance.post("", payload)
 
     async def update(self, metadata: Metadata, spec: Spec) -> EntitySpec:

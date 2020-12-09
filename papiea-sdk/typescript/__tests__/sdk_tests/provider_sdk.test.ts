@@ -1939,7 +1939,7 @@ describe("SDK client tests", () => {
             {input_schema: loadYamlFromTestFactoryDir("./test_data/procedure_geolocation_compute_input.yml"),
              output_schema: loadYamlFromTestFactoryDir("./test_data/procedure_geolocation_compute_input.yml")},
                 async (ctx, input) => {
-                const client = ctx.get_provider_client(adminKey)
+                const client = await ctx.get_provider_client(adminKey)
                 const kind_client = client.get_kind(location.kind.name)
                 const entity_spec = await kind_client.create({
                     x: 100,
@@ -1967,7 +1967,7 @@ describe("SDK client tests", () => {
 
 class MockProceduralCtx implements ProceduralCtx_Interface {
 
-    public static create(provider_client_func: (key?: string) => ProviderClient): MockProceduralCtx {
+    public static create(provider_client_func: (key?: string) => Promise<ProviderClient>): MockProceduralCtx {
         const mock = new MockProceduralCtx()
         mock.get_provider_client = provider_client_func
         return mock
@@ -2005,7 +2005,7 @@ class MockProceduralCtx implements ProceduralCtx_Interface {
     get_logger(log_level?: string, pretty_print?: boolean): Logger {
         throw new Error("Method not implemented.");
     }
-    get_provider_client(key?: string): ProviderClient {
+    async get_provider_client(key?: string): Promise<ProviderClient> {
         throw new Error("Method not implemented.");
     }
     cleanup() {
@@ -2017,12 +2017,12 @@ describe("SDK client mock", () => {
     test("Provider mocks client", async () => {
         expect.hasAssertions();
         const location_procedure = async (ctx: ProceduralCtx_Interface, input: any) => {
-            const client = ctx.get_provider_client('test_key')
+            const client = await ctx.get_provider_client('test_key')
             let cluster_location = "us.west.";
             cluster_location += input;
             return cluster_location
         }
-        const mock_ctx = MockProceduralCtx.create(key => {
+        const mock_ctx = MockProceduralCtx.create(async key => {
             return {} as ProviderClient
         })
         const res = await location_procedure(mock_ctx, "2")

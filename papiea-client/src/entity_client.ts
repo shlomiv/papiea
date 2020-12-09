@@ -1,5 +1,14 @@
 import axios, { AxiosPromise, AxiosRequestConfig } from "axios";
-import { Metadata, Spec, Entity_Reference, Entity, PapieaError, IntentWatcher, IntentfulStatus } from "papiea-core";
+import {
+    Metadata,
+    Spec,
+    Entity_Reference,
+    Entity,
+    PapieaError,
+    IntentWatcher,
+    IntentfulStatus,
+    Status
+} from "papiea-core"
 import {
     BadRequestError,
     ConflictingEntityError,
@@ -10,6 +19,13 @@ import {
     UnauthorizedError,
     ValidationError
 } from "./errors/errors";
+
+interface EntityCreationResult {
+    intent_watcher: IntentWatcher | null,
+    metadata: Metadata,
+    spec: Spec,
+    status: Status | null
+}
 
 type EntitySpec = Pick<Entity, Metadata | Spec>
 
@@ -46,21 +62,32 @@ function make_request<T = any, Y = AxiosPromise<T>>(f: (url: string, data?: any,
     }
 }
 
-async function create_entity(provider: string, kind: string, version: string, request_spec: Spec, papiea_url: string, meta_extension: any, s2skey: string): Promise<EntitySpec> {
-    const payload = {
-        spec: request_spec,
-        ...(meta_extension) && { metadata: { extension: meta_extension } }
+async function create_entity(provider: string, kind: string, version: string, request_spec: Spec, papiea_url: string, meta_extension: any, s2skey: string, constructor_present: boolean): Promise<EntityCreationResult> {
+    let payload: any
+    if (constructor_present) {
+        payload = { ...request_spec, ...meta_extension}
+    } else {
+        payload = {
+            spec: request_spec,
+            ...(meta_extension) && { metadata: { extension: meta_extension } }
+        }
     }
-    const { data: { metadata, spec } } = await make_request(axios.post, `${ papiea_url }/services/${ provider }/${ version }/${ kind }`, payload, { headers: { "Authorization": `Bearer ${ s2skey }` } });
-    return { metadata, spec };
+    const { data: { metadata, spec, intent_watcher, status } } = await make_request<EntityCreationResult>(axios.post, `${ papiea_url }/services/${ provider }/${ version }/${ kind }`, payload, { headers: { "Authorization": `Bearer ${ s2skey }` } });
+    return { metadata, spec, intent_watcher, status };
 }
 
-async function create_entity_with_meta(provider: string, kind: string, version: string, meta: Partial<Metadata>, request_spec: Spec, papiea_url: string, s2skey: string): Promise<EntitySpec> {
-    const { data: { metadata, spec } } = await make_request(axios.post, `${ papiea_url }/services/${ provider }/${ version }/${ kind }`, {
-        spec: request_spec,
-        metadata: meta
-    }, { headers: { "Authorization": `Bearer ${ s2skey }` } });
-    return { metadata, spec };
+async function create_entity_with_meta(provider: string, kind: string, version: string, meta: Partial<Metadata>, request_spec: Spec, papiea_url: string, s2skey: string, constructor_present: boolean): Promise<EntityCreationResult> {
+    let payload: any
+    if (constructor_present) {
+        payload = {...request_spec, ...meta}
+    } else {
+        payload = {
+            spec: request_spec,
+            metadata: meta
+        }
+    }
+    const { data: { metadata, spec, intent_watcher, status } } = await make_request<EntityCreationResult>(axios.post, `${ papiea_url }/services/${ provider }/${ version }/${ kind }`, payload, { headers: { "Authorization": `Bearer ${ s2skey }` } });
+    return { metadata, spec, intent_watcher, status };
 }
 
 async function update_entity(provider: string, kind: string, version: string, request_spec: Spec, request_metadata: Metadata, papiea_url: string, s2skey: string): Promise<IntentWatcher | undefined> {
@@ -158,14 +185,14 @@ async function wait_for_watcher_status(papiea_url: string, s2skey: string, watch
 }
 
 export interface ProviderClient {
-    get_kind(kind: string): EntityCRUD
+    get_kind(kind: string): Promise<EntityCRUD>
 
     invoke_procedure(procedure_name: string, input: any): Promise<any>
 }
 
-export function provider_client(papiea_url: string, provider: string, version: string, s2skey?: string, meta_extension?: (s2skey: string) => any): ProviderClient {
+export async function provider_client(papiea_url: string, provider: string, version: string, s2skey?: string, meta_extension?: (s2skey: string) => any): Promise<ProviderClient> {
     const the_s2skey = s2skey ?? 'anonymous'
-    return <ProviderClient>{
+    return {
         get_kind: (kind: string) => kind_client(papiea_url, provider, kind, version, the_s2skey, meta_extension),
         invoke_procedure: (proc_name: string, input: any) => invoke_provider_procedure(provider, version, proc_name, input, papiea_url, the_s2skey)
     }
@@ -175,9 +202,9 @@ export function provider_client(papiea_url: string, provider: string, version: s
 export interface EntityCRUD {
     get(entity_reference: Entity_Reference): Promise<Entity>
 
-    create(spec: Spec): Promise<EntitySpec>
+    create(spec: Spec): Promise<EntityCreationResult>
 
-    create_with_meta(metadata: Partial<Metadata>, spec: Spec): Promise<EntitySpec>
+    create_with_meta(metadata: Partial<Metadata>, spec: Spec): Promise<EntityCreationResult>
 
     update(metadata: Metadata, spec: Spec): Promise<IntentWatcher | undefined>
 
@@ -194,12 +221,23 @@ export interface EntityCRUD {
     invoke_kind_procedure(procedure_name: string, input: any): Promise<any>
 }
 
-export function kind_client(papiea_url: string, provider: string, kind: string, version: string, s2skey?: string, meta_extension?: (s2skey: string) => any): EntityCRUD {
+export async function kind_client(papiea_url: string, provider: string, kind: string, version: string, s2skey?: string, meta_extension?: (s2skey: string) => any): Promise<EntityCRUD> {
+    let constructor_present = false
+    const constructor_procedure = `__${kind}_create`
     const the_s2skey = s2skey ?? 'anonymous'
+    try {
+        await invoke_kind_procedure(provider, kind, version, constructor_procedure, {}, papiea_url, the_s2skey)
+    } catch (e) {
+        if (e.message === `Procedure ${constructor_procedure} not found for kind ${kind}`) {
+            constructor_present = false
+        } else {
+            constructor_present = true
+        }
+    }
     const crudder: EntityCRUD = {
         get: (entity_reference: Entity_Reference) => get_entity(provider, kind, version, entity_reference, papiea_url, the_s2skey),
-        create: (spec: Spec) => create_entity(provider, kind, version, spec, papiea_url, meta_extension ? meta_extension(the_s2skey) : undefined, the_s2skey),
-        create_with_meta: (meta: Partial<Metadata>, spec: Spec) => create_entity_with_meta(provider, kind, version, meta, spec, papiea_url, the_s2skey),
+        create: (spec: Spec) => create_entity(provider, kind, version, spec, papiea_url, meta_extension ? meta_extension(the_s2skey) : undefined, the_s2skey, constructor_present),
+        create_with_meta: (meta: Partial<Metadata>, spec: Spec) => create_entity_with_meta(provider, kind, version, meta, spec, papiea_url, the_s2skey, constructor_present),
         update: (metadata: Metadata, spec: Spec) => update_entity(provider, kind, version, spec, metadata, papiea_url, the_s2skey),
         delete: (entity_reference: Entity_Reference) => delete_entity(provider, kind, version, entity_reference, papiea_url, the_s2skey),
         filter: (filter: any) => filter_entity(provider, kind, version, filter, papiea_url, the_s2skey),

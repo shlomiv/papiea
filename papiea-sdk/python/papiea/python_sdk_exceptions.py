@@ -34,7 +34,8 @@ class PapieaBaseException(Exception):
         details = await resp.text()
         try:
             details = json_loads_attrs(details)
-            logger.error(f"Got exception while making request. Status: {resp.status}, Reason: {resp.reason}, Details: {details}")
+            logger.error(f"Got exception while making request. Status: {resp.status}, Reason: {resp.reason},"
+                         f" Details: {details}")
         except:
             logger.error(f"Got exception while making request. Status: {resp.status}, Reason: {resp.reason}")
             raise ApiException(resp.status, resp.reason, details)

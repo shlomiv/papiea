@@ -1,34 +1,31 @@
 import axios from "axios"
-import { Status_DB } from "../databases/status_db_interface";
-import { Spec_DB } from "../databases/spec_db_interface";
-import { Entity_API, OperationSuccess } from "./entity_api_interface";
-import { Validator } from "../validator";
-import { Authorizer } from "../auth/authz";
-import { UserAuthInfo } from "../auth/authn";
+import {Status_DB} from "../databases/status_db_interface"
+import {Spec_DB} from "../databases/spec_db_interface"
+import {Entity_API, OperationSuccess} from "./entity_api_interface"
+import {Validator} from "../validator"
+import {Authorizer} from "../auth/authz"
+import {UserAuthInfo} from "../auth/authn"
 import {
-    Entity_Reference,
+    Action,
+    Entity,
+    IntentWatcher,
     Metadata,
     Procedural_Signature,
     Provider,
+    Provider_Entity_Reference,
     Spec,
     Status,
     uuid4,
-    Version,
-    Action,
-    Provider_Entity_Reference,
-    Entity,
-    IntentWatcher
-} from "papiea-core";
-import { ProcedureInvocationError } from "../errors/procedure_invocation_error";
-import uuid = require("uuid");
-import { PermissionDeniedError } from "../errors/permission_error";
-import { Logger } from "papiea-backend-utils";
-import { IntentfulContext } from "../intentful_core/intentful_context"
-import { Provider_DB } from "../databases/provider_db_interface"
-import { IntentWatcherMapper } from "../intentful_engine/intent_interface"
-import { IntentWatcher_DB } from "../databases/intent_watcher_db_interface"
-import { ConflictingEntityError } from "../databases/utils/errors"
-import { Graveyard_DB } from "../databases/graveyard_db_interface"
+    Version
+} from "papiea-core"
+import {ProcedureInvocationError} from "../errors/procedure_invocation_error"
+import {PermissionDeniedError} from "../errors/permission_error"
+import {Logger} from "papiea-backend-utils"
+import {IntentfulContext} from "../intentful_core/intentful_context"
+import {Provider_DB} from "../databases/provider_db_interface"
+import {IntentWatcherMapper} from "../intentful_engine/intent_interface"
+import {IntentWatcher_DB} from "../databases/intent_watcher_db_interface"
+import {Graveyard_DB} from "../databases/graveyard_db_interface"
 
 export type SortParams = { [key: string]: number };
 
@@ -61,85 +58,75 @@ export class Entity_API_Impl implements Entity_API {
 
     async get_intent_watcher(user: UserAuthInfo, id: string): Promise<Partial<IntentWatcher>> {
         const intent_watcher = await this.intent_watcher_db.get_watcher(id)
-        const [metadata, _] = await this.spec_db.get_spec(intent_watcher.entity_ref)
-        await this.authorizer.checkPermission(user, { "metadata": metadata }, Action.Update);
+        // TODO: this should be a separate authorizer not a PerProvider one
+        // await this.authorizer.checkPermission(user, { "metadata": metadata }, Action.Update);
         return IntentWatcherMapper.toResponse(intent_watcher)
     }
 
     async filter_intent_watcher(user: UserAuthInfo, fields: any, sortParams?: SortParams): Promise<Partial<IntentWatcher>[]> {
         const intent_watchers = await this.intent_watcher_db.list_watchers(fields, sortParams)
-        const entities = await this.spec_db.get_specs_by_ref(intent_watchers.map(watcher => watcher.entity_ref))
-        const filteredRes = await this.authorizer.filter(user, entities, Action.Update, x => { return { "metadata": x[0] } });
-        const filteredWatchers = IntentWatcherMapper.filter(intent_watchers, filteredRes)
-        return IntentWatcherMapper.toResponses(filteredWatchers)
+        // TODO: this should be a separate authorizer not a PerProvider one
+        // const filteredRes = await this.authorizer.filter(user, entities, Action.Update, x => { return { "metadata": x[0] } });
+        // const filteredWatchers = IntentWatcherMapper.filter(intent_watchers, filteredRes)
+        return IntentWatcherMapper.toResponses(intent_watchers)
     }
 
-    async save_entity(user: UserAuthInfo, prefix: string, kind_name: string, version: Version, spec_description: Spec, request_metadata: Metadata = {} as Metadata): Promise<[Metadata, Spec]> {
+    async save_entity(user: UserAuthInfo, prefix: string, kind_name: string, version: Version, input: unknown): Promise<{
+        intent_watcher: IntentWatcher | null,
+        metadata: Metadata,
+        spec: Spec,
+        status: Status | null
+    }> {
         const provider = await this.get_provider(prefix, version);
         const kind = this.providerDb.find_kind(provider, kind_name);
-        this.validator.validate_metadata_extension(provider.extension_structure, request_metadata, provider.allowExtraProps);
-        this.validator.validate_spec(spec_description, kind, provider.allowExtraProps);
-        if (!request_metadata.uuid) {
-            if (kind.uuid_validation_pattern === undefined) {
-                request_metadata.uuid = uuid();
-            } else {
-                throw new Error("Uuid is not provided, but supposed to be since validation pattern is specified")
-            }
-        } else {
-            const result = await this.get_existing_entities(provider, request_metadata.uuid, request_metadata.kind)
-            if (result.length !== 0) {
-                const [metadata, spec, status] = result
-                throw new ConflictingEntityError("An entity with this uuid already exists", metadata, spec, status)
-            }
-        }
-        this.validator.validate_uuid(kind, request_metadata.uuid)
-        if (request_metadata.spec_version === undefined || request_metadata.spec_version === null) {
-            let spec_version = await this.graveyardDb.get_highest_spec_version(
-                {provider_prefix: prefix, kind: kind_name, provider_version: version, uuid: request_metadata.uuid})
-            request_metadata.spec_version = spec_version
-        }
-        request_metadata.kind = kind.name;
-        request_metadata.provider_prefix = prefix
-        request_metadata.provider_version = version
-        await this.authorizer.checkPermission(user, { "metadata": request_metadata }, Action.Create);
-        const strategy = this.intentfulCtx.getIntentfulStrategy(kind, user)
-        const [metadata, spec] = await strategy.create(request_metadata, spec_description)
-        return [metadata, spec];
+        const strategy = this.intentfulCtx.getEntityCreationStrategy(provider, kind, user)
+        return await strategy.create(input)
     }
 
     async get_entity_spec(user: UserAuthInfo, prefix: string, version: Version, kind_name: string, entity_uuid: uuid4): Promise<[Metadata, Spec]> {
+        const provider = await this.get_provider(prefix, version);
         const entity_ref: Provider_Entity_Reference = { kind: kind_name, uuid: entity_uuid, provider_prefix: prefix, provider_version: version };
         const [metadata, spec] = await this.spec_db.get_spec(entity_ref);
-        await this.authorizer.checkPermission(user, { "metadata": metadata }, Action.Read);
+        await this.authorizer.checkPermission(user, {"metadata": metadata}, Action.Read, provider);
         return [metadata, spec];
     }
 
     async get_entity_status(user: UserAuthInfo, prefix: string, version: Version, kind_name: string, entity_uuid: uuid4): Promise<[Metadata, Status]> {
+        const provider = await this.get_provider(prefix, version);
         const entity_ref: Provider_Entity_Reference = { provider_prefix: prefix, provider_version: version,
             kind: kind_name, uuid: entity_uuid };
         const [metadata, status] = await this.status_db.get_status(entity_ref);
-        await this.authorizer.checkPermission(user, { "metadata": metadata }, Action.Read);
+        await this.authorizer.checkPermission(user, {"metadata": metadata}, Action.Read, provider);
         return [metadata, status];
     }
 
-    async filter_entity_spec(user: UserAuthInfo, kind_name: string, fields: any, exact_match: boolean, sortParams?: SortParams): Promise<[Metadata, Spec][]> {
+    async filter_entity_spec(user: UserAuthInfo, prefix: string, version: Version, kind_name: string, fields: any, exact_match: boolean, sortParams?: SortParams): Promise<[Metadata, Spec][]> {
+        const provider = await this.providerDb.get_provider(prefix, version);
         fields.metadata.kind = kind_name;
         const res = await this.spec_db.list_specs(fields, exact_match, sortParams);
-        const filteredRes = await this.authorizer.filter(user, res, Action.Read, x => { return { "metadata": x[0] } });
+        const filteredRes = await this.authorizer.filter(user, res, Action.Read, provider, x => {
+            return {"metadata": x[0]}
+        });
         return filteredRes;
     }
 
-    async filter_entity_status(user: UserAuthInfo, kind_name: string, fields: any, exact_match: boolean, sortParams?: SortParams): Promise<[Metadata, Status][]> {
+    async filter_entity_status(user: UserAuthInfo, prefix: string, version: Version, kind_name: string, fields: any, exact_match: boolean, sortParams?: SortParams): Promise<[Metadata, Status][]> {
+        const provider = await this.providerDb.get_provider(prefix, version);
         fields.metadata.kind = kind_name;
         const res = await this.status_db.list_status(fields, exact_match, sortParams);
-        const filteredRes = await this.authorizer.filter(user, res, Action.Read, x => { return { "metadata": x[0] } });
+        const filteredRes = await this.authorizer.filter(user, res, Action.Read, provider, x => {
+            return {"metadata": x[0]}
+        });
         return filteredRes;
     }
 
-    async filter_deleted(user: UserAuthInfo, kind_name: string, fields: any, exact_match: boolean, sortParams?: SortParams): Promise<Entity[]> {
+    async filter_deleted(user: UserAuthInfo, prefix: string, version: Version, kind_name: string, fields: any, exact_match: boolean, sortParams?: SortParams): Promise<Entity[]> {
+        const provider = await this.providerDb.get_provider(prefix, version);
         fields.metadata.kind = kind_name;
         const res = await this.graveyardDb.list_entities(fields, exact_match, sortParams)
-        const filteredRes = await this.authorizer.filter(user, res, Action.Read, x => { return { "metadata": x.metadata } });
+        const filteredRes = await this.authorizer.filter(user, res, Action.Read, provider, x => {
+            return {"metadata": x.metadata}
+        });
         return filteredRes
     }
 
@@ -149,7 +136,7 @@ export class Entity_API_Impl implements Entity_API {
         this.validator.validate_spec(spec_description, kind, provider.allowExtraProps);
         const entity_ref: Provider_Entity_Reference = { kind: kind_name, uuid: uuid, provider_prefix: prefix, provider_version: version };
         const metadata: Metadata = (await this.spec_db.get_spec(entity_ref))[0];
-        await this.authorizer.checkPermission(user, { "metadata": metadata }, Action.Update);
+        await this.authorizer.checkPermission(user, {"metadata": metadata}, Action.Update, provider);
         metadata.spec_version = spec_version;
         metadata.provider_prefix = prefix
         metadata.provider_version = version
@@ -164,7 +151,7 @@ export class Entity_API_Impl implements Entity_API {
         const entity_ref: Provider_Entity_Reference = { kind: kind_name, uuid: entity_uuid, provider_prefix: prefix, provider_version: version };
         const [metadata, spec] = await this.spec_db.get_spec(entity_ref);
         const [_, status] = await this.status_db.get_status(entity_ref);
-        await this.authorizer.checkPermission(user, { "metadata": metadata }, Action.Delete);
+        await this.authorizer.checkPermission(user, {"metadata": metadata}, Action.Delete, provider);
         const strategy = this.intentfulCtx.getIntentfulStrategy(kind, user)
         await strategy.delete({ metadata, spec, status })
     }
@@ -271,17 +258,18 @@ export class Entity_API_Impl implements Entity_API {
     }
 
     async check_permission(user: UserAuthInfo, prefix: string, version: Version, entityAction: [Action, Provider_Entity_Reference][]): Promise<OperationSuccess> {
+        const provider = await this.providerDb.get_provider(prefix, version)
         if (entityAction.length === 1) {
-            return await this.check_single_permission(user, prefix, version, entityAction[0])
+            return await this.check_single_permission(user, provider, entityAction[0])
         } else {
-            return await this.check_multiple_permissions(user, prefix, version, entityAction)
+            return await this.check_multiple_permissions(user, provider, entityAction)
         }
     }
 
-    async check_single_permission(user: UserAuthInfo, prefix: string, version: Version, entityAction: [Action, Provider_Entity_Reference]): Promise<OperationSuccess> {
+    async check_single_permission(user: UserAuthInfo, provider: Provider, entityAction: [Action, Provider_Entity_Reference]): Promise<OperationSuccess> {
         const [action, entityRef] = entityAction;
         if (action === Action.Create) {
-            const has_perm = await this.has_permission(user, entityRef as Metadata, action)
+            const has_perm = await this.has_permission(user, provider, entityRef as Metadata, action)
             if (has_perm) {
                 return {"success": "Ok"}
             } else {
@@ -289,7 +277,7 @@ export class Entity_API_Impl implements Entity_API {
             }
         } else {
             const [metadata, _] = await this.spec_db.get_spec(entityRef);
-            const has_perm = await this.has_permission(user, metadata, action)
+            const has_perm = await this.has_permission(user, provider, metadata, action)
             if (has_perm) {
                 return {"success": "Ok"}
             } else {
@@ -298,14 +286,14 @@ export class Entity_API_Impl implements Entity_API {
         }
     }
 
-    async check_multiple_permissions(user: UserAuthInfo, prefix: string, version: Version, entityAction: [Action, Provider_Entity_Reference][]): Promise<OperationSuccess> {
+    async check_multiple_permissions(user: UserAuthInfo, provider: Provider, entityAction: [Action, Provider_Entity_Reference][]): Promise<OperationSuccess> {
         const checkPromises: Promise<boolean>[] = [];
         for (let [action, entityRef] of entityAction) {
             if (action === Action.Create) {
-                checkPromises.push(this.has_permission(user, entityRef as Metadata, action));
+                checkPromises.push(this.has_permission(user, provider, entityRef as Metadata, action));
             } else {
                 const [metadata, _] = await this.spec_db.get_spec(entityRef);
-                checkPromises.push(this.has_permission(user, metadata, action));
+                checkPromises.push(this.has_permission(user, provider, metadata, action));
             }
         }
         const has_perm = (await Promise.all(checkPromises)).every((val, index, arr) => val)
@@ -316,28 +304,12 @@ export class Entity_API_Impl implements Entity_API {
         }
     }
 
-    async has_permission(user: UserAuthInfo, metadata: Metadata, action: Action) {
+    async has_permission(user: UserAuthInfo, provider: Provider, metadata: Metadata, action: Action) {
         try {
-            await this.authorizer.checkPermission(user, { "metadata": metadata }, action);
+            await this.authorizer.checkPermission(user, {"metadata": metadata}, action, provider);
             return true;
         } catch (e) {
             return false;
-        }
-    }
-
-    private async get_existing_entities(provider: Provider, uuid: string, kind_name: string): Promise<[Metadata, Spec, Status] | []> {
-        try {
-            const result_spec = await this.spec_db.list_specs({ metadata: { uuid: uuid, kind: kind_name, provider_version: provider.version, provider_prefix: provider.prefix, deleted_at: null } }, false)
-            const result_status = await this.status_db.list_status({ metadata: { uuid: uuid, kind: kind_name, provider_version: provider.version, provider_prefix: provider.prefix, deleted_at: null } }, false)
-            if (result_spec.length !== 0 || result_status.length !== 0) {
-                return [result_spec[0][0], result_spec[0][1], result_status[0][1]]
-            } else {
-                return []
-            }
-        } catch (e) {
-            // Hiding details of the error for security reasons
-            // since it is not supposed to occur under normal circumstances
-            throw new Error("uuid is not valid")
         }
     }
 }

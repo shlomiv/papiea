@@ -3,7 +3,7 @@ import axios from "axios";
 import { UserAuthInfo } from "../../src/auth/authn";
 import { Authorizer } from "../../src/auth/authz";
 import { Action } from "papiea-core";
-import { Logger, LoggerFactory } from 'papiea-backend-utils';
+import { LoggerFactory } from 'papiea-backend-utils';
 
 
 declare var process: {

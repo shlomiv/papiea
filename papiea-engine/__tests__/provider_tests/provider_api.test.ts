@@ -456,8 +456,8 @@ describe('Status-only fields are not overridden by spec changes', function () {
         });
         res = await entityApi.get(`/${ providerPrefix }/${ providerVersion }/${ kind_name }/${ metadata.uuid }`);
         expect(res.data.status).toEqual({
-            host: "large",
-            ip: "1.1.1.1",
+            host: "medium",
+            ip: "0.0.0.0",
             name: "test_cluster"
         })
         expect(res.data.spec).toEqual({

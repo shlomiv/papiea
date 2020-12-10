@@ -1,8 +1,7 @@
 import { Spec_DB } from "../databases/spec_db_interface"
 import { Status_DB } from "../databases/status_db_interface"
 import { IntentfulStrategy } from "./intentful_strategies/intentful_strategy_interface"
-import { BasicIntentfulStrategy } from "./intentful_strategies/basic_intentful_strategy"
-import { IntentfulBehaviour, Kind, Differ, DiffSelectionStrategy } from "papiea-core"
+import {IntentfulBehaviour, Kind, Differ, DiffSelectionStrategy, Provider} from "papiea-core"
 import { SpecOnlyIntentfulStrategy } from "./intentful_strategies/spec_only_intentful_strategy"
 import { UserAuthInfo } from "../auth/authn"
 import { DifferIntentfulStrategy } from "./intentful_strategies/differ_intentful_strategy"
@@ -17,19 +16,26 @@ import {
     StatusUpdateStrategy
 } from "./intentful_strategies/status_update_strategy";
 import { Graveyard_DB } from "../databases/graveyard_db_interface"
+import {EntityCreationStrategy} from "./entity_creation_strategies/entity_creation_strategy_interface"
+import {ConstructorEntityCreationStrategy} from "./entity_creation_strategies/constructor_entity_creation_strategy"
+import {BasicEntityCreationStrategy} from "./entity_creation_strategies/basic_entity_creation_strategy"
+import {Validator} from "../validator"
+import {Authorizer} from "../auth/authz"
 
 export type BehaviourStrategyMap = Map<IntentfulBehaviour, IntentfulStrategy>
 export type DiffSelectionStrategyMap = Map<DiffSelectionStrategy, DiffSelectionStrategyInterface>
 export type StatusUpdateStrategyMap = Map<IntentfulBehaviour, StatusUpdateStrategy>
+export type EntityCreationStrategyMap = Map<"constructor" | "basic", EntityCreationStrategy>
 
 export class IntentfulContext {
     private readonly behaviourStrategyMap: BehaviourStrategyMap
     private readonly diffSelectionStrategyMap: DiffSelectionStrategyMap
     private readonly statusUpdateStrategyMap: StatusUpdateStrategyMap
+    private readonly entityCreationStrategyMap: EntityCreationStrategyMap
 
-    constructor(specDb: Spec_DB, statusDb: Status_DB, graveyardDb: Graveyard_DB, differ: Differ, intentWatcherDb: IntentWatcher_DB, watchlistDb: Watchlist_DB) {
+    constructor(specDb: Spec_DB, statusDb: Status_DB, graveyardDb: Graveyard_DB, differ: Differ, intentWatcherDb: IntentWatcher_DB, watchlistDb: Watchlist_DB, validator: Validator, authorizer: Authorizer) {
         this.behaviourStrategyMap = new Map()
-        this.behaviourStrategyMap.set(IntentfulBehaviour.Basic, new BasicIntentfulStrategy(specDb, statusDb, graveyardDb))
+        this.behaviourStrategyMap.set(IntentfulBehaviour.Basic, new DifferIntentfulStrategy(specDb, statusDb, graveyardDb, differ, intentWatcherDb, watchlistDb))
         this.behaviourStrategyMap.set(IntentfulBehaviour.SpecOnly, new SpecOnlyIntentfulStrategy(specDb, statusDb, graveyardDb))
         this.behaviourStrategyMap.set(IntentfulBehaviour.Differ, new DifferIntentfulStrategy(specDb, statusDb, graveyardDb, differ, intentWatcherDb, watchlistDb))
 
@@ -41,6 +47,10 @@ export class IntentfulContext {
         this.statusUpdateStrategyMap.set(IntentfulBehaviour.Basic, new BasicUpdateStrategy(statusDb))
         this.statusUpdateStrategyMap.set(IntentfulBehaviour.SpecOnly, new SpecOnlyUpdateStrategy(statusDb))
         this.statusUpdateStrategyMap.set(IntentfulBehaviour.Differ, new DifferUpdateStrategy(statusDb, specDb, differ, watchlistDb))
+
+        this.entityCreationStrategyMap = new Map()
+        this.entityCreationStrategyMap.set("constructor", new ConstructorEntityCreationStrategy(specDb, statusDb, graveyardDb, watchlistDb, validator, authorizer, differ, intentWatcherDb))
+        this.entityCreationStrategyMap.set("basic", new BasicEntityCreationStrategy(specDb, statusDb, graveyardDb, watchlistDb, validator, authorizer))
     }
 
     getIntentfulStrategy(kind: Kind, user: UserAuthInfo): IntentfulStrategy {
@@ -66,5 +76,18 @@ export class IntentfulContext {
         strategy.setKind(kind)
         strategy.setUser(user)
         return strategy
+    }
+
+    getEntityCreationStrategy(provider: Provider, kind: Kind, user: UserAuthInfo): EntityCreationStrategy {
+        let strategy: EntityCreationStrategy | undefined
+        if (kind.kind_procedures[`__${ kind.name }_create`] !== null && kind.kind_procedures[`__${ kind.name }_create`] !== undefined) {
+            strategy = this.entityCreationStrategyMap.get("constructor")
+        } else {
+            strategy = this.entityCreationStrategyMap.get("basic")
+        }
+        strategy?.setKind(kind)
+        strategy?.setUser(user)
+        strategy?.setProvider(provider)
+        return strategy!
     }
 }

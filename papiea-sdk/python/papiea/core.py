@@ -1,6 +1,5 @@
 import enum
-from typing import Any, Optional, Dict
-from typing import TypedDict
+from typing import Any, Optional, Dict, Union, List, TypedDict
 
 
 class AttributeDict(dict):
@@ -11,20 +10,146 @@ class AttributeDict(dict):
 Version = str
 Secret = str
 DataDescription = Any
+SFS = str
+ProviderCallbackUrl = str
 
 
 class ProceduralExecutionStrategy(str):
-    HaltIntentful = "Halt_Intentful"
+    HaltIntentful = 0
 
 
-UserInfo = AttributeDict
-S2S_Key = AttributeDict
+class IntentfulExecutionStrategy(int):
+    Basic = 0
+
+
+ProceduralSignature = AttributeDict
+
+# class ProceduralSignature(TypedDict):
+#     name: str
+#     argument: DataDescription
+#     result: DataDescription
+#     execution_strategy: Union[ProceduralExecutionStrategy, IntentfulExecutionStrategy]
+#     procedure_callback: ProviderCallbackUrl
+#     base_callback: ProviderCallbackUrl
+#     description: Optional[str]
+#     errors_schemas: Optional['ErrorSchemas']
+
+
+# Cannot inherit this because of
+# non-default arguments follows default argument, waiting for Python to work around this MRO inconvenience
+
+IntentfulSignature = AttributeDict
+# class IntentfulSignature(TypedDict):
+#     name: str
+#     argument: DataDescription
+#     result: DataDescription
+#     execution_strategy: Union[ProceduralExecutionStrategy, IntentfulExecutionStrategy]
+#     procedure_callback: ProviderCallbackUrl
+#     base_callback: ProviderCallbackUrl
+#     signature: SFS
+#     description: Optional[str]
+#     errors_schemas: Optional['ErrorSchemas']
+
+
+CreateS2SKeyRequest = AttributeDict
+
+# class CreateS2SKeyRequest(TypedDict):
+#     user_info: 'UserInfo'
+#     owner: Optional[str]
+#     key: Optional[Secret]
+#     name: Optional[str]
+
+
+S2SKey = AttributeDict
+
+# class S2SKey(TypedDict):
+#     owner: str
+#     provider_prefix: str
+#     key: Secret
+#     uuid: str
+#     created_at: Any
+#     deleted_at: Any
+#     user_info: 'UserInfo'
+#     name: Optional[str]
+
+
+UserInfo = Dict[str, Any]
+
+
 Entity = AttributeDict
+
+# class Entity(TypedDict):
+#     metadata: 'Metadata'
+#     spec: 'Spec'
+#     status: 'Status'
+
+
 EntityReference = AttributeDict
+
+# class EntityReference(TypedDict):
+#     uuid: str
+#     kind: str
+#     name: Optional[str]
+#
+#
+# class ProviderEntityReference(EntityReference):
+#     provider_prefix: str
+#     provider_version: Version
+
+
 Spec = AttributeDict
+Status = AttributeDict
+
+
 EntitySpec = AttributeDict
+
+# class EntitySpec(TypedDict):
+#     metadata: 'Metadata'
+#     spec: 'Spec'
+
+
 Metadata = AttributeDict
+
+# class Metadata(ProviderEntityReference):
+#     spec_version: int
+#     created_at: Any
+#     deleted_at: Optional[Any]
+#     extension: Optional[Dict[str, Any]]
+
+
+class ConstructorResult(TypedDict):
+    spec: Spec
+    status: Status
+    metadata: Optional[Union['Metadata', Any]]
+
+
+class DiffContent:
+    keys: Any
+    key: str
+    path: List[Union[str, int]]
+    spec: Union[List[int], List[str]]
+    status: Union[List[int], List[str]]
+
+
+class Diff(TypedDict):
+    kind: str
+    intentful_signature: 'IntentfulSignature'
+    diff_fields: List[DiffContent]
+    handler_url: Optional[str]
+
+
 IntentWatcher = AttributeDict
+
+# class IntentWatcher(TypedDict):
+#     uuid: str
+#     entity_ref: ProviderEntityReference
+#     spec_version: int
+#     diffs: List[Diff]
+#     status: 'IntentfulStatus'
+#     user: Optional[UserInfo]
+#     last_status_changed: Optional[Any]
+#     created_at: Optional[Any]
+
 
 class Action(str):
     Read = "read"
@@ -41,12 +166,38 @@ class Action(str):
     UpdateStatus = "update_status"
 
 
-Status = Any
 Provider = AttributeDict
+
+# class Provider(TypedDict):
+#     prefix: str
+#     version: Version
+#     kinds: List['Kind']
+#     procedures: Dict[str, ProceduralSignature]
+#     extension_structure: DataDescription
+#     allowExtraProps: bool
+#     created_at: Optional[Any]
+#     policy: Optional[str]
+#     oauth: Optional[str]
+#     authModel: Optional[str]
+
+
 Kind = AttributeDict
 
+# class Kind(TypedDict):
+#     name: str
+#     kind_structure: DataDescription
+#     intentful_behaviour: 'IntentfulBehaviour'
+#     intentful_signatures: List[IntentfulSignature]
+#     dependency_tree: Dict[SFS, List[SFS]]
+#     entity_procedures: Dict[str, ProceduralSignature]
+#     kind_procedures: Dict[str, ProceduralSignature]
+#     uuid_validation_pattern: Optional[str]
+#     name_plural: Optional[str]
+#     differ: Optional[Any]
+#     diff_delay: Optional[int]
+#     diff_selection_strategy: Optional['DiffSelectionStrategy']
 
-# TODO: these should be strings
+
 class PapieaError(enum.Enum):
     Validation = "validation_error"
     BadRequest = "bad_request_error"
@@ -58,14 +209,15 @@ class PapieaError(enum.Enum):
     ServerError = "server_error"
 
 
+class DiffSelectionStrategy(enum.Enum):
+    Basic = "basic"
+    Random = "random"
+
+
 class IntentfulBehaviour(str):
     Basic = "basic"
     SpecOnly = "spec-only"
     Differ = "differ"
-
-
-class IntentfulExecutionStrategy(int):
-    Basic = 0
 
 
 # Error description in format:
@@ -80,18 +232,24 @@ class ErrorSchema(TypedDict):
 
 ErrorSchemas = Dict[str, ErrorSchema]
 
+ProcedureDescription = AttributeDict
 
-class ProcedureDescription(TypedDict, total=False): # total=False indicates not all fields are necessary
+# class ProcedureDescription(TypedDict):
+#     input_schema: Optional[Any]  # openapi schema representing input
+#     output_schema: Optional[Any]  # openapi schema representing output
+#     errors_schemas: Optional[ErrorSchemas]  # map of error-code to openapi schema representing error
+#     description: Optional[str]  # textual description of the procedure
+#
+#
+
+class ConstructorProcedureDescription(TypedDict):
     input_schema: Optional[Any]  # openapi schema representing input
-    output_schema: Optional[Any]  # openapi schema representing output
     errors_schemas: Optional[ErrorSchemas]  # map of error-code to openapi schema representing error
-    description: Optional[str]  # textual description of the procedure
 
 
 ProviderPower = str
 Key = str
-ProceduralSignature = AttributeDict
-IntentfulSignature = AttributeDict
+
 
 class IntentfulStatus(str):
     Pending = "Pending"

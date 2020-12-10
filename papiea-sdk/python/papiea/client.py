@@ -4,22 +4,24 @@ from types import TracebackType
 from typing import Any, Optional, List, Type, Callable, AsyncGenerator
 
 from .api import ApiInstance
-from .core import AttributeDict, Entity, EntityReference, EntitySpec, IntentfulStatus, IntentWatcher, Metadata, Secret, Spec
-from .python_sdk_exceptions import ApiException, PapieaBaseException
+from .core import AttributeDict, Entity, EntityReference, EntitySpec, IntentfulStatus, IntentWatcher, Metadata, Secret, \
+    Spec
+from .python_sdk_exceptions import PapieaServerException
 
 FilterResults = AttributeDict
 
 BATCH_SIZE = 20
 
+
 class EntityCRUD(object):
     def __init__(
-        self,
-        papiea_url: str,
-        prefix: str,
-        version: str,
-        kind: str,
-        s2skey: Optional[str] = None,
-        logger: logging.Logger = logging.getLogger(__name__),
+            self,
+            papiea_url: str,
+            prefix: str,
+            version: str,
+            kind: str,
+            s2skey: Optional[str] = None,
+            logger: logging.Logger = logging.getLogger(__name__),
     ):
         headers = {
             "Content-Type": "application/json",
@@ -29,15 +31,17 @@ class EntityCRUD(object):
         self.api_instance = ApiInstance(
             f"{papiea_url}/services/{prefix}/{version}/{kind}", headers=headers, logger=logger
         )
+        self.kind = kind
+        self.__constructor_present = None
 
     async def __aenter__(self) -> "EntityCRUD":
         return self
 
     async def __aexit__(
-        self,
-        exc_type: Optional[Type[BaseException]],
-        exc_val: Optional[BaseException],
-        exc_tb: Optional[TracebackType],
+            self,
+            exc_type: Optional[Type[BaseException]],
+            exc_val: Optional[BaseException],
+            exc_tb: Optional[TracebackType],
     ) -> None:
         await self.api_instance.close()
 
@@ -48,20 +52,38 @@ class EntityCRUD(object):
         res = await self.api_instance.get("")
         return res.results
 
-    async def get_all(self) -> List[Entity]:
-        res = await self.api_instance.get("")
-        return res.results
+    async def check_constructor(self):
+        if self.__constructor_present is None:
+            constructor_procedure = f"__{self.kind}_create"
+            try:
+                await self.invoke_kind_procedure(constructor_procedure, {})
+            except Exception as e:
+                # No constructor for this kind
+                if str(e) == f"Procedure {constructor_procedure} not found for kind {self.kind}":
+                    self.__constructor_present = False
+                else:
+                    self.__constructor_present = True
 
     async def create(
-        self, spec: Spec, metadata_extension: Optional[Any] = None
+            self, input_data: Any, metadata_extension: Optional[Any] = None
     ) -> EntitySpec:
-        payload = {"spec": spec}
-        if metadata_extension is not None:
-            payload["metadata"] = {"extension": metadata_extension}
+        await self.check_constructor()
+        if self.__constructor_present:
+            payload = input_data
+            if metadata_extension is not None:
+                payload = {**payload, **metadata_extension}
+        else:
+            payload = {"spec": input_data}
+            if metadata_extension is not None:
+                payload["metadata"] = {"extension": metadata_extension}
         return await self.api_instance.post("", payload)
 
-    async def create_with_meta(self, metadata: Metadata, spec: Spec) -> EntitySpec:
-        payload = {"metadata": metadata, "spec": spec}
+    async def create_with_meta(self, metadata: Metadata, input_data: Any) -> EntitySpec:
+        await self.check_constructor()
+        if self.__constructor_present:
+            payload = {**metadata, **input_data}
+        else:
+            payload = {"metadata": metadata, "spec": input_data}
         return await self.api_instance.post("", payload)
 
     async def update(self, metadata: Metadata, spec: Spec) -> EntitySpec:
@@ -88,13 +110,14 @@ class EntityCRUD(object):
                 async for val in iter_func(batch_size, offset + batch_size):
                     yield val
                 return
+
         return iter_func
 
     async def list_iter(self) -> Callable[[Optional[int], Optional[int]], AsyncGenerator[Any, None]]:
         return await self.filter_iter({})
 
     async def invoke_procedure(
-        self, procedure_name: str, entity_reference: EntityReference, input_: Any
+            self, procedure_name: str, entity_reference: EntityReference, input_: Any
     ) -> Any:
         payload = {"input": input_}
         return await self.api_instance.post(
@@ -105,12 +128,13 @@ class EntityCRUD(object):
         payload = {"input": input_}
         return await self.api_instance.post(f"procedure/{procedure_name}", payload)
 
+
 class IntentWatcherClient(object):
     def __init__(
-        self,
-        papiea_url: str,
-        s2skey: Secret = None,
-        logger: logging.Logger = logging.getLogger(__name__)
+            self,
+            papiea_url: str,
+            s2skey: Secret = None,
+            logger: logging.Logger = logging.getLogger(__name__)
     ):
         headers = {
             "Content-Type": "application/json",
@@ -124,14 +148,14 @@ class IntentWatcherClient(object):
 
         self.logger = logger
 
-    async def __aenter__(self) -> "IntentWatcherApi":
+    async def __aenter__(self) -> "IntentWatcherClient":
         return self
 
     async def __aexit__(
-        self,
-        exc_type: Optional[Type[BaseException]],
-        exc_val: Optional[BaseException],
-        exc_tb: Optional[TracebackType]
+            self,
+            exc_type: Optional[Type[BaseException]],
+            exc_val: Optional[BaseException],
+            exc_tb: Optional[TracebackType]
     ) -> None:
         await self.api_instance.close()
 
@@ -147,10 +171,10 @@ class IntentWatcherClient(object):
         res = await self.api_instance.post("filter", filter_obj)
         return res.results
 
-
-    async def wait_for_watcher_status(self, watcher_ref: AttributeDict, watcher_status: IntentfulStatus, timeout_secs: float = 50, delay_millis: float = 500) -> bool:
+    async def wait_for_watcher_status(self, watcher_ref: AttributeDict, watcher_status: IntentfulStatus,
+                                      timeout_secs: float = 50, delay_millis: float = 500) -> bool:
         start_time = time.time()
-        delay_secs = delay_millis/1000
+        delay_secs = delay_millis / 1000
         while True:
             watcher = await self.get_intent_watcher(watcher_ref.uuid)
             if watcher.status == watcher_status:
@@ -161,14 +185,15 @@ class IntentWatcherClient(object):
                 raise Exception("Timeout waiting for intent watcher status")
             time.sleep(delay_secs)
 
+
 class ProviderClient(object):
     def __init__(
-        self,
-        papiea_url: str,
-        provider: str,
-        version: str,
-        s2skey: Optional[str] = None,
-        logger: logging.Logger = logging.getLogger(__name__),
+            self,
+            papiea_url: str,
+            provider: str,
+            version: str,
+            s2skey: Optional[str] = None,
+            logger: logging.Logger = logging.getLogger(__name__),
     ):
         self.papiea_url = papiea_url
         self.provider = provider
@@ -188,10 +213,10 @@ class ProviderClient(object):
         return self
 
     async def __aexit__(
-        self,
-        exc_type: Optional[Type[BaseException]],
-        exc_val: Optional[BaseException],
-        exc_tb: Optional[TracebackType],
+            self,
+            exc_type: Optional[Type[BaseException]],
+            exc_val: Optional[BaseException],
+            exc_tb: Optional[TracebackType],
     ) -> None:
         await self.api_instance.close()
 

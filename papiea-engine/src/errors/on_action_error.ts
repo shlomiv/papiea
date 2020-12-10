@@ -1,7 +1,7 @@
 export class OnActionError extends Error {
     static ON_CREATE_ACTION_MSG = "On Create couldn't be called;"
     static ON_DELETE_ACTION_MSG = "On Delete couldn't be called;"
-    static UNKNOWN_ACTION_MSG = "Unknown action couldn't be called;"
+    static UNKNOWN_ACTION_MSG = "Action couldn't be called;"
 
     message: string;
 

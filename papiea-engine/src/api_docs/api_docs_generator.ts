@@ -1,6 +1,10 @@
 import {Provider_DB} from "../databases/provider_db_interface"
 import {FieldBehavior, IntentfulBehaviour, Kind, Procedural_Signature, Provider} from "papiea-core"
 
+function getConstructorProcedureName(kind: Kind): string {
+    return `__${kind.name}_create`
+}
+
 export default class ApiDocsGenerator {
     providerDb: Provider_DB;
 
@@ -155,6 +159,36 @@ export default class ApiDocsGenerator {
         }
     }
 
+    getResponseConstructor(kind: Kind) {
+        return {
+            "200": {
+                "description": `${ kind.name } response`,
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "required": ["metadata", "spec", "status"],
+                            "properties": {
+                                "metadata": {
+                                    "$ref": `#/components/schemas/${ kind.name }-Metadata`
+                                },
+                                "spec": {
+                                    "$ref": `#/components/schemas/${ kind.name }-Spec`
+                                },
+                                "status": {
+                                    "$ref": `#/components/schemas/${ kind.name }-Status`
+                                },
+                                "intent_watcher": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "default": this.getDefaultResponse()
+        }
+    }
+
     getKind(provider: Provider, kind: Kind) {
         return {
             "description": `Returns all entities' specs of kind ${ kind.name }`,
@@ -243,7 +277,7 @@ export default class ApiDocsGenerator {
 
     postKind(provider: Provider, kind: Kind) {
         return {
-            "description": `Creates a new ${ kind.name }`,
+            "description": `Creates a new instance of ${kind.name}. The created entity will have no diffs upon creation since this default constructor sets status to be the same as spec`,
             "operationId": `add${ provider.prefix }${ kind.name }`,
             "tags": [`${ provider.prefix }/${ provider.version }/${ kind.name }`],
             "requestBody": {
@@ -458,6 +492,33 @@ export default class ApiDocsGenerator {
     getKindProcedureSchema = (provider: Provider, kind: Kind, procedure: Procedural_Signature): [string, string] => {
         const base = `${provider.prefix}-${provider.version}-${kind.name}-${procedure.name}`
         return this.getProcedureSchema(base, procedure)
+    }
+
+    callConstructorProcedure(provider: Provider, kind: Kind, procedure: Procedural_Signature) {
+        const [input, _] = this.getKindProcedureSchema(provider, kind, procedure)
+        const procedural_def = {
+            "description": `Creates a new instance of ${kind.name} based on the provided input parameters. The created entity may have diffs upon creation which will get resolved in the usual way.`,
+            "operationId": `add${ provider.prefix }${ kind.name }`,
+            "tags": [`${ provider.prefix }/${ provider.version }/${ kind.name }`],
+            "requestBody": {
+                "description": `${ procedure.name } input`,
+                "required": true,
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "properties": {
+                                "input": {
+                                    "$ref": `#/components/schemas/${ input }`
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "responses": this.getResponseConstructor(kind)
+        };
+        this.processCustomErrorDescriptions(procedural_def, procedure)
+        return this.processEmptyValidation(procedural_def, procedure)
     }
 
     callKindProcedure(provider: Provider, kind: Kind, procedure: Procedural_Signature) {
@@ -838,9 +899,17 @@ export default class ApiDocsGenerator {
         const paths = root.paths;
         const schemas = root.components.schemas;
         provider.kinds.forEach(kind => {
+            const constructor_procedure = Object.values(kind.kind_procedures).filter(proc => {
+                if (proc.name === getConstructorProcedureName(kind)) {
+                    return proc
+                }
+            })[0]
             paths[`/services/${ provider.prefix }/${ provider.version }/${ kind.name }`] = {
                 "get": this.getKind(provider, kind),
-                "post": this.postKind(provider, kind)
+                "post":
+                    constructor_procedure
+                        ? this.callConstructorProcedure(provider, kind, constructor_procedure)
+                        : this.postKind(provider, kind)
             };
             paths[`/services/${ provider.prefix }/${ provider.version }/${ kind.name }/filter`] = {
                 "post": this.postKindFilter(provider, kind)
@@ -852,9 +921,12 @@ export default class ApiDocsGenerator {
             };
             if (kind.kind_procedures) {
                 Object.values(kind.kind_procedures).forEach(procedure => {
-                    paths[`/services/${ provider.prefix }/${ provider.version }/${ kind.name }/procedure/${ procedure.name }`] = {
-                        "post": this.callKindProcedure(provider, kind, procedure)
-                    };
+                    // Hide constructor from OpenAPI spec
+                    if (procedure.name !== getConstructorProcedureName(kind)) {
+                        paths[`/services/${ provider.prefix }/${ provider.version }/${ kind.name }/procedure/${ procedure.name }`] = {
+                            "post": this.callKindProcedure(provider, kind, procedure)
+                        }
+                    }
                     this.addProcedureSchema(provider, kind, procedure, schemas, this.getKindProcedureSchema)
                 });
             }

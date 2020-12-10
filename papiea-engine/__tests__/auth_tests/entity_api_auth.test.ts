@@ -17,6 +17,17 @@ declare var process: {
 const serverPort = parseInt(process.env.SERVER_PORT || '3000');
 const adminKey = process.env.PAPIEA_ADMIN_S2S_KEY || '';
 
+const entityApiAdmin = axios.create(
+    {
+        baseURL: `http://127.0.0.1:${serverPort}/services`,
+        timeout: 1000,
+        headers: {
+            "Content-Type": "application/json",
+            'Authorization': `Bearer ${adminKey}`
+        },
+    }
+)
+
 const entityApi = axios.create({
     baseURL: `http://127.0.0.1:${serverPort}/services`,
     timeout: 1000,
@@ -211,14 +222,14 @@ describe("Entity API auth tests", () => {
         await providerApiAdmin.post(`/${provider.prefix}/${provider.version}/auth`, {
             policy: null
         });
-        await entityApi.delete(`/${provider.prefix}/${provider.version}/${kind_name}/${entity_metadata.uuid}`);
+        await entityApiAdmin.delete(`/${provider.prefix}/${provider.version}/${kind_name}/${entity_metadata.uuid}`);
     });
 
     test("Get user info", async () => {
         expect.hasAssertions();
         const { data: { token } } = await providerApi.get(`/${ provider.prefix }/${ provider.version }/auth/login`);
         const { data } = await providerApi.get(`/${ provider.prefix }/${ provider.version }/auth/user_info`,
-            { headers: { 'Authorization': 'Bearer ' + token } }
+                                               { headers: { 'Authorization': 'Bearer ' + token } }
         );
         expect(data.owner).toEqual("alice");
         expect(data.tenant).toEqual(tenant_uuid);
@@ -279,7 +290,7 @@ describe("Entity API auth tests", () => {
             policy: `p, alice, owner, ${ kind_name }, *, allow`
         });
         const { data: { metadata, spec } } = await entityApi.get(`/${ provider.prefix }/${ provider.version }/${ kind_name }/${ entity_metadata.uuid }`,
-            { headers: { 'Authorization': 'Bearer ' + token } }
+                                                                 { headers: { 'Authorization': 'Bearer ' + token } }
         );
         expect(metadata).toEqual(entity_metadata);
         expect(spec).toEqual(entity_spec);
@@ -301,8 +312,8 @@ describe("Entity API auth tests", () => {
                     spec_version: 1
                 }
             }, {
-                headers: { 'Authorization': 'Bearer ' + token }
-            });
+                                    headers: { 'Authorization': 'Bearer ' + token }
+                                });
         } catch (e) {
             expect(e.response.status).toEqual(403);
         }
@@ -322,8 +333,8 @@ describe("Entity API auth tests", () => {
                 spec_version: 1
             }
         }, {
-            headers: { 'Authorization': 'Bearer ' + token }
-        });
+                                headers: { 'Authorization': 'Bearer ' + token }
+                            });
         const { data: {metadata, spec } } = await entityApi.get(`/${ provider.prefix }/${ provider.version }/${ kind_name }/${ entity_metadata.uuid }`, {
             headers: { 'Authorization': 'Bearer ' + token }
         })
@@ -364,8 +375,8 @@ describe("Entity API auth tests", () => {
                     }
                 }
             }, {
-                headers: { 'Authorization': 'Bearer ' + token }
-            });
+                                    headers: { 'Authorization': 'Bearer ' + token }
+                                });
         } catch (e) {
             expect(e.response.status).toEqual(403);
         }
@@ -397,7 +408,7 @@ describe("Entity API auth tests", () => {
             policy: `p, alice, owner, ${ kind_name }, *, allow`
         });
         await entityApi.post(`/${ provider.prefix }/${ provider.version }/${ kind_name }/${ entity_metadata.uuid }/procedure/moveX`, { input: 5 },
-            { headers: { 'Authorization': 'Bearer ' + token } }
+                             { headers: { 'Authorization': 'Bearer ' + token } }
         );
         expect(headers['tenant']).toEqual(tenant_uuid);
         expect(headers['tenant-email']).toEqual('alice@localhost');

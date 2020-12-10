@@ -2953,20 +2953,20 @@ p-try@^1.0.0:
   integrity sha1-y8ec26+P1CKOE/Yh8rGiN8GyB7M=
 
 "papiea-backend-utils@file:../../papiea-backend-utils":
-  version "0.8.4"
+  version "0.8.7"
   dependencies:
     logform "^2.1.2"
-    papiea-core "file:../../../../Library/Caches/Yarn/v6/npm-papiea-backend-utils-0.8.4-d45cbce6-5dc5-4c5d-8b71-088d9ed59e05-1606215638939/node_modules/papiea-core"
+    papiea-core "file:../../../../Library/Caches/Yarn/v6/npm-papiea-backend-utils-0.8.7-29a6b510-5247-49fc-a393-2bb10f214790-1607337150287/node_modules/papiea-core"
     winston "^3.3.3"
 
 "papiea-client@file:../../papiea-client":
-  version "0.8.4"
+  version "0.8.7"
   dependencies:
     axios "^0.18.1"
-    papiea-core "file:../../../../Library/Caches/Yarn/v6/npm-papiea-client-0.8.4-cf593547-b09c-4583-bb3e-4247a0f86bb7-1606215639062/node_modules/papiea-core"
+    papiea-core "file:../../../../Library/Caches/Yarn/v6/npm-papiea-client-0.8.7-293fdf08-0cab-4dd1-838b-1c8d301db2cb-1607337150318/node_modules/papiea-core"
 
 "papiea-core@file:../../papiea-core":
-  version "0.8.4"
+  version "0.8.7"
 
 parse-glob@^3.0.4:
   version "3.0.4"
@@ -3918,10 +3918,10 @@ type-is@~1.6.17, type-is@~1.6.18:
     media-typer "0.3.0"
     mime-types "~2.1.24"
 
-typescript@^3.8.3:
-  version "3.9.2"
-  resolved "https://registry.yarnpkg.com/typescript/-/typescript-3.9.2.tgz#64e9c8e9be6ea583c54607677dd4680a1cf35db9"
-  integrity sha512-q2ktq4n/uLuNNShyayit+DTobV2ApPEo/6so68JaD5ojvc/6GClBipedB9zNWYxRSAlZXAe405Rlijzl6qDiSw==
+typescript@^4.1:
+  version "4.1.2"
+  resolved "https://registry.npmjs.org/typescript/-/typescript-4.1.2.tgz#6369ef22516fe5e10304aae5a5c4862db55380e9"
+  integrity sha512-thGloWsGH3SOxv1SoY7QojKi0tc+8FnOmiarEGMbd/lar7QOEd3hvlx3Fp5y6FlDUGl9L+pd4n2e+oToGMmhRQ==
 
 uglify-js@^3.1.4:
   version "3.9.3"

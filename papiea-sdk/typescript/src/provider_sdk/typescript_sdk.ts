@@ -26,7 +26,7 @@ import {
     SpecOnlyEntityKind,
     UserInfo,
     Version,
-    IntentWatcher,
+    IntentWatcher, ErrorSchemas, Status, Spec, Metadata,
 } from "papiea-core"
 import { LoggerFactory } from 'papiea-backend-utils'
 import { InvocationError, SecurityApiError } from "./typescript_sdk_exceptions"
@@ -415,7 +415,7 @@ export class Kind_Builder {
     private readonly allowExtraProps: boolean;
     private readonly provider: ProviderSdk;
 
-    constructor (kind: Kind, provider: ProviderSdk, allowExtraProps: boolean) {
+    constructor(kind: Kind, provider: ProviderSdk, allowExtraProps: boolean) {
         this.provider = provider;
         this.server_manager = provider.server_manager;
         this.kind = kind;
@@ -571,17 +571,18 @@ export class Kind_Builder {
         return this
     }
 
-    on_create(handler: (ctx: ProceduralCtx_Interface, entity: Partial<Entity>) => Promise<any>): Kind_Builder {
+    // Return type should always contain spec and status (metadata could be empty)
+    on_create(description: {input_schema: any, error_schemas?: ErrorSchemas}, handler: (ctx: ProceduralCtx_Interface, input: any) => Promise<{spec: Spec, status: Status, metadata?: Partial<Metadata>}>): Kind_Builder {
         const name = `__${this.kind.name}_create`
         const loggerFactory = new LoggerFactory({logPath: name})
         const [logger, handle] = loggerFactory.createLogger()
         logger.info("You are registering on create handler. Note, this is a post create handler. The behaviour is due to change")
         handle.cleanup()
-        this.kind_procedure(name, {}, handler)
+        this.kind_procedure(name, description, handler)
         return this
     }
 
-    on_delete(handler: (ctx: ProceduralCtx_Interface, entity: Partial<Entity>) => Promise<any>): Kind_Builder {
+    on_delete(handler: (ctx: ProceduralCtx_Interface, entity: Partial<Entity>) => Promise<void>): Kind_Builder {
         const name = `__${this.kind.name}_delete`
         const loggerFactory = new LoggerFactory({logPath: name})
         const [logger, handle] = loggerFactory.createLogger()

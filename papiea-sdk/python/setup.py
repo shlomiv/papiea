@@ -5,7 +5,9 @@ import os
 # Thus using this simple env variable hack
 version = os.getenv("VERSION")
 if version is None:
-    raise Exception("No version specified as VERSION env param, exiting")
+    print("No version specified as VERSION env param, probably using commit hash as version")
+    # Placeholder version because commit hash is used as version instead
+    version = "0.0.1"
 
 with open("README.md", "r") as fh:
     long_description = fh.read()

@@ -25,7 +25,7 @@ export class BasicEntityCreationStrategy extends EntityCreationStrategy {
             intent_watcher: null,
             metadata: created_metadata,
             spec: spec,
-            status: null
+            status: spec
         }
     }
 

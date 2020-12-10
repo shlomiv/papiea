@@ -21,9 +21,4 @@ export class SpecOnlyIntentfulStrategy extends IntentfulStrategy {
         await this.update_entity(metadata, spec)
         return null
     }
-
-    // Simply delete from DB both spec and status
-    async delete(entity: Entity): Promise<void> {
-        return this.delete_entity(entity)
-    }
 }

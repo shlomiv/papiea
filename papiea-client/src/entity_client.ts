@@ -228,7 +228,7 @@ export async function kind_client(papiea_url: string, provider: string, kind: st
     try {
         await invoke_kind_procedure(provider, kind, version, constructor_procedure, {}, papiea_url, the_s2skey)
     } catch (e) {
-        if (e.message === `Procedure ${constructor_procedure} not found for kind ${kind}`) {
+        if (e.response.data.error.message === `Procedure ${constructor_procedure} not found for kind ${kind}`) {
             constructor_present = false
         } else {
             constructor_present = true

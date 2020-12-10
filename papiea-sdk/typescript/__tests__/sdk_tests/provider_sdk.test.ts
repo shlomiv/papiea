@@ -7,10 +7,11 @@ import axios from "axios"
 import { readFileSync } from "fs";
 import { Metadata, IntentfulBehaviour, Provider, Spec, Action, Entity_Reference, Entity } from "papiea-core";
 import { Logger, LoggerFactory } from "papiea-backend-utils";
-import { ProviderClient } from "papiea-client";
+import {kind_client, ProviderClient} from "papiea-client"
 import { Kind_Builder, ProceduralCtx_Interface, ProviderSdk, SecurityApi } from "../../src/provider_sdk/typescript_sdk";
 import { InvocationError } from "../../src/provider_sdk/typescript_sdk_exceptions"
 import uuid = require("uuid");
+import {version} from "ts-jest"
 
 
 declare var process: {
@@ -1596,6 +1597,70 @@ describe("SDK callback tests", () => {
         }
     });
 
+    test("Client should infer request format when on create callback is present", async () => {
+        expect.hasAssertions();
+        const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
+        const location = sdk.new_kind(location_yaml);
+        prefix = "provider_on_create_callback_schema"
+        sdk.version(provider_version);
+        sdk.prefix(prefix);
+        sdk.provider_procedure(
+            "computeWithCreateCallback",
+            {input_schema: loadYamlFromTestFactoryDir("./test_data/procedure_sum_input.yml")},
+            async (ctx, input) => {
+            }
+        );
+        location.on_create({input_schema: location_yaml}, async (ctx, input) => {
+            expect(input).toBeDefined()
+            return {
+                spec: input,
+                status: input
+            }
+        })
+        try {
+            await sdk.register()
+            kind_name = sdk.provider.kinds[0].name
+            const client = await kind_client(papieaUrl, prefix, kind_name, provider_version, adminKey)
+            const entity = await client.create({x: 10, y: 11})
+            await entityApi.delete(`/${prefix}/${provider_version}/${kind_name}/${entity.metadata.uuid}`, {
+                headers: {
+                    "Authorization": `Bearer ${adminKey}`
+                }
+            })
+        } finally {
+            sdk.server.close()
+        }
+    });
+
+    test("Client should infer request format when on create callback is NOT present", async () => {
+        expect.hasAssertions();
+        const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
+        const location = sdk.new_kind(location_yaml);
+        prefix = "provider_on_create_callback_schema_1"
+        sdk.version(provider_version);
+        sdk.prefix(prefix);
+        sdk.provider_procedure(
+            "computeWithCreateCallback",
+            {input_schema: loadYamlFromTestFactoryDir("./test_data/procedure_sum_input.yml")},
+            async (ctx, input) => {
+            }
+        );
+        try {
+            await sdk.register()
+            kind_name = sdk.provider.kinds[0].name
+            const client = await kind_client(papieaUrl, prefix, kind_name, provider_version, adminKey)
+            const entity = await client.create({x: 10, y: 11})
+            await entityApi.delete(`/${prefix}/${provider_version}/${kind_name}/${entity.metadata.uuid}`, {
+                headers: {
+                    "Authorization": `Bearer ${adminKey}`
+                }
+            })
+            expect(entity.status.x).toEqual(10)
+        } finally {
+            sdk.server.close()
+        }
+    });
+
     const constructor_input_schema = {
         Input: {
             type: "object",
@@ -1940,7 +2005,7 @@ describe("SDK client tests", () => {
              output_schema: loadYamlFromTestFactoryDir("./test_data/procedure_geolocation_compute_input.yml")},
                 async (ctx, input) => {
                 const client = await ctx.get_provider_client(adminKey)
-                const kind_client = client.get_kind(location.kind.name)
+                const kind_client = await client.get_kind(location.kind.name)
                 const entity_spec = await kind_client.create({
                     x: 100,
                     y: 150

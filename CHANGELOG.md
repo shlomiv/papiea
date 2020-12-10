@@ -1,3 +1,4 @@
+- Version 0.9.1+1796: Custom entity constructors implementation (#550)
 - Version 0.8.9+1781: Added module to remove status-only fields from entity status (#546) PR url: git@github.com:nutanix/papiea.git/pull/546
 - Version 0.8.8+1773: fix version in case commit message is used instead of version (#560)
 - Version 0.8.7+1767: added log line for health check failed situation (#558) PR url: git@github.com:nutanix/papiea.git/pull/558

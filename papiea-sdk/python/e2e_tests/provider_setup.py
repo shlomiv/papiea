@@ -1,7 +1,7 @@
 import e2e_tests as papiea_test
 import e2e_tests.procedure_handlers as procedure_handlers
 
-from papiea.core import Key, ProcedureDescription, CreateS2SKeyRequest
+from papiea.core import Key, ProcedureDescription, CreateS2SKeyRequest, ConstructorProcedureDescription
 from papiea.python_sdk import ProviderSdk
 from papiea.python_sdk_exceptions import SecurityApiError
 
@@ -75,8 +75,37 @@ async def setup_and_register_sdk() -> ProviderSdk:
             bucket = sdk.new_kind(bucket_yaml)
             obj = sdk.new_kind(object_yaml)
 
-            bucket.on_create(procedure_handlers.bucket_create_handler)
-            obj.on_create(procedure_handlers.object_create_handler)
+            bucket.on_create(ConstructorProcedureDescription(
+                input_schema={
+                    "Bucket": {
+                        "properties": {
+                            "name": {
+                                "type": "string"
+                            },
+                            "owner": {
+                                "type": "string"
+                            },
+                            "objects": {
+                                "type": "array"
+                            }
+                        }
+                    }
+                }
+            ), procedure_handlers.bucket_create_handler)
+            obj.on_create(ConstructorProcedureDescription(
+                input_schema={
+                    "Object": {
+                        "properties": {
+                            "content": {
+                                "type": "string"
+                            },
+                            "owner": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            ),procedure_handlers.object_create_handler)
 
             bucket.on("name", procedure_handlers.bucket_name_handler)
             bucket.on("objects.+{name}", procedure_handlers.on_object_added_handler)

@@ -48,7 +48,7 @@ export class ConstructorEntityCreationStrategy extends EntityCreationStrategy {
         entity.metadata = await this.create_metadata(entity.metadata ?? {})
         await this.validate_entity(entity)
         const spec_status_equal = deepEqual(entity.spec, entity.status)
-        if (this.kind.intentful_behaviour === IntentfulBehaviour.SpecOnly) {
+        if (!spec_status_equal && this.kind.intentful_behaviour === IntentfulBehaviour.SpecOnly) {
             throw OnActionError.create("Spec-only entity constructor returned spec not matching status", "Constructor", this.kind.name)
         }
         const [created_metadata, created_spec, created_status] = await this.save_entity(entity)

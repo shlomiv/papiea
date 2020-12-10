@@ -1,4 +1,3 @@
-import dataclasses
 import json
 import logging
 from types import TracebackType
@@ -20,14 +19,6 @@ from papiea.python_sdk_exceptions import (
     check_response
 )
 from papiea.utils import json_loads_attrs
-
-
-class DataclassJSONEncoder(json.JSONEncoder):
-    def default(self, o):
-        if dataclasses.is_dataclass(o):
-            return dataclasses.asdict(o)
-        return super().default(o)
-
 
 class ApiInstance:
     def __init__(
@@ -65,7 +56,7 @@ class ApiInstance:
         new_headers = CIMultiDict()
         new_headers.update(self.headers)
         new_headers.update(headers)
-        data_binary = json.dumps(data, cls=DataclassJSONEncoder).encode("utf-8")
+        data_binary = json.dumps(data).encode("utf-8")
         # TODO: this is too much code duplication but I cannot think of
         # a way outside macros that could abstract async with block
         # and sadly there are no macro in python

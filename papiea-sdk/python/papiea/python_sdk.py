@@ -1,6 +1,6 @@
 import logging
 from types import TracebackType
-from typing import Any, Callable, List, NoReturn, Optional, Type
+from typing import Any, Callable, List, NoReturn, Optional, Type, Union
 
 from aiohttp import web
 
@@ -46,7 +46,7 @@ class ProviderServerManager(object):
         if not self.should_run:
             self.should_run = True
 
-        async def healthcheck_callback_fn():
+        async def healthcheck_callback_fn(request):
             return web.json_response({"status": "Available"}, status=200)
 
         self.app.add_routes([web.get("/healthcheck", healthcheck_callback_fn)])
@@ -268,16 +268,16 @@ class ProviderSdk(object):
     ) -> "ProviderSdk":
         procedure_callback_url = self._server_manager.procedure_callback_url(name)
         callback_url = self._server_manager.callback_url()
-        validate_error_codes(procedure_description.errors_schemas)
+        validate_error_codes(procedure_description["errors_schemas"])
         procedural_signature = ProceduralSignature(
             name=name,
-            argument=procedure_description.input_schema,
-            result=procedure_description.output_schema,
+            argument=procedure_description.get("input_schema", {}),
+            result=procedure_description.get("output_schema", {}),
             execution_strategy=IntentfulExecutionStrategy.Basic,
             procedure_callback=procedure_callback_url,
-            errors_schemas=procedure_description.errors_schemas,
+            errors_schemas=procedure_description["errors_schemas"],
             base_callback=callback_url,
-            description=procedure_description.description
+            description=procedure_description.get("description")
         )
         self._procedures[name] = procedural_signature
         prefix = self.get_prefix()
@@ -398,21 +398,21 @@ class KindBuilder:
             handler: Callable[[ProceduralCtx, Entity, Any], Any],
     ) -> "KindBuilder":
         procedure_callback_url = self.server_manager.procedure_callback_url(
-            name, self.kind.name
+            name, self.kind["name"]
         )
         callback_url = self.server_manager.callback_url()
-        validate_error_codes(procedure_description.errors_schemas)
+        validate_error_codes(procedure_description.get("errors_schemas", {}))
         procedural_signature = ProceduralSignature(
             name=name,
-            argument=procedure_description.input_schema,
-            result=procedure_description.output_schema,
+            argument=procedure_description.get("input_schema", {}),
+            result=procedure_description.get("output_schema", {}),
             execution_strategy=IntentfulExecutionStrategy.Basic,
             procedure_callback=procedure_callback_url,
-            errors_schemas=procedure_description.errors_schemas,
+            errors_schemas=procedure_description.get("errors_schemas", {}),
             base_callback=callback_url,
-            description=procedure_description.description
+            description=procedure_description.get("description")
         )
-        self.kind.entity_procedures[name] = procedural_signature
+        self.kind["entity_procedures"][name] = procedural_signature
         prefix = self.get_prefix()
         version = self.get_version()
 
@@ -436,32 +436,32 @@ class KindBuilder:
                 return web.json_response(e.to_response(), status=e.status_code)
 
         self.server_manager.register_handler(
-            f"/{self.kind.name}/{name}", procedure_callback_fn
+            f"/{self.kind['name']}/{name}", procedure_callback_fn
         )
         return self
 
     def kind_procedure(
             self,
             name: str,
-            procedure_description: ProcedureDescription,
+            procedure_description: Union[ProcedureDescription, ConstructorProcedureDescription],
             handler: Callable[[ProceduralCtx, Any], Any],
     ) -> "KindBuilder":
         procedure_callback_url = self.server_manager.procedure_callback_url(
-            name, self.kind.name
+            name, self.kind["name"]
         )
         callback_url = self.server_manager.callback_url()
-        validate_error_codes(procedure_description.errors_schemas)
+        validate_error_codes(procedure_description.get("errors_schemas", {}))
         procedural_signature = ProceduralSignature(
             name=name,
-            argument=procedure_description.input_schema or {},
-            result=procedure_description.output_schema or {},
+            argument=procedure_description.get("input_schema", {}),
+            result=procedure_description.get("output_schema", {}),
             execution_strategy=IntentfulExecutionStrategy.Basic,
             procedure_callback=procedure_callback_url,
-            errors_schemas=procedure_description.errors_schemas,
+            errors_schemas=procedure_description.get("errors_schemas", {}),
             base_callback=callback_url,
-            description=procedure_description.description
+            description=procedure_description.get("description")
         )
-        self.kind.kind_procedures[name] = procedural_signature
+        self.kind["kind_procedures"][name] = procedural_signature
         prefix = self.get_prefix()
         version = self.get_version()
 
@@ -480,7 +480,7 @@ class KindBuilder:
                 return web.json_response(e.to_response(), status=e.status_code)
 
         self.server_manager.register_handler(
-            f"/{self.kind.name}/{name}", procedure_callback_fn
+            f"/{self.kind['name']}/{name}", procedure_callback_fn
         )
         return self
 
@@ -488,10 +488,10 @@ class KindBuilder:
             self, sfs_signature: str, handler: Callable[[IntentfulCtx, Entity, Any], Any],
     ) -> "KindBuilder":
         procedure_callback_url = self.server_manager.procedure_callback_url(
-            sfs_signature, self.kind.name
+            sfs_signature, self.kind["name"]
         )
         callback_url = self.server_manager.callback_url()
-        self.kind.intentful_signatures.append(
+        self.kind["intentful_signatures"].append(
             IntentfulSignature(
                 signature=sfs_signature,
                 name=sfs_signature,
@@ -547,13 +547,13 @@ class KindBuilder:
                 return web.json_response(e.to_response(), status=e.status_code)
 
         self.server_manager.register_handler(
-            f"/{self.kind.name}/{sfs_signature}", procedure_callback_fn
+            f"/{self.kind['name']}/{sfs_signature}", procedure_callback_fn
         )
         self.server_manager.register_healthcheck()
         return self
 
     def on_create(self, description: ConstructorProcedureDescription, handler: Callable[[ProceduralCtx, Any], ConstructorResult]) -> "KindBuilder":
-        name = f"__{self.kind.name}_create"
+        name = f"__{self.kind['name']}_create"
         self.kind_procedure(
             name, description, handler
         )
@@ -563,8 +563,8 @@ class KindBuilder:
         self,
         handler: Callable[[ProceduralCtx, Any], Any],
     ) -> "KindBuilder":
-        name = f"__{self.kind.name}_delete"
+        name = f"__{self.kind['name']}_delete"
         self.kind_procedure(
-            name, {}, handler
+            name, ProcedureDescription(), handler
         )
         return self

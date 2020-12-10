@@ -656,7 +656,7 @@ class TestEntityOperations:
                 bucket1_name = "test-bucket1"
 
                 bucket_ref = await bucket_entity_client.create(
-                    spec=Spec(name=bucket1_name, objects=list()),
+                    input_data=Spec(name=bucket1_name, objects=list()),
                     metadata_extension={
                         "owner": "nutanix"
                     }
@@ -894,7 +894,7 @@ class TestEntityOperations:
             async with papiea_test.get_client(papiea_test.OBJECT_KIND) as object_entity_client:
 
                 object_ref = await object_entity_client.create(
-                    spec=Spec(content="test"),
+                    input_data=Spec(content="test"),
                     metadata_extension={
                         "owner": "nutanix"
                     }

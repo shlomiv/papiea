@@ -1,6 +1,5 @@
 import enum
-from dataclasses import dataclass
-from typing import Any, Optional, Dict, Union, List
+from typing import Any, Optional, Dict, Union, List, TypedDict
 
 
 class AttributeDict(dict):
@@ -23,100 +22,107 @@ class IntentfulExecutionStrategy(int):
     Basic = 0
 
 
-@dataclass
-class ProceduralSignature:
-    name: str
-    argument: DataDescription
-    result: DataDescription
-    execution_strategy: Union[ProceduralExecutionStrategy, IntentfulExecutionStrategy]
-    procedure_callback: ProviderCallbackUrl
-    base_callback: ProviderCallbackUrl
-    description: Optional[str] = None
-    errors_schemas: Optional['ErrorSchemas'] = None
+ProceduralSignature = AttributeDict
+
+# class ProceduralSignature(TypedDict):
+#     name: str
+#     argument: DataDescription
+#     result: DataDescription
+#     execution_strategy: Union[ProceduralExecutionStrategy, IntentfulExecutionStrategy]
+#     procedure_callback: ProviderCallbackUrl
+#     base_callback: ProviderCallbackUrl
+#     description: Optional[str]
+#     errors_schemas: Optional['ErrorSchemas']
 
 
 # Cannot inherit this because of
 # non-default arguments follows default argument, waiting for Python to work around this MRO inconvenience
-@dataclass
-class IntentfulSignature:
-    name: str
-    argument: DataDescription
-    result: DataDescription
-    execution_strategy: Union[ProceduralExecutionStrategy, IntentfulExecutionStrategy]
-    procedure_callback: ProviderCallbackUrl
-    base_callback: ProviderCallbackUrl
-    signature: SFS
-    description: Optional[str] = None
-    errors_schemas: Optional['ErrorSchemas'] = None
+
+IntentfulSignature = AttributeDict
+# class IntentfulSignature(TypedDict):
+#     name: str
+#     argument: DataDescription
+#     result: DataDescription
+#     execution_strategy: Union[ProceduralExecutionStrategy, IntentfulExecutionStrategy]
+#     procedure_callback: ProviderCallbackUrl
+#     base_callback: ProviderCallbackUrl
+#     signature: SFS
+#     description: Optional[str]
+#     errors_schemas: Optional['ErrorSchemas']
 
 
-@dataclass
-class CreateS2SKeyRequest:
-    user_info: 'UserInfo'
-    owner: Optional[str] = None
-    key: Optional[Secret] = None
-    name: Optional[str] = None
+CreateS2SKeyRequest = AttributeDict
+
+# class CreateS2SKeyRequest(TypedDict):
+#     user_info: 'UserInfo'
+#     owner: Optional[str]
+#     key: Optional[Secret]
+#     name: Optional[str]
 
 
-@dataclass
-class S2SKey:
-    owner: str
-    provider_prefix: str
-    key: Secret
-    uuid: str
-    created_at: Any
-    deleted_at: Any
-    user_info: 'UserInfo'
-    name: Optional[str] = None
+S2SKey = AttributeDict
+
+# class S2SKey(TypedDict):
+#     owner: str
+#     provider_prefix: str
+#     key: Secret
+#     uuid: str
+#     created_at: Any
+#     deleted_at: Any
+#     user_info: 'UserInfo'
+#     name: Optional[str]
 
 
 UserInfo = Dict[str, Any]
 
 
-@dataclass
-class Entity:
-    metadata: 'Metadata'
-    spec: 'Spec'
-    status: 'Status'
+Entity = AttributeDict
+
+# class Entity(TypedDict):
+#     metadata: 'Metadata'
+#     spec: 'Spec'
+#     status: 'Status'
 
 
-@dataclass
-class EntityReference:
-    uuid: str
-    kind: str
-    name: Optional[str] = None
+EntityReference = AttributeDict
 
-
-class ProviderEntityReference(EntityReference):
-    provider_prefix: str
-    provider_version: Version
+# class EntityReference(TypedDict):
+#     uuid: str
+#     kind: str
+#     name: Optional[str]
+#
+#
+# class ProviderEntityReference(EntityReference):
+#     provider_prefix: str
+#     provider_version: Version
 
 
 Spec = AttributeDict
 Status = AttributeDict
 
 
-@dataclass
-class EntitySpec:
-    metadata: 'Metadata'
-    spec: 'Spec'
+EntitySpec = AttributeDict
+
+# class EntitySpec(TypedDict):
+#     metadata: 'Metadata'
+#     spec: 'Spec'
 
 
-class Metadata(ProviderEntityReference):
-    spec_version: int
-    created_at: Any
-    deleted_at: Optional[Any] = None
-    extension: Optional[Dict[str, Any]] = None
+Metadata = AttributeDict
+
+# class Metadata(ProviderEntityReference):
+#     spec_version: int
+#     created_at: Any
+#     deleted_at: Optional[Any]
+#     extension: Optional[Dict[str, Any]]
 
 
-@dataclass
-class ConstructorResult:
-    spec: 'Spec'
-    status: 'Status'
+class ConstructorResult(TypedDict):
+    spec: Spec
+    status: Status
     metadata: Optional[Union['Metadata', Any]]
 
 
-@dataclass
 class DiffContent:
     keys: Any
     key: str
@@ -125,24 +131,24 @@ class DiffContent:
     status: Union[List[int], List[str]]
 
 
-@dataclass
-class Diff:
+class Diff(TypedDict):
     kind: str
     intentful_signature: 'IntentfulSignature'
     diff_fields: List[DiffContent]
-    handler_url: Optional[str] = None
+    handler_url: Optional[str]
 
 
-@dataclass
-class IntentWatcher:
-    uuid: str
-    entity_ref: ProviderEntityReference
-    spec_version: int
-    diffs: List[Diff]
-    status: 'IntentfulStatus'
-    user: Optional[UserInfo] = None
-    last_status_changed: Optional[Any] = None
-    created_at: Optional[Any] = None
+IntentWatcher = AttributeDict
+
+# class IntentWatcher(TypedDict):
+#     uuid: str
+#     entity_ref: ProviderEntityReference
+#     spec_version: int
+#     diffs: List[Diff]
+#     status: 'IntentfulStatus'
+#     user: Optional[UserInfo]
+#     last_status_changed: Optional[Any]
+#     created_at: Optional[Any]
 
 
 class Action(str):
@@ -160,34 +166,36 @@ class Action(str):
     UpdateStatus = "update_status"
 
 
-@dataclass
-class Provider:
-    prefix: str
-    version: Version
-    kinds: List['Kind']
-    procedures: Dict[str, ProceduralSignature]
-    extension_structure: DataDescription
-    allowExtraProps: bool
-    created_at: Optional[Any] = None
-    policy: Optional[str] = None
-    oauth: Optional[str] = None
-    authModel: Optional[str] = None
+Provider = AttributeDict
+
+# class Provider(TypedDict):
+#     prefix: str
+#     version: Version
+#     kinds: List['Kind']
+#     procedures: Dict[str, ProceduralSignature]
+#     extension_structure: DataDescription
+#     allowExtraProps: bool
+#     created_at: Optional[Any]
+#     policy: Optional[str]
+#     oauth: Optional[str]
+#     authModel: Optional[str]
 
 
-@dataclass
-class Kind:
-    name: str
-    kind_structure: DataDescription
-    intentful_behaviour: 'IntentfulBehaviour'
-    intentful_signatures: List[IntentfulSignature]
-    dependency_tree: Dict[SFS, List[SFS]]
-    entity_procedures: Dict[str, ProceduralSignature]
-    kind_procedures: Dict[str, ProceduralSignature]
-    uuid_validation_pattern: Optional[str] = None
-    name_plural: Optional[str] = None
-    differ: Optional[Any] = None
-    diff_delay: Optional[int] = None
-    diff_selection_strategy: Optional['DiffSelectionStrategy'] = None
+Kind = AttributeDict
+
+# class Kind(TypedDict):
+#     name: str
+#     kind_structure: DataDescription
+#     intentful_behaviour: 'IntentfulBehaviour'
+#     intentful_signatures: List[IntentfulSignature]
+#     dependency_tree: Dict[SFS, List[SFS]]
+#     entity_procedures: Dict[str, ProceduralSignature]
+#     kind_procedures: Dict[str, ProceduralSignature]
+#     uuid_validation_pattern: Optional[str]
+#     name_plural: Optional[str]
+#     differ: Optional[Any]
+#     diff_delay: Optional[int]
+#     diff_selection_strategy: Optional['DiffSelectionStrategy']
 
 
 class PapieaError(enum.Enum):
@@ -217,27 +225,26 @@ class IntentfulBehaviour(str):
 # ErrorSchemas structure is an OpenAPI object describing error value
 # Beware that an Error that user gets in the end is still of
 #  a PapieaErrorResponse type
-@dataclass
-class ErrorSchema:
-    description: Optional[str] = None
-    structure: Optional[Any] = None
+class ErrorSchema(TypedDict):
+    description: Optional[str]
+    structure: Optional[Any]
 
 
 ErrorSchemas = Dict[str, ErrorSchema]
 
+ProcedureDescription = AttributeDict
 
-@dataclass
-class ProcedureDescription:
-    input_schema: Optional[Any] = None  # openapi schema representing input
-    output_schema: Optional[Any] = None # openapi schema representing output
-    errors_schemas: Optional[ErrorSchemas] = None  # map of error-code to openapi schema representing error
-    description: Optional[str] = None # textual description of the procedure
+# class ProcedureDescription(TypedDict):
+#     input_schema: Optional[Any]  # openapi schema representing input
+#     output_schema: Optional[Any]  # openapi schema representing output
+#     errors_schemas: Optional[ErrorSchemas]  # map of error-code to openapi schema representing error
+#     description: Optional[str]  # textual description of the procedure
+#
+#
 
-
-@dataclass
-class ConstructorProcedureDescription:
-    input_schema: Optional[Any] = None  # openapi schema representing input
-    errors_schemas: Optional[ErrorSchemas] = None  # map of error-code to openapi schema representing error
+class ConstructorProcedureDescription(TypedDict):
+    input_schema: Optional[Any]  # openapi schema representing input
+    errors_schemas: Optional[ErrorSchemas]  # map of error-code to openapi schema representing error
 
 
 ProviderPower = str

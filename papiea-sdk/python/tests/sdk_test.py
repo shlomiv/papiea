@@ -9,7 +9,8 @@ from yaml import Loader as YamlLoader
 from yaml import load as load_yaml
 
 from papiea.client import EntityCRUD
-from papiea.core import Action, ProcedureDescription, S2SKey, Spec
+from papiea.core import Action, ProcedureDescription, S2SKey, Spec, ConstructorProcedureDescription, ConstructorResult, \
+    AttributeDict, CreateS2SKeyRequest
 from papiea.python_sdk import ProviderSdk
 
 SERVER_PORT = int(os.environ.get("SERVER_PORT", "3000"))
@@ -44,7 +45,7 @@ def load_yaml_from_file(filename):
 async def create_user_s2s_key(sdk: ProviderSdk):
     admin_security_api = sdk.provider_security_api
 
-    the_key = S2SKey(
+    the_key = CreateS2SKeyRequest(
         name="location provider some.user s2s key",
         user_info={"owner": "nitesh", "tenant": "ada14b27-c147-4aca-9b9f-7762f1f48426"},
     )
@@ -118,64 +119,76 @@ class TestBasic:
             assert str(excinfo.value) == "Malformed provider description. Missing: prefix"
 
     @pytest.mark.asyncio
-    async def test_add_multiple_kinds(self):
-        async with ProviderSdk.create_provider(PAPIEA_URL, ADMIN_KEY, SERVER_CONFIG_HOST, SERVER_CONFIG_PORT) as sdk:
-            geolocation_yaml = self.location_yaml
-            sdk.new_kind(self.location_yaml)
-            sdk.new_kind(geolocation_yaml)
-
-    @pytest.mark.asyncio
-    async def test_duplicate_delete_kind(self):
-        async with ProviderSdk.create_provider(PAPIEA_URL, ADMIN_KEY, SERVER_CONFIG_HOST, SERVER_CONFIG_PORT) as sdk:
-            location_kind_builder = sdk.new_kind(self.location_yaml)
-            assert sdk.remove_kind(location_kind_builder.kind) == True
-            assert sdk.remove_kind(location_kind_builder.kind) == False
-
-    @pytest.mark.asyncio
-    async def test_duplicate_add_kind(self):
-        async with ProviderSdk.create_provider(PAPIEA_URL, ADMIN_KEY, SERVER_CONFIG_HOST, SERVER_CONFIG_PORT) as sdk:
-            location_kind_builder = sdk.new_kind(self.location_yaml)
-            assert sdk.remove_kind(location_kind_builder.kind) == True
-            assert sdk.add_kind(location_kind_builder.kind) is not None
-            assert sdk.add_kind(location_kind_builder.kind) is None
-
-    @pytest.mark.asyncio
-    async def test_provider_valid(self):
-        async with ProviderSdk.create_provider(PAPIEA_URL, ADMIN_KEY, SERVER_CONFIG_HOST, SERVER_CONFIG_PORT) as sdk:
-            sdk.version(PROVIDER_VERSION)
-            sdk.prefix("location_provider")
-            sdk.new_kind(self.location_yaml)
-            await sdk.register()
-            await sdk.server.close()
-
-    @pytest.mark.asyncio
-    async def test_provider_entity_procedure(self):
+    async def test_provider_on_create_should_change_request_format_when_set(self):
         async with ProviderSdk.create_provider(PAPIEA_URL, ADMIN_KEY, SERVER_CONFIG_HOST, SERVER_CONFIG_PORT) as sdk:
             try:
                 sdk.version(PROVIDER_VERSION)
-                sdk.prefix("location_provider")
+                sdk.prefix("location_provider_on_create")
+
+                async def on_create_handler(ctx, handler_input) -> ConstructorResult:
+                    spec = AttributeDict(x=handler_input["x"], y=handler_input["y"])
+                    return ConstructorResult(spec=spec, status=spec)
 
                 location = sdk.new_kind(self.location_yaml)
-                procedure_description = ProcedureDescription(
-                    input_schema=load_yaml_from_file('./test_data/procedure_move_input.yml'),
-                    output_schema=load_yaml_from_file('./test_data/procedure_move_output.yml')
-                )
+                location.on_create(ConstructorProcedureDescription(input_schema={
+                    "Location": {
+                        "properties": {
+                            "x": {
+                                "type": "number"
+                            },
+                            "y": {
+                                "type": "number"
+                            }
+                        }
+                    }
+                }), on_create_handler)
 
-                async def movex_handler(ctx, entity, input):
-                    entity.spec.x += input
-                    allowed = await ctx.check_permission([(Action.Update, entity.metadata)])
-                    if not allowed:
-                        raise Exception("Permission denied")
-                    async with ctx.entity_client_for_user(entity.metadata) as entity_client:
-                        await entity_client.update(entity.metadata, entity.spec)
-                    return entity.spec.x
-
-                location.entity_procedure(
-                    "moveX",
-                    procedure_description,
-                    movex_handler
-                )
                 await sdk.register()
+
+                user_s2s_key = await create_user_s2s_key(sdk)
+
+                async with EntityCRUD(
+                        PAPIEA_URL, "location_provider_on_create", "0.1.0", "Location", user_s2s_key
+                ) as entity_client:
+
+                    entity = await entity_client.create(
+                        Spec(x=10, y=11)
+                    )
+                    updated_entity = await entity_client.get(entity.metadata)
+
+                    assert updated_entity.metadata.spec_version == 1
+                    assert updated_entity.status.x == 10
+
+            except Exception as ex:
+                print(str(ex))
+            finally:
+                await sdk.server.close()
+
+    @pytest.mark.asyncio
+    async def test_provider_on_create_should_change_request_format_when_not_set(self):
+        async with ProviderSdk.create_provider(PAPIEA_URL, ADMIN_KEY, SERVER_CONFIG_HOST, SERVER_CONFIG_PORT) as sdk:
+            try:
+                sdk.version(PROVIDER_VERSION)
+                sdk.prefix("location_provider_on_create_2")
+
+                location = sdk.new_kind(self.location_yaml)
+
+                await sdk.register()
+
+                user_s2s_key = await create_user_s2s_key(sdk)
+
+                async with EntityCRUD(
+                        PAPIEA_URL, "location_provider_on_create_2", "0.1.0", "Location", user_s2s_key
+                ) as entity_client:
+
+                    entity = await entity_client.create(
+                        Spec(x=10, y=11)
+                    )
+                    updated_entity = await entity_client.get(entity.metadata)
+
+                    assert updated_entity.metadata.spec_version == 1
+                    assert updated_entity.status.x == 10
+
             except Exception as ex:
                 print(str(ex))
             finally:

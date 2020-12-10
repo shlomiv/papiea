@@ -2,7 +2,7 @@ import e2e_tests as papiea_test
 
 from datetime import datetime, timezone
 
-from papiea.core import AttributeDict, EntityReference, Spec
+from papiea.core import AttributeDict, EntityReference, Spec, ConstructorResult
 
 ensure_bucket_exists_takes = AttributeDict(
     EnsureBucketExistsInput=AttributeDict(
@@ -37,7 +37,7 @@ async def ensure_bucket_exists(ctx, input_bucket_name):
             papiea_test.logger.debug("Bucket not found. Creating new bucket...")
 
             bucket_ref = await bucket_entity_client.create(
-                spec=Spec(name=input_bucket_name, objects=list()),
+                input_data=Spec(name=input_bucket_name, objects=list()),
                 metadata_extension={
                     "owner": "nutanix"
                 }
@@ -50,7 +50,8 @@ async def ensure_bucket_exists(ctx, input_bucket_name):
                 kind=ret_entity.metadata.kind
             )
     except:
-        raise Exception("Unable to create bucket entity")
+        raise
+    raise Exception("Unable to create bucket entity")
 
 
 change_bucket_name_takes = AttributeDict(
@@ -153,7 +154,8 @@ async def create_object(ctx, entity_bucket, input_object_name):
         else:
             raise Exception("Object already exists in the bucket")
     except:
-        raise Exception("Unable to create object entity")
+        raise
+    raise Exception("Unable to create object entity")
 
 
 link_object_takes = AttributeDict(
@@ -217,7 +219,8 @@ async def link_object(ctx, entity_bucket, input_object):
         else:
             raise Exception("Object already exists in the bucket")
     except:
-        raise Exception("Unable to link object entity")
+        raise
+    raise Exception("Unable to link object entity")
 
 
 unlink_object_takes = AttributeDict(
@@ -262,7 +265,8 @@ async def unlink_object(ctx, entity_bucket, input_object_name):
         else:
             raise Exception("Object not found in the bucket")
     except:
-        raise Exception("Unable to unlink object entity")
+        raise
+    raise Exception("Unable to create object entity")
 
 
 async def bucket_create_handler(ctx, entity_bucket):
@@ -270,10 +274,14 @@ async def bucket_create_handler(ctx, entity_bucket):
         papiea_test.logger.debug("Executing bucket create intent handler...")
 
         status = AttributeDict(
-            name=entity_bucket.spec.name,
+            name=entity_bucket.name,
             objects=list()
         )
-        await ctx.update_status(entity_bucket.metadata, status)
+        return ConstructorResult(spec=status, status=status, metadata={
+            "extension": {
+                "owner": entity_bucket.owner
+            }
+        })
     except Exception as ex:
         raise Exception("Unable to execute bucket create intent handler: " + str(ex))
 
@@ -362,12 +370,16 @@ async def object_create_handler(ctx, entity_object):
         papiea_test.logger.debug("Executing object create intent handler...")
 
         status = AttributeDict(
-            content=entity_object.spec.content,
-            size=len(entity_object.spec.content),
+            content=entity_object.content,
+            size=len(entity_object.content),
             last_modified=str(datetime.now(timezone.utc)),
             references=list()
         )
-        await ctx.update_status(entity_object.metadata, status)
+        return ConstructorResult(spec=status, status=status, metadata={
+            "extension": {
+                "owner": entity_object.owner
+            }
+        })
     except:
         raise
 

@@ -1089,13 +1089,36 @@ describe("Provider Sdk tests", () => {
             }
         }
     }
+
+    const input_schema = {
+        nested_object: {
+            type: "object",
+            properties: {
+                test: {
+                    type: "array"
+                }
+            }
+        }
+    }
+
     test("Diff resolver should not run if only diff field is a status-only field", async () => {
-        expect.assertions(3)
+        expect.assertions(4)
         const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
+        let called = false
         try {
             const nested_object = sdk.new_kind(STATUS_ONLY_TEST_SCHEMA);
             sdk.version(provider_version);
-            sdk.prefix("test_provider");
+            sdk.prefix("test_provider_status_only_field");
+            nested_object.on_create({input_schema}, async (ctx, input) => {
+                return {
+                    spec: {
+                        test: input.test
+                    },
+                    status: {
+                        test: []
+                    }
+                }
+            })
             nested_object.on('test.+{id}', async(ctx, entity, diff) => {
                 await ctx.update_status(entity.metadata, {
                     test: [{
@@ -1106,31 +1129,34 @@ describe("Provider Sdk tests", () => {
                 })
             })
             nested_object.on('test.{id}', async (ctx, entity, diff) => {
-                throw new Error("Update intent handler should not be called")
+                called = true
             });
 
             await sdk.register();
             const kind_name = sdk.provider.kinds[0].name;
             const { data: { metadata, spec } } = await axios.post(`${sdk.entity_url}/${sdk.provider.prefix}/${sdk.provider.version}/${kind_name}`, {
-                spec: {
-                    test: [
-                        {
-                            id: 'test-idval',
-                            b: 'test-aval'
-                        }
-                    ]
+                test: [
+                    {
+                        id: "test-idval",
+                        b: "test-aval"
+                    }
+                ]
+            }, {
+                headers: {
+                  "Content-Type": "application/json",
+                  "Authorization": `Bearer ${adminKey}`
                 }
-            });
+            })
 
-            await timeout(5000)
+            await timeout(15000)
 
             const updatedEntity: any = await axios.get(`${sdk.entity_url}/${sdk.provider.prefix}/${sdk.provider.version}/${kind_name}/${metadata.uuid}`);
             expect(updatedEntity.data.spec.test[0].id).toEqual('test-idval')
             expect(updatedEntity.data.status.test[0].id).toEqual('test-idval')
             expect(updatedEntity.data.status.test[0].a).toEqual('test-aval')
+            expect(called).toBeFalsy()
         } catch (e) {
-            expect(e.response.data).toBeDefined()
-            expect(e.response.data.error.message).toBe("Update intent handler should not be called")
+            expect(e).toBeUndefined()
         } finally {
             sdk.server.close();
         }

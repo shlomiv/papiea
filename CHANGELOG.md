@@ -1,3 +1,4 @@
+- Version 0.9.2+1800: Bump dot-prop from 4.2.0 to 4.2.1 in /papiea-engine (#544) PR url: git@github.com:nutanix/papiea.git/pull/544
 - Version 0.9.1+1796: Custom entity constructors implementation (#550)
 - Version 0.8.9+1781: Added module to remove status-only fields from entity status (#546) PR url: git@github.com:nutanix/papiea.git/pull/546
 - Version 0.8.8+1773: fix version in case commit message is used instead of version (#560)

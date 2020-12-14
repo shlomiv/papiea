@@ -656,7 +656,7 @@ class TestEntityOperations:
                 bucket1_name = "test-bucket1"
 
                 bucket_ref = await bucket_entity_client.create(
-                    {"name": bucket1_name, "objects": list()),
+                    {"name": bucket1_name, "objects": list(),
                      "owner": "nutanix"}
                 )
 

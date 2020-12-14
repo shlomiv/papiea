@@ -6,7 +6,6 @@ from typing import Any, Optional, List, Type, Callable, AsyncGenerator
 from .api import ApiInstance
 from .core import AttributeDict, Entity, EntityReference, EntitySpec, IntentfulStatus, IntentWatcher, Metadata, Secret, \
     Spec
-from .python_sdk_exceptions import PapieaServerException
 
 FilterResults = AttributeDict
 
@@ -52,38 +51,7 @@ class EntityCRUD(object):
         res = await self.api_instance.get("")
         return res.results
 
-    async def check_constructor(self):
-        if self.__constructor_present is None:
-            constructor_procedure = f"__{self.kind}_create"
-            try:
-                await self.invoke_kind_procedure(constructor_procedure, {})
-            except Exception as e:
-                # No constructor for this kind
-                if str(e) == f"Procedure {constructor_procedure} not found for kind {self.kind}":
-                    self.__constructor_present = False
-                else:
-                    self.__constructor_present = True
-
-    async def create(
-            self, input_data: Any, metadata_extension: Optional[Any] = None
-    ) -> EntitySpec:
-        await self.check_constructor()
-        if self.__constructor_present:
-            payload = input_data
-            if metadata_extension is not None:
-                payload = {**payload, **metadata_extension}
-        else:
-            payload = {"spec": input_data}
-            if metadata_extension is not None:
-                payload["metadata"] = {"extension": metadata_extension}
-        return await self.api_instance.post("", payload)
-
-    async def create_with_meta(self, metadata: Metadata, input_data: Any) -> EntitySpec:
-        await self.check_constructor()
-        if self.__constructor_present:
-            payload = {**metadata, **input_data}
-        else:
-            payload = {"metadata": metadata, "spec": input_data}
+    async def create(self, payload: Any) -> EntitySpec:
         return await self.api_instance.post("", payload)
 
     async def update(self, metadata: Metadata, spec: Spec) -> EntitySpec:

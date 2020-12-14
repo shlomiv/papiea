@@ -36,12 +36,7 @@ async def ensure_bucket_exists(ctx, input_bucket_name):
 
             papiea_test.logger.debug("Bucket not found. Creating new bucket...")
 
-            bucket_ref = await bucket_entity_client.create(
-                input_data=Spec(name=input_bucket_name, objects=list()),
-                metadata_extension={
-                    "owner": "nutanix"
-                }
-            )
+            bucket_ref = await bucket_entity_client.create({"spec": Spec(name=input_bucket_name, objects=list())})
 
             ret_entity = await bucket_entity_client.get(bucket_ref.metadata)
 
@@ -124,12 +119,7 @@ async def create_object(ctx, entity_bucket, input_object_name):
             papiea_test.logger.debug("Object does not exist. Creating new object...")
 
             async with ctx.entity_client_for_user(papiea_test.object_kind_dict) as object_entity_client:
-                entity_object = await object_entity_client.create(
-                    Spec(content=""),
-                    metadata_extension={
-                        "owner": "nutanix"
-                    }
-                )
+                entity_object = await object_entity_client.create({"spec": Spec(content="")})
 
                 async with ctx.entity_client_for_user(papiea_test.bucket_kind_dict) as bucket_entity_client:
                     entity_bucket.spec.objects.append(

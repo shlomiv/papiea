@@ -2,15 +2,12 @@ import { kind_client, objectify } from './entity_client'
 
 async function main() {
 
-    const provider_prefix = 'location_provider_first'
-    const kind_name = 'location'
-
     console.log("Create an api for location kind")
-    const location_client = await kind_client("http://papiea:3000", "location_provider", "Location", "0.0.3")
+    const location_client = kind_client("http://papiea:3000", "location_provider", "Location", "0.0.3")
 
     {
         console.log("\nCreate a new location...")
-        const { metadata } = await location_client.create({ x: 10, y: 20 })
+        const { metadata } = await location_client.create({spec: { x: 10, y: 20 }})
         console.log("\tCreated location metadata", metadata)
 
         let entity = await location_client.get(metadata)
@@ -44,7 +41,7 @@ async function main() {
         // The same exact test as above but with immutable object representation
         const location_object = objectify(location_client)
         console.log("\nCreate a new location...")
-        const immloc = await location_object.create({ x: 10, y: 20 })
+        const immloc = await location_object.create({spec: { x: 10, y: 20 }})
         console.log("\tLocation created is:", immloc.entity)
 
         const manual_get = await location_object.get({uuid:immloc.entity.metadata.uuid, kind:"Location"})

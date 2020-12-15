@@ -1,3 +1,4 @@
+- Version 0.9.6+1821: Bump ini from 1.3.5 to 1.3.7 in /papiea-engine (#568) PR url: git@github.com:nutanix/papiea.git/pull/568
 - Version 0.9.5+1818: Bump cryptography from 2.3 to 3.2 in /papiea-sdk/python/e2e_tests (#536) PR url: git@github.com:nutanix/papiea.git/pull/536
 - Version 0.9.4+1815: Fixed payload on client to not collide with constructor implementation details (#570)
 - Version 0.9.3+1806: Added deprecate info for the replace_status sdk method and relavant tests. (#564) PR url: git@github.com:nutanix/papiea.git/pull/564

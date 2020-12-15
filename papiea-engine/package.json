@@ -1,6 +1,6 @@
 {
   "name": "papiea-engine",
-  "version": "0.9.3+1806",
+  "version": "0.9.4+1815",
   "description": "",
   "main": "build/main.js",
   "files": [

@@ -1,3 +1,4 @@
+- Version 0.9.4+1815: Fixed payload on client to not collide with constructor implementation details (#570)
 - Version 0.9.3+1806: Added deprecate info for the replace_status sdk method and relavant tests. (#564) PR url: git@github.com:nutanix/papiea.git/pull/564
 - Version 0.9.2+1800: Bump dot-prop from 4.2.0 to 4.2.1 in /papiea-engine (#544) PR url: git@github.com:nutanix/papiea.git/pull/544
 - Version 0.9.1+1796: Custom entity constructors implementation (#550)

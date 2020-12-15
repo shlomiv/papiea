@@ -1,3 +1,4 @@
+- Version 0.9.5+1818: Bump cryptography from 2.3 to 3.2 in /papiea-sdk/python/e2e_tests (#536) PR url: git@github.com:nutanix/papiea.git/pull/536
 - Version 0.9.4+1815: Fixed payload on client to not collide with constructor implementation details (#570)
 - Version 0.9.3+1806: Added deprecate info for the replace_status sdk method and relavant tests. (#564) PR url: git@github.com:nutanix/papiea.git/pull/564
 - Version 0.9.2+1800: Bump dot-prop from 4.2.0 to 4.2.1 in /papiea-engine (#544) PR url: git@github.com:nutanix/papiea.git/pull/544

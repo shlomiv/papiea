@@ -152,7 +152,7 @@ class TestBasic:
                 ) as entity_client:
 
                     entity = await entity_client.create(
-                        Spec(x=10, y=11)
+                        {"spec": Spec(x=10, y=11)}
                     )
                     updated_entity = await entity_client.get(entity.metadata)
 
@@ -182,7 +182,7 @@ class TestBasic:
                 ) as entity_client:
 
                     entity = await entity_client.create(
-                        Spec(x=10, y=11)
+                        {"spec": Spec(x=10, y=11)}
                     )
                     updated_entity = await entity_client.get(entity.metadata)
 
@@ -229,7 +229,7 @@ class TestBasic:
                 ) as entity_client:
 
                     entity = await entity_client.create(
-                        Spec(x=10, y=11)
+                        {"spec": Spec(x=10, y=11)}
                     )
                     await entity_client.invoke_procedure("moveX", entity.metadata, 5)
                     updated_entity = await entity_client.get(entity.metadata)

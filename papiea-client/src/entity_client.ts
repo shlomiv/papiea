@@ -62,30 +62,7 @@ function make_request<T = any, Y = AxiosPromise<T>>(f: (url: string, data?: any,
     }
 }
 
-async function create_entity(provider: string, kind: string, version: string, request_spec: Spec, papiea_url: string, meta_extension: any, s2skey: string, constructor_present: boolean): Promise<EntityCreationResult> {
-    let payload: any
-    if (constructor_present) {
-        payload = { ...request_spec, ...meta_extension}
-    } else {
-        payload = {
-            spec: request_spec,
-            ...(meta_extension) && { metadata: { extension: meta_extension } }
-        }
-    }
-    const { data: { metadata, spec, intent_watcher, status } } = await make_request<EntityCreationResult>(axios.post, `${ papiea_url }/services/${ provider }/${ version }/${ kind }`, payload, { headers: { "Authorization": `Bearer ${ s2skey }` } });
-    return { metadata, spec, intent_watcher, status };
-}
-
-async function create_entity_with_meta(provider: string, kind: string, version: string, meta: Partial<Metadata>, request_spec: Spec, papiea_url: string, s2skey: string, constructor_present: boolean): Promise<EntityCreationResult> {
-    let payload: any
-    if (constructor_present) {
-        payload = {...request_spec, ...meta}
-    } else {
-        payload = {
-            spec: request_spec,
-            metadata: meta
-        }
-    }
+async function create_entity(provider: string, kind: string, version: string, payload: any, papiea_url: string, s2skey: string): Promise<EntityCreationResult> {
     const { data: { metadata, spec, intent_watcher, status } } = await make_request<EntityCreationResult>(axios.post, `${ papiea_url }/services/${ provider }/${ version }/${ kind }`, payload, { headers: { "Authorization": `Bearer ${ s2skey }` } });
     return { metadata, spec, intent_watcher, status };
 }
@@ -185,12 +162,12 @@ async function wait_for_watcher_status(papiea_url: string, s2skey: string, watch
 }
 
 export interface ProviderClient {
-    get_kind(kind: string): Promise<EntityCRUD>
+    get_kind(kind: string): EntityCRUD
 
     invoke_procedure(procedure_name: string, input: any): Promise<any>
 }
 
-export async function provider_client(papiea_url: string, provider: string, version: string, s2skey?: string, meta_extension?: (s2skey: string) => any): Promise<ProviderClient> {
+export function provider_client(papiea_url: string, provider: string, version: string, s2skey?: string, meta_extension?: (s2skey: string) => any): ProviderClient {
     const the_s2skey = s2skey ?? 'anonymous'
     return {
         get_kind: (kind: string) => kind_client(papiea_url, provider, kind, version, the_s2skey, meta_extension),
@@ -203,8 +180,6 @@ export interface EntityCRUD {
     get(entity_reference: Entity_Reference): Promise<Entity>
 
     create(spec: Spec): Promise<EntityCreationResult>
-
-    create_with_meta(metadata: Partial<Metadata>, spec: Spec): Promise<EntityCreationResult>
 
     update(metadata: Metadata, spec: Spec): Promise<IntentWatcher | undefined>
 
@@ -221,23 +196,11 @@ export interface EntityCRUD {
     invoke_kind_procedure(procedure_name: string, input: any): Promise<any>
 }
 
-export async function kind_client(papiea_url: string, provider: string, kind: string, version: string, s2skey?: string, meta_extension?: (s2skey: string) => any): Promise<EntityCRUD> {
-    let constructor_present = false
-    const constructor_procedure = `__${kind}_create`
+export function kind_client(papiea_url: string, provider: string, kind: string, version: string, s2skey?: string, meta_extension?: (s2skey: string) => any): EntityCRUD {
     const the_s2skey = s2skey ?? 'anonymous'
-    try {
-        await invoke_kind_procedure(provider, kind, version, constructor_procedure, {}, papiea_url, the_s2skey)
-    } catch (e) {
-        if (e.response.data.error.message === `Procedure ${constructor_procedure} not found for kind ${kind}`) {
-            constructor_present = false
-        } else {
-            constructor_present = true
-        }
-    }
     const crudder: EntityCRUD = {
         get: (entity_reference: Entity_Reference) => get_entity(provider, kind, version, entity_reference, papiea_url, the_s2skey),
-        create: (spec: Spec) => create_entity(provider, kind, version, spec, papiea_url, meta_extension ? meta_extension(the_s2skey) : undefined, the_s2skey, constructor_present),
-        create_with_meta: (meta: Partial<Metadata>, spec: Spec) => create_entity_with_meta(provider, kind, version, meta, spec, papiea_url, the_s2skey, constructor_present),
+        create: (payload: any) => create_entity(provider, kind, version, payload, papiea_url, the_s2skey),
         update: (metadata: Metadata, spec: Spec) => update_entity(provider, kind, version, spec, metadata, papiea_url, the_s2skey),
         delete: (entity_reference: Entity_Reference) => delete_entity(provider, kind, version, entity_reference, papiea_url, the_s2skey),
         filter: (filter: any) => filter_entity(provider, kind, version, filter, papiea_url, the_s2skey),
@@ -309,8 +272,6 @@ export class ImmutableEntityObject implements EntityObjectCRUD {
 interface ImmutableEntityObjectBuilder {
     create(spec: Spec): Promise<ImmutableEntityObject>
 
-    create_with_meta(meta: Metadata, spec: Spec): Promise<ImmutableEntityObject>
-
     filter(filter: any): Promise<ImmutableEntityObject[]>
 
     get(entity_reference: Entity_Reference): Promise<ImmutableEntityObject>
@@ -318,8 +279,7 @@ interface ImmutableEntityObjectBuilder {
 
 export function objectify(c: EntityCRUD): ImmutableEntityObjectBuilder {
     return {
-        create: async (spec: Spec) => new ImmutableEntityObject(await c.create(spec), c).refresh(),
-        create_with_meta: async (meta: Partial<Metadata>, spec: Spec) => new ImmutableEntityObject(await c.create_with_meta(meta, spec), c).refresh(),
+        create: async (payload: any) => new ImmutableEntityObject(await c.create(payload), c).refresh(),
         filter: async (filter: any) => (await c.filter(filter)).results.map(e => new ImmutableEntityObject(e, c)),
         get: async (entity_reference: Entity_Reference) => new ImmutableEntityObject(await c.get(entity_reference), c)
     }

@@ -1741,7 +1741,7 @@ describe("SDK callback tests", () => {
         }
     });
 
-    test("Client should infer request format when on create callback is present", async () => {
+    test("Client should use appropriate request format when on create callback is present", async () => {
         expect.hasAssertions();
         const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
         const location = sdk.new_kind(location_yaml);
@@ -1776,7 +1776,7 @@ describe("SDK callback tests", () => {
         }
     });
 
-    test("Client should infer request format when on create callback is NOT present", async () => {
+    test("Client should use appropriate request format when on create callback is NOT present", async () => {
         expect.hasAssertions();
         const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
         const location = sdk.new_kind(location_yaml);
@@ -1793,7 +1793,7 @@ describe("SDK callback tests", () => {
             await sdk.register()
             kind_name = sdk.provider.kinds[0].name
             const client = await kind_client(papieaUrl, prefix, kind_name, provider_version, adminKey)
-            const entity = await client.create({x: 10, y: 11})
+            const entity = await client.create({spec: {x: 10, y: 11}})
             await entityApi.delete(`/${prefix}/${provider_version}/${kind_name}/${entity.metadata.uuid}`, {
                 headers: {
                     "Authorization": `Bearer ${adminKey}`
@@ -2150,10 +2150,10 @@ describe("SDK client tests", () => {
                 async (ctx, input) => {
                 const client = await ctx.get_provider_client(adminKey)
                 const kind_client = await client.get_kind(location.kind.name)
-                const entity_spec = await kind_client.create({
+                const entity_spec = await kind_client.create({spec: {
                     x: 100,
                     y: 150
-                })
+                }})
                 uuid = entity_spec.metadata.uuid
                 let cluster_location = "us.west.";
                 cluster_location += input;

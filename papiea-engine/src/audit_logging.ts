@@ -53,14 +53,15 @@ export class AuditLogger {
             url: req.originalUrl,
             status_code: res.statusCode,
         }
+        const verbose = this._logger.opts().verbosity_options.verbose
         const fields = this._logger.opts().verbosity_options.fields
-        if (fields.includes("headers")) {
+        if (verbose || fields.includes("headers")) {
             logmsg.headers = req.headers
         }
-        if (fields.includes("request_body") && req.body) {
+        if (verbose || (fields.includes("request_body") && req.body)) {
             logmsg.request_body = req.body
         }
-        if (fields.includes("response_body") && res.body) {
+        if (verbose || (fields.includes("response_body") && res.body)) {
             logmsg.response_body = res.body
         }
         if ((req as UserAuthInfoRequest).user) {

@@ -23,9 +23,10 @@ const papieaDebug = config.debug
 const entityPollDelay = config.entity_poll_delay
 const intentResolveDelay = config.intent_resolve_delay
 const diffResolveDelay = config.diff_resolve_delay
+const verbosityOptions = config.logging_verbosity
 
 async function setUpDiffResolver() {
-    const logger = LoggerFactory.makeLogger({level: loggingLevel});
+    const logger = LoggerFactory.makeLogger({level: loggingLevel, verbosity_options: verbosityOptions});
     const mongoConnection: MongoConnection = new MongoConnection(mongoUrl, mongoDb);
     await mongoConnection.connect();
 

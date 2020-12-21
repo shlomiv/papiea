@@ -1,6 +1,7 @@
 import * as fs from "fs"
 import { load } from "js-yaml"
 import * as path from "path"
+import {LoggingVerbosityOptions} from "papiea-backend-utils"
 
 const PAPIEA_CONFIG_PATH = process.env.PAPIEA_CONFIG_PATH ?? path.join(__dirname, "../../papiea-config.yaml")
 
@@ -8,10 +9,10 @@ const toNum: (val: string) => number = Number.parseInt
 const toStr: (val: string) => string = (val: string) => val
 const toBool: (val: string) => boolean = (val: string) => {
     return !["0", "null", "false", ""].includes(val);
-
 }
+const id: (val: any) => any = (val: any) => JSON.parse(JSON.stringify(val))
 
-const TRANSFORM_FN_MAP: { [key in keyof PapieaConfig]: (val: string) => PapieaConfig[key] } = {
+const TRANSFORM_FN_MAP: { [key in keyof PapieaConfig]: (val: any) => PapieaConfig[key] } = {
     server_port: toNum,
     entity_batch_size: toNum,
     deleted_watcher_persist_time: toNum,
@@ -23,11 +24,12 @@ const TRANSFORM_FN_MAP: { [key in keyof PapieaConfig]: (val: string) => PapieaCo
     mongo_url: toStr,
     mongo_db: toStr,
     admin_key: toStr,
-    logging_level: toStr
+    logging_level: toStr,
+    logging_verbosity: id
 }
 
 export interface PapieaConfig {
-    [k: string]: string | number | boolean
+    [k: string]: any
 
     // Server port
     server_port: number,
@@ -64,6 +66,9 @@ export interface PapieaConfig {
 
     // Delay for rediffing watcher entities in milliseconds
     diff_resolve_delay: number
+
+    // Config options for logging verbosity
+    logging_verbosity: LoggingVerbosityOptions
 }
 
 const PAPIEA_DEFAULT_CFG: PapieaConfig = {
@@ -78,7 +83,11 @@ const PAPIEA_DEFAULT_CFG: PapieaConfig = {
     deleted_watcher_persist_time: 100,
     entity_poll_delay: 250,
     intent_resolve_delay: 3000,
-    diff_resolve_delay: 1500
+    diff_resolve_delay: 1500,
+    logging_verbosity: {
+        verbose: false,
+        fields: []
+    }
 }
 
 export function getConfig(): PapieaConfig {

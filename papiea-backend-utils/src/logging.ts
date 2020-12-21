@@ -3,6 +3,13 @@ import {Format} from 'logform'
 
 import {inspect} from 'util'
 
+export type LoggingFieldOptions = "headers" | "request_body" | "response_body"
+
+export interface LoggingVerbosityOptions {
+    verbose: boolean,
+    fields: LoggingFieldOptions[]
+}
+
 export const LOG_LEVELS = {
     emerg: 0,
     alert: 1,
@@ -23,6 +30,7 @@ export function logLevelFromString(str: string) : LogLevel | undefined {
 }
 
 export interface Logger {
+    opts(): LoggerOptions
     log(level: LogLevel, msg: any, ...messages: any[]): void
 
     emerg(msg: any, ...messages: any[]): void
@@ -50,6 +58,7 @@ export type LoggerOptions = {
     logPath?: string,
     level: LogLevel,
     format: 'json' | 'pretty',
+    verbosity_options: LoggingVerbosityOptions
 }
 
 export class LoggerFactory {
@@ -79,6 +88,10 @@ export class LoggerFactory {
         this.options = LoggerFactory.mergeOptions({
             level: 'info',
             format: LoggerFactory.PRODUCTION ? 'json' : 'pretty',
+            verbosity_options: {
+                verbose: false,
+                fields: []
+            }
         }, options)
     }
 
@@ -145,7 +158,7 @@ export class LoggerFactory {
             ]
         })
 
-        return [new LoggerImpl(logger), new LoggerHandle(logger)]
+        return [new LoggerImpl(logger, opts), new LoggerHandle(logger)]
     }
 
     public static mergeOptions(first: LoggerOptions,
@@ -158,6 +171,7 @@ export class LoggerFactory {
             }
             if (opt.level) res.level = opt.level
             if (opt.format) res.format = opt.format
+            if (opt.verbosity_options) res.verbosity_options = opt.verbosity_options
             return res
         }, Object.assign({}, first))
     }
@@ -169,8 +183,13 @@ export class LoggerFactory {
 
 class LoggerImpl implements Logger {
     private readonly _logger: winston.Logger
+    private readonly _opts: LoggerOptions
 
-    constructor(logger: winston.Logger) { this._logger = logger }
+    constructor(logger: winston.Logger, opts: LoggerOptions) { this._logger = logger; this._opts = opts }
+
+    opts(): LoggerOptions {
+        return this._opts
+    }
 
     log(level: LogLevel, msg: any, ...messages: any[]): void {
         this._logger.log(level, msg, ...messages)

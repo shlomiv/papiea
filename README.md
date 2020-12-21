@@ -82,7 +82,7 @@ Now you can use your `${PAPIEA_INSTANCE_PUBLIC_IP}:3333` as PAPIEA_URL in benchm
 
 ## Environment Papiea-Engine
 
-Papiea uses configuration file to apply settings. Sample config file is located in `papiea-engine/papiea-config.json`.
+Papiea uses configuration file to apply settings. Sample config file is located in `papiea-engine/papiea-config.yaml`.
 The configuration parameters are following:
 
 ```
@@ -121,6 +121,16 @@ intent_resolve_delay: number
 
 # Delay for rediffing watcher entities in milliseconds (default - 3000)
 diff_resolve_delay: number
+
+# Config options for logging verbosity
+logging_verbosity: {
+
+    # If set to "true" includes all fields in the request log
+    verbose: boolean
+    
+    # Which fields to be set in request log
+    fields: ['headers' | 'response_body' | 'request_body']
+}
 ```
 
 A set of these variables might be used to override the preceeding config file params.

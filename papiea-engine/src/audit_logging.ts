@@ -7,12 +7,12 @@ import { UserAuthInfo, UserAuthInfoRequest } from "./auth/authn"
 import { safeJSONParse } from "./utils/utils"
 
 export interface AuditLogMessage {
-    request_ip: string,
     method: string,
     url: string,
-    headers: IncomingHttpHeaders,
     status_code: number,
-    response_body: any,
+    headers?: IncomingHttpHeaders,
+    request_ip?: string,
+    response_body?: any,
     request_body?: any,
     user?: UserAuthInfo
 }
@@ -51,12 +51,18 @@ export class AuditLogger {
             request_ip: req.ip,
             method: req.method,
             url: req.originalUrl,
-            headers: req.headers,
             status_code: res.statusCode,
-            response_body: res.body,
         }
-        if (req.method !== "GET") {
+        const verbose = this._logger.opts().verbosity_options.verbose
+        const fields = this._logger.opts().verbosity_options.fields
+        if (verbose || fields.includes("headers")) {
+            logmsg.headers = req.headers
+        }
+        if (verbose || (fields.includes("request_body") && req.body)) {
             logmsg.request_body = req.body
+        }
+        if (verbose || (fields.includes("response_body") && res.body)) {
+            logmsg.response_body = res.body
         }
         if ((req as UserAuthInfoRequest).user) {
             logmsg.user = (req as UserAuthInfoRequest).user

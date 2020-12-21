@@ -35,9 +35,10 @@ const mongoDb = config.mongo_db
 const adminKey = config.admin_key
 const loggingLevel = logLevelFromString(config.logging_level)
 const papieaDebug = config.debug
+const verbosityOptions = config.logging_verbosity
 
 async function setUpApplication(): Promise<express.Express> {
-    const logger = LoggerFactory.makeLogger({level: loggingLevel});
+    const logger = LoggerFactory.makeLogger({level: loggingLevel, verbosity_options: verbosityOptions});
     const auditLogger: AuditLogger = new AuditLogger(logger, papieaDebug)
     const app = express();
     app.use(cookieParser());

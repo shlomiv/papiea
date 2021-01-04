@@ -1,3 +1,4 @@
+- Version 0.9.9+1835: Added semantic version check for the papiea sdk requests (#573) PR url: git@github.com:nutanix/papiea.git/pull/573
 - Version 0.9.8+1831: Logging verbosity (#578) PR url: git@github.com:nutanix/papiea.git/pull/578
 - Version 0.9.7+1824: Added validation check to not allow required status-only fields in schema (#569) PR url: git@github.com:nutanix/papiea.git/pull/569
 - Version 0.9.6+1821: Bump ini from 1.3.5 to 1.3.7 in /papiea-engine (#568) PR url: git@github.com:nutanix/papiea.git/pull/568

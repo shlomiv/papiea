@@ -7,6 +7,7 @@ import { processPaginationParams, processSortQuery } from "../utils/utils";
 import { SortParams } from "./entity_api_impl";
 import { CheckNoQueryParams, check_request } from "../validator/express_validator";
 import {Version} from "papiea-core"
+import {track} from "../utils/tracing"
 
 const CheckProcedureCallParams = check_request({
     allowed_query_params: [],
@@ -105,7 +106,7 @@ export function createEntityAPIRouter(entity_api: Entity_API): Router {
         res.json(await paginateEntities(intent_watchers, skip, size))
     }))
 
-    router.get("/:prefix/:version/:kind", check_request({
+    router.get("/:prefix/:version/:kind", track("get_entity"), check_request({
         allowed_query_params: ['offset', 'limit', 'sort', 'spec', 'status', 'metadata', 'exact', 'deleted']
     }), asyncHandler(async (req, res) => {
         const filter: any = {};

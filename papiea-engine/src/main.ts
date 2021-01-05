@@ -25,6 +25,7 @@ import { AuditLogger } from "./audit_logging"
 import { BasicDiffer } from "./intentful_core/differ_impl"
 import { getConfig } from "./utils/arg_parser"
 import { getPapieaVersion } from "./utils/utils"
+import {track} from "./utils/tracing"
 const cookieParser = require('cookie-parser');
 const semver = require('semver')
 

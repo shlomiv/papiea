@@ -184,8 +184,8 @@ export function createEntityAPIRouter(entity_api: Entity_API): Router {
         res.json("OK")
     }));
 
-    router.post("/:prefix/:version/:kind/:uuid/procedure/:procedure_name", CheckProcedureCallParams, asyncHandler(async (req, res) => {
-        const result: any = await entity_api.call_procedure(req.user, req.params.prefix, req.params.kind, req.params.version, req.params.uuid, req.params.procedure_name, req.body.input);
+    router.post("/:prefix/:version/:kind/:uuid/procedure/:procedure_name", track("entity_procedure"), CheckProcedureCallParams, asyncHandler(async (req, res) => {
+        const result: any = await entity_api.call_procedure(req.user, req.params.prefix, req.params.kind, req.params.version, req.params.uuid, req.params.procedure_name, req.body.input, res.locals.ctx);
         res.json(result);
     }));
 

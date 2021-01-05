@@ -26,6 +26,7 @@ import {Provider_DB} from "../databases/provider_db_interface"
 import {IntentWatcherMapper} from "../intentful_engine/intent_interface"
 import {IntentWatcher_DB} from "../databases/intent_watcher_db_interface"
 import {Graveyard_DB} from "../databases/graveyard_db_interface"
+import {FORMAT_HTTP_HEADERS} from "opentracing"
 
 export type SortParams = { [key: string]: number };
 
@@ -156,7 +157,7 @@ export class Entity_API_Impl implements Entity_API {
         await strategy.delete({ metadata, spec, status })
     }
 
-    async call_procedure(user: UserAuthInfo, prefix: string, kind_name: string, version: Version, entity_uuid: uuid4, procedure_name: string, input: any): Promise<any> {
+    async call_procedure(user: UserAuthInfo, prefix: string, kind_name: string, version: Version, entity_uuid: uuid4, procedure_name: string, input: any, ctx: any): Promise<any> {
         const provider = await this.get_provider(prefix, version);
         const kind = this.providerDb.find_kind(provider, kind_name);
         const entity_spec: [Metadata, Spec] = await this.get_entity_spec(user, prefix, version, kind_name, entity_uuid);
@@ -176,6 +177,10 @@ export class Entity_API_Impl implements Entity_API {
             throw ProcedureInvocationError.fromError(err, 400)
         }
         try {
+            const {tracer, span: parent_span, headers} = ctx
+            const span = tracer.startSpan("procedure_invocation", { childOf: parent_span })
+            span.setTag("uuid", entity_uuid)
+            tracer.inject(span, FORMAT_HTTP_HEADERS, headers)
             const { data } = await axios.post(procedure.procedure_callback,
                 {
                     metadata: entity_spec[0],
@@ -183,8 +188,9 @@ export class Entity_API_Impl implements Entity_API {
                     status: entity_status[1],
                     input: input
                 }, {
-                    headers: user
+                    headers: {...headers, ...user}
                 });
+            span.finish()
             this.validator.validate(data, Object.values(procedure.result)[0], schemas,
                 provider.allowExtraProps, Object.keys(procedure.argument)[0], procedure_name);
             return data;

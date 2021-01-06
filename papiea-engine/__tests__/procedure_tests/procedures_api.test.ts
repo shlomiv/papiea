@@ -4,8 +4,6 @@ import axios from "axios"
 import { ProviderBuilder } from "../test_data_factory"
 import { Provider } from "papiea-core"
 import { Logger, LoggerFactory } from 'papiea-backend-utils';
-import {FORMAT_HTTP_HEADERS} from "opentracing"
-import {getTracer} from "../../src/utils/tracing"
 
 declare var process: {
     env: {
@@ -55,14 +53,8 @@ describe("Procedures tests", () => {
 
     test.only("Call entity_procedure", async () => {
         expect.hasAssertions();
-        const tracer = getTracer("TestProcedure")
         const server = http.createServer((req, res) => {
             if (req.method == 'POST') {
-                console.log(JSON.stringify(req.headers))
-                const parentSpanContext = tracer.extract(FORMAT_HTTP_HEADERS, req.headers)
-                const span = tracer.startSpan('Procedure', {
-                    childOf: parentSpanContext!,
-                });
                 let body = '';
                 req.on('data', function (data) {
                     body += data;
@@ -76,10 +68,8 @@ describe("Procedures tests", () => {
                     }).then(() => {
                         res.statusCode = 200;
                         res.setHeader('Content-Type', 'text/plain');
-                        span.finish()
                         res.end(JSON.stringify(post.spec));
                         server.close();
-                        tracer.close()
                     }).catch((err) => {
                         providerApiTestLogger.error(err);
                     });

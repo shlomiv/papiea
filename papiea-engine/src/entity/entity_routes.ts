@@ -7,7 +7,6 @@ import { processPaginationParams, processSortQuery } from "../utils/utils";
 import { SortParams } from "./entity_api_impl";
 import { CheckNoQueryParams, check_request } from "../validator/express_validator";
 import {Version} from "papiea-core"
-import {track} from "../utils/tracing"
 
 const CheckProcedureCallParams = check_request({
     allowed_query_params: [],
@@ -19,7 +18,7 @@ interface PaginatedResult {
     entity_count: number
 }
 
-export function createEntityAPIRouter(entity_api: Entity_API): Router {
+export function createEntityAPIRouter(entity_api: Entity_API, trace: Function): Router {
     const router = Router();
 
     const paginateEntities = async function(entities: any, skip: number, size: number): Promise<PaginatedResult> {
@@ -53,17 +52,17 @@ export function createEntityAPIRouter(entity_api: Entity_API): Router {
         return paginateEntities(entities, skip, size)
     };
 
-    router.post("/:prefix/:version/check_permission", CheckNoQueryParams, asyncHandler(async (req, res) => {
+    router.post("/:prefix/:version/check_permission", CheckNoQueryParams, trace("check_permission"), asyncHandler(async (req, res) => {
         res.json(await entity_api.check_permission(req.user, req.params.prefix, req.params.version, req.body))
     }));
 
-    router.get("/intent_watcher/:id", CheckNoQueryParams, asyncHandler(async (req, res) => {
+    router.get("/intent_watcher/:id", CheckNoQueryParams, trace("get_intent_watcher"), asyncHandler(async (req, res) => {
         res.json(await entity_api.get_intent_watcher(req.user, req.params.id))
     }))
 
     router.get("/intent_watcher", check_request({
         allowed_query_params: ['offset', 'limit', 'sort', 'entity_ref', 'created_at', 'status']
-    }), asyncHandler(async (req, res) => {
+    }), trace("filter_intent_watcher"), asyncHandler(async (req, res) => {
         const filter: any = {};
         const offset = queryToNum(req.query.offset);
         const limit = queryToNum(req.query.limit);
@@ -86,7 +85,7 @@ export function createEntityAPIRouter(entity_api: Entity_API): Router {
     router.post("/intent_watcher/filter", check_request({
         allowed_query_params: ['offset', 'limit', 'sort'],
         allowed_body_params: ['entity_ref', 'created_at', 'status']
-    }), asyncHandler(async (req, res) => {
+    }), trace("filter_intent_watcher"), asyncHandler(async (req, res) => {
         const filter: any = {};
         const offset = queryToNum(req.query.offset);
         const limit = queryToNum(req.query.limit);
@@ -106,9 +105,9 @@ export function createEntityAPIRouter(entity_api: Entity_API): Router {
         res.json(await paginateEntities(intent_watchers, skip, size))
     }))
 
-    router.get("/:prefix/:version/:kind", track("get_entity"), check_request({
+    router.get("/:prefix/:version/:kind", check_request({
         allowed_query_params: ['offset', 'limit', 'sort', 'spec', 'status', 'metadata', 'exact', 'deleted']
-    }), asyncHandler(async (req, res) => {
+    }), trace("filter_entity"), asyncHandler(async (req, res) => {
         const filter: any = {};
         const offset = queryToNum(req.query.offset);
         const limit = queryToNum(req.query.limit);
@@ -125,7 +124,7 @@ export function createEntityAPIRouter(entity_api: Entity_API): Router {
         res.json(await filterEntities(req.user, req.params.prefix, req.params.version, req.params.kind, filter, skip, size, searchDeleted, exactMatch, sortParams));
     }));
 
-    router.get("/:prefix/:version/:kind/:uuid", CheckNoQueryParams, asyncHandler(async (req, res) => {
+    router.get("/:prefix/:version/:kind/:uuid", CheckNoQueryParams, trace("get_entity"), asyncHandler(async (req, res) => {
         const [metadata, spec] = await entity_api.get_entity_spec(req.user, req.params.prefix, req.params.version, req.params.kind, req.params.uuid);
         const [_, status] = await entity_api.get_entity_status(req.user, req.params.prefix,
                                                                req.params.version, req.params.kind, req.params.uuid);
@@ -135,7 +134,7 @@ export function createEntityAPIRouter(entity_api: Entity_API): Router {
     router.post("/:prefix/:version/:kind/filter", check_request({
         allowed_query_params: ['offset', 'limit', 'sort', 'exact', 'deleted'],
         allowed_body_params: ['spec', 'status', 'metadata', 'offset', 'limit', 'sort']
-    }), asyncHandler(async (req, res) => {
+    }), trace("filter_entity"), asyncHandler(async (req, res) => {
         const offset = queryToNum(req.query.offset) ?? req.body.offset;
         const limit = queryToNum(req.query.limit) ?? req.body.limit;
         const rawSortQuery = queryToString(req.query.sort) ?? req.body.sort;
@@ -166,7 +165,7 @@ export function createEntityAPIRouter(entity_api: Entity_API): Router {
     router.put("/:prefix/:version/:kind/:uuid", check_request({
         allowed_query_params: [],
         allowed_body_params: ['metadata', 'spec']
-    }), asyncHandler(async (req, res) => {
+    }), trace("update_entity"), asyncHandler(async (req, res) => {
         const request_metadata = req.body.metadata;
         const watcher = await entity_api.update_entity_spec(req.user, req.params.uuid, req.params.prefix, request_metadata.spec_version, request_metadata.extension, req.params.kind, req.params.version, req.body.spec);
         res.json({ "watcher": watcher });
@@ -174,17 +173,17 @@ export function createEntityAPIRouter(entity_api: Entity_API): Router {
 
     router.post("/:prefix/:version/:kind", check_request({
         allowed_query_params: [],
-    }), asyncHandler(async (req, res) => {
+    }), trace("create_entity"), asyncHandler(async (req, res) => {
         const result = await entity_api.save_entity(req.user, req.params.prefix, req.params.kind, req.params.version, req.body);
         res.json(result);
     }));
 
-    router.delete("/:prefix/:version/:kind/:uuid", CheckNoQueryParams, asyncHandler(async (req, res) => {
+    router.delete("/:prefix/:version/:kind/:uuid", CheckNoQueryParams, trace("delete_entity"), asyncHandler(async (req, res) => {
         await entity_api.delete_entity(req.user, req.params.prefix, req.params.version, req.params.kind, req.params.uuid);
         res.json("OK")
     }));
 
-    router.post("/:prefix/:version/:kind/:uuid/procedure/:procedure_name", track("entity_procedure"), CheckProcedureCallParams, asyncHandler(async (req, res) => {
+    router.post("/:prefix/:version/:kind/:uuid/procedure/:procedure_name", CheckProcedureCallParams, trace("entity_procedure"), asyncHandler(async (req, res) => {
         const result: any = await entity_api.call_procedure(req.user, req.params.prefix, req.params.kind, req.params.version, req.params.uuid, req.params.procedure_name, req.body.input, res.locals.ctx);
         res.json(result);
     }));

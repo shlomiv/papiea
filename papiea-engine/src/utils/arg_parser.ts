@@ -2,6 +2,7 @@ import * as fs from "fs"
 import { load } from "js-yaml"
 import * as path from "path"
 import {LoggingVerbosityOptions} from "papiea-backend-utils"
+import {TracingConfig} from "jaeger-client"
 
 const PAPIEA_CONFIG_PATH = process.env.PAPIEA_CONFIG_PATH ?? path.join(__dirname, "../../papiea-config.yaml")
 
@@ -25,7 +26,8 @@ const TRANSFORM_FN_MAP: { [key in keyof PapieaConfig]: (val: any) => PapieaConfi
     mongo_db: toStr,
     admin_key: toStr,
     logging_level: toStr,
-    logging_verbosity: id
+    logging_verbosity: id,
+    tracing_config: id
 }
 
 export interface PapieaConfig {
@@ -68,7 +70,9 @@ export interface PapieaConfig {
     diff_resolve_delay: number
 
     // Config options for logging verbosity
-    logging_verbosity: LoggingVerbosityOptions
+    logging_verbosity: LoggingVerbosityOptions,
+
+    tracing_config: TracingConfig
 }
 
 const PAPIEA_DEFAULT_CFG: PapieaConfig = {
@@ -87,6 +91,18 @@ const PAPIEA_DEFAULT_CFG: PapieaConfig = {
     logging_verbosity: {
         verbose: false,
         fields: []
+    },
+    tracing_config: {
+        reporter: {
+            collectorEndpoint: "http://jaeger:14268/api/traces",
+            agentHost: "jaeger",
+            agentPort: 6832,
+            logSpans: true
+        },
+        sampler: {
+            type: "const",
+            param: 1
+        }
     }
 }
 

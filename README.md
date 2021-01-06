@@ -131,6 +131,19 @@ logging_verbosity: {
     # Which fields to be set in request log
     fields: ['headers' | 'response_body' | 'request_body']
 }
+
+# Config options for working with Jaeger 
+tracing_config: {
+    reporter: {
+        collectorEndpoint: string,
+        agentHost: string,
+        agentPort: number,
+    },
+    sampler: {
+        type: string,
+        param: number
+    }
+}
 ```
 
 A set of these variables might be used to override the preceeding config file params.

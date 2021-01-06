@@ -1905,6 +1905,35 @@ describe("SDK callback tests", () => {
         }
     });
 
+    test("Engine should reject incorrect entity creation format (constructor format for example)", async () => {
+        expect.hasAssertions();
+        const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
+        sdk.new_kind(location_yaml);
+        prefix = "constructor_format_provider"
+        sdk.version(provider_version);
+        sdk.prefix(prefix);
+        try {
+            await sdk.register();
+            const kind_name = sdk.provider.kinds[0].name;
+            const {
+                data: {
+                    metadata,
+                    spec
+                }
+            } = await axios.post(`${sdk.entity_url}/${sdk.provider.prefix}/${sdk.provider.version}/${kind_name}`, {
+                x: 10,
+                y: 11
+            }, {
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${adminKey}`,
+                }
+            });
+        } catch (e) {
+            expect(e.response.data.error.errors[0].message).toEqual("Spec was not provided or was provided in an incorrect format")
+        }
+    });
+
     test("Client should use appropriate request format when on create callback is present", async () => {
         expect.hasAssertions();
         const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);

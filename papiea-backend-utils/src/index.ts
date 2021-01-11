@@ -4,10 +4,15 @@ import {
 } from './logging';
 
 import {dotnotation} from './dotnotation'
-import {getTracer, getTracingMiddleware} from "./tracing"
+import {getTracer, getTracingMiddleware, TracingCtx, spanOperation, spanEntityOperation} from "./tracing"
+
+interface RequestContext {
+    tracing_ctx: TracingCtx
+}
 
 export {
     LOG_LEVELS, LogLevel, logLevelFromString, LoggerOptions, Logger,
     LoggerFactory, dotnotation, LoggerHandle, LoggingVerbosityOptions,
-    getTracer, getTracingMiddleware
+    getTracer, getTracingMiddleware, spanOperation, spanEntityOperation,
+    RequestContext
 };

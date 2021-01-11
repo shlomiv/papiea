@@ -133,6 +133,7 @@ logging_verbosity: {
 }
 
 # Config options for working with Jaeger 
+
 tracing_config: {
     reporter: {
         collectorEndpoint: string,

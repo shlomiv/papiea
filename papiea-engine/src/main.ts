@@ -93,7 +93,7 @@ async function setUpApplication(): Promise<express.Express> {
       })
     app.use(createAuthnRouter(logger, userAuthInfoExtractor));
     app.use(createOAuth2Router(logger, oauth2RedirectUri, providerDb, sessionKeyApi));
-    app.use('/provider', createProviderAPIRouter(providerApi));
+    app.use('/provider', createProviderAPIRouter(providerApi, trace));
     app.use('/services', createEntityAPIRouter(new Entity_API_Impl(logger, statusDb, specDb, graveyardDb, providerDb, intentWatcherDB, entityApiAuthorizer, validator, intentfulContext), trace));
     app.use('/api-docs', createAPIDocsRouter('/api-docs', new ApiDocsGenerator(providerDb), providerDb));
     app.use(function (err: any, req: any, res: any, next: any) {

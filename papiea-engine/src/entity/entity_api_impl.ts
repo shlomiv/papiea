@@ -20,13 +20,12 @@ import {
 } from "papiea-core"
 import {ProcedureInvocationError} from "../errors/procedure_invocation_error"
 import {PermissionDeniedError} from "../errors/permission_error"
-import {Logger} from "papiea-backend-utils"
+import {Logger, RequestContext, spanEntityOperation, spanOperation} from "papiea-backend-utils"
 import {IntentfulContext} from "../intentful_core/intentful_context"
 import {Provider_DB} from "../databases/provider_db_interface"
 import {IntentWatcherMapper} from "../intentful_engine/intent_interface"
 import {IntentWatcher_DB} from "../databases/intent_watcher_db_interface"
 import {Graveyard_DB} from "../databases/graveyard_db_interface"
-import {FORMAT_HTTP_HEADERS} from "opentracing"
 
 export type SortParams = { [key: string]: number };
 
@@ -57,14 +56,14 @@ export class Entity_API_Impl implements Entity_API {
         return this.providerDb.get_provider(prefix, version);
     }
 
-    async get_intent_watcher(user: UserAuthInfo, id: string): Promise<Partial<IntentWatcher>> {
+    async get_intent_watcher(user: UserAuthInfo, id: string, ctx: RequestContext): Promise<Partial<IntentWatcher>> {
         const intent_watcher = await this.intent_watcher_db.get_watcher(id)
         // TODO: this should be a separate authorizer not a PerProvider one
         // await this.authorizer.checkPermission(user, { "metadata": metadata }, Action.Update);
         return IntentWatcherMapper.toResponse(intent_watcher)
     }
 
-    async filter_intent_watcher(user: UserAuthInfo, fields: any, sortParams?: SortParams): Promise<Partial<IntentWatcher>[]> {
+    async filter_intent_watcher(user: UserAuthInfo, fields: any, ctx: RequestContext, sortParams?: SortParams): Promise<Partial<IntentWatcher>[]> {
         const intent_watchers = await this.intent_watcher_db.list_watchers(fields, sortParams)
         // TODO: this should be a separate authorizer not a PerProvider one
         // const filteredRes = await this.authorizer.filter(user, entities, Action.Update, x => { return { "metadata": x[0] } });
@@ -72,7 +71,7 @@ export class Entity_API_Impl implements Entity_API {
         return IntentWatcherMapper.toResponses(intent_watchers)
     }
 
-    async save_entity(user: UserAuthInfo, prefix: string, kind_name: string, version: Version, input: unknown): Promise<{
+    async save_entity(user: UserAuthInfo, prefix: string, kind_name: string, version: Version, input: unknown, ctx: RequestContext,): Promise<{
         intent_watcher: IntentWatcher | null,
         metadata: Metadata,
         spec: Spec,
@@ -84,7 +83,7 @@ export class Entity_API_Impl implements Entity_API {
         return await strategy.create(input)
     }
 
-    async get_entity_spec(user: UserAuthInfo, prefix: string, version: Version, kind_name: string, entity_uuid: uuid4): Promise<[Metadata, Spec]> {
+    async get_entity_spec(user: UserAuthInfo, prefix: string, version: Version, kind_name: string, entity_uuid: uuid4, ctx: RequestContext,): Promise<[Metadata, Spec]> {
         const provider = await this.get_provider(prefix, version);
         const entity_ref: Provider_Entity_Reference = { kind: kind_name, uuid: entity_uuid, provider_prefix: prefix, provider_version: version };
         const [metadata, spec] = await this.spec_db.get_spec(entity_ref);
@@ -92,7 +91,7 @@ export class Entity_API_Impl implements Entity_API {
         return [metadata, spec];
     }
 
-    async get_entity_status(user: UserAuthInfo, prefix: string, version: Version, kind_name: string, entity_uuid: uuid4): Promise<[Metadata, Status]> {
+    async get_entity_status(user: UserAuthInfo, prefix: string, version: Version, kind_name: string, entity_uuid: uuid4, ctx: RequestContext,): Promise<[Metadata, Status]> {
         const provider = await this.get_provider(prefix, version);
         const entity_ref: Provider_Entity_Reference = { provider_prefix: prefix, provider_version: version,
             kind: kind_name, uuid: entity_uuid };
@@ -101,7 +100,7 @@ export class Entity_API_Impl implements Entity_API {
         return [metadata, status];
     }
 
-    async filter_entity_spec(user: UserAuthInfo, prefix: string, version: Version, kind_name: string, fields: any, exact_match: boolean, sortParams?: SortParams): Promise<[Metadata, Spec][]> {
+    async filter_entity_spec(user: UserAuthInfo, prefix: string, version: Version, kind_name: string, fields: any, exact_match: boolean, ctx: RequestContext, sortParams?: SortParams): Promise<[Metadata, Spec][]> {
         const provider = await this.providerDb.get_provider(prefix, version);
         fields.metadata.kind = kind_name;
         const res = await this.spec_db.list_specs(fields, exact_match, sortParams);
@@ -111,7 +110,7 @@ export class Entity_API_Impl implements Entity_API {
         return filteredRes;
     }
 
-    async filter_entity_status(user: UserAuthInfo, prefix: string, version: Version, kind_name: string, fields: any, exact_match: boolean, sortParams?: SortParams): Promise<[Metadata, Status][]> {
+    async filter_entity_status(user: UserAuthInfo, prefix: string, version: Version, kind_name: string, fields: any, exact_match: boolean, ctx: RequestContext, sortParams?: SortParams): Promise<[Metadata, Status][]> {
         const provider = await this.providerDb.get_provider(prefix, version);
         fields.metadata.kind = kind_name;
         const res = await this.status_db.list_status(fields, exact_match, sortParams);
@@ -121,7 +120,7 @@ export class Entity_API_Impl implements Entity_API {
         return filteredRes;
     }
 
-    async filter_deleted(user: UserAuthInfo, prefix: string, version: Version, kind_name: string, fields: any, exact_match: boolean, sortParams?: SortParams): Promise<Entity[]> {
+    async filter_deleted(user: UserAuthInfo, prefix: string, version: Version, kind_name: string, fields: any, exact_match: boolean, ctx: RequestContext, sortParams?: SortParams): Promise<Entity[]> {
         const provider = await this.providerDb.get_provider(prefix, version);
         fields.metadata.kind = kind_name;
         const res = await this.graveyardDb.list_entities(fields, exact_match, sortParams)
@@ -131,7 +130,7 @@ export class Entity_API_Impl implements Entity_API {
         return filteredRes
     }
 
-    async update_entity_spec(user: UserAuthInfo, uuid: uuid4, prefix: string, spec_version: number, extension: {[key: string]: any}, kind_name: string, version: Version, spec_description: Spec): Promise<IntentWatcher | null> {
+    async update_entity_spec(user: UserAuthInfo, uuid: uuid4, prefix: string, spec_version: number, extension: {[key: string]: any}, kind_name: string, version: Version, spec_description: Spec, ctx: RequestContext): Promise<IntentWatcher | null> {
         const provider = await this.get_provider(prefix, version);
         const kind = this.providerDb.find_kind(provider, kind_name);
         this.validator.validate_spec(spec_description, kind, provider.allowExtraProps);
@@ -146,7 +145,7 @@ export class Entity_API_Impl implements Entity_API {
         return watcher;
     }
 
-    async delete_entity(user: UserAuthInfo, prefix: string, version: Version, kind_name: string, entity_uuid: uuid4): Promise<void> {
+    async delete_entity(user: UserAuthInfo, prefix: string, version: Version, kind_name: string, entity_uuid: uuid4, ctx: RequestContext): Promise<void> {
         const provider = await this.get_provider(prefix, version);
         const kind = this.providerDb.find_kind(provider, kind_name);
         const entity_ref: Provider_Entity_Reference = { kind: kind_name, uuid: entity_uuid, provider_prefix: prefix, provider_version: version };
@@ -157,12 +156,12 @@ export class Entity_API_Impl implements Entity_API {
         await strategy.delete({ metadata, spec, status })
     }
 
-    async call_procedure(user: UserAuthInfo, prefix: string, kind_name: string, version: Version, entity_uuid: uuid4, procedure_name: string, input: any, ctx: any): Promise<any> {
+    async call_procedure(user: UserAuthInfo, prefix: string, kind_name: string, version: Version, entity_uuid: uuid4, procedure_name: string, input: any, ctx: RequestContext): Promise<any> {
         const provider = await this.get_provider(prefix, version);
         const kind = this.providerDb.find_kind(provider, kind_name);
-        const entity_spec: [Metadata, Spec] = await this.get_entity_spec(user, prefix, version, kind_name, entity_uuid);
+        const entity_spec: [Metadata, Spec] = await this.get_entity_spec(user, prefix, version, kind_name, entity_uuid, ctx);
         const entity_status: [Metadata, Status] = await this.get_entity_status(
-            user, prefix, version, kind_name, entity_uuid);
+            user, prefix, version, kind_name, entity_uuid, ctx);
         const procedure: Procedural_Signature | undefined = kind.entity_procedures[procedure_name];
         if (procedure === undefined) {
             throw new Error(`Procedure ${procedure_name} not found for kind ${kind.name}`);
@@ -177,10 +176,9 @@ export class Entity_API_Impl implements Entity_API {
             throw ProcedureInvocationError.fromError(err, 400)
         }
         try {
-            const {tracer, span: parent_span, headers} = ctx
-            const span = tracer.startSpan("procedure_invocation", { childOf: parent_span })
-            span.setTag("uuid", entity_uuid)
-            tracer.inject(span, FORMAT_HTTP_HEADERS, headers)
+            const span = spanOperation(`entity_procedure_${procedure_name}`,
+                                             ctx.tracing_ctx,
+                                             {entity_uuid})
             const { data } = await axios.post(procedure.procedure_callback,
                 {
                     metadata: entity_spec[0],
@@ -188,7 +186,7 @@ export class Entity_API_Impl implements Entity_API {
                     status: entity_status[1],
                     input: input
                 }, {
-                    headers: {...headers, ...user}
+                    headers: {...ctx.tracing_ctx.headers, ...user}
                 });
             span.finish()
             this.validator.validate(data, Object.values(procedure.result)[0], schemas,
@@ -199,7 +197,7 @@ export class Entity_API_Impl implements Entity_API {
         }
     }
 
-    async call_provider_procedure(user: UserAuthInfo, prefix: string, version: Version, procedure_name: string, input: any): Promise<any> {
+    async call_provider_procedure(user: UserAuthInfo, prefix: string, version: Version, procedure_name: string, input: any, ctx: RequestContext): Promise<any> {
         const provider = await this.get_provider(prefix, version);
         if (provider.procedures === undefined) {
             throw new Error(`Procedure ${procedure_name} not found for provider ${prefix}`);
@@ -218,12 +216,15 @@ export class Entity_API_Impl implements Entity_API {
             throw ProcedureInvocationError.fromError(err, 400)
         }
         try {
+            const span = spanOperation(`provider_procedure_${procedure_name}`,
+                                             ctx.tracing_ctx)
             const { data } = await axios.post(procedure.procedure_callback,
                 {
                     input: input
                 }, {
-                    headers: user
+                    headers: {...ctx.tracing_ctx.headers, ...user}
                 });
+            span.finish()
             this.validator.validate(data, Object.values(procedure.result)[0], schemas,
                 provider.allowExtraProps, Object.keys(procedure.argument)[0], procedure_name);
             return data;
@@ -232,7 +233,7 @@ export class Entity_API_Impl implements Entity_API {
         }
     }
 
-    async call_kind_procedure(user: UserAuthInfo, prefix: string, kind_name: string, version: Version, procedure_name: string, input: any): Promise<any> {
+    async call_kind_procedure(user: UserAuthInfo, prefix: string, kind_name: string, version: Version, procedure_name: string, input: any, ctx: RequestContext,): Promise<any> {
         const provider = await this.get_provider(prefix, version);
         const kind = this.providerDb.find_kind(provider, kind_name);
         const procedure: Procedural_Signature | undefined = kind.kind_procedures[procedure_name];
@@ -249,12 +250,15 @@ export class Entity_API_Impl implements Entity_API {
             throw ProcedureInvocationError.fromError(err, 400)
         }
         try {
+            const span = spanOperation(`kind_procedure_${procedure_name}`,
+                                       ctx.tracing_ctx)
             const { data } = await axios.post(procedure.procedure_callback,
                 {
                     input: input
                 }, {
-                    headers: user
+                    headers: {...ctx.tracing_ctx.headers, ...user}
                 });
+            span.finish()
             this.validator.validate(data, Object.values(procedure.result)[0], schemas,
                 provider.allowExtraProps, Object.keys(procedure.argument)[0], procedure_name);
             return data;
@@ -263,7 +267,7 @@ export class Entity_API_Impl implements Entity_API {
         }
     }
 
-    async check_permission(user: UserAuthInfo, prefix: string, version: Version, entityAction: [Action, Provider_Entity_Reference][]): Promise<OperationSuccess> {
+    async check_permission(user: UserAuthInfo, prefix: string, version: Version, entityAction: [Action, Provider_Entity_Reference][], ctx: RequestContext): Promise<OperationSuccess> {
         const provider = await this.providerDb.get_provider(prefix, version)
         if (entityAction.length === 1) {
             return await this.check_single_permission(user, provider, entityAction[0])

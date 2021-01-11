@@ -7,7 +7,7 @@ import { Authorizer } from "../auth/authz";
 import { UserAuthInfo } from "../auth/authn";
 import { createHash } from "../auth/crypto";
 import { Action, Entity_Reference, Provider, S2S_Key, Secret, Status, Version } from "papiea-core";
-import { Logger } from "papiea-backend-utils";
+import {Logger, RequestContext} from "papiea-backend-utils"
 import { Watchlist_DB } from "../databases/watchlist_db_interface";
 import { SpecOnlyUpdateStrategy } from "../intentful_core/intentful_strategies/status_update_strategy";
 import { IntentfulContext } from "../intentful_core/intentful_context";
@@ -41,24 +41,24 @@ export class Provider_API_Impl implements Provider_API {
         this.validator = validator
     }
 
-    async register_provider(user: UserAuthInfo, provider: Provider): Promise<void> {
+    async register_provider(user: UserAuthInfo, provider: Provider, context: RequestContext): Promise<void> {
         await this.authorizer.checkPermission(user, provider, Action.RegisterProvider);
         this.validator.validate_provider(provider)
         this.validator.validate_sfs(provider)
         return this.providerDb.save_provider(provider);
     }
 
-    async list_providers(user: UserAuthInfo): Promise<Provider[]> {
+    async list_providers(user: UserAuthInfo, context: RequestContext): Promise<Provider[]> {
         const providers = await this.providerDb.list_providers();
         return this.authorizer.filter(user, providers, Action.ReadProvider);
     };
 
-    async unregister_provider(user: UserAuthInfo, provider_prefix: string, version: Version): Promise<void> {
+    async unregister_provider(user: UserAuthInfo, provider_prefix: string, version: Version, context: RequestContext): Promise<void> {
         await this.authorizer.checkPermission(user, {prefix: provider_prefix}, Action.UnregisterProvider);
         return this.providerDb.delete_provider(provider_prefix, version);
     }
 
-    async replace_status(user: UserAuthInfo, provider_prefix: string, version: Version, context: any, entity_ref: Entity_Reference, status: Status): Promise<void> {
+    async replace_status(user: UserAuthInfo, provider_prefix: string, version: Version, entity_ref: Entity_Reference, status: Status, context: RequestContext): Promise<void> {
         const provider: Provider = await this.providerDb.get_provider(provider_prefix, version);
         const kind = this.providerDb.find_kind(provider, entity_ref.kind)
         const strategy = this.intentfulContext.getStatusUpdateStrategy(kind, user)
@@ -72,7 +72,7 @@ export class Provider_API_Impl implements Provider_API {
         return strategy.replace({provider_prefix: provider_prefix, provider_version: version, ...entity_ref}, status)
     }
 
-    async update_status(user: UserAuthInfo, provider_prefix: string, version: Version, context: any, entity_ref: Entity_Reference, partialStatus: Status): Promise<void> {
+    async update_status(user: UserAuthInfo, provider_prefix: string, version: Version, entity_ref: Entity_Reference, partialStatus: Status, context: RequestContext): Promise<void> {
         const provider: Provider = await this.providerDb.get_provider(provider_prefix, version);
         const kind = this.providerDb.find_kind(provider, entity_ref.kind)
         const strategy = this.intentfulContext.getStatusUpdateStrategy(kind, user)
@@ -101,12 +101,12 @@ export class Provider_API_Impl implements Provider_API {
         return strategy.update({provider_prefix: provider_prefix, provider_version: version, ...entity_ref}, partialStatus)
     }
 
-    async update_progress(user: UserAuthInfo, context: any, message: string, done_percent: number): Promise<void> {
+    async update_progress(user: UserAuthInfo, provider_prefix: string, version: Version, message: string, done_percent: number, context: RequestContext): Promise<void> {
         // TODO(adolgarev)
         throw new Error("Not implemented");
     }
 
-    async power(user: UserAuthInfo, provider_prefix: string, version: Version, power_state: Provider_Power): Promise<void> {
+    async power(user: UserAuthInfo, provider_prefix: string, version: Version, power_state: Provider_Power, context: RequestContext): Promise<void> {
         // TODO(adolgarev)
         throw new Error("Not implemented");
     }
@@ -115,25 +115,17 @@ export class Provider_API_Impl implements Provider_API {
         return this.providerDb.get_provider(provider_prefix, provider_version);
     }
 
-    async get_provider(user: UserAuthInfo, provider_prefix: string, provider_version: Version): Promise<Provider> {
+    async get_provider(user: UserAuthInfo, provider_prefix: string, provider_version: Version, context: RequestContext): Promise<Provider> {
         await this.authorizer.checkPermission(user, {prefix: provider_prefix}, Action.ReadProvider);
         return this.providerDb.get_provider(provider_prefix, provider_version);
     }
 
-    async list_providers_by_prefix(user: UserAuthInfo, provider_prefix: string): Promise<Provider[]> {
+    async list_providers_by_prefix(user: UserAuthInfo, provider_prefix: string, context: RequestContext): Promise<Provider[]> {
         const res = await this.providerDb.find_providers(provider_prefix);
         return this.authorizer.filter(user, res, Action.ReadProvider);
     }
 
-    async get_latest_provider(user: UserAuthInfo, provider_prefix: string): Promise<Provider> {
-        return this.providerDb.get_latest_provider(provider_prefix);
-    }
-
-    async get_latest_provider_by_kind(user: UserAuthInfo, kind_name: string): Promise<Provider> {
-        return await this.providerDb.get_latest_provider_by_kind(kind_name);
-    }
-
-    async update_auth(user: UserAuthInfo, provider_prefix: string, provider_version: Version, auth: any): Promise<void> {
+    async update_auth(user: UserAuthInfo, provider_prefix: string, provider_version: Version, auth: any, context: RequestContext): Promise<void> {
         const provider: Provider = await this.get_provider_unchecked(provider_prefix, provider_version);
         await this.authorizer.checkPermission(user, provider, Action.UpdateAuth);
         if (auth.authModel !== undefined) {
@@ -151,7 +143,7 @@ export class Provider_API_Impl implements Provider_API {
         }
     }
 
-    async create_key(user: UserAuthInfo, name: string, owner: string, provider_prefix: string, user_info?: any, key?: Secret): Promise<S2S_Key> {
+    async create_key(user: UserAuthInfo, name: string, owner: string, provider_prefix: string, context: RequestContext, user_info?: any, key?: Secret): Promise<S2S_Key> {
         // - name is not mandatory, displayed in UI
         // - owner is the owner of the key (usually email),
         // it is not unique, different providers may have same owner
@@ -179,19 +171,19 @@ export class Provider_API_Impl implements Provider_API {
         return this.s2skeyDb.get_key(s2skey.uuid);
     }
 
-    async get_key(user: UserAuthInfo, uuid: string): Promise<S2S_Key> {
+    async get_key(user: UserAuthInfo, uuid: string, context: RequestContext): Promise<S2S_Key> {
         const s2skey = await this.s2skeyDb.get_key(uuid);
         await this.authorizer.checkPermission(user, s2skey, Action.ReadS2SKey);
         return s2skey;
     }
 
-    async inactivate_key(user: UserAuthInfo, uuid: string): Promise<void> {
+    async inactivate_key(user: UserAuthInfo, uuid: string, context: RequestContext): Promise<void> {
         const s2skey: S2S_Key = await this.s2skeyDb.get_key(uuid);
         await this.authorizer.checkPermission(user, s2skey, Action.InactivateS2SKey);
         await this.s2skeyDb.inactivate_key(s2skey.uuid);
     }
 
-    async filter_keys(user: UserAuthInfo, fields: any): Promise<S2S_Key[]> {
+    async filter_keys(user: UserAuthInfo, fields: any, context: RequestContext): Promise<S2S_Key[]> {
         const res = await this.s2skeyDb.list_keys(fields);
         let secret;
         for (let s2s_key of res) {

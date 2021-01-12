@@ -51,7 +51,7 @@ describe("Procedures tests", () => {
         await providerApi.delete(`/${provider.prefix}/${provider.version}`);
     });
 
-    test.only("Call entity_procedure", async () => {
+    test("Call entity_procedure", async () => {
         expect.hasAssertions();
         const server = http.createServer((req, res) => {
             if (req.method == 'POST') {

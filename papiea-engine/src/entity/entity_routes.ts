@@ -189,12 +189,12 @@ export function createEntityAPIRouter(entity_api: Entity_API, trace: Function): 
         res.json(result);
     }));
 
-    router.post("/:prefix/:version/:kind/procedure/:procedure_name", CheckProcedureCallParams, asyncHandler(async (req, res) => {
+    router.post("/:prefix/:version/:kind/procedure/:procedure_name", CheckProcedureCallParams, trace("kind_procedure"), asyncHandler(async (req, res) => {
         const result: any = await entity_api.call_kind_procedure(req.user, req.params.prefix, req.params.kind, req.params.version, req.params.procedure_name, req.body.input, res.locals.ctx);
         res.json(result);
     }));
 
-    router.post("/:prefix/:version/procedure/:procedure_name", CheckProcedureCallParams, asyncHandler(async (req, res) => {
+    router.post("/:prefix/:version/procedure/:procedure_name", CheckProcedureCallParams, trace("provider_procedure"), asyncHandler(async (req, res) => {
         const result: any = await entity_api.call_provider_procedure(req.user, req.params.prefix, req.params.version, req.params.procedure_name, req.body.input, res.locals.ctx);
         res.json(result);
     }));

@@ -87,13 +87,13 @@ class EntityCRUD(object):
     async def invoke_procedure(
             self, procedure_name: str, entity_reference: EntityReference, input_: Any
     ) -> Any:
-        payload = {"input": input_}
+        payload = input_
         return await self.api_instance.post(
             f"{entity_reference.uuid}/procedure/{procedure_name}", payload
         )
 
     async def invoke_kind_procedure(self, procedure_name: str, input_: Any) -> Any:
-        payload = {"input": input_}
+        payload = input_
         return await self.api_instance.post(f"procedure/{procedure_name}", payload)
 
 
@@ -194,5 +194,5 @@ class ProviderClient(object):
         )
 
     async def invoke_procedure(self, procedure_name: str, input: Any) -> Any:
-        payload = {"input": input}
+        payload = input
         return await self.api_instance.post(f"procedure/{procedure_name}", payload)

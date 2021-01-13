@@ -9,8 +9,7 @@ import { CheckNoQueryParams, check_request } from "../validator/express_validato
 import {Version} from "papiea-core"
 
 const CheckProcedureCallParams = check_request({
-    allowed_query_params: [],
-    allowed_body_params: ['input']
+    allowed_query_params: []
 });
 
 interface PaginatedResult {
@@ -184,17 +183,17 @@ export function createEntityAPIRouter(entity_api: Entity_API): Router {
     }));
 
     router.post("/:prefix/:version/:kind/:uuid/procedure/:procedure_name", CheckProcedureCallParams, asyncHandler(async (req, res) => {
-        const result: any = await entity_api.call_procedure(req.user, req.params.prefix, req.params.kind, req.params.version, req.params.uuid, req.params.procedure_name, req.body.input);
+        const result: any = await entity_api.call_procedure(req.user, req.params.prefix, req.params.kind, req.params.version, req.params.uuid, req.params.procedure_name, req.body);
         res.json(result);
     }));
 
     router.post("/:prefix/:version/:kind/procedure/:procedure_name", CheckProcedureCallParams, asyncHandler(async (req, res) => {
-        const result: any = await entity_api.call_kind_procedure(req.user, req.params.prefix, req.params.kind, req.params.version, req.params.procedure_name, req.body.input);
+        const result: any = await entity_api.call_kind_procedure(req.user, req.params.prefix, req.params.kind, req.params.version, req.params.procedure_name, req.body);
         res.json(result);
     }));
 
     router.post("/:prefix/:version/procedure/:procedure_name", CheckProcedureCallParams, asyncHandler(async (req, res) => {
-        const result: any = await entity_api.call_provider_procedure(req.user, req.params.prefix, req.params.version, req.params.procedure_name, req.body.input);
+        const result: any = await entity_api.call_provider_procedure(req.user, req.params.prefix, req.params.version, req.params.procedure_name, req.body);
         res.json(result);
     }));
 

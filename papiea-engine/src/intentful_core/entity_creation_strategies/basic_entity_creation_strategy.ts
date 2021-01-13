@@ -7,12 +7,16 @@ import {Graveyard_DB} from "../../databases/graveyard_db_interface"
 import {Watchlist_DB} from "../../databases/watchlist_db_interface"
 import {Validator} from "../../validator"
 import {Authorizer} from "../../auth/authz"
+import {RequestContext, spanOperation} from "papiea-backend-utils"
 
 export class BasicEntityCreationStrategy extends EntityCreationStrategy {
-    public async create(input: {metadata: Metadata, spec: Spec}): Promise<EntityCreationResult> {
+    public async create(input: {metadata: Metadata, spec: Spec}, ctx: RequestContext): Promise<EntityCreationResult> {
         const metadata = await this.create_metadata(input.metadata ?? {})
         await this.validate_entity({metadata, spec: input.spec, status: input.spec})
+        const span = spanOperation(`save_entity_db`,
+                                   ctx.tracing_ctx)
         const [created_metadata, spec] = await this.create_entity(metadata, input.spec)
+        span.finish()
         if (this.kind?.intentful_behaviour === IntentfulBehaviour.Differ) {
             const watchlist = await this.watchlistDb.get_watchlist()
             const ent = create_entry(created_metadata)

@@ -19,17 +19,27 @@ const defaultSampler = {
 
 export interface TracingCtx {
     headers: IncomingHttpHeaders,
-    parentSpan: Span,
+    parentSpan?: Span,
     tracer: Tracer
 }
 
-export function getTracer(serviceName: string, logger: Logger, reporterConfig?: ReporterConfig, samplerConfig?: SamplerConfig): Tracer {
+const defaultLogger = {
+    info: (msg: string) => {
+        console.log("JAEGER INFO ", msg);
+    },
+    error: (msg: string) => {
+        console.log("JAEGER ERROR", msg);
+    }
+};
+
+export function getTracer(serviceName: string, logger?: Logger, reporterConfig?: ReporterConfig, samplerConfig?: SamplerConfig): Tracer {
+    const tracerLogger = logger ?? defaultLogger
     const config = {
         serviceName: serviceName,
         reporter: reporterConfig ?? defaultReporter,
         sampler: samplerConfig ?? defaultSampler
     }
-    return initTracer(config, {logger})
+    return initTracer(config, {logger: tracerLogger})
 }
 
 export function getTracingMiddleware(tracer: Tracer) {
@@ -61,8 +71,13 @@ export function getTracingMiddleware(tracer: Tracer) {
 }
 
 export function spanOperation(operationName: string, ctx: TracingCtx, tags?: {[key: string]: any}): Span {
+    let span: Span
     const {headers, parentSpan, tracer} = ctx
-    const span = tracer.startSpan(operationName, { childOf: parentSpan })
+    if (parentSpan !== undefined && parentSpan !== null) {
+        span = tracer.startSpan(operationName, { childOf: parentSpan })
+    } else {
+        span = tracer.startSpan(operationName)
+    }
     if (tags) {
         for (let prop in tags) {
             span.setTag(prop, tags[prop])

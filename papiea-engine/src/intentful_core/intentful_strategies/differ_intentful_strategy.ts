@@ -1,13 +1,14 @@
 import { IntentfulStrategy } from "./intentful_strategy_interface"
 import { Spec_DB } from "../../databases/spec_db_interface"
 import { Status_DB } from "../../databases/status_db_interface"
-import { Differ, Metadata, Spec, IntentWatcher } from "papiea-core"
+import { Action, Differ, Metadata, Spec, IntentWatcher } from "papiea-core"
 import { IntentWatcher_DB } from "../../databases/intent_watcher_db_interface"
 import { IntentfulStatus } from "papiea-core"
 import { Watchlist_DB } from "../../databases/watchlist_db_interface";
 import uuid = require("uuid")
 import { create_entry } from "../../intentful_engine/watchlist";
 import { Graveyard_DB } from "../../databases/graveyard_db_interface"
+import { Authorizer } from "../../auth/authz"
 
 export class DifferIntentfulStrategy extends IntentfulStrategy {
     protected differ: Differ

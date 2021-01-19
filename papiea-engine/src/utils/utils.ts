@@ -1,6 +1,7 @@
 import { SortParams } from "../entity/entity_api_impl"
 import { ValidationError } from "../errors/validation_error"
 import { AxiosError } from "axios"
+import { Logger } from "papiea-backend-utils"
 
 function validatePaginationParams(offset: number | undefined, limit: number | undefined) {
     if (offset !== undefined) {
@@ -125,8 +126,22 @@ export function deepMerge(target: any, ...sources: any[]): any {
     return deepMerge(target, ...sources);
 }
 
-export function calculateBackoff(retries: number, maximumBackoff: number, entropy: number) {
-    return Math.min(Math.pow(2, retries) + entropy, maximumBackoff)
+export function getCalculateBackoffFn(papieaDebug: boolean, retryExponent: number, logger: Logger) {
+    let exponent: number
+    if (papieaDebug) {
+        logger.debug("Debug flag is set. Setting the diff retry exponent to 1.3")
+        exponent = 1.3
+    } else {
+        exponent = retryExponent
+    }
+    return (retries?: number, maximumBackoff?: number, entropy?: number) => {
+        if (retries !== undefined && retries != null &&
+            maximumBackoff !== undefined && maximumBackoff !== null &&
+            entropy !== undefined && entropy !== null) {
+            return Math.min(Math.pow(exponent, retries) + entropy, maximumBackoff)
+        }
+        return 10
+    }
 }
 
 export function getEntropyFn(papieaDebug: boolean) {

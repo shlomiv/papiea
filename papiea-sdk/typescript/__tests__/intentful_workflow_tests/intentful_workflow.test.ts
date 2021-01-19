@@ -320,7 +320,7 @@ describe("Intentful Workflow tests single provider", () => {
                 }
             })
             await timeout(18000)
-            expect(times_requested).toBeLessThanOrEqual(4)
+            expect(times_requested).toBeLessThanOrEqual(5)
         } finally {
             sdk.server.close();
         }

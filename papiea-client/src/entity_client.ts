@@ -94,7 +94,7 @@ async function update_entity(provider: string, kind: string, version: string, re
 
 async function get_entity(provider: string, kind: string, version: string, entity_reference: Entity_Reference, papiea_url: string, s2skey: string, tracer: Tracer): Promise<Entity> {
     const headers = getHeaders(s2skey)
-    const span = spanOperation("update_entity_client", {headers, tracer}, {entity_uuid: entity_reference.uuid})
+    const span = spanOperation("get_entity_client", {headers, tracer}, {entity_uuid: entity_reference.uuid})
     const { data: { metadata, spec, status } } = await make_request(axios.get, `${ papiea_url }/services/${ provider }/${ version }/${ kind }/${ entity_reference.uuid }`,
         {headers});
     span.finish()

@@ -104,7 +104,7 @@ export class ConstructorEntityCreationStrategy extends EntityCreationStrategy {
                     this.validator.validate(input, Object.values(constructor.argument)[0], schemas,
                                             this.provider.allowExtraProps,
                                             Object.keys(constructor.argument)[0], "Constructor procedure")
-                    const span = spanOperation(`constructor`,
+                    const span = spanOperation(`custom_constructor`,
                                                ctx.tracing_ctx)
                     const {data} = await axios.post<Entity>(this.kind.kind_procedures[procedure_name].procedure_callback, {
                         input

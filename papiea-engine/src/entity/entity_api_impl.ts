@@ -20,7 +20,7 @@ import {
 } from "papiea-core"
 import {ProcedureInvocationError} from "../errors/procedure_invocation_error"
 import {PermissionDeniedError} from "../errors/permission_error"
-import {Logger, RequestContext, spanEntityOperation, spanOperation} from "papiea-backend-utils"
+import {Logger, RequestContext, getTraceHeaders, spanOperation} from "papiea-backend-utils"
 import {IntentfulContext} from "../intentful_core/intentful_context"
 import {Provider_DB} from "../databases/provider_db_interface"
 import {IntentWatcherMapper} from "../intentful_engine/intent_interface"
@@ -208,7 +208,7 @@ export class Entity_API_Impl implements Entity_API {
                     status: entity_status[1],
                     input: input
                 }, {
-                    headers: {...ctx.tracing_ctx.headers, ...user}
+                    headers: {...getTraceHeaders(ctx.tracing_ctx.headers), ...user}
                 });
             span.finish()
             this.validator.validate(data, Object.values(procedure.result)[0], schemas,
@@ -244,7 +244,7 @@ export class Entity_API_Impl implements Entity_API {
                 {
                     input: input
                 }, {
-                    headers: {...ctx.tracing_ctx.headers, ...user}
+                    headers: {...getTraceHeaders(ctx.tracing_ctx.headers), ...user}
                 });
             span.finish()
             this.validator.validate(data, Object.values(procedure.result)[0], schemas,
@@ -278,7 +278,7 @@ export class Entity_API_Impl implements Entity_API {
                 {
                     input: input
                 }, {
-                    headers: {...ctx.tracing_ctx.headers, ...user}
+                    headers: {...getTraceHeaders(ctx.tracing_ctx.headers), ...user}
                 });
             span.finish()
             this.validator.validate(data, Object.values(procedure.result)[0], schemas,

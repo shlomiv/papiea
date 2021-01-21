@@ -70,6 +70,13 @@ export function getTracingMiddleware(tracer: Tracer) {
     }
 }
 
+export function getTraceHeaders(headers: any) {
+    const traceId = headers["uber-trace-id"]
+    if (traceId) {
+        return {"uber-trace-id": traceId}
+    }
+}
+
 export function spanOperation(operationName: string, ctx: TracingCtx, tags?: {[key: string]: any}): Span {
     let span: Span
     const {headers, parentSpan, tracer} = ctx

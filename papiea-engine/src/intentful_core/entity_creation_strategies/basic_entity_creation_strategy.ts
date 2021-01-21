@@ -8,10 +8,14 @@ import {Watchlist_DB} from "../../databases/watchlist_db_interface"
 import {Validator} from "../../validator"
 import {Authorizer} from "../../auth/authz"
 import {RequestContext, spanOperation} from "papiea-backend-utils"
+import {ValidationError} from "../../errors/validation_error"
 
 export class BasicEntityCreationStrategy extends EntityCreationStrategy {
     public async create(input: {metadata: Metadata, spec: Spec}, ctx: RequestContext): Promise<EntityCreationResult> {
         const metadata = await this.create_metadata(input.metadata ?? {})
+        if (input.spec === undefined || input.spec === null) {
+            throw new ValidationError([new Error("Spec was not provided or was provided in an incorrect format")])
+        }
         await this.validate_entity({metadata, spec: input.spec, status: input.spec})
         const span = spanOperation(`save_entity_db`,
                                    ctx.tracing_ctx)

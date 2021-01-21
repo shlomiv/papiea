@@ -1,3 +1,5 @@
+- Version 0.9.11+1862: Added authorizer for intent watcher related operations (#591) PR url: git@github.com:nutanix/papiea.git/pull/591
+- Version 0.9.10+1845: added test and check for the wrong format (#590)
 - Version 0.9.9+1835: Added semantic version check for the papiea sdk requests (#573) PR url: git@github.com:nutanix/papiea.git/pull/573
 - Version 0.9.8+1831: Logging verbosity (#578) PR url: git@github.com:nutanix/papiea.git/pull/578
 - Version 0.9.7+1824: Added validation check to not allow required status-only fields in schema (#569) PR url: git@github.com:nutanix/papiea.git/pull/569

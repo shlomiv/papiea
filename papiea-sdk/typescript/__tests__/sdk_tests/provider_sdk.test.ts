@@ -85,6 +85,7 @@ describe("Provider Sdk tests", () => {
             expect(err).not.toBeNull();
             done();
         }
+        sdk.cleanup()
     });
     test("Provider can create a new kind", (done) => {
         const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
@@ -99,10 +100,10 @@ describe("Provider Sdk tests", () => {
             sdk.new_kind(location_yaml);
             sdk.prefix("test_provider");
             await sdk.register();
-            sdk.cleanup()
         } catch (err) {
             expect(err.message).toBe("Malformed provider description. Missing: version");
         }
+        sdk.cleanup()
     });
     test("Provider without kind should fail to register", async () => {
         expect.hasAssertions();
@@ -115,6 +116,7 @@ describe("Provider Sdk tests", () => {
         } catch (err) {
             expect(err.message).toBe("Malformed provider description. Missing: kind");
         }
+        sdk.cleanup()
     });
     test("Provider without prefix should fail to register", async () => {
         expect.hasAssertions();
@@ -123,16 +125,17 @@ describe("Provider Sdk tests", () => {
             sdk.new_kind(location_yaml);
             sdk.version(provider_version);
             await sdk.register();
-            sdk.cleanup()
         } catch (err) {
             expect(err.message).toBe("Malformed provider description. Missing: prefix");
         }
+        sdk.cleanup()
     });
     test("Add multiple kinds shouldn't fail", (done) => {
         const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
         const geo_location_yaml = JSON.parse(JSON.stringify(location_yaml));
         sdk.new_kind(location_yaml);
         sdk.new_kind(geo_location_yaml);
+        sdk.cleanup()
         done();
     });
     let location_kind_manager: Kind_Builder;
@@ -141,12 +144,14 @@ describe("Provider Sdk tests", () => {
         location_kind_manager = sdk.new_kind(location_yaml);
         expect(sdk.remove_kind(location_kind_manager.kind)).toBeTruthy();
         expect(sdk.remove_kind(location_kind_manager.kind)).toBeFalsy();
+        sdk.cleanup()
         done();
     });
     test("Duplicate add on kind should return false", (done) => {
         const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
         expect(sdk.add_kind(location_kind_manager.kind)).not.toBeNull();
         expect(sdk.add_kind(location_kind_manager.kind)).toBeNull();
+        sdk.cleanup()
         done();
     });
     test("Provider should be created on papiea", async () => {
@@ -156,7 +161,7 @@ describe("Provider Sdk tests", () => {
         sdk.prefix("location_provider");
         await sdk.register();
         try {
-            sdk.server.close()
+            sdk.cleanup()
         } catch (e) {
         }
     });
@@ -275,6 +280,7 @@ describe("Provider Sdk tests", () => {
         } catch (e) {
             expect(e.message).toBe("Malformed provider description. Missing: prefix");
         }
+        sdk.cleanup()
     });
 
     test("Provider with kind level procedures should be created on papiea", async () => {
@@ -994,7 +1000,7 @@ describe("Provider Sdk tests", () => {
             }
         }
     }
-    test("Entity initialization after setting it to null should succeed", async () => {
+    test.only("Entity initialization after setting it to null should succeed", async () => {
         expect.assertions(2);
         const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
         try {
@@ -1216,6 +1222,7 @@ describe("Provider Sdk tests", () => {
         } catch (e) {
             expect(e.response.data.error.errors[0].message).toBe("a of type 'status-only' is set to be required. Required fields cannot be 'status-only'")
         }
+        sdk.cleanup()
     });
 
     test("Create entity spec with status-only field set should fail", async () => {
@@ -1811,7 +1818,7 @@ describe("SDK + oauth provider tests", () => {
         } catch (e) {
             expect(e.response.data.error.errors[0].errors[0].message).toEqual('provider_prefix should not be specified in the request body')
         } finally {
-            sdk.server.close()
+            sdk.cleanup()
         }
     });
 
@@ -1886,7 +1893,7 @@ describe("SDK + oauth provider tests", () => {
             const intent_watcher = await watcherApi.get(watcher.uuid)
             expect(intent_watcher.status).toEqual(IntentfulStatus.Active)
         } finally {
-            sdk.server.close();
+            sdk.cleanup();
             await providerApiAdmin.post(`/${ sdk.provider.prefix }/${ sdk.provider.version }/auth`, {
                 policy: null
             });
@@ -1950,7 +1957,7 @@ describe("SDK + oauth provider tests", () => {
         } catch (e) {
             expect(e.response.data.error.errors[0].message).toBe("Permission denied.")
         } finally {
-            sdk.server.close();
+            sdk.cleanup();
             await providerApiAdmin.post(`/${ sdk.provider.prefix }/${ sdk.provider.version }/auth`, {
                 policy: null
             });
@@ -2052,7 +2059,7 @@ describe("SDK callback tests", () => {
                 }
             })
         } finally {
-            sdk.server.close()
+            sdk.cleanup()
         }
     });
 
@@ -2115,8 +2122,9 @@ describe("SDK callback tests", () => {
                     "Authorization": `Bearer ${adminKey}`
                 }
             })
+            client.close()
         } finally {
-            sdk.server.close()
+            sdk.cleanup()
         }
     });
 
@@ -2144,8 +2152,9 @@ describe("SDK callback tests", () => {
                 }
             })
             expect(entity.status.x).toEqual(10)
+            client.close()
         } finally {
-            sdk.server.close()
+            sdk.cleanup()
         }
     });
 
@@ -2468,7 +2477,9 @@ describe("SDK client tests", () => {
             "compute",
             {input_schema: loadYamlFromTestFactoryDir("./test_data/procedure_sum_input.yml")},
             async (ctx, input) => {
-                expect(ctx.get_provider_client()).toBeDefined()
+                const client = ctx.get_provider_client()
+                expect(client).toBeDefined()
+                client.close()
             }
         );
         try {
@@ -2501,6 +2512,7 @@ describe("SDK client tests", () => {
                 uuid = entity_spec.metadata.uuid
                 let cluster_location = "us.west.";
                 cluster_location += input;
+                kind_client.close()
                 return cluster_location
             }
         );
@@ -2520,7 +2532,7 @@ describe("SDK client tests", () => {
 
 class MockProceduralCtx implements ProceduralCtx_Interface {
 
-    public static create(provider_client_func: (key?: string) => Promise<ProviderClient>): MockProceduralCtx {
+    public static create(provider_client_func: (key?: string) => ProviderClient): MockProceduralCtx {
         const mock = new MockProceduralCtx()
         mock.get_provider_client = provider_client_func
         return mock
@@ -2558,7 +2570,7 @@ class MockProceduralCtx implements ProceduralCtx_Interface {
     get_logger(log_level?: string, pretty_print?: boolean): Logger {
         throw new Error("Method not implemented.");
     }
-    async get_provider_client(key?: string): Promise<ProviderClient> {
+    get_provider_client(key?: string): ProviderClient {
         throw new Error("Method not implemented.");
     }
     cleanup() {
@@ -2575,7 +2587,7 @@ describe("SDK client mock", () => {
             cluster_location += input;
             return cluster_location
         }
-        const mock_ctx = MockProceduralCtx.create(async key => {
+        const mock_ctx = MockProceduralCtx.create(key => {
             return {} as ProviderClient
         })
         const res = await location_procedure(mock_ctx, "2")

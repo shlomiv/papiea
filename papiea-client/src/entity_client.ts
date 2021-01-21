@@ -203,6 +203,8 @@ export interface ProviderClient {
     get_kind(kind: string): EntityCRUD
 
     invoke_procedure(procedure_name: string, input: any): Promise<any>
+
+    close(): void
 }
 
 export function provider_client(papiea_url: string, provider: string, version: string, s2skey?: string, tracer?: Tracer): ProviderClient {
@@ -210,7 +212,8 @@ export function provider_client(papiea_url: string, provider: string, version: s
     const the_s2skey = s2skey ?? 'anonymous'
     return {
         get_kind: (kind: string) => kind_client(papiea_url, provider, kind, version, the_s2skey),
-        invoke_procedure: (proc_name: string, input: any) => invoke_provider_procedure(provider, version, proc_name, input, papiea_url, the_s2skey, client_tracer)
+        invoke_procedure: (proc_name: string, input: any) => invoke_provider_procedure(provider, version, proc_name, input, papiea_url, the_s2skey, client_tracer),
+        close: () => (client_tracer as any).close()
     }
 }
 
@@ -233,6 +236,8 @@ export interface EntityCRUD {
     invoke_procedure(procedure_name: string, entity_reference: Entity_Reference, input: any): Promise<any>
 
     invoke_kind_procedure(procedure_name: string, input: any): Promise<any>
+
+    close(): void
 }
 
 export function kind_client(papiea_url: string, provider: string, kind: string, version: string, s2skey?: string, tracer?: Tracer): EntityCRUD {
@@ -247,7 +252,8 @@ export function kind_client(papiea_url: string, provider: string, kind: string, 
         filter_iter: (filter: any) => filter_entity_iter(provider, kind, version, filter, papiea_url, the_s2skey, client_tracer),
         list_iter: () => filter_entity_iter(provider, kind, version, {}, papiea_url, the_s2skey, client_tracer),
         invoke_procedure: (proc_name: string, entity_reference: Entity_Reference, input: any) => invoke_entity_procedure(provider, kind, version, proc_name, input, entity_reference, papiea_url, the_s2skey, client_tracer),
-        invoke_kind_procedure: (proc_name: string, input: any) => invoke_kind_procedure(provider, kind, version, proc_name, input, papiea_url, the_s2skey, client_tracer)
+        invoke_kind_procedure: (proc_name: string, input: any) => invoke_kind_procedure(provider, kind, version, proc_name, input, papiea_url, the_s2skey, client_tracer),
+        close: () => (client_tracer as any).close()
     }
     return crudder
 }
@@ -260,6 +266,8 @@ export interface IntentWatcherClient {
     filter_iter(filter: any): Promise<FilterResults>
 
     wait_for_status_change(watcher_ref: any, watcher_status: IntentfulStatus, timeout_secs?: number, delay_millis?: number): Promise<boolean>
+
+    close(): void
 }
 
 export function intent_watcher_client(papiea_url: string, s2skey?: string, tracer?: Tracer): IntentWatcherClient {
@@ -269,7 +277,8 @@ export function intent_watcher_client(papiea_url: string, s2skey?: string, trace
         get: (id: string) => get_intent_watcher(papiea_url, id, the_s2skey, client_tracer),
         list_iter: () => filter_intent_watcher(papiea_url, "", the_s2skey, client_tracer),
         filter_iter: (filter: any) => filter_intent_watcher(papiea_url, filter, the_s2skey, client_tracer),
-        wait_for_status_change: (watcher_ref: any, watcher_status: IntentfulStatus, timeout_secs: number = 50, delay_millis: number = 500) => wait_for_watcher_status(papiea_url, the_s2skey, watcher_ref, watcher_status, timeout_secs, delay_millis, client_tracer)
+        wait_for_status_change: (watcher_ref: any, watcher_status: IntentfulStatus, timeout_secs: number = 50, delay_millis: number = 500) => wait_for_watcher_status(papiea_url, the_s2skey, watcher_ref, watcher_status, timeout_secs, delay_millis, client_tracer),
+        close: () => (client_tracer as any).close()
     }
     return intent_watcher
 }

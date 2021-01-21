@@ -1102,8 +1102,8 @@ describe("Intentful workflow multiple providers", () => {
         } catch (e) {
             console.log(`Error: ${e}`)
         } finally {
-            sdk1.server.close();
-            sdk2.server.close();
+            sdk1.cleanup();
+            sdk2.cleanup();
             expect(test_result).toBeTruthy()
         }
     })
@@ -1211,8 +1211,8 @@ describe("Intentful workflow multiple providers", () => {
         } catch (e) {
             console.log(`Error: ${e}`)
         } finally {
-            sdk1.server.close();
-            sdk2.server.close();
+            sdk1.cleanup();
+            sdk2.cleanup();
             expect(test_result).toBeTruthy()
         }
     })

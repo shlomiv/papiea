@@ -344,9 +344,16 @@ export class ProviderSdk implements ProviderImpl {
     }
 
     public cleanup(): void {
-        this.server.close();
-        // Assume a tracer has a close method
-        (this._tracer as any).close()
+        try {
+            this.server.close();
+        } catch (e) {
+        }
+        try {
+            // Assume a tracer has a close method
+            (this._tracer as any).close()
+            (this._intentWatcherClient.close())
+        } catch (e) {
+        }
     }
 }
 

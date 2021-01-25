@@ -121,7 +121,7 @@ describe("Procedures tests", () => {
             const res = err.response;
             expect(res.status).toEqual(400);
             expect(res.data.error.errors.length).toEqual(1);
-            expect(res.data.error.errors[0].message).toBe("Unable to validate an empty value for property: rootModel")
+            expect(res.data.error.errors[0].message).toBe("moveX with schema MoveInput was expecting non-empty input");
         }
     });
     test("Procedure result validation", async () => {

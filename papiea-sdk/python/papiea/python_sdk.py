@@ -4,7 +4,6 @@ from typing import Any, Callable, List, NoReturn, Optional, Type, Union
 
 from aiohttp import web
 from opentracing import Tracer, Format, child_of
-from jaeger_client import Config
 
 from .api import ApiInstance
 from .client import IntentWatcherClient
@@ -27,7 +26,7 @@ from .core import (
 from .python_sdk_context import IntentfulCtx, ProceduralCtx
 from .python_sdk_exceptions import InvocationError, SecurityApiError
 from .utils import json_loads_attrs, validate_error_codes
-from .tracing_utils import init_default_tracer
+from .tracing_utils import init_default_tracer, get_special_operation_name
 
 
 class ProviderServerManager(object):
@@ -295,7 +294,7 @@ class ProviderSdk(object):
                     format=Format.HTTP_HEADERS,
                     carrier=req.headers,
                 )
-                with self.tracer.start_span(operation_name=f"{name}_provider_procedure_sdk", child_of=child_of(span_context)):
+                with self.tracer.start_span(operation_name=f"{name}_provider_procedure_sdk", references=child_of(span_context)):
                     result = await handler(
                         ProceduralCtx(self, prefix, version, req.headers), body_obj
                     )
@@ -435,7 +434,7 @@ class KindBuilder:
                     format=Format.HTTP_HEADERS,
                     carrier=req.headers,
                 )
-                with self.tracer.start_span(operation_name=f"{name}_entity_procedure", child_of=child_of(span_context)):
+                with self.tracer.start_span(operation_name=f"{name}_entity_procedure", references=child_of(span_context)):
                     result = await handler(
                         ProceduralCtx(self.provider, prefix, version, req.headers),
                         Entity(
@@ -488,7 +487,8 @@ class KindBuilder:
                     format=Format.HTTP_HEADERS,
                     carrier=req.headers,
                 )
-                with self.tracer.start_span(operation_name=f"{name}_kind_procedure", child_of=child_of(span_context)):
+                operation_name = get_special_operation_name(name, prefix, version, self.kind.name)
+                with self.tracer.start_span(operation_name=operation_name, references=child_of(span_context)):
                     body_obj = json_loads_attrs(await req.text())
                     result = await handler(
                         ProceduralCtx(self.provider, prefix, version, req.headers),
@@ -555,7 +555,7 @@ class KindBuilder:
                     format=Format.HTTP_HEADERS,
                     carrier=req.headers,
                 )
-                with self.tracer.start_span(operation_name=f"{sfs_signature}_handler_procedure", child_of=child_of(span_context)):
+                with self.tracer.start_span(operation_name=f"{sfs_signature}_handler_procedure", references=child_of(span_context)):
                     body_obj = json_loads_attrs(await req.text())
                     result = await handler(
                         IntentfulCtx(self.provider, prefix, version, req.headers),

@@ -36,8 +36,6 @@ logging.basicConfig(
 
 
 def get_client(kind: str, tracer: Tracer = init_default_tracer()):
-    print('Here')
-    print(tracer)
     return EntityCRUD(
         PAPIEA_URL, PROVIDER_PREFIX, PROVIDER_VERSION, kind, USER_S2S_KEY, tracer=tracer
     )

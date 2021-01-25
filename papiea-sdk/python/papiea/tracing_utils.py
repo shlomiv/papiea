@@ -3,6 +3,7 @@ from jaeger_client import Config
 from opentracing import Tracer, Format, Span
 
 from papiea.api import ApiInstance
+import re
 
 
 def init_default_tracer() -> Tracer:
@@ -12,7 +13,10 @@ def init_default_tracer() -> Tracer:
                 'type': 'const',
                 'param': 1,
             },
-            'logging': False,
+            'local_agent': {
+                'reporting_port': '6831',
+            },
+            'logging': True,
         },
         service_name='papiea-sdk-python',
         validate=True,
@@ -34,3 +38,11 @@ def inject_tracing_headers(tracer: Tracer, span: Span, api_instance: ApiInstance
 
     for key, value in http_header_carrier.items():
         api_instance.headers[key] = value
+
+
+def get_special_operation_name(operation_name: str, prefix: str, version: str, kind: str) -> str:
+    if re.match("^__.*_create$", operation_name):
+        return f"{prefix}'s (version: {version}) constructor, kind: {kind}"
+    if re.match("^__.*_delete$", operation_name):
+        return f"{prefix}'s (version: {version}) destructor, kind: {kind}"
+    return operation_name

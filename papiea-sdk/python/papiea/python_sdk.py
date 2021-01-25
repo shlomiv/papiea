@@ -27,6 +27,7 @@ from .core import (
 from .python_sdk_context import IntentfulCtx, ProceduralCtx
 from .python_sdk_exceptions import InvocationError, SecurityApiError
 from .utils import json_loads_attrs, validate_error_codes
+from .tracing_utils import init_default_tracer
 
 
 class ProviderServerManager(object):
@@ -137,7 +138,7 @@ class ProviderSdk(object):
             server_manager: Optional[ProviderServerManager] = None,
             allow_extra_props: bool = False,
             logger: logging.Logger = None,
-            tracer: Tracer = None
+            tracer: Tracer = init_default_tracer()
     ):
         self._version = None
         self._prefix = None
@@ -150,28 +151,12 @@ class ProviderSdk(object):
             self._server_manager = server_manager
         else:
             self._server_manager = ProviderServerManager()
-        if tracer is None:
-            config = Config(
-                config={  # usually read from some yaml config
-                    'sampler': {
-                        'type': 'const',
-                        'param': 1,
-                    },
-                    'logging': True,
-                },
-                service_name='papiea-sdk-python',
-                validate=True,
-            )
-            # this call also sets opentracing.tracer
-            tracer = config.initialize_tracer()
-            self.tracer = tracer
-        else:
-            self.tracer = tracer
+        self.tracer = tracer
         self._procedures = {}
         self.meta_ext = {}
         self.allow_extra_props = allow_extra_props
         self._security_api = SecurityApi(self, s2skey)
-        self._intent_watcher_client = IntentWatcherClient(papiea_url, s2skey, logger)
+        self._intent_watcher_client = IntentWatcherClient(papiea_url, s2skey, logger, tracer)
         self._provider_api = ApiInstance(
             self.provider_url,
             headers={
@@ -367,10 +352,11 @@ class ProviderSdk(object):
             public_host: Optional[str],
             public_port: Optional[int],
             allow_extra_props: bool = False,
-            logger: logging.Logger = logging.getLogger(__name__)
+            logger: logging.Logger = logging.getLogger(__name__),
+            tracer: Tracer = init_default_tracer()
     ) -> "ProviderSdk":
         server_manager = ProviderServerManager(public_host, public_port)
-        return ProviderSdk(papiea_url, s2skey, server_manager, allow_extra_props, logger)
+        return ProviderSdk(papiea_url, s2skey, server_manager, allow_extra_props, logger, tracer)
 
     def secure_with(
             self, oauth_config: Any, casbin_model: str, casbin_initial_policy: str

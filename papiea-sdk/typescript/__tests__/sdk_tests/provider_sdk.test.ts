@@ -83,14 +83,15 @@ describe("Provider Sdk tests", () => {
             sdk.new_kind({});
         } catch (err) {
             expect(err).not.toBeNull();
+            sdk.cleanup()
             done();
         }
-        sdk.cleanup()
     });
     test("Provider can create a new kind", (done) => {
         const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
         const location_manager = sdk.new_kind(location_yaml);
         expect(location_manager.kind.name).toBe("Location");
+        sdk.cleanup()
         done();
     });
     test("Provider without version should fail to register", async () => {
@@ -112,7 +113,6 @@ describe("Provider Sdk tests", () => {
             sdk.prefix("test_provider");
             sdk.version(provider_version);
             await sdk.register();
-            sdk.cleanup()
         } catch (err) {
             expect(err.message).toBe("Malformed provider description. Missing: kind");
         }
@@ -160,10 +160,7 @@ describe("Provider Sdk tests", () => {
         sdk.version(provider_version);
         sdk.prefix("location_provider");
         await sdk.register();
-        try {
-            sdk.cleanup()
-        } catch (e) {
-        }
+        sdk.cleanup()
     });
     test("Provider with procedures should be created on papiea", async () => {
         const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
@@ -398,52 +395,6 @@ describe("Provider Sdk tests", () => {
         }
     });
 
-    // TODO: some low-level merging/serialization stuff doesn't allow us to use ctx.update_status() with
-    // TODO: top level array
-    // TODO: fix the test after fixing the aforementioned
-    // test("Provider with kind level procedures update status with nested array of objects", async () => {
-    //     expect.hasAssertions()
-    //     let kind_name: string = ""
-    //     let uuid: string = ""
-    //     const kind_copy = JSON.parse(JSON.stringify(location_array_yaml))
-    //     kind_copy["Location"]["x-papiea-entity"] = "differ"
-    //     const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
-    //     const location = sdk.new_kind(kind_copy);
-    //     sdk.version(provider_version);
-    //     sdk.prefix("location_provider");
-    //     location.entity_procedure("moveX", {}, Procedural_Execution_Strategy.Halt_Intentful, loadYamlFromTestFactoryDir("./test_data/procedure_move_input.yml"), loadYamlFromTestFactoryDir("./test_data/location_kind_test_data.yml"), async (ctx, entity, input) => {
-    //         await ctx.update_status(entity.metadata, [{
-    //             x: 10,
-    //             y: 15,
-    //             v: {
-    //                 e: 15
-    //             }
-    //         }])
-    //         return entity.spec;
-    //     });
-    //     try {
-    //         await sdk.register();
-    //         kind_name = sdk.provider.kinds[ 0 ].name;
-    //         const { data: { metadata, spec } } = await axios.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }`, {
-    //             spec: [{
-    //                 x: 10,
-    //                 y: 11
-    //             }]
-    //         });
-    //         uuid = metadata.uuid
-    //         console.log(1)
-    //         await axios.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }/procedure/moveX`, { input: 5 });
-    //         console.log(2)
-    //         const result = await entityApi.get(`${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`)
-    //         console.log(3)
-    //         expect(result.data.status[0].v.e).toEqual(15)
-    //         console.log(4)
-    //     } finally {
-    //         await entityApi.delete(`${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ uuid }`)
-    //         sdk.cleanup()
-    //     }
-    // });
-
     test("Provider with kind level procedures replace status with nested array of objects", async () => {
         expect.hasAssertions()
         const kind_copy = JSON.parse(JSON.stringify(location_array_yaml))
@@ -654,6 +605,7 @@ describe("Provider Sdk tests", () => {
                 }
             );
         }).toThrow("Error description should feature status code in 4xx or 5xx")
+        sdk.cleanup()
     });
 
     test("Provider with kind level procedures should be executed", async () => {
@@ -1000,7 +952,7 @@ describe("Provider Sdk tests", () => {
             }
         }
     }
-    test.only("Entity initialization after setting it to null should succeed", async () => {
+    test("Entity initialization after setting it to null should succeed", async () => {
         expect.assertions(2);
         const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
         try {
@@ -2089,6 +2041,8 @@ describe("SDK callback tests", () => {
             });
         } catch (e) {
             expect(e.response.data.error.errors[0].message).toEqual("Spec was not provided or was provided in an incorrect format")
+        } finally {
+            sdk.cleanup()
         }
     });
 
@@ -2513,6 +2467,7 @@ describe("SDK client tests", () => {
                 let cluster_location = "us.west.";
                 cluster_location += input;
                 kind_client.close()
+                client.close()
                 return cluster_location
             }
         );

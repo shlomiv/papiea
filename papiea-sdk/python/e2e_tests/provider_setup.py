@@ -165,6 +165,7 @@ async def setup_and_register_sdk() -> ProviderSdk:
 
             await sdk.register()
             papiea_test.USER_S2S_KEY = await create_user_s2s_key(sdk)
+
             return sdk
     except SecurityApiError as err:
             raise SecurityApiError.from_error(err, str(err))

@@ -12,8 +12,6 @@ import {kind_client, ProviderClient} from "papiea-client"
 import { Kind_Builder, ProceduralCtx_Interface, ProviderSdk, SecurityApi } from "../../src/provider_sdk/typescript_sdk";
 import { InvocationError } from "../../src/provider_sdk/typescript_sdk_exceptions"
 import uuid = require("uuid");
-import {version} from "ts-jest"
-
 
 declare var process: {
     env: {
@@ -171,7 +169,7 @@ describe("Provider Sdk tests", () => {
             {input_schema: loadYamlFromTestFactoryDir("./test_data/procedure_move_input.yml"),
              output_schema: loadYamlFromTestFactoryDir("./test_data/location_kind_test_data.yml")},
             async (ctx, entity, input) => {
-            entity.spec.x += input;
+            entity.spec.x += parseInt(input);
             const res = await axios.put(ctx.url_for(entity), {
                 spec: entity.spec,
                 metadata: entity.metadata
@@ -196,7 +194,7 @@ describe("Provider Sdk tests", () => {
                 {input_schema: loadYamlFromTestFactoryDir("./test_data/procedure_move_input.yml"),
                  output_schema: loadYamlFromTestFactoryDir("./test_data/location_kind_test_data.yml")},
                 async (ctx, entity, input) => {
-                    entity.spec.x += input.x;
+                    entity.spec.x += parseInt(input);
                     await axios.put(ctx.url_for(entity), {
                         spec: entity.spec,
                         metadata: entity.metadata
@@ -211,8 +209,7 @@ describe("Provider Sdk tests", () => {
                     y: 11
                 }
             });
-
-            const res: any = await axios.post(`${sdk.entity_url}/${sdk.provider.prefix}/${sdk.provider.version}/${kind_name}/${metadata.uuid}/procedure/moveX`, { x: 5 });
+            const res: any = await axios.post(`${sdk.entity_url}/${sdk.provider.prefix}/${sdk.provider.version}/${kind_name}/${metadata.uuid}/procedure/moveX`, "5");
             const updatedEntity: any = await axios.get(`${sdk.entity_url}/${sdk.provider.prefix}/${sdk.provider.version}/${kind_name}/${metadata.uuid}`);
             expect(updatedEntity.data.metadata.spec_version).toEqual(2);
             expect(updatedEntity.data.spec.x).toEqual(15);
@@ -245,7 +242,7 @@ describe("Provider Sdk tests", () => {
                 }
             });
             try {
-                const res: any = await axios.post(`${sdk.entity_url}/${sdk.provider.prefix}/${sdk.provider.version}/${kind_name}/${metadata.uuid}/procedure/moveX`, { x: 5 });
+                const res: any = await axios.post(`${sdk.entity_url}/${sdk.provider.prefix}/${sdk.provider.version}/${kind_name}/${metadata.uuid}/procedure/moveX`, "5");
             } catch (e) {
                 expect(e).toBeDefined();
             }
@@ -265,7 +262,7 @@ describe("Provider Sdk tests", () => {
                 {input_schema: loadYamlFromTestFactoryDir("./test_data/procedure_move_input.yml"),
                  output_schema: loadYamlFromTestFactoryDir("./test_data/location_kind_test_data.yml")},
                 async (ctx, entity, input) => {
-                entity.spec.x += input;
+                entity.spec.x += parseInt(input);
                 const res = await axios.put(ctx.url_for(entity), {
                     spec: entity.spec,
                     metadata: entity.metadata
@@ -288,7 +285,7 @@ describe("Provider Sdk tests", () => {
             {input_schema: loadYamlFromTestFactoryDir("./test_data/procedure_move_input.yml"),
              output_schema: loadYamlFromTestFactoryDir("./test_data/location_kind_test_data.yml")},
             async (ctx, entity, input) => {
-            entity.spec.x += input;
+            entity.spec.x += parseInt(input);
             const res = await axios.put(ctx.url_for(entity), {
                 spec: entity.spec,
                 metadata: entity.metadata
@@ -326,7 +323,7 @@ describe("Provider Sdk tests", () => {
             {input_schema: loadYamlFromTestFactoryDir("./test_data/procedure_move_input.yml"),
             output_schema: loadYamlFromTestFactoryDir("./test_data/location_kind_test_data.yml")},
             async (ctx, entity, input) => {
-            entity.spec.x += input.x;
+            entity.spec.x += parseInt(input);
             await ctx.update_status(entity.metadata, {
                 c: 15
             })
@@ -341,7 +338,7 @@ describe("Provider Sdk tests", () => {
                     y: 11
                 }
             });
-            await axios.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }/procedure/moveX`, { x: 5 });
+            await axios.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }/procedure/moveX`, "5");
         } catch(e) {
             expect(e).toBeDefined()
             expect(e.response.status).toEqual(400)
@@ -384,7 +381,7 @@ describe("Provider Sdk tests", () => {
                     y: 11
                 }
             });
-            await axios.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }/procedure/moveX`, { x: 5 });
+            await axios.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }/procedure/moveX`, "5");
             const result = await entityApi.get(`${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`)
             expect(result.data.status.v.e).toEqual(15)
             await entityApi.delete(`${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`)
@@ -470,7 +467,7 @@ describe("Provider Sdk tests", () => {
                     y: 11
                 }]
             });
-            await axios.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }/procedure/moveX`, { x: 5 });
+            await axios.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }/procedure/moveX`, "5");
             const result = await entityApi.get(`${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`)
             expect(result.data.status[0].v.e).toEqual(15)
             await entityApi.delete(`${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`)
@@ -513,7 +510,7 @@ describe("Provider Sdk tests", () => {
                     y: 11
                 }
             });
-            await axios.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }/procedure/moveX`, { x: 5 });
+            await axios.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }/procedure/moveX`, "5");
             const result = await entityApi.get(`${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`)
             expect(result.data.status["v"]).toEqual({e: 15})
         } finally {
@@ -555,7 +552,7 @@ describe("Provider Sdk tests", () => {
                     y: 11
                 }
             });
-            await axios.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }/procedure/moveX`, { x: 5 });
+            await axios.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }/procedure/moveX`, "5");
             const result = await entityApi.get(`${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`)
             expect(result.data.status["v"]).toEqual({e: 15})
         } finally {
@@ -596,15 +593,15 @@ describe("Provider Sdk tests", () => {
                         sample_prop: "It's an error :("
                     }])
                 }
-                cluster_location += input.region_id;
-                return { "region_id": cluster_location }
+                cluster_location += input;
+                return cluster_location
             }
         );
         await sdk.register();
         const kind_name = sdk.provider.kinds[0].name;
         try {
-            const res: any = await axios.post(`${sdk.entity_url}/${sdk.provider.prefix}/${sdk.provider.version}/${kind_name}/procedure/computeGeolocation`, { region_id: "2" });
-            expect(res.data.region_id).toBe("us.west.2");
+            const res: any = await axios.post(`${sdk.entity_url}/${sdk.provider.prefix}/${sdk.provider.version}/${kind_name}/procedure/computeGeolocation`, "2");
+            expect(res.data).toBe("us.west.2");
         } finally {
             sdk.server.close();
         }
@@ -662,7 +659,7 @@ describe("Provider Sdk tests", () => {
             {input_schema: loadYamlFromTestFactoryDir("./test_data/procedure_move_input.yml"),
              output_schema: loadYamlFromTestFactoryDir("./test_data/location_kind_test_data.yml")},
             async (ctx, entity, input) => {
-            entity.spec.x += input;
+            entity.spec.x += parseInt(input);
             const res = await axios.put(ctx.url_for(entity), {
                 spec: entity.spec,
                 metadata: entity.metadata
@@ -675,15 +672,15 @@ describe("Provider Sdk tests", () => {
              output_schema: loadYamlFromTestFactoryDir("./test_data/procedure_geolocation_compute_input.yml")},
             async (ctx, input) => {
                 let cluster_location = "us.west.";
-                cluster_location += input.region_id;
-                return { "region_id": cluster_location }
+                cluster_location += input;
+                return cluster_location
             }
         );
         await sdk.register();
         const kind_name = sdk.provider.kinds[0].name;
         try {
-            const res: any = await axios.post(`${sdk.entity_url}/${sdk.provider.prefix}/${sdk.provider.version}/${kind_name}/procedure/computeGeolocation`, { region_id: "2" });
-            expect(res.data.region_id).toBe("us.west.2");
+            const res: any = await axios.post(`${sdk.entity_url}/${sdk.provider.prefix}/${sdk.provider.version}/${kind_name}/procedure/computeGeolocation`, "2");
+            expect(res.data).toBe("us.west.2");
         } finally {
             sdk.server.close();
         }
@@ -699,7 +696,7 @@ describe("Provider Sdk tests", () => {
             {input_schema: loadYamlFromTestFactoryDir("./test_data/procedure_move_input.yml"),
             output_schema: loadYamlFromTestFactoryDir("./test_data/location_kind_test_data.yml")},
             async (ctx, entity, input) => {
-            entity.spec.x += input;
+            entity.spec.x += parseInt(input);
             const res = await axios.put(ctx.url_for(entity), {
                 spec: entity.spec,
                 metadata: entity.metadata
@@ -732,7 +729,7 @@ describe("Provider Sdk tests", () => {
             {input_schema: loadYamlFromTestFactoryDir("./test_data/procedure_move_input.yml"),
              output_schema: loadYamlFromTestFactoryDir("./test_data/location_kind_test_data.yml")},
             async (ctx, entity, input) => {
-            entity.spec.x += input;
+            entity.spec.x += parseInt(input);
             const res = await axios.put(ctx.url_for(entity), {
                 spec: entity.spec,
                 metadata: entity.metadata
@@ -767,7 +764,7 @@ describe("Provider Sdk tests", () => {
             {input_schema: loadYamlFromTestFactoryDir("./test_data/procedure_move_input.yml"),
              output_schema: loadYamlFromTestFactoryDir("./test_data/location_kind_test_data.yml")},
             async (ctx, entity, input) => {
-            entity.spec.x += input.x;
+            entity.spec.x += parseInt(input);
             const res = await axios.put(ctx.url_for(entity), {
                 spec: entity.spec,
                 metadata: entity.metadata
@@ -1063,17 +1060,15 @@ describe("Provider Sdk tests", () => {
             sdk.prefix("test_provider");
             machine.entity_procedure(
                 "testProcedure",
-                {input_schema: {TestProcedureInput: {type: 'object', title: 'Input value to test procedure', required: ['b_id'], properties: {b_id: {type: 'string'}}}},
+                {input_schema: {TestProcedureInput: {type: 'string', title: 'Input value to test procedure'}},
                  output_schema: NULL_TEST_SCHEMA},
                 async (ctx, entity, input) => {
-
                 const real_ref = {
                     a_id: '1',
-                    b_id: input.b_id
+                    b_id: input
                 }
                 await ctx.update_status(entity.metadata, {provider_ref: null})
                 await ctx.update_status(entity.metadata, {provider_ref: real_ref})
-
                 return entity.spec;
             });
 
@@ -1088,7 +1083,7 @@ describe("Provider Sdk tests", () => {
                 }
             });
 
-            const res: any = await axios.post(`${sdk.entity_url}/${sdk.provider.prefix}/${sdk.provider.version}/${kind_name}/${metadata.uuid}/procedure/testProcedure`, {b_id: '2'});
+            const res: any = await axios.post(`${sdk.entity_url}/${sdk.provider.prefix}/${sdk.provider.version}/${kind_name}/${metadata.uuid}/procedure/testProcedure`, "2");
             const updatedEntity: any = await axios.get(`${sdk.entity_url}/${sdk.provider.prefix}/${sdk.provider.version}/${kind_name}/${metadata.uuid}`);
             expect(updatedEntity.data.status.provider_ref.a_id).toEqual('1')
             expect(updatedEntity.data.status.provider_ref.b_id).toEqual('2')
@@ -2407,15 +2402,15 @@ describe("SDK client tests", () => {
                 }})
                 uuid = entity_spec.metadata.uuid
                 let cluster_location = "us.west.";
-                cluster_location += input.region_id;
-                return { "region_id": cluster_location }
+                cluster_location += input;
+                return cluster_location
             }
         );
         await sdk.register();
         const kind_name = sdk.provider.kinds[0].name;
         try {
-            const res: any = await axios.post(`${sdk.entity_url}/${sdk.provider.prefix}/${sdk.provider.version}/${kind_name}/procedure/computeGeolocation`, { region_id: "2" });
-            expect(res.data.region_id).toBe("us.west.2");
+            const res: any = await axios.post(`${sdk.entity_url}/${sdk.provider.prefix}/${sdk.provider.version}/${kind_name}/procedure/computeGeolocation`, "2");
+            expect(res.data).toBe("us.west.2");
             const entity_created = await axios.get(`${sdk.entity_url}/${sdk.provider.prefix}/${sdk.provider.version}/${kind_name}/${uuid}`)
             expect(entity_created.data.spec.x).toEqual(100)
         } finally {

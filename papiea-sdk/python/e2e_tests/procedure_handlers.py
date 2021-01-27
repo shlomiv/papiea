@@ -6,15 +6,9 @@ from papiea.core import AttributeDict, EntityReference, Spec, ConstructorResult
 
 ensure_bucket_exists_takes = AttributeDict(
     EnsureBucketExistsInput=AttributeDict(
-        type="object",
+        type="string",
         title="Input value of ensure_bucket_exists function",
-        description="Name of the bucket to be created/checked for existence",
-        required=["bucket_name"],
-        properties=AttributeDict(
-            bucket_name=AttributeDict(
-                type="string"
-            )
-        )
+        description="Name of the bucket to be created/checked for existence"
     )
 )
 ensure_bucket_exists_returns = AttributeDict(
@@ -22,14 +16,13 @@ ensure_bucket_exists_returns = AttributeDict(
 )
 
 
-async def ensure_bucket_exists(ctx, input_bucket):
+async def ensure_bucket_exists(ctx, input_bucket_name):
     # Run get query to obtain the list of buckets
     # Check if bucket_name exists in the bucket list
     # If true, simply return the bucket
     # Else, create a new bucket with input_bucket_name and return
 
     try:
-        input_bucket_name = input_bucket.bucket_name
         async with ctx.entity_client_for_user(papiea_test.bucket_kind_dict) as bucket_entity_client:
             desired_bucket = await bucket_entity_client.filter(
                 AttributeDict(spec=AttributeDict(name=input_bucket_name)))
@@ -58,15 +51,9 @@ async def ensure_bucket_exists(ctx, input_bucket):
 
 change_bucket_name_takes = AttributeDict(
     ChangeBucketNameInput=AttributeDict(
-        type="object",
+        type="string",
         title="Input value of change_bucket_name function",
-        description="New name for the bucket",
-        required=["bucket_name"],
-        properties=AttributeDict(
-            bucket_name=AttributeDict(
-                type="string"
-            )
-        )
+        description="New name for the bucket"
     )
 )
 change_bucket_name_returns = AttributeDict(
@@ -76,13 +63,12 @@ change_bucket_name_returns.get("ChangeBucketNameOutput").get("properties") \
     ["message"] = AttributeDict(type="string", description="Error message")
 
 
-async def change_bucket_name(ctx, entity_bucket, new_bucket):
+async def change_bucket_name(ctx, entity_bucket, new_bucket_name):
     # check if there's any bucket with the new name
     # if found, return None/failure
     # else update name and bucket entity
 
     try:
-        new_bucket_name = new_bucket.bucket_name
         async with ctx.entity_client_for_user(papiea_test.bucket_kind_dict) as bucket_entity_client:
             matched_bucket = await bucket_entity_client.filter(AttributeDict(spec=AttributeDict(name=new_bucket_name)))
             if len(matched_bucket.results) == 0:
@@ -109,15 +95,9 @@ async def change_bucket_name(ctx, entity_bucket, new_bucket):
 
 create_object_takes = AttributeDict(
     CreateObjectInput=AttributeDict(
-        type="object",
+        type="string",
         title="Input value of create_object function",
-        description="Name of the object to be created",
-        required=["object_name"],
-        properties=AttributeDict(
-            object_name=AttributeDict(
-                type="string"
-            )
-        )
+        description="Name of the object to be created"
     )
 )
 create_object_returns = AttributeDict(
@@ -127,14 +107,13 @@ create_object_returns.get("CreateObjectOutput").get("properties") \
     ["message"] = AttributeDict(type="string", description="Error message")
 
 
-async def create_object(ctx, entity_bucket, input_object):
+async def create_object(ctx, entity_bucket, input_object_name):
     # check if object name already exists in entity.objects
     # if found, return None/failure
     # else create a new object entity and add the object name
     # reference in the objects list and return the bucket reference
 
     try:
-        input_object_name = input_object.object_name
         objects_list = entity_bucket.spec.objects
         if not any(obj.name == input_object_name for obj in objects_list):
             papiea_test.logger.debug("Object does not exist. Creating new object...")
@@ -236,15 +215,9 @@ async def link_object(ctx, entity_bucket, input_object):
 
 unlink_object_takes = AttributeDict(
     UnlinkObjectInput=AttributeDict(
-        type="object",
+        type="string",
         title="Input value of unlink_object function",
-        description="Name of the object to be unlinked",
-        required=["object_name"],
-        properties=AttributeDict(
-            object_name=AttributeDict(
-                type="string"
-            )
-        )
+        description="Name of the object to be unlinked"
     )
 )
 unlink_object_returns = AttributeDict(
@@ -254,7 +227,7 @@ unlink_object_returns.get("UnlinkObjectOutput").get("properties") \
     ["message"] = AttributeDict(type="string", description="Error message")
 
 
-async def unlink_object(ctx, entity_bucket, input_object):
+async def unlink_object(ctx, entity_bucket, input_object_name):
     # assuming input_object to be the object name
     # check if the name exists in the object list
     # if does not exists, return None/failure
@@ -262,7 +235,6 @@ async def unlink_object(ctx, entity_bucket, input_object):
     # and return the bucket reference
 
     try:
-        input_object_name = input_object.object_name
         objects_list = entity_bucket.spec.objects
         if any(obj.name == input_object_name for obj in objects_list):
             papiea_test.logger.debug("Object found. Unlinking the object...")

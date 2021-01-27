@@ -1,9 +1,3 @@
 RegionIdentifier:
-  type: object
-  title: Object include identifier of a region
-  description: Used to get a particular server region number
-  required:
-    - region_id
-  properties:
-    region_id:
-        type: string
+  type: string
+  title: Identifier of a region

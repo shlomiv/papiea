@@ -220,6 +220,76 @@ describe("Provider Sdk tests", () => {
             sdk.server.close();
         }
     });
+    test("Invalid string input to the entity procedure should throw an error", async () => {
+        expect.assertions(1);
+        const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
+        try {
+            const location = sdk.new_kind(location_yaml);
+            sdk.version(provider_version);
+            sdk.prefix("location_provider");
+            location.entity_procedure(
+                "moveX",
+                {input_schema: loadYamlFromTestFactoryDir("./test_data/procedure_move_input.yml"),
+                 output_schema: loadYamlFromTestFactoryDir("./test_data/location_kind_test_data.yml")},
+                async (ctx, entity, input) => {
+                    entity.spec.x += input.x;
+                    await axios.put(ctx.url_for(entity), {
+                        spec: entity.spec,
+                        metadata: entity.metadata
+                    });
+                    return entity.spec;
+            });
+            await sdk.register();
+            const kind_name = sdk.provider.kinds[0].name;
+            const { data: { metadata, spec } } = await axios.post(`${sdk.entity_url}/${sdk.provider.prefix}/${sdk.provider.version}/${kind_name}`, {
+                spec: {
+                    x: 10,
+                    y: 11
+                }
+            });
+
+            await axios.post(`${sdk.entity_url}/${sdk.provider.prefix}/${sdk.provider.version}/${kind_name}/${metadata.uuid}/procedure/moveX`, "5");
+        } catch (err) {
+            expect(err.response.data.error.errors[0].message).toContain("moveX with schema MoveInput was expecting non-empty input")
+        } finally {
+            sdk.server.close();
+        }
+    });
+    test("Invalid numeric input to the entity procedure should throw an error", async () => {
+        expect.assertions(1);
+        const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
+        try {
+            const location = sdk.new_kind(location_yaml);
+            sdk.version(provider_version);
+            sdk.prefix("location_provider");
+            location.entity_procedure(
+                "moveX",
+                {input_schema: loadYamlFromTestFactoryDir("./test_data/procedure_move_input.yml"),
+                 output_schema: loadYamlFromTestFactoryDir("./test_data/location_kind_test_data.yml")},
+                async (ctx, entity, input) => {
+                    entity.spec.x += input.x;
+                    await axios.put(ctx.url_for(entity), {
+                        spec: entity.spec,
+                        metadata: entity.metadata
+                    });
+                    return entity.spec;
+            });
+            await sdk.register();
+            const kind_name = sdk.provider.kinds[0].name;
+            const { data: { metadata, spec } } = await axios.post(`${sdk.entity_url}/${sdk.provider.prefix}/${sdk.provider.version}/${kind_name}`, {
+                spec: {
+                    x: 10,
+                    y: 11
+                }
+            });
+
+            await axios.post(`${sdk.entity_url}/${sdk.provider.prefix}/${sdk.provider.version}/${kind_name}/${metadata.uuid}/procedure/moveX`, 5);
+        } catch (err) {
+            expect(err).toBeDefined()
+        } finally {
+            sdk.server.close();
+        }
+    });
     test("Malformed handler registered on sdk should fail", async () => {
         expect.hasAssertions();
         const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);

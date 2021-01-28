@@ -24,7 +24,7 @@ import { IntentfulContext } from "./intentful_core/intentful_context"
 import { AuditLogger } from "./audit_logging"
 import { BasicDiffer } from "./intentful_core/differ_impl"
 import { getConfig } from "./utils/arg_parser"
-import { getPapieaVersion, convertNumToStringJSONReviver } from "./utils/utils"
+import { getPapieaVersion } from "./utils/utils"
 const cookieParser = require('cookie-parser');
 const semver = require('semver')
 
@@ -39,22 +39,13 @@ const adminKey = config.admin_key
 const loggingLevel = logLevelFromString(config.logging_level)
 const papieaDebug = config.debug
 const verbosityOptions = config.logging_verbosity
-const bodyParserOptions = {
-    strict: false, 
-    type: [
-        'application/json',
-        'text/plain',
-        'application/x-www-form-urlencoded'
-    ], 
-    reviver: convertNumToStringJSONReviver
-}
 
 async function setUpApplication(): Promise<express.Express> {
     const logger = LoggerFactory.makeLogger({level: loggingLevel, verbosity_options: verbosityOptions});
     const auditLogger: AuditLogger = new AuditLogger(logger, papieaDebug)
     const app = express();
     app.use(cookieParser());
-    app.use(express.json(bodyParserOptions));
+    app.use(express.json());
     app.use(auditLogger.middleware());
     const mongoConnection: MongoConnection = new MongoConnection(mongoUrl, mongoDb);
     await mongoConnection.connect();

@@ -152,20 +152,3 @@ export function getPapieaVersion(): string {
     const engineSDKVersion: string = packageJSON.version.split('+')[0];
     return engineSDKVersion
 }
-
-// Transform request function to handle number input
-export const transformRequestAxiosNumToString = function (data: any, headers: any) {
-    if (typeof data === 'number') {
-        return data.toString();
-    }
-    return data;
-}
-
-
-// JSON parse reviver function to convert non-json numeric value to
-export const convertNumToStringJSONReviver = function (key: string, value: any) {
-    if (key === '' && typeof value === 'number') {
-        return value.toString();
-    }
-    return value;
-}

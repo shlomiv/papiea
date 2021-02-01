@@ -1,3 +1,4 @@
+- Version 0.9.14+1909: Swallowing stacktrace is bad for debugging
 - Version 0.9.13+1906: Swallowing stacktrace is bad for debugging
 - Version 0.9.12+1893: Introduce tracing to logging of papiea components (#584) PR url: git@github.com:nutanix/papiea.git/pull/584
 - Version 0.9.11+1862: Added authorizer for intent watcher related operations (#591) PR url: git@github.com:nutanix/papiea.git/pull/591

@@ -131,6 +131,19 @@ logging_verbosity: {
     # Which fields to be set in request log
     fields: ['headers' | 'response_body' | 'request_body']
 }
+
+# Config options for working with Jaeger 
+tracing_config: {
+    reporter: {
+        collectorEndpoint: string,
+        agentHost: string,
+        agentPort: number,
+    },
+    sampler: {
+        type: string,
+        param: number
+    }
+}
 ```
 
 A set of these variables might be used to override the preceeding config file params.
@@ -147,6 +160,15 @@ Additional env variables:
 * `HOT_RELOAD` - use nodemon to autoreload papiea on code changes
 * `PAPIEA_CONFIG_PATH` - path to config file (default - `../../papiea-config.yaml` rootDir is counted from `papiea
 -engine/src/utils`)
+
+## Tracing
+
+To use tracing in debug mode:
+1. Use docker-compose-debug.yml
+2. Access http://localhost:16686 to get Jaeger UI with all the traces
+
+To use tracing in production:
+1. Specify config parameters for production usage (possible params declated in Environment section of README)
 
 
 ## CLJS instructions

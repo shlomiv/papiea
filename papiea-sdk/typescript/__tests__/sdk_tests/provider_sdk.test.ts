@@ -12,7 +12,6 @@ import {kind_client, ProviderClient} from "papiea-client"
 import { Kind_Builder, ProceduralCtx_Interface, ProviderSdk, SecurityApi } from "../../src/provider_sdk/typescript_sdk";
 import { InvocationError } from "../../src/provider_sdk/typescript_sdk_exceptions"
 import uuid = require("uuid");
-import {version} from "ts-jest"
 
 
 declare var process: {
@@ -84,6 +83,7 @@ describe("Provider Sdk tests", () => {
             sdk.new_kind({});
         } catch (err) {
             expect(err).not.toBeNull();
+            sdk.cleanup()
             done();
         }
     });
@@ -91,6 +91,7 @@ describe("Provider Sdk tests", () => {
         const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
         const location_manager = sdk.new_kind(location_yaml);
         expect(location_manager.kind.name).toBe("Location");
+        sdk.cleanup()
         done();
     });
     test("Provider without version should fail to register", async () => {
@@ -100,10 +101,10 @@ describe("Provider Sdk tests", () => {
             sdk.new_kind(location_yaml);
             sdk.prefix("test_provider");
             await sdk.register();
-            sdk.server.close();
         } catch (err) {
             expect(err.message).toBe("Malformed provider description. Missing: version");
         }
+        sdk.cleanup()
     });
     test("Provider without kind should fail to register", async () => {
         expect.hasAssertions();
@@ -112,10 +113,10 @@ describe("Provider Sdk tests", () => {
             sdk.prefix("test_provider");
             sdk.version(provider_version);
             await sdk.register();
-            sdk.server.close();
         } catch (err) {
             expect(err.message).toBe("Malformed provider description. Missing: kind");
         }
+        sdk.cleanup()
     });
     test("Provider without prefix should fail to register", async () => {
         expect.hasAssertions();
@@ -124,16 +125,17 @@ describe("Provider Sdk tests", () => {
             sdk.new_kind(location_yaml);
             sdk.version(provider_version);
             await sdk.register();
-            sdk.server.close();
         } catch (err) {
             expect(err.message).toBe("Malformed provider description. Missing: prefix");
         }
+        sdk.cleanup()
     });
     test("Add multiple kinds shouldn't fail", (done) => {
         const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
         const geo_location_yaml = JSON.parse(JSON.stringify(location_yaml));
         sdk.new_kind(location_yaml);
         sdk.new_kind(geo_location_yaml);
+        sdk.cleanup()
         done();
     });
     let location_kind_manager: Kind_Builder;
@@ -142,12 +144,14 @@ describe("Provider Sdk tests", () => {
         location_kind_manager = sdk.new_kind(location_yaml);
         expect(sdk.remove_kind(location_kind_manager.kind)).toBeTruthy();
         expect(sdk.remove_kind(location_kind_manager.kind)).toBeFalsy();
+        sdk.cleanup()
         done();
     });
     test("Duplicate add on kind should return false", (done) => {
         const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
         expect(sdk.add_kind(location_kind_manager.kind)).not.toBeNull();
         expect(sdk.add_kind(location_kind_manager.kind)).toBeNull();
+        sdk.cleanup()
         done();
     });
     test("Provider should be created on papiea", async () => {
@@ -156,10 +160,7 @@ describe("Provider Sdk tests", () => {
         sdk.version(provider_version);
         sdk.prefix("location_provider");
         await sdk.register();
-        try {
-            sdk.server.close()
-        } catch (e) {
-        }
+        sdk.cleanup()
     });
     test("Provider with procedures should be created on papiea", async () => {
         const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
@@ -181,7 +182,7 @@ describe("Provider Sdk tests", () => {
         try {
             await sdk.register();
         } finally {
-            sdk.server.close();
+            sdk.cleanup()
         }
     });
     test("Entity should be allowed to be modified using procedures defined using provider SDK", async () => {
@@ -217,7 +218,7 @@ describe("Provider Sdk tests", () => {
             expect(updatedEntity.data.metadata.spec_version).toEqual(2);
             expect(updatedEntity.data.spec.x).toEqual(15);
         } finally {
-            sdk.server.close();
+            sdk.cleanup()
         }
     });
     test("Malformed handler registered on sdk should fail", async () => {
@@ -250,7 +251,7 @@ describe("Provider Sdk tests", () => {
                 expect(e).toBeDefined();
             }
         } finally {
-            sdk.server.close();
+            sdk.cleanup()
         }
     });
 
@@ -276,6 +277,7 @@ describe("Provider Sdk tests", () => {
         } catch (e) {
             expect(e.message).toBe("Malformed provider description. Missing: prefix");
         }
+        sdk.cleanup()
     });
 
     test("Provider with kind level procedures should be created on papiea", async () => {
@@ -309,7 +311,7 @@ describe("Provider Sdk tests", () => {
         try {
             await sdk.register();
         } finally {
-            sdk.server.close();
+            sdk.cleanup()
         }
     });
 
@@ -346,7 +348,7 @@ describe("Provider Sdk tests", () => {
             expect(e).toBeDefined()
             expect(e.response.status).toEqual(400)
         } finally {
-            sdk.server.close();
+            sdk.cleanup()
         }
     });
 
@@ -389,55 +391,9 @@ describe("Provider Sdk tests", () => {
             expect(result.data.status.v.e).toEqual(15)
             await entityApi.delete(`${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`)
         } finally {
-            sdk.server.close();
+            sdk.cleanup()
         }
     });
-
-    // TODO: some low-level merging/serialization stuff doesn't allow us to use ctx.update_status() with
-    // TODO: top level array
-    // TODO: fix the test after fixing the aforementioned
-    // test("Provider with kind level procedures update status with nested array of objects", async () => {
-    //     expect.hasAssertions()
-    //     let kind_name: string = ""
-    //     let uuid: string = ""
-    //     const kind_copy = JSON.parse(JSON.stringify(location_array_yaml))
-    //     kind_copy["Location"]["x-papiea-entity"] = "differ"
-    //     const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
-    //     const location = sdk.new_kind(kind_copy);
-    //     sdk.version(provider_version);
-    //     sdk.prefix("location_provider");
-    //     location.entity_procedure("moveX", {}, Procedural_Execution_Strategy.Halt_Intentful, loadYamlFromTestFactoryDir("./test_data/procedure_move_input.yml"), loadYamlFromTestFactoryDir("./test_data/location_kind_test_data.yml"), async (ctx, entity, input) => {
-    //         await ctx.update_status(entity.metadata, [{
-    //             x: 10,
-    //             y: 15,
-    //             v: {
-    //                 e: 15
-    //             }
-    //         }])
-    //         return entity.spec;
-    //     });
-    //     try {
-    //         await sdk.register();
-    //         kind_name = sdk.provider.kinds[ 0 ].name;
-    //         const { data: { metadata, spec } } = await axios.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }`, {
-    //             spec: [{
-    //                 x: 10,
-    //                 y: 11
-    //             }]
-    //         });
-    //         uuid = metadata.uuid
-    //         console.log(1)
-    //         await axios.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }/procedure/moveX`, { input: 5 });
-    //         console.log(2)
-    //         const result = await entityApi.get(`${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`)
-    //         console.log(3)
-    //         expect(result.data.status[0].v.e).toEqual(15)
-    //         console.log(4)
-    //     } finally {
-    //         await entityApi.delete(`${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ uuid }`)
-    //         sdk.server.close();
-    //     }
-    // });
 
     test("Provider with kind level procedures replace status with nested array of objects", async () => {
         expect.hasAssertions()
@@ -475,7 +431,7 @@ describe("Provider Sdk tests", () => {
             expect(result.data.status[0].v.e).toEqual(15)
             await entityApi.delete(`${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`)
         } finally {
-            sdk.server.close();
+            sdk.cleanup()
         }
     });
 
@@ -517,7 +473,7 @@ describe("Provider Sdk tests", () => {
             const result = await entityApi.get(`${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`)
             expect(result.data.status["v"]).toEqual({e: 15})
         } finally {
-            sdk.server.close();
+            sdk.cleanup()
         }
     });
 
@@ -559,7 +515,7 @@ describe("Provider Sdk tests", () => {
             const result = await entityApi.get(`${ sdk.provider.prefix }/${ sdk.provider.version }/${ kind_name }/${ metadata.uuid }`)
             expect(result.data.status["v"]).toEqual({e: 15})
         } finally {
-            sdk.server.close();
+            sdk.cleanup()
         }
     });
 
@@ -606,7 +562,7 @@ describe("Provider Sdk tests", () => {
             const res: any = await axios.post(`${sdk.entity_url}/${sdk.provider.prefix}/${sdk.provider.version}/${kind_name}/procedure/computeGeolocation`, { input: "2" });
             expect(res.data).toBe("us.west.2");
         } finally {
-            sdk.server.close();
+            sdk.cleanup()
         }
     });
 
@@ -649,6 +605,7 @@ describe("Provider Sdk tests", () => {
                 }
             );
         }).toThrow("Error description should feature status code in 4xx or 5xx")
+        sdk.cleanup()
     });
 
     test("Provider with kind level procedures should be executed", async () => {
@@ -685,7 +642,7 @@ describe("Provider Sdk tests", () => {
             const res: any = await axios.post(`${sdk.entity_url}/${sdk.provider.prefix}/${sdk.provider.version}/${kind_name}/procedure/computeGeolocation`, { input: "2" });
             expect(res.data).toBe("us.west.2");
         } finally {
-            sdk.server.close();
+            sdk.cleanup()
         }
     });
 
@@ -717,7 +674,7 @@ describe("Provider Sdk tests", () => {
         try {
             await sdk.register();
         } finally {
-            sdk.server.close();
+            sdk.cleanup()
         }
     });
 
@@ -752,7 +709,7 @@ describe("Provider Sdk tests", () => {
             const res: any = await axios.post(`${sdk.entity_url}/${sdk.provider.prefix}/${sdk.provider.version}/procedure/computeSum`, { input: { "a": 5, "b": 5 } });
             expect(res.data).toBe(10);
         } finally {
-            sdk.server.close();
+            sdk.cleanup()
         }
     });
 
@@ -791,7 +748,7 @@ describe("Provider Sdk tests", () => {
             expect(e.response.data.error.errors[0].stacktrace).toContain("Unable to validate a model with a type: string, expected: number")
             expect(e.response.data.error.code).toBe(500);
         } finally {
-            sdk.server.close();
+            sdk.cleanup()
         }
     });
 
@@ -809,7 +766,7 @@ describe("Provider Sdk tests", () => {
             await sdk.register();
             const res: any = await axios.post(`${sdk.entity_url}/${sdk.provider.prefix}/${sdk.provider.version}/procedure/computeSumWithNoValidation`, { input: {} });
         } finally {
-            sdk.server.close();
+            sdk.cleanup()
         }
     });
 
@@ -829,7 +786,7 @@ describe("Provider Sdk tests", () => {
             await sdk.register();
             const res: any = await axios.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/procedure/computeSumWithEmptyInput`, { input: {} });
         } finally {
-            sdk.server.close();
+            sdk.cleanup()
         }
     });
 
@@ -849,7 +806,7 @@ describe("Provider Sdk tests", () => {
             await sdk.register();
             const res: any = await axios.post(`${ sdk.entity_url }/${ sdk.provider.prefix }/${ sdk.provider.version }/procedure/computeSumWithEmptyInput`, { input: {} });
         } finally {
-            sdk.server.close();
+            sdk.cleanup()
         }
     });
 
@@ -872,7 +829,7 @@ describe("Provider Sdk tests", () => {
         } catch(e) {
             expect(e.response.data.error.errors[0].message).toBe("computeSumWithEmptyInput with schema input was expecting empty object")
         } finally {
-            sdk.server.close();
+            sdk.cleanup()
         }
     });
 
@@ -895,7 +852,7 @@ describe("Provider Sdk tests", () => {
         } catch(e) {
             expect(e.response.data.error.errors[0].message).toBe("computeSumWithEmptyOutput with schema input was expecting empty object")
         } finally {
-            sdk.server.close();
+            sdk.cleanup()
         }
     });
 
@@ -917,7 +874,7 @@ describe("Provider Sdk tests", () => {
         } catch (e) {
             expect(e.response.data.error.errors[0].message).toBe("computeSumWithNoValidation with schema undefined was expecting type void");
         } finally {
-            sdk.server.close();
+            sdk.cleanup()
         }
     });
 
@@ -942,7 +899,7 @@ describe("Provider Sdk tests", () => {
             expect(e.response.data.error.errors[0].message).toBe("My custom error");
             expect(e.response.data.error.errors[0].stacktrace).not.toBeUndefined();
         } finally {
-            sdk.server.close();
+            sdk.cleanup()
         }
     });
 
@@ -970,7 +927,7 @@ describe("Provider Sdk tests", () => {
             expect(e.response.data.error.errors[0].stacktrace).not.toBeUndefined();
             expect(e.response.data.error.errors[0].stacktrace).toContain("TypeError: Cannot set property 'x' of undefined")
         } finally {
-            sdk.server.close();
+            sdk.cleanup()
         }
     });
 
@@ -1035,7 +992,7 @@ describe("Provider Sdk tests", () => {
             expect(updatedEntity.data.status.provider_ref.a_id).toEqual('1')
             expect(updatedEntity.data.status.provider_ref.b_id).toEqual('2')
         } finally {
-            sdk.server.close();
+            sdk.cleanup()
         }
     });
 
@@ -1057,28 +1014,29 @@ describe("Provider Sdk tests", () => {
             }
         }
     }
+
     test("Update status of a nested object with value of type any should succeed", async () => {
         expect.assertions(2)
         const sdk = ProviderSdk.create_provider(papieaUrl, adminKey, server_config.host, server_config.port);
         try {
             const nested_object = sdk.new_kind(NESTED_TEST_SCHEMA);
             sdk.version(provider_version);
-            sdk.prefix("test_provider");
+            sdk.prefix("test_provider_update");
             nested_object.entity_procedure(
-                "testProcedure",
+                "testProcedureUpdate",
                 {input_schema: null,
                  output_schema: NESTED_TEST_SCHEMA},
                 async (ctx, entity, input) => {
 
-                await ctx.update_status(entity.metadata, {
-                    a: {
-                        b: {
-                            hyp_type: 'test'
+                    await ctx.update_status(entity.metadata, {
+                        a: {
+                            b: {
+                                hyp_type: 'test'
+                            }
                         }
-                    }
-                });
+                    });
 
-                return entity.spec;
+                    return entity.spec;
             });
 
             await sdk.register();
@@ -1093,12 +1051,12 @@ describe("Provider Sdk tests", () => {
                 }
             });
 
-            const res: any = await axios.post(`${sdk.entity_url}/${sdk.provider.prefix}/${sdk.provider.version}/${kind_name}/${metadata.uuid}/procedure/testProcedure`, null);
+            const res: any = await axios.post(`${sdk.entity_url}/${sdk.provider.prefix}/${sdk.provider.version}/${kind_name}/${metadata.uuid}/procedure/testProcedureUpdate`);
             const updatedEntity: any = await axios.get(`${sdk.entity_url}/${sdk.provider.prefix}/${sdk.provider.version}/${kind_name}/${metadata.uuid}`);
             expect(updatedEntity.data.spec.a.b.hyp_type).toEqual('test')
             expect(updatedEntity.data.status.a.b.hyp_type).toEqual('test')
         } finally {
-            sdk.server.close();
+            sdk.cleanup();
         }
     });
 
@@ -1199,7 +1157,7 @@ describe("Provider Sdk tests", () => {
         } catch (e) {
             expect(e).toBeUndefined()
         } finally {
-            sdk.server.close();
+            sdk.cleanup()
         }
     })
 
@@ -1216,6 +1174,7 @@ describe("Provider Sdk tests", () => {
         } catch (e) {
             expect(e.response.data.error.errors[0].message).toBe("a of type 'status-only' is set to be required. Required fields cannot be 'status-only'")
         }
+        sdk.cleanup()
     });
 
     test("Create entity spec with status-only field set should fail", async () => {
@@ -1263,7 +1222,7 @@ describe("Provider Sdk tests", () => {
         } catch (e) {
             expect(e.response.data.error.errors[0].message).toBe("Target property 'a' is not in the model")
         } finally {
-            sdk.server.close();
+            sdk.cleanup()
         }
     });
 
@@ -1296,7 +1255,7 @@ describe("Provider Sdk tests", () => {
             const updatedEntity: any = await axios.get(`${sdk.entity_url}/${sdk.provider.prefix}/${sdk.provider.version}/${kind_name}/${metadata.uuid}`);
             expect(updatedEntity.data.spec.x).toEqual(10);
         } finally {
-            sdk.server.close();
+            sdk.cleanup()
         }
     });
 
@@ -1335,7 +1294,7 @@ describe("Provider Sdk tests", () => {
             const updatedEntity: any = await axios.get(`${sdk.entity_url}/${sdk.provider.prefix}/${sdk.provider.version}/${kind_name}/${metadata.uuid}`);
             expect(updatedEntity.data.spec.x).toEqual(10);
         } finally {
-            sdk.server.close();
+            sdk.cleanup()
         }
     });
 
@@ -1373,7 +1332,7 @@ describe("Provider Sdk tests", () => {
         } catch (e) {
             expect(e.response.data.error.errors[0].message).toContain("Received incompatible papiea version")
         } finally {
-            sdk.server.close();
+            sdk.cleanup()
         }
     });
 });
@@ -1451,7 +1410,7 @@ describe("SDK + oauth provider tests", () => {
             const res: any = await axios.post(`${sdk.entity_url}/${sdk.provider.prefix}/${sdk.provider.version}/procedure/computeWithPermissionCheck`, { input: { "a": 5, "b": 5 } },
                 { headers: { 'Authorization': `Bearer ${token}` }});
         } finally {
-            sdk.server.close();
+            sdk.cleanup()
             await providerApiAdmin.post(`/${ provider.prefix }/${ provider.version }/auth`, {
                 policy: null
             });
@@ -1482,7 +1441,7 @@ describe("SDK + oauth provider tests", () => {
             const res: any = await axios.post(`${sdk.entity_url}/${sdk.provider.prefix}/${sdk.provider.version}/procedure/computeWithPermissionCheck`, { input: { "a": 5, "b": 5 } },
                 { headers: { 'Authorization': `Bearer ${token}` }});
         } finally {
-            sdk.server.close();
+            sdk.cleanup()
             await providerApiAdmin.post(`/${ provider.prefix }/${ provider.version }/auth`, {
                 policy: null
             });
@@ -1513,7 +1472,7 @@ describe("SDK + oauth provider tests", () => {
             const res: any = await axios.post(`${sdk.entity_url}/${sdk.provider.prefix}/${sdk.provider.version}/procedure/computeWithPermissionCheck`, { input: { "a": 5, "b": 5 } },
                 { headers: { 'Authorization': `Bearer ${token}` }});
         } finally {
-            sdk.server.close();
+            sdk.cleanup()
             await providerApiAdmin.post(`/${ provider.prefix }/${ provider.version }/auth`, {
                 policy: null
             });
@@ -1544,7 +1503,7 @@ describe("SDK + oauth provider tests", () => {
             const res: any = await axios.post(`${sdk.entity_url}/${sdk.provider.prefix}/${sdk.provider.version}/procedure/computeWithPermissionCheck`, { input: { "a": 5, "b": 5 } },
                 { headers: { 'Authorization': `Bearer ${token}` }});
         } finally {
-            sdk.server.close();
+            sdk.cleanup()
             await providerApiAdmin.post(`/${ provider.prefix }/${ provider.version }/auth`, {
                 policy: null
             });
@@ -1575,7 +1534,7 @@ describe("SDK + oauth provider tests", () => {
             const res: any = await axios.post(`${sdk.entity_url}/${sdk.provider.prefix}/${sdk.provider.version}/procedure/computeWithPermissionCheck`, { input: { "a": 5, "b": 5 } },
                 { headers: { 'Authorization': `Bearer ${token}` }});
         } finally {
-            sdk.server.close();
+            sdk.cleanup()
             await providerApiAdmin.post(`/${ provider.prefix }/${ provider.version }/auth`, {
                 policy: null
             });
@@ -1606,7 +1565,7 @@ describe("SDK + oauth provider tests", () => {
             const res: any = await axios.post(`${sdk.entity_url}/${sdk.provider.prefix}/${sdk.provider.version}/procedure/computeWithPermissionCheck`, { input: { "a": 5, "b": 5 } },
                 { headers: { 'Authorization': `Bearer ${token}` }});
         } finally {
-            sdk.server.close();
+            sdk.cleanup()
             await providerApiAdmin.post(`/${ provider.prefix }/${ provider.version }/auth`, {
                 policy: null
             });
@@ -1637,7 +1596,7 @@ describe("SDK + oauth provider tests", () => {
             const res: any = await axios.post(`${sdk.entity_url}/${sdk.provider.prefix}/${sdk.provider.version}/procedure/computeWithPermissionCheck`, { input: { "a": 5, "b": 5 } },
                 { headers: { 'Authorization': `Bearer ${token}` }});
         } finally {
-            sdk.server.close();
+            sdk.cleanup()
             await providerApiAdmin.post(`/${ provider.prefix }/${ provider.version }/auth`, {
                 policy: null
             });
@@ -1671,7 +1630,7 @@ describe("SDK + oauth provider tests", () => {
             const res: any = await axios.post(`${sdk.entity_url}/${sdk.provider.prefix}/${sdk.provider.version}/procedure/computeWithPermissionCheck`, { input: { "a": 5, "b": 5 } },
                 { headers: { 'Authorization': `Bearer ${token}` }});
         } finally {
-            sdk.server.close();
+            sdk.cleanup()
             await providerApiAdmin.post(`/${ provider.prefix }/${ provider.version }/auth`, {
                 policy: null
             });
@@ -1705,7 +1664,7 @@ describe("SDK + oauth provider tests", () => {
             const res: any = await axios.post(`${sdk.entity_url}/${sdk.provider.prefix}/${sdk.provider.version}/procedure/computeWithPermissionCheck`, { input: { "a": 5, "b": 5 } },
                 { headers: { 'Authorization': `Bearer ${token}` }});
         } finally {
-            sdk.server.close();
+            sdk.cleanup()
             await providerApiAdmin.post(`/${ provider.prefix }/${ provider.version }/auth`, {
                 policy: null
             });
@@ -1739,7 +1698,7 @@ describe("SDK + oauth provider tests", () => {
             const res: any = await axios.post(`${sdk.entity_url}/${sdk.provider.prefix}/${sdk.provider.version}/procedure/computeWithPermissionCheck`, { input: { "a": 5, "b": 5 } },
                 { headers: { 'Authorization': `Bearer ${token}` }});
         } finally {
-            sdk.server.close();
+            sdk.cleanup()
             await providerApiAdmin.post(`/${ provider.prefix }/${ provider.version }/auth`, {
                 policy: null
             });
@@ -1773,7 +1732,7 @@ describe("SDK + oauth provider tests", () => {
             const res: any = await axios.post(`${sdk.entity_url}/${sdk.provider.prefix}/${sdk.provider.version}/procedure/computeWithPermissionCheck`, { input: { "a": 5, "b": 5 } },
                 { headers: { 'Authorization': `Bearer ${token}` }});
         } finally {
-            sdk.server.close();
+            sdk.cleanup()
             await providerApiAdmin.post(`/${ provider.prefix }/${ provider.version }/auth`, {
                 policy: null
             });
@@ -1811,7 +1770,7 @@ describe("SDK + oauth provider tests", () => {
         } catch (e) {
             expect(e.response.data.error.errors[0].errors[0].message).toEqual('provider_prefix should not be specified in the request body')
         } finally {
-            sdk.server.close()
+            sdk.cleanup()
         }
     });
 
@@ -1886,7 +1845,7 @@ describe("SDK + oauth provider tests", () => {
             const intent_watcher = await watcherApi.get(watcher.uuid)
             expect(intent_watcher.status).toEqual(IntentfulStatus.Active)
         } finally {
-            sdk.server.close();
+            sdk.cleanup();
             await providerApiAdmin.post(`/${ sdk.provider.prefix }/${ sdk.provider.version }/auth`, {
                 policy: null
             });
@@ -1950,7 +1909,7 @@ describe("SDK + oauth provider tests", () => {
         } catch (e) {
             expect(e.response.data.error.errors[0].message).toBe("Permission denied.")
         } finally {
-            sdk.server.close();
+            sdk.cleanup();
             await providerApiAdmin.post(`/${ sdk.provider.prefix }/${ sdk.provider.version }/auth`, {
                 policy: null
             });
@@ -2007,7 +1966,7 @@ describe("SDK callback tests", () => {
                 }
             })
         } finally {
-            sdk.server.close();
+            sdk.cleanup()
         }
     });
 
@@ -2052,7 +2011,7 @@ describe("SDK callback tests", () => {
                 }
             })
         } finally {
-            sdk.server.close()
+            sdk.cleanup()
         }
     });
 
@@ -2082,6 +2041,8 @@ describe("SDK callback tests", () => {
             });
         } catch (e) {
             expect(e.response.data.error.errors[0].message).toEqual("Spec was not provided or was provided in an incorrect format")
+        } finally {
+            sdk.cleanup()
         }
     });
 
@@ -2115,8 +2076,9 @@ describe("SDK callback tests", () => {
                     "Authorization": `Bearer ${adminKey}`
                 }
             })
+            client.close()
         } finally {
-            sdk.server.close()
+            sdk.cleanup()
         }
     });
 
@@ -2144,8 +2106,9 @@ describe("SDK callback tests", () => {
                 }
             })
             expect(entity.status.x).toEqual(10)
+            client.close()
         } finally {
-            sdk.server.close()
+            sdk.cleanup()
         }
     });
 
@@ -2201,7 +2164,7 @@ describe("SDK callback tests", () => {
                 expect(e).toBeDefined()
             }
         } finally {
-            sdk.server.close();
+            sdk.cleanup()
         }
     });
 
@@ -2266,7 +2229,7 @@ describe("SDK callback tests", () => {
             })
             expect(called_times).toEqual(1)
         } finally {
-            sdk.server.close();
+            sdk.cleanup()
         }
     });
 
@@ -2323,7 +2286,7 @@ describe("SDK callback tests", () => {
                 }
             })
         } finally {
-            sdk.server.close();
+            sdk.cleanup()
         }
     });
 
@@ -2368,7 +2331,7 @@ describe("SDK callback tests", () => {
                 }
             })
         } finally {
-            sdk.server.close();
+            sdk.cleanup()
         }
     })
 
@@ -2406,7 +2369,7 @@ describe("SDK callback tests", () => {
                 expect(e.response.data.error.message).toBe("On Delete couldn't be called; Cannot invoke on delete")
             }
         } finally {
-            sdk.server.close();
+            sdk.cleanup()
         }
     });
 
@@ -2443,7 +2406,7 @@ describe("SDK callback tests", () => {
                 expect(e.response.data.error.message).toBe("On Create couldn't be called; Cannot invoke on create")
             }
         } finally {
-            sdk.server.close();
+            sdk.cleanup()
         }
     });
 });
@@ -2468,14 +2431,16 @@ describe("SDK client tests", () => {
             "compute",
             {input_schema: loadYamlFromTestFactoryDir("./test_data/procedure_sum_input.yml")},
             async (ctx, input) => {
-                expect(ctx.get_provider_client()).toBeDefined()
+                const client = ctx.get_provider_client()
+                expect(client).toBeDefined()
+                client.close()
             }
         );
         try {
             await sdk.register();
             const res: any = await axios.post(`${sdk.entity_url}/${sdk.provider.prefix}/${sdk.provider.version}/procedure/compute`, { input: { "a": 5, "b": 5 } })
         } finally {
-            sdk.server.close();
+            sdk.cleanup()
         }
     });
 
@@ -2501,6 +2466,8 @@ describe("SDK client tests", () => {
                 uuid = entity_spec.metadata.uuid
                 let cluster_location = "us.west.";
                 cluster_location += input;
+                kind_client.close()
+                client.close()
                 return cluster_location
             }
         );
@@ -2512,7 +2479,7 @@ describe("SDK client tests", () => {
             const entity_created = await axios.get(`${sdk.entity_url}/${sdk.provider.prefix}/${sdk.provider.version}/${kind_name}/${uuid}`)
             expect(entity_created.data.spec.x).toEqual(100)
         } finally {
-            sdk.server.close();
+            sdk.cleanup()
         }
     });
 
@@ -2520,7 +2487,7 @@ describe("SDK client tests", () => {
 
 class MockProceduralCtx implements ProceduralCtx_Interface {
 
-    public static create(provider_client_func: (key?: string) => Promise<ProviderClient>): MockProceduralCtx {
+    public static create(provider_client_func: (key?: string) => ProviderClient): MockProceduralCtx {
         const mock = new MockProceduralCtx()
         mock.get_provider_client = provider_client_func
         return mock
@@ -2558,7 +2525,7 @@ class MockProceduralCtx implements ProceduralCtx_Interface {
     get_logger(log_level?: string, pretty_print?: boolean): Logger {
         throw new Error("Method not implemented.");
     }
-    async get_provider_client(key?: string): Promise<ProviderClient> {
+    get_provider_client(key?: string): ProviderClient {
         throw new Error("Method not implemented.");
     }
     cleanup() {
@@ -2575,7 +2542,7 @@ describe("SDK client mock", () => {
             cluster_location += input;
             return cluster_location
         }
-        const mock_ctx = MockProceduralCtx.create(async key => {
+        const mock_ctx = MockProceduralCtx.create(key => {
             return {} as ProviderClient
         })
         const res = await location_procedure(mock_ctx, "2")

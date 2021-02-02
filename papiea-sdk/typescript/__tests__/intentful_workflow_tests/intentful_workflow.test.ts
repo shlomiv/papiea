@@ -121,7 +121,7 @@ describe("Intentful Workflow tests single provider", () => {
                 console.log(`Couldn't get entity: ${e}`)
             }
         } finally {
-            sdk.server.close();
+            sdk.cleanup()
         }
     })
 
@@ -172,7 +172,7 @@ describe("Intentful Workflow tests single provider", () => {
                 console.log(`Couldn't get entity: ${e}`)
             }
         } finally {
-            sdk.server.close();
+            sdk.cleanup()
         }
     })
 
@@ -221,7 +221,7 @@ describe("Intentful Workflow tests single provider", () => {
             expect(times_invoked_before_deletion).toEqual(times_invoked_after_deletion)
             await providerApiAdmin.delete(`${prefix}/${provider_version}`)
         } finally {
-            sdk.server.close();
+            sdk.cleanup()
         }
     })
 
@@ -285,7 +285,7 @@ describe("Intentful Workflow tests single provider", () => {
                 expect(e).toBeUndefined()
             }
         } finally {
-            sdk.server.close();
+            sdk.cleanup()
         }
     })
 
@@ -322,7 +322,7 @@ describe("Intentful Workflow tests single provider", () => {
             await timeout(18000)
             expect(times_requested).toBeLessThanOrEqual(4)
         } finally {
-            sdk.server.close();
+            sdk.cleanup()
         }
     })
 
@@ -381,7 +381,7 @@ describe("Intentful Workflow tests single provider", () => {
                 expect(e).toBeUndefined()
             }
         } finally {
-            sdk.server.close();
+            sdk.cleanup()
         }
     })
 
@@ -476,7 +476,7 @@ describe("Intentful Workflow tests single provider", () => {
                 expect(e).toBeUndefined()
             }
         } finally {
-            sdk.server.close();
+            sdk.cleanup()
             expect(test_result).toBeTruthy()
         }
     })
@@ -522,7 +522,7 @@ describe("Intentful Workflow tests single provider", () => {
                 expect(e.response.status).toEqual(409)
             }
         } finally {
-            sdk.server.close();
+            sdk.cleanup()
         }
     })
 
@@ -571,7 +571,7 @@ describe("Intentful Workflow tests single provider", () => {
                 expect(e.response.status).toEqual(409)
             }
         } finally {
-            sdk.server.close();
+            sdk.cleanup()
         }
     })
 
@@ -625,7 +625,7 @@ describe("Intentful Workflow tests single provider", () => {
                 expect(e.response.status).toEqual(409)
             }
         } finally {
-            sdk.server.close();
+            sdk.cleanup()
         }
     })
 
@@ -687,7 +687,7 @@ describe("Intentful Workflow tests single provider", () => {
                 console.log(`Couldn't get entity: ${e}`)
             }
         } finally {
-            sdk.server.close();
+            sdk.cleanup()
         }
     })
 
@@ -807,7 +807,7 @@ describe("Intentful Workflow tests single provider", () => {
                 console.log(`Couldn't get entity: ${e}`)
             }
         } finally {
-            sdk.server.close();
+            sdk.cleanup()
         }
     })
 
@@ -853,7 +853,7 @@ describe("Intentful Workflow tests single provider", () => {
                 console.log(`Couldn't wait timeout: ${e}`)
             }
         } finally {
-            sdk.server.close();
+            sdk.cleanup()
         }
     })
 
@@ -938,7 +938,7 @@ describe("Intentful Workflow tests single provider", () => {
                 console.log(`Error encountered: ${e}`)
             }
         } finally {
-            sdk.server.close();
+            sdk.cleanup()
         }
     })
 })
@@ -973,6 +973,8 @@ describe("Intentful Workflow test sfs validation", () => {
             expect(e.response.status).toEqual(400)
             expect(e.response.data.error.errors[ 0 ].message).toContain("SFS: 'wrong, wrong2' parsing on kind:" +
                 ` ${Object.keys(locationDataDescription)[0]} failed with error: Parse error at line 1,`)
+        } finally {
+            sdk.cleanup()
         }
     })
 })
@@ -1102,8 +1104,8 @@ describe("Intentful workflow multiple providers", () => {
         } catch (e) {
             console.log(`Error: ${e}`)
         } finally {
-            sdk1.server.close();
-            sdk2.server.close();
+            sdk1.cleanup();
+            sdk2.cleanup();
             expect(test_result).toBeTruthy()
         }
     })
@@ -1211,8 +1213,8 @@ describe("Intentful workflow multiple providers", () => {
         } catch (e) {
             console.log(`Error: ${e}`)
         } finally {
-            sdk1.server.close();
-            sdk2.server.close();
+            sdk1.cleanup();
+            sdk2.cleanup();
             expect(test_result).toBeTruthy()
         }
     })

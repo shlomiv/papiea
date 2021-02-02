@@ -126,19 +126,12 @@ export function deepMerge(target: any, ...sources: any[]): any {
     return deepMerge(target, ...sources);
 }
 
-export function getCalculateBackoffFn(papieaDebug: boolean, retryExponent: number, logger: Logger) {
-    let exponent: number
-    if (papieaDebug) {
-        logger.debug("Debug flag is set. Setting the diff retry exponent to 1.3")
-        exponent = 1.3
-    } else {
-        exponent = retryExponent
-    }
+export function getCalculateBackoffFn(retryExponent: number) {
     return (retries?: number, maximumBackoff?: number, entropy?: number) => {
         if (retries !== undefined && retries != null &&
             maximumBackoff !== undefined && maximumBackoff !== null &&
             entropy !== undefined && entropy !== null) {
-            return Math.min(Math.pow(exponent, retries) + entropy, maximumBackoff)
+            return Math.min(Math.pow(retryExponent, retries) + entropy, maximumBackoff)
         }
         return 10
     }

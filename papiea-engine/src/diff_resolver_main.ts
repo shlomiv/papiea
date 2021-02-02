@@ -48,7 +48,7 @@ async function setUpDiffResolver() {
     const intentfulListenerMongo = new IntentfulListenerMongo(statusDb, specDb, watchlist)
     intentfulListenerMongo.run(entityPollDelay)
     const entropyFunction = getEntropyFn(papieaDebug)
-    const calculateBackoffFunction = getCalculateBackoffFn(papieaDebug, diffRetryExponent, logger)
+    const calculateBackoffFunction = getCalculateBackoffFn(diffRetryExponent)
 
     const diffResolver = new DiffResolver(watchlist, watchlistDb, specDb, statusDb, providerDb, differ, intentfulContext, logger, batchSize, entropyFunction, calculateBackoffFunction)
 

@@ -88,7 +88,7 @@ const PAPIEA_DEFAULT_CFG: PapieaConfig = {
     entity_poll_delay: 250,
     intent_resolve_delay: 3000,
     diff_resolve_delay: 1500,
-    diff_retry_exponent: 2,
+    diff_retry_exponent: 1.3,
     logging_verbosity: {
         verbose: false,
         fields: []

@@ -33,7 +33,7 @@ export class DiffResolver {
     private batchSize: number;
     private static MAXIMUM_BACKOFF = 100
     private entropyFn: (diff_delay?: number) => number
-    private calculateBackoffFn: (retries?: number, maximumBackoff?: number, entropy?: number) => number
+    private calculateBackoffFn: (retries?: number, maximumBackoff?: number, entropy?: number, kind_retry_exponent?: number, kind_name?: string) => number
 
     constructor(watchlist: Watchlist, watchlistDb: Watchlist_DB, specDb: Spec_DB, statusDb: Status_DB, providerDb: Provider_DB, differ: Differ, intentfulContext: IntentfulContext, logger: Logger, batchSize: number, entropyFn: (diff_delay?: number) => number, calculateBackoffFn: (retries?: number, maximumBackoff?: number, entropy?: number) => number) {
         this.specDb = specDb
@@ -85,7 +85,7 @@ export class DiffResolver {
         } else {
             return {
                 delay: {
-                    delay_seconds: this.calculateBackoffFn(retries, DiffResolver.MAXIMUM_BACKOFF, this.entropyFn(kind.diff_delay)),
+                    delay_seconds: this.calculateBackoffFn(retries, DiffResolver.MAXIMUM_BACKOFF, this.entropyFn(kind.diff_delay), kind.diff_retry_exponent, kind.name),
                     delay_set_time: new Date()
                 },
                 retries

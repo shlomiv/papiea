@@ -126,13 +126,18 @@ export function deepMerge(target: any, ...sources: any[]): any {
     return deepMerge(target, ...sources);
 }
 
-export function getCalculateBackoffFn(retryExponent: number) {
-    return (retries?: number, maximumBackoff?: number, entropy?: number) => {
-        if (retries !== undefined && retries != null &&
+export function getCalculateBackoffFn(retryExponent: number, logger: Logger) {
+    return (retries?: number, maximumBackoff?: number, entropy?: number, kind_retry_exponent?: number, kind_name: string = '') => {
+        if (retries !== undefined && retries !== null &&
             maximumBackoff !== undefined && maximumBackoff !== null &&
             entropy !== undefined && entropy !== null) {
+            if (kind_retry_exponent !== null && kind_retry_exponent !== undefined) {
+                logger.info(`Retry exponent for kind ${ kind_name } is set, not using the config exponent value`)
+                retryExponent = kind_retry_exponent
+            }
             return Math.min(Math.pow(retryExponent, retries) + entropy, maximumBackoff)
         }
+        logger.warn("Received null/undefined input in calculate backoff, using default backoff set to 10sec.")
         return 10
     }
 }
